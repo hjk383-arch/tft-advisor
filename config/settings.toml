@@ -1,0 +1,44 @@
+# TFT Advisor 실행 설정. 키 정의: src/tft_advisor/config.py (Settings)
+# 비밀값(API 키)은 여기 두지 않는다. TypeSafe 키는 환경변수 TYPESAFE_API_KEY.
+
+[app]
+set_number = 18
+data_dir = "data"
+log_dir = "logs"
+
+[capture]
+monitor = 1              # mss 모니터 번호(1 = 주 모니터)
+poll_interval_ms = 500   # 캡처 주기. 추천 호출은 상태 변화 시에만
+stable_frames = 3        # 화면 상태 전이 확정에 필요한 연속 일치 프레임 수
+
+[vision]
+profile = "1920x1080"    # ROI 프로파일 이름
+shop_fuzzy_min = 85      # rapidfuzz 점수(0~100) 미만이면 None
+icon_match_min = 0.8     # 템플릿 매칭 점수 미만이면 None
+state_min_confidence = 0.6   # 이보다 낮은 필드는 Jev state에서 제외
+
+[advisor]
+jev_enabled = true
+timeout_s = 2.0          # 추천 1회 목표 지연
+max_candidate_comps = 8  # 코드 1차 필터 후 Jev에 보낼 덱 후보 수
+cache_size = 64          # state 해시 캐시
+
+[stats]
+primary = "metatft"
+fallbacks = ["tactics_tools", "opgg_mcp"]
+db_path = "data/stats/stats.sqlite"
+days = 3
+rank_filter = "CHALLENGER,DIAMOND,GRANDMASTER,MASTER"
+request_interval_s = 1.2
+user_agent = "tft-advisor-research/0.1 (personal use)"
+
+[ui]
+backend = "auto"         # "auto" | "tkinter" | "pyside6" (결정 보류)
+opacity = 0.85
+click_through = true
+max_target_comps = 3
+
+[logging]
+level = "INFO"
+recommendation_log = "logs/recommendations.jsonl"
+save_frame_on_error = true

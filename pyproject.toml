@@ -1,0 +1,49 @@
+[build-system]
+requires = ["setuptools>=77", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "tft_advisor"
+version = "0.1.0"
+description = "TFT 화면 인식 + 통계 + TypeSafe Jev 기반 실시간 추천 (개인용)"
+requires-python = ">=3.14"
+# core: 계약(contracts), 설정, 정적 데이터 로더만. 무거운 의존성은 extras로 분리한다.
+dependencies = [
+    "pydantic>=2.12,<3",   # 2.12부터 Python 3.14 공식 지원
+]
+
+[project.optional-dependencies]
+# 화면 캡처/인식. 버전은 _workspace/01_vision-engineer_layout.md 5절 (3.14 휠 실측) 기준.
+vision = [
+    "mss>=10.2",
+    "numpy>=2.3",
+    "opencv-python>=4.10,<5",   # 5.0 메이저 변경 회피
+    "rapidfuzz>=3.14",
+    "rapidocr>=3.4",
+    "onnxruntime>=1.23",
+]
+# TypeSafe Jev. API 키는 환경변수 TYPESAFE_API_KEY 에서만 읽는다.
+advisor = [
+    "typesafe_sdk",
+]
+# 통계 수집기(실시간 루프 밖 배치).
+stats = [
+    "httpx>=0.28",
+]
+# UI: 기본은 stdlib tkinter(추가 설치 없음). Qt 오버레이를 택하면 이 그룹을 설치한다. 결정 보류.
+ui-qt = [
+    "PySide6>=6.10",
+]
+dev = [
+    "pytest>=8.4",
+]
+
+[project.scripts]
+tft-advisor = "tft_advisor.__main__:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
