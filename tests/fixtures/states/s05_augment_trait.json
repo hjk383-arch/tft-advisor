@@ -1,0 +1,59 @@
+{
+ "description": "augment_select 3-2, 보드에 Elderwood 유닛 3(오른·알리스타·자야). 제시: Elderwood 특성 증강 + 수완가 + 천상의 축복 II",
+ "state": {
+  "screen_mode": "augment_select",
+  "stage": "3-2",
+  "level": 6,
+  "gold": 30,
+  "hp": 70,
+  "board": [
+   {
+    "id": "DA_18_Ornn",
+    "star": 2
+   },
+   {
+    "id": "DA_18_Alistar",
+    "star": 1
+   },
+   {
+    "id": "DA_18_Xayah",
+    "star": 1
+   },
+   {
+    "id": "DA_18_Varus",
+    "star": 1
+   }
+  ],
+  "bench": [
+   {
+    "id": "DA_18_Shen",
+    "star": 1
+   }
+  ],
+  "items": {
+   "components": [
+    {
+     "id": "DA_Component_BFSword"
+    }
+   ]
+  },
+  "augments_owned": [],
+  "augment_offer": [
+   {
+    "id": "DA_Hustler"
+   },
+   {
+    "id": "DA_18_ElderwoodTraitAugment"
+   },
+   {
+    "id": "DA_CelestialBlessingII"
+   }
+  ]
+ },
+ "expect": {
+  "augment_pick": "DA_18_ElderwoodTraitAugment",
+  "augment_cf_key_trait": "DA_18_Elderwood",
+  "shop_empty": true
+ },
+ "stats": "tests/fixtures/stats/mini_18.json"
+}

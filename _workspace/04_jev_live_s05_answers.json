@@ -1,0 +1,260 @@
+{
+ "fixture": "s05_augment_trait",
+ "recorded": "2026-09-22",
+ "jev": {
+  "model": "jev-1.13.0",
+  "request_id": "req_01a0c9791a4e7e6c8a471dd7bc3a8916",
+  "input_tokens": 14889,
+  "output_tokens": 959,
+  "call_ms": 763.7481920028222,
+  "backend": "live",
+  "cached": false,
+  "scores": {
+   "comp_item_fit_0": {
+    "score": 0.54,
+    "confidence": 0.46
+   },
+   "comp_board_fit_0": {
+    "score": 2.35,
+    "confidence": 0.64
+   },
+   "comp_item_fit_1": {
+    "score": 0.24,
+    "confidence": 0.76
+   },
+   "comp_board_fit_1": {
+    "score": 1.61,
+    "confidence": 0.54
+   },
+   "comp_item_fit_2": {
+    "score": 0.85,
+    "confidence": 0.15
+   },
+   "comp_board_fit_2": {
+    "score": 1.86,
+    "confidence": 0.78
+   },
+   "comp_item_fit_3": {
+    "score": 0.34,
+    "confidence": 0.66
+   },
+   "comp_board_fit_3": {
+    "score": 1.97,
+    "confidence": 0.82
+   },
+   "comp_item_fit_4": {
+    "score": 0.58,
+    "confidence": 0.42
+   },
+   "comp_board_fit_4": {
+    "score": 1.95,
+    "confidence": 0.88
+   },
+   "comp_item_fit_5": {
+    "score": 0.44,
+    "confidence": 0.56
+   },
+   "comp_board_fit_5": {
+    "score": 1.28,
+    "confidence": 0.71
+   },
+   "comp_item_fit_6": {
+    "score": 0.47,
+    "confidence": 0.53
+   },
+   "comp_board_fit_6": {
+    "score": 1.23,
+    "confidence": 0.63
+   },
+   "comp_item_fit_7": {
+    "score": 0.21,
+    "confidence": 0.79
+   },
+   "comp_board_fit_7": {
+    "score": 0.52,
+    "confidence": 0.48
+   },
+   "aug_comp_fit_0_0": {
+    "score": 0.79,
+    "confidence": 0.68
+   },
+   "aug_comp_fit_0_1": {
+    "score": 0.76,
+    "confidence": 0.73
+   },
+   "aug_comp_fit_0_2": {
+    "score": 0.93,
+    "confidence": 0.67
+   },
+   "aug_comp_fit_0_3": {
+    "score": 0.72,
+    "confidence": 0.62
+   },
+   "aug_comp_fit_0_4": {
+    "score": 0.85,
+    "confidence": 0.66
+   },
+   "aug_comp_fit_0_5": {
+    "score": 0.85,
+    "confidence": 0.81
+   },
+   "aug_comp_fit_0_6": {
+    "score": 0.78,
+    "confidence": 0.66
+   },
+   "aug_comp_fit_0_7": {
+    "score": 0.84,
+    "confidence": 0.71
+   },
+   "aug_standalone_0": {
+    "score": 1.0,
+    "confidence": 0.57
+   },
+   "aug_comp_fit_1_0": {
+    "score": 2.9,
+    "confidence": 0.9
+   },
+   "aug_comp_fit_1_1": {
+    "score": 2.61,
+    "confidence": 0.61
+   },
+   "aug_comp_fit_1_2": {
+    "score": 0.26,
+    "confidence": 0.74
+   },
+   "aug_comp_fit_1_3": {
+    "score": 0.9,
+    "confidence": 0.1
+   },
+   "aug_comp_fit_1_4": {
+    "score": 1.8,
+    "confidence": 0.29
+   },
+   "aug_comp_fit_1_5": {
+    "score": 2.36,
+    "confidence": 0.36
+   },
+   "aug_comp_fit_1_6": {
+    "score": 0.42,
+    "confidence": 0.58
+   },
+   "aug_comp_fit_1_7": {
+    "score": 0.22,
+    "confidence": 0.78
+   },
+   "aug_standalone_1": {
+    "score": 1.43,
+    "confidence": 0.3
+   },
+   "aug_comp_fit_2_0": {
+    "score": 1.18,
+    "confidence": 0.75
+   },
+   "aug_comp_fit_2_1": {
+    "score": 1.07,
+    "confidence": 0.8
+   },
+   "aug_comp_fit_2_2": {
+    "score": 1.13,
+    "confidence": 0.78
+   },
+   "aug_comp_fit_2_3": {
+    "score": 1.09,
+    "confidence": 0.84
+   },
+   "aug_comp_fit_2_4": {
+    "score": 1.11,
+    "confidence": 0.79
+   },
+   "aug_comp_fit_2_5": {
+    "score": 1.14,
+    "confidence": 0.76
+   },
+   "aug_comp_fit_2_6": {
+    "score": 1.16,
+    "confidence": 0.72
+   },
+   "aug_comp_fit_2_7": {
+    "score": 1.18,
+    "confidence": 0.76
+   },
+   "aug_standalone_2": {
+    "score": 1.48,
+    "confidence": 0.47
+   }
+  },
+  "choices": {
+   "comp_pick": {
+    "choice": "Elderwood Aphelios",
+    "confidence": 0.68,
+    "probabilities": {
+     "Spellweaver Veigar": 0.06,
+     "undecided": 0.04,
+     "Executioner Kha'Zix": 0.04,
+     "Executioner Draven": 0.03,
+     "Inferno Ashe": 0.01,
+     "Elderwood Aphelios": 0.72,
+     "Invoker Ahri": 0.0,
+     "Juggernaut Elder Dragon": 0.0,
+     "Lunar Aphelios Nidalee": 0.1
+    }
+   },
+   "aug_pick": {
+    "choice": "Nature's Shelter",
+    "confidence": 0.46,
+    "probabilities": {
+     "Nature's Shelter": 0.64,
+     "Hustler": 0.07,
+     "Celestial Blessing II": 0.29
+    }
+   }
+  }
+ },
+ "question_ids": [
+  "comp_item_fit_0",
+  "comp_board_fit_0",
+  "comp_item_fit_1",
+  "comp_board_fit_1",
+  "comp_item_fit_2",
+  "comp_board_fit_2",
+  "comp_item_fit_3",
+  "comp_board_fit_3",
+  "comp_item_fit_4",
+  "comp_board_fit_4",
+  "comp_item_fit_5",
+  "comp_board_fit_5",
+  "comp_item_fit_6",
+  "comp_board_fit_6",
+  "comp_item_fit_7",
+  "comp_board_fit_7",
+  "comp_pick",
+  "aug_comp_fit_0_0",
+  "aug_comp_fit_0_1",
+  "aug_comp_fit_0_2",
+  "aug_comp_fit_0_3",
+  "aug_comp_fit_0_4",
+  "aug_comp_fit_0_5",
+  "aug_comp_fit_0_6",
+  "aug_comp_fit_0_7",
+  "aug_standalone_0",
+  "aug_comp_fit_1_0",
+  "aug_comp_fit_1_1",
+  "aug_comp_fit_1_2",
+  "aug_comp_fit_1_3",
+  "aug_comp_fit_1_4",
+  "aug_comp_fit_1_5",
+  "aug_comp_fit_1_6",
+  "aug_comp_fit_1_7",
+  "aug_standalone_1",
+  "aug_comp_fit_2_0",
+  "aug_comp_fit_2_1",
+  "aug_comp_fit_2_2",
+  "aug_comp_fit_2_3",
+  "aug_comp_fit_2_4",
+  "aug_comp_fit_2_5",
+  "aug_comp_fit_2_6",
+  "aug_comp_fit_2_7",
+  "aug_standalone_2",
+  "aug_pick"
+ ]
+}

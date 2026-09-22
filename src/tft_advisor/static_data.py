@@ -26,14 +26,20 @@ def _norm(name: str) -> str:
     return "".join(name.split()).lower()
 
 
-def _preference(rec: Record) -> tuple[int, int, int]:
-    """동명 후보 정렬 키(작을수록 우선)."""
+def preference_key(rec: Record) -> tuple[int, int, int]:
+    """동명 후보 정렬 키(작을수록 우선): DA_* > 레거시, set_native > 비세트, 기본 > _Upgrade/_Prismatic.
+
+    vision(아이콘 중복 해소) 등 외부 모듈도 이 키로 같은 우선순위를 쓴다."""
     api = rec["apiName"]
     return (
         0 if api.startswith("DA_") else 1,
         0 if rec.get("set_native", True) else 1,
         1 if api.endswith(("_Upgrade", "_Prismatic")) else 0,
     )
+
+
+# 하위 호환(deprecated): vision/templates.py가 아직 `_preference`를 import한다. 새 코드는 `preference_key`를 쓸 것.
+_preference = preference_key
 
 
 class StaticData:
@@ -61,7 +67,7 @@ class StaticData:
                         self._name_index[kind].setdefault(_norm(r[key]), []).append(r)
         for idx in self._name_index.values():
             for cands in idx.values():
-                cands.sort(key=_preference)
+                cands.sort(key=preference_key)
 
     def _load(self, kind: str) -> list[Record]:
         return json.loads((self.dir / f"{kind}.json").read_text(encoding="utf-8"))
@@ -115,6 +121,10 @@ class StaticData:
     def observed_shop_odds(self) -> dict[int, list[int]]:
         """관측된 레벨별 상점 확률(%). 미관측 레벨은 없음(5, 7~10레벨 미확인)."""
         return {int(k): v for k, v in self.meta.get("observed_shop_odds_pct", {}).items()}
+
+    def xp_to_next(self) -> dict[int, int]:
+        """레벨 L → 다음 레벨까지 필요한 경험치(화면 "a/b"의 b). meta.json `xp_to_next`(없으면 빈 dict)."""
+        return {int(k): int(v) for k, v in self.meta.get("xp_to_next", {}).items()}
 
 
 @cache

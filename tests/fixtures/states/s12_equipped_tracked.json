@@ -1,0 +1,91 @@
+{
+ "description": "연속 스텝. 1: 벤치에 대천사. 2: 벤치에서 대천사 사라짐(보드 None) → 장착 추적으로 owned 유지",
+ "steps": [
+  {
+   "state": {
+    "screen_mode": "planning",
+    "stage": "3-1",
+    "level": 6,
+    "gold": 30,
+    "shop": [
+     {
+      "kind": "champion",
+      "id": "DA_18_Zyra"
+     },
+     {
+      "kind": "champion",
+      "id": "DA_18_Varus"
+     },
+     {
+      "kind": "champion",
+      "id": "DA_18_Ornn"
+     },
+     {
+      "kind": "champion",
+      "id": "DA_18_LeBlanc"
+     },
+     {
+      "kind": "champion",
+      "id": "DA_18_Sejuani"
+     }
+    ],
+    "items": {
+     "completed": [
+      {
+       "id": "DA_ArchangelsStaff"
+      }
+     ]
+    },
+    "augments_owned": []
+   },
+   "expect": {
+    "top_comp": "juggernaut-zyra-amumu",
+    "items_ready_status": {
+     "DA_ArchangelsStaff": "owned"
+    }
+   }
+  },
+  {
+   "state": {
+    "screen_mode": "planning",
+    "stage": "3-2",
+    "level": 6,
+    "gold": 32,
+    "shop": [
+     {
+      "kind": "champion",
+      "id": "DA_18_Zyra"
+     },
+     {
+      "kind": "champion",
+      "id": "DA_18_Varus"
+     },
+     {
+      "kind": "champion",
+      "id": "DA_18_Ornn"
+     },
+     {
+      "kind": "champion",
+      "id": "DA_18_LeBlanc"
+     },
+     {
+      "kind": "champion",
+      "id": "DA_18_Sejuani"
+     }
+    ],
+    "items": {
+     "completed": []
+    },
+    "augments_owned": []
+   },
+   "expect": {
+    "top_comp": "juggernaut-zyra-amumu",
+    "items_ready_status": {
+     "DA_ArchangelsStaff": "owned"
+    },
+    "state_completed_items_contains": "Archangel's Staff"
+   }
+  }
+ ],
+ "stats": "tests/fixtures/stats/mini_18.json"
+}

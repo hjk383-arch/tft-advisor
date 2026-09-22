@@ -1,10 +1,12 @@
 {
- "checked_at": "2026-09-21",
- "note": "통계 소스 응답 ID 중 CDragon 스냅샷(data/static/raw_cdragon)에 없는 것. 스냅샷이 18.2b보다 오래됐을 가능성. OP.GG MCP tft_list_augments로 이름/설명/티어 보완 가능(일부).",
+ "checked_at": "2026-09-22",
+ "note": "통계 소스 응답 ID 중 정적 데이터(data/static/18)에 없는 것. 스냅샷이 18.2b보다 오래됐을 가능성. summons_in_boards는 챔피언이 아니라서 변환 시 보드에서 제거하는 유닛(metatft_convert.SUMMON_IDS + 상점 풀 필터).",
  "units": {"metatft": ["TFT18_Akali", "TFT18_Gromp", "TFT18_MasterYi", "TFT18_NidaleeCougar"],
-           "summons_in_boards": ["DA_Elderwood18_Lifeblossom", "DA_Elderwood18_StonebarkTree"]},
+           "summons_in_boards": ["DA_Elderwood18_Lifeblossom", "DA_Elderwood18_StonebarkTree", "DA_Elderwood18_Protector",
+                                 "DA_TheTower_TrainingDummy", "DA_TrainingDummy"]},
  "items": {"tactics_tools": ["DA_Artifact_Hullcrusher"]},
- "augments": {"metatft_augments_tiers": ["DA_CalculatedLoss", "DA_18_FloraFatalisAugmentPlus", "DA_StarringUp", "DA_Lineup",
-   "DA_18_RivalsAugmentPlus", "DA_ConstructACompanion", "DA_DoubleTrouble", "DA_NestingDolls", "DA_ForgeAFriend", "DA_SubscriptionService"],
-   "opgg_only_DA": ["DA_CalculatedLoss", "DA_DoubleTrouble", "DA_18_FloraFatalisAugmentPlus", "DA_ConstructACompanion", "DA_ForgeAFriend"]}
+ "augments": {"metatft_augments_tiers": ["DA_StarringUp", "DA_Lineup", "DA_18_RivalsAugmentPlus", "DA_NestingDolls",
+   "DA_SubscriptionService"],
+   "resolved_by_opgg": ["DA_CalculatedLoss", "DA_DoubleTrouble", "DA_18_FloraFatalisAugmentPlus", "DA_ConstructACompanion",
+   "DA_ForgeAFriend"]}
 }

@@ -5,6 +5,10 @@
 변환(원본 -> 계약 모델)은 `tft_advisor.stats.metatft_convert`가 한다. 이 모듈은 받아서 저장만 한다.
 
     python -m tft_advisor.stats.collectors.metatft [--date 2026-09-22] [--refresh] [--only comp_details]
+    (보통은 수집·변환·DB 적재를 한 번에 하는 `python -m tft_advisor.stats refresh`를 쓴다)
+
+요청 파라미터(간격·User-Agent·days·rank)의 기준값은 `config/settings.toml [stats]`다. 아래 DEFAULT_* 상수는
+설정 없이 함수를 직접 부를 때의 폴백이며 settings 기본값과 같다.
 
 의존성: 표준 라이브러리만(urllib). 1회 재시도 후 실패하면 해당 파일을 건너뛰고 failures에 남긴다.
 """
@@ -134,18 +138,23 @@ def latest_raw_dir(root: Path | None = None) -> Path | None:
     return dirs[-1] if dirs else None
 
 
-def main() -> None:
+def main(argv: list[str] | None = None) -> None:
+    """기본값은 settings.stats(days, rank_filter, request_interval_s, user_agent). 인자로 덮어쓸 수 있다."""
+    from tft_advisor.config import load_settings
+
+    s = load_settings().stats
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--date", default=dt.date.today().isoformat())
     ap.add_argument("--refresh", action="store_true")
     ap.add_argument("--only", choices=["base", "comp_details"], action="append")
-    ap.add_argument("--days", type=int, default=3)
-    ap.add_argument("--rank", default=DEFAULT_RANKS)
-    ap.add_argument("--interval", type=float, default=1.2)
-    a = ap.parse_args()
+    ap.add_argument("--days", type=int, default=s.days)
+    ap.add_argument("--rank", default=s.rank_filter)
+    ap.add_argument("--interval", type=float, default=s.request_interval_s)
+    ap.add_argument("--user-agent", default=s.user_agent)
+    a = ap.parse_args(argv)
     out = PROJECT_ROOT / "data" / "raw" / "metatft" / a.date
-    m = collect_raw(out, days=a.days, rank_filter=a.rank, interval_s=a.interval, refresh=a.refresh,
-                    only=set(a.only) if a.only else None)
+    m = collect_raw(out, days=a.days, rank_filter=a.rank, interval_s=a.interval, user_agent=a.user_agent,
+                    refresh=a.refresh, only=set(a.only) if a.only else None)
     print(json.dumps(m, ensure_ascii=False, indent=1))
 
 

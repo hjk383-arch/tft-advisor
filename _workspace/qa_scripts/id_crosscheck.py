@@ -179,8 +179,10 @@ for c in conv["comps"]:
         for b in boards: cu |= set(b["units"])
 for a in conv["augment_tiers"]:
     ca.add(a["augment_id"])
-for r in conv["unit_item_stats"]:
+for r in conv["unit_item_stats"] + conv.get("unit_build_stats", []):   # R16: holds + builds 분리(Phase 3)
     cu.add(r["unit_id"]); ci |= set(r["item_ids"])
+for r in conv.get("item_stats", []):
+    ci.add(r["item_id"])
 for r in conv["unit_stats"]:
     cu.add(r["unit_id"])
 out["converted_file"] = conv_path.name

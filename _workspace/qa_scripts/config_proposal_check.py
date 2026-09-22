@@ -54,6 +54,20 @@ PROPOSED_SETTINGS = {
     "ui": {"max_target_comps": 3},
 }
 
+# Phase 3 config round(2026-09-22, app-integrator): 모듈 요청 키. content_box(기본 None=프레임 전체)는 TOML에
+# 값으로 쓸 수 없어서 여기서 빼고 tests/test_config_round.py에서 검사한다.
+PHASE3_WEIGHTS = {"comp": {"hysteresis_other_share": 0.25}, "item": {"overall_stat_games_factor": 0.25}}
+PHASE3_SETTINGS = {
+    "stats": {"keep_snapshots": 5},
+    "advisor": {"jev_backend": "mock"},
+    "vision": {"ocr_backend": "auto", "name_fuzzy_min_margin": 10, "name_fuzzy_relaxed_margin": 15,
+               "item_match_margin": 0.05, "change_threshold": 24, "change_stable_frames": 2, "capture_fps": 4,
+               "traits_every_s": 3},
+}
+for _base, _extra in ((PROPOSED_WEIGHTS, PHASE3_WEIGHTS), (PROPOSED_SETTINGS, PHASE3_SETTINGS)):
+    for _sec, _kv in _extra.items():
+        _base.setdefault(_sec, {}).update(_kv)
+
 def dump_toml(d: dict, prefix: str = "") -> str:
     lines, subs = [], []
     for k, v in d.items():
@@ -108,7 +122,7 @@ if __name__ == "__main__":
     n_keys = sum(len(v) for v in PROPOSED_WEIGHTS.values()) + sum(len(v) for v in PROPOSED_SETTINGS.values())
     errs = run("weights", ROOT / "config/weights.toml", PROPOSED_WEIGHTS, load_weights)
     errs += run("settings", ROOT / "config/settings.toml", PROPOSED_SETTINGS, load_settings)
-    print(f"§10a keys checked: {n_keys}")
+    print(f"§10a keys checked: {n_keys} (Phase 3 config round 키 포함)")
     print(f"rejected keys: {len(errs)}")
     for e in errs:
         print(" ", e)

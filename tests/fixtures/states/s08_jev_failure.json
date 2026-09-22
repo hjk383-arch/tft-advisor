@@ -1,0 +1,87 @@
+{
+ "description": "#1과 같은 state, Jev 모의 529 연속 → 통계 전용 폴백, 1위 덱은 #1과 같음",
+ "state": {
+  "screen_mode": "planning",
+  "stage": "3-2",
+  "level": 6,
+  "gold": 34,
+  "hp": 62,
+  "shop": [
+   {
+    "kind": "champion",
+    "id": "DA_18_Zyra"
+   },
+   {
+    "kind": "champion",
+    "id": "DA_18_Varus"
+   },
+   {
+    "kind": "champion",
+    "id": "DA_18_Ornn"
+   },
+   {
+    "kind": "champion",
+    "id": "DA_18_LeBlanc"
+   },
+   {
+    "kind": "champion",
+    "id": "DA_18_Sejuani"
+   }
+  ],
+  "board": [
+   {
+    "id": "DA_18_Yorick",
+    "star": 2
+   },
+   {
+    "id": "DA_18_Rakan",
+    "star": 1
+   },
+   {
+    "id": "DA_Karma18",
+    "star": 1
+   },
+   {
+    "id": "DA_18_Ornn",
+    "star": 1
+   },
+   {
+    "id": "DA_18_Alistar",
+    "star": 1
+   },
+   {
+    "id": "DA_18_Xayah",
+    "star": 1
+   }
+  ],
+  "bench": [
+   {
+    "id": "DA_18_Varus",
+    "star": 1
+   }
+  ],
+  "augments_owned": [],
+  "items": {
+   "completed": [
+    {
+     "id": "DA_ArchangelsStaff"
+    }
+   ],
+   "components": [
+    {
+     "id": "DA_Component_NeedlesslyLargeRod"
+    }
+   ]
+  }
+ },
+ "jev": {
+  "fail": "overloaded"
+ },
+ "expect": {
+  "jev_used": false,
+  "fallback_reason": "overloaded",
+  "top_comp_same_as": "s01_board_ap_items",
+  "latency_ms_max": 2000
+ },
+ "stats": "tests/fixtures/stats/mini_18.json"
+}

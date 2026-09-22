@@ -19,7 +19,7 @@ def build_parser() -> argparse.ArgumentParser:
     mode.add_argument("--screenshot", type=Path, metavar="PATH", help="스크린샷 파일 1장을 인식·추천(디버깅/QA)")
     mode.add_argument("--live", action="store_true", help="실시간 화면 캡처 + 오버레이")
     p.add_argument("--config", type=Path, default=None, metavar="DIR", help="설정 디렉터리(기본: config/)")
-    p.add_argument("--no-jev", action="store_true", help="Jev 호출 없이 통계 전용 추천")
+    p.add_argument("--no-jev", action="store_true", help="Jev 호출 없이 통계 전용 추천(= create_advisor(\"off\"), 설정 [advisor] jev_backend보다 우선)")
     p.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
     return p
 

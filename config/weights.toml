@@ -12,6 +12,7 @@ wt = 0.2
 show_ratio = 0.75           # 2·3위는 1위 점수의 이 비율 이상일 때만 표시
 max_shown = 3               # 실효값 = min(max_shown, ui.max_target_comps)
 hysteresis_bonus = 0.05     # 직전 추천 덱 가산(널뛰기 방지)
+hysteresis_other_share = 0.25   # H(c): 직전 1위 = 1, 직전 표시 2·3위 = 이 값, 그 외 0
 stat_avg_best = 4.0         # stat_norm: 이 평균 등수 이하 = 1 (stat_avg_best < stat_avg_worst)
 stat_avg_worst = 5.2        # stat_norm: 이 평균 등수 이상 = 0
 show_ratio_undecided = 0.6  # 초반 방향 미정일 때 표시 컷 (<= show_ratio)
@@ -103,3 +104,4 @@ w_stat = 0.15
 place_change_span = 1.0
 hold_bis_max = 0.4
 hold_until_stage = 4        # stage 번호 < 이 값일 때만 hold
+overall_stat_games_factor = 0.25   # 덱 한정 유닛+아이템 행이 없어 전체(파생) 행을 쓸 때 표본 수 할인

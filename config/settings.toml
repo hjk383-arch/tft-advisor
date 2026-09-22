@@ -8,16 +8,28 @@ log_dir = "logs"
 
 [capture]
 monitor = 1              # mss 모니터 번호(1 = 주 모니터)
-poll_interval_ms = 500   # 캡처 주기. 추천 호출은 상태 변화 시에만
-stable_frames = 3        # 화면 상태 전이 확정에 필요한 연속 일치 프레임 수
+# 캡처 주기·안정 프레임은 [vision] capture_fps / change_stable_frames (옛 poll_interval_ms·stable_frames 대체)
 
 [vision]
 profile = "1920x1080"    # ROI 프로파일 이름
 shop_fuzzy_min = 85      # rapidfuzz 점수(0~100) 미만이면 None
 icon_match_min = 0.8     # 템플릿 매칭 점수 미만이면 None
 state_min_confidence = 0.6   # 이보다 낮은 필드는 Jev state에서 제외
+# 게임 화면 영역 [x1, y1, x2, y2] — 캡처 프레임에 대한 비율(0 <= x1 < x2 <= 1, y 동일).
+# 생략 또는 [] = 프레임 전체(= [0, 0, 1, 1]). 전체 화면 1920x1080 이면 그대로 둔다.
+# 창모드·레터박스면 게임 영역을 지정한다. 예: 2560x1440 모니터의 (200,150) 위치 1600x900 창 → [0.078125, 0.104167, 0.703125, 0.729167]
+# content_box = [0, 0, 1, 1]
+ocr_backend = "auto"          # "auto" | "onnxruntime" | "openvino" | "none"(OCR 끔, 진단용)
+name_fuzzy_min_margin = 10    # 이름 점수 >= shop_fuzzy_min 이어도 2위와 이만큼 차이 나야 수락 (<= relaxed)
+name_fuzzy_relaxed_margin = 15   # 점수 60~85 구간 수락에 필요한 2위와의 차
+item_match_margin = 0.05      # 아이템 아이콘 1위와 다른 아이템 1위의 점수 차 하한
+change_threshold = 24         # ROI 서명(32x16 회색조) 픽셀 절대차 최댓값이 이보다 크면 변화 (0~255)
+change_stable_frames = 2      # 변화 후 이 프레임 수 연속 같아야 재인식 (애니메이션 중 읽지 않음)
+capture_fps = 4               # 앱 루프 캡처 주기(Phase 4). 인식·추천은 변화가 있을 때만
+traits_every_s = 3            # 앱 루프: 특성 패널을 몇 초에 한 번 읽을지(비싼 ROI)
 
 [advisor]
+jev_backend = "mock"          # "mock"(기본, 네트워크·과금 없음) | "live"(TYPESAFE_API_KEY 필요, 과금) | "off"(통계 전용). CLI --no-jev → "off"
 jev_enabled = true            # false → fallback_reason = jev_disabled
 timeout_s = 2.0               # 추천 1회 전체 예산(초)
 max_candidate_comps = 8       # 코드 1차 필터 후 Jev에 보낼 덱 후보 수 (1~20)
@@ -36,6 +48,7 @@ db_path = "data/stats/stats.sqlite"
 days = 3
 rank_filter = "CHALLENGER,DIAMOND,GRANDMASTER,MASTER"   # 순서 무관(집합 비교), 로드 시 정렬
 request_interval_s = 1.2
+keep_snapshots = 5            # 출처별 보존 스냅샷 수 (>= 1)
 user_agent = "tft-advisor-research/0.1 (personal use)"
 
 [ui]

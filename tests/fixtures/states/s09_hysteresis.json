@@ -1,0 +1,254 @@
+{
+ "description": "연속 스텝. 1: 대천사 보유(A=자이라 1위). 2: 재료만 추가(시그니처 동일) → A 유지. 2': 새 스텝 체인에서 B 캐리 BIS 완성템 추가 → B 1위",
+ "steps": [
+  {
+   "state": {
+    "screen_mode": "planning",
+    "stage": "3-5",
+    "level": 6,
+    "gold": 30,
+    "hp": 60,
+    "shop": [
+     {
+      "kind": "champion",
+      "id": "DA_18_Zyra"
+     },
+     {
+      "kind": "champion",
+      "id": "DA_18_Varus"
+     },
+     {
+      "kind": "champion",
+      "id": "DA_18_Ornn"
+     },
+     {
+      "kind": "champion",
+      "id": "DA_18_LeBlanc"
+     },
+     {
+      "kind": "champion",
+      "id": "DA_18_Sejuani"
+     }
+    ],
+    "board": [
+     {
+      "id": "DA_18_Yorick",
+      "star": 2
+     },
+     {
+      "id": "DA_18_Rakan",
+      "star": 1
+     },
+     {
+      "id": "DA_Karma18",
+      "star": 1
+     },
+     {
+      "id": "DA_18_Ornn",
+      "star": 1
+     },
+     {
+      "id": "DA_18_Alistar",
+      "star": 1
+     },
+     {
+      "id": "DA_18_Xayah",
+      "star": 1
+     }
+    ],
+    "bench": [
+     {
+      "id": "DA_18_Varus",
+      "star": 1
+     }
+    ],
+    "augments_owned": [],
+    "items": {
+     "completed": [
+      {
+       "id": "DA_ArchangelsStaff"
+      },
+      {
+       "id": "DA_JeweledGauntlet"
+      }
+     ],
+     "components": []
+    }
+   },
+   "expect": {
+    "top_comp": "juggernaut-zyra-amumu"
+   }
+  },
+  {
+   "state": {
+    "screen_mode": "planning",
+    "stage": "3-5",
+    "level": 6,
+    "gold": 30,
+    "hp": 60,
+    "shop": [
+     {
+      "kind": "champion",
+      "id": "DA_18_Zyra"
+     },
+     {
+      "kind": "champion",
+      "id": "DA_18_Varus"
+     },
+     {
+      "kind": "champion",
+      "id": "DA_18_Ornn"
+     },
+     {
+      "kind": "champion",
+      "id": "DA_18_LeBlanc"
+     },
+     {
+      "kind": "champion",
+      "id": "DA_18_Sejuani"
+     }
+    ],
+    "board": [
+     {
+      "id": "DA_18_Yorick",
+      "star": 2
+     },
+     {
+      "id": "DA_18_Rakan",
+      "star": 1
+     },
+     {
+      "id": "DA_Karma18",
+      "star": 1
+     },
+     {
+      "id": "DA_18_Ornn",
+      "star": 1
+     },
+     {
+      "id": "DA_18_Alistar",
+      "star": 1
+     },
+     {
+      "id": "DA_18_Xayah",
+      "star": 1
+     }
+    ],
+    "bench": [
+     {
+      "id": "DA_18_Varus",
+      "star": 1
+     }
+    ],
+    "augments_owned": [],
+    "items": {
+     "completed": [
+      {
+       "id": "DA_ArchangelsStaff"
+      },
+      {
+       "id": "DA_JeweledGauntlet"
+      }
+     ],
+     "components": [
+      {
+       "id": "DA_Component_SparringGloves"
+      }
+     ]
+    }
+   },
+   "expect": {
+    "top_comp": "juggernaut-zyra-amumu",
+    "sig_unchanged": true
+   }
+  }
+ ],
+ "branch": [
+  {
+   "state": {
+    "screen_mode": "planning",
+    "stage": "3-5",
+    "level": 6,
+    "gold": 30,
+    "hp": 60,
+    "shop": [
+     {
+      "kind": "champion",
+      "id": "DA_18_Zyra"
+     },
+     {
+      "kind": "champion",
+      "id": "DA_18_Varus"
+     },
+     {
+      "kind": "champion",
+      "id": "DA_18_Ornn"
+     },
+     {
+      "kind": "champion",
+      "id": "DA_18_LeBlanc"
+     },
+     {
+      "kind": "champion",
+      "id": "DA_18_Sejuani"
+     }
+    ],
+    "board": [
+     {
+      "id": "DA_18_Yorick",
+      "star": 2
+     },
+     {
+      "id": "DA_18_Rakan",
+      "star": 1
+     },
+     {
+      "id": "DA_Karma18",
+      "star": 1
+     },
+     {
+      "id": "DA_18_Ornn",
+      "star": 1
+     },
+     {
+      "id": "DA_18_Alistar",
+      "star": 1
+     },
+     {
+      "id": "DA_18_Xayah",
+      "star": 1
+     }
+    ],
+    "bench": [
+     {
+      "id": "DA_18_Varus",
+      "star": 1
+     }
+    ],
+    "augments_owned": [],
+    "items": {
+     "completed": [
+      {
+       "id": "DA_ArchangelsStaff"
+      },
+      {
+       "id": "DA_JeweledGauntlet"
+      },
+      {
+       "id": "DA_StrikersFlail"
+      },
+      {
+       "id": "DA_18_EmblemInvoker"
+      }
+     ],
+     "components": []
+    }
+   },
+   "expect": {
+    "top_comp": "invoker-ahri",
+    "sig_unchanged": false
+   }
+  }
+ ],
+ "stats": "tests/fixtures/stats/mini_18.json"
+}

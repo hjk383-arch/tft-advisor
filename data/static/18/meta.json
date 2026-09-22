@@ -179,6 +179,26 @@
    ]
   }
  },
+ "xp_to_next": {
+  "1": 2,
+  "2": 2,
+  "3": 6,
+  "4": 10,
+  "5": 20,
+  "6": 36,
+  "7": 56,
+  "8": 68,
+  "9": 68
+ },
+ "xp_to_next_observed_levels": [
+  3,
+  4,
+  6
+ ],
+ "xp_sources": [
+  "https://tftflow.com/tables/set18/shop-odds-pool-size-xp-table"
+ ],
+ "xp_note": "레벨 L → L+1 필요 경험치(화면 a/b의 b). 10레벨이 최대. 3/4/6레벨만 화면 관측으로 확인, 나머지는 출처 값",
  "notes": [
   "증강 tier는 tags 해시 기반 추정",
   "TFT_* 와 DA_* 동명 중복은 aliases 로 연결"

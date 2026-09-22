@@ -5,28 +5,45 @@
 - shop: 5칸 리스트. null = 빈 칸, {"name": 챔피언 이름, "cost"}, {"special": 특수 상품 이름, "cost", "desc"},
   {"unknown": true} = 식별 불가. 이름 대신 {"id": "DA_..."}도 허용.
 - augment_offer / augments_owned: 증강 이름 문자열 또는 ID 문자열 리스트.
+- items(보유 아이템 = 아이템 벤치, 미장착분): `{"components"|"completed"|"emblems"|"others": [이름|apiName, …]}`
+  또는 이름 평면 리스트. 이름은 vision `item_ids.ItemCatalog.resolve`로 **묶음 대표 ID**로 바꾼다(vision 출력과 같은 ID,
+  예: "자석 제거기" → `DA_Consumable_ItemRemover`). 분류는 정적 데이터 `category`를 따르고, 라벨 버킷과 다르면 오류.
+- item_bench: 아이템 벤치 10칸(위→아래) 이름|apiName|null 리스트. GameState 필드가 아니므로
+  `ExpectedScreen.extras["item_bench"]`에 대표 ID(빈 칸 None)로 담는다(harvest-items용). `items`가 없으면
+  item_bench로 `items`를 채운다(비교 대상이 된다). 둘 다 있으면 같은 아이템 묶음(다중집합)이어야 한다.
+- 해석할 수 없는 이름은 KeyError(라벨 글자를 ID로 쓰지 않는다).
 - 정답 파일에 없는 필드는 "정답 미기재"이며 비교 대상이 아니다 → `ExpectedScreen.fields`.
 """
 from __future__ import annotations
 
 import json
-from dataclasses import dataclass
+from collections import Counter
+from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from .contracts import AugmentRef, FieldSource, GameState, ShopSlot, ShopSlotKind
+from .contracts import AugmentRef, FieldSource, GameState, ItemRef, ItemState, ShopSlot, ShopSlotKind
 from .static_data import StaticData, load_static
 
+if TYPE_CHECKING:
+    from .vision.item_ids import ItemCatalog
+
 _IGNORED_PREFIXES = ("_", "note")
+_EXTRA_KEYS = ("item_bench",)   # GameState 필드가 아닌 정답 키 → ExpectedScreen.extras
+ITEM_BUCKETS = ("components", "completed", "emblems", "others")
+# items.json category → ItemState 버킷 (vision recognizer와 같은 규칙: 나머지는 others)
+_CATEGORY_BUCKET = {"component": "components", "completed": "completed", "emblem": "emblems"}
+ITEM_BENCH_SLOTS = 10
 
 
 @dataclass(frozen=True)
 class ExpectedScreen:
-    """정답 GameState와 정답이 기재된 필드 집합."""
+    """정답 GameState와 정답이 기재된 필드 집합. extras = GameState 밖의 정답(현재 `item_bench`: 대표 ID|None 리스트)."""
 
     path: Path
     state: GameState
     fields: frozenset[str]
+    extras: dict[str, Any] = field(default_factory=dict)
 
 
 def _is_note(key: str) -> bool:
@@ -58,12 +75,75 @@ def _augment(static: StaticData, value: str) -> AugmentRef:
     return AugmentRef(id=rec["apiName"], name_ko=rec["name_ko"], rarity=rec.get("tier"))
 
 
+def _item_catalog(static: StaticData) -> ItemCatalog:
+    # vision extra(numpy·rapidfuzz)가 필요하므로 items/item_bench가 있을 때만 import한다.
+    from .vision.item_ids import ItemCatalog
+
+    return ItemCatalog(static)
+
+
+def _item_id(cat: ItemCatalog, label: str) -> str:
+    api = cat.resolve(label)
+    if api is None:
+        raise KeyError(f"items에서 찾을 수 없음: {label!r}")
+    return api
+
+
+def _item_ref(static: StaticData, cat: ItemCatalog, api: str) -> ItemRef:
+    return ItemRef(id=api, name_ko=cat.display_name(api), category=(static.get("items", api) or {}).get("category"))
+
+
+def _bucket_of(static: StaticData, api: str) -> str:
+    return _CATEGORY_BUCKET.get((static.get("items", api) or {}).get("category"), "others")
+
+
+def _items(static: StaticData, cat: ItemCatalog, raw: dict[str, list[str]] | list[str]) -> ItemState:
+    state = ItemState()
+    if isinstance(raw, list):
+        labelled = [(None, x) for x in raw]
+    elif isinstance(raw, dict):
+        bad = set(raw) - set(ITEM_BUCKETS)
+        if bad:
+            raise ValueError(f"items 버킷은 {ITEM_BUCKETS} 중 하나여야 한다: {sorted(bad)}")
+        labelled = [(b, x) for b, xs in raw.items() for x in (xs or [])]
+    else:
+        raise ValueError(f"items는 버킷 dict 또는 이름 리스트여야 한다: {raw!r}")
+    for bucket, label in labelled:
+        api = _item_id(cat, label)
+        actual = _bucket_of(static, api)
+        if bucket is not None and bucket != actual:
+            raise ValueError(f"items.{bucket}의 {label!r}({api})는 정적 데이터상 {actual}이다")
+        getattr(state, actual).append(_item_ref(static, cat, api))
+    return state
+
+
+def _item_bench(cat: ItemCatalog, raw: list[str | None]) -> list[str | None]:
+    if not isinstance(raw, list) or len(raw) > ITEM_BENCH_SLOTS:
+        raise ValueError(f"item_bench는 {ITEM_BENCH_SLOTS}칸 이하 리스트여야 한다: {raw!r}")
+    return [None if x is None else _item_id(cat, x) for x in raw]
+
+
 def load_expected(path: str | Path, static: StaticData | None = None) -> ExpectedScreen:
     """정답 파일 1개를 읽어 GameState로 만든다. 알 수 없는 최상위 키는 GameState 검증에서 오류가 난다."""
     path = Path(path)
     static = static or load_static()
     raw = json.loads(path.read_text(encoding="utf-8"))
     data = {k: v for k, v in raw.items() if not _is_note(k)}
+    extras_raw = {k: data.pop(k) for k in _EXTRA_KEYS if k in data}
+    extras: dict[str, Any] = {}
+    if data.get("items") is not None or extras_raw.get("item_bench") is not None:
+        cat = _item_catalog(static)
+        if data.get("items") is not None:
+            data["items"] = _items(static, cat, data["items"])
+        if extras_raw.get("item_bench") is not None:
+            bench = extras["item_bench"] = _item_bench(cat, extras_raw["item_bench"])
+            from_bench = _items(static, cat, [x for x in bench if x is not None])
+            if "items" not in data:
+                data["items"] = from_bench
+            elif data["items"] is not None and Counter(data["items"].all_ids()) != Counter(from_bench.all_ids()):
+                raise ValueError(f"{path.name}: items와 item_bench의 아이템이 다르다")
+    elif "item_bench" in extras_raw:
+        extras["item_bench"] = None
 
     if "shop" in data and data["shop"] is not None:
         data["shop"] = [_shop_slot(static, s) for s in data["shop"]]
@@ -75,4 +155,4 @@ def load_expected(path: str | Path, static: StaticData | None = None) -> Expecte
     data["field_source"] = {k: FieldSource.FIXTURE for k in fields}
     data.setdefault("set_number", static.set_number)
     data["source_image"] = str(path.with_name(path.name.replace(".expected.json", ".png")))
-    return ExpectedScreen(path=path, state=GameState.model_validate(data), fields=fields)
+    return ExpectedScreen(path=path, state=GameState.model_validate(data), fields=fields, extras=extras)

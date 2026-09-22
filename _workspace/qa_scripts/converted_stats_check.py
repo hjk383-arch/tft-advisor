@@ -25,11 +25,14 @@ out: dict = {"file": path.name}
 comps = [CompStats.model_validate(c) for c in doc["comps"]]
 tiers = [AugmentTier.model_validate(t) for t in doc["augment_tiers"]]
 uis = [UnitItemStats.model_validate(r) for r in doc["unit_item_stats"]]
+ubs = [UnitItemStats.model_validate(r) for r in doc.get("unit_build_stats", [])]   # R16(Phase 3): 정확한 빌드
 us = [UnitStats.model_validate(r) for r in doc["unit_stats"]]
 rt_fail = sum(CompStats.model_validate_json(c.model_dump_json()) != c for c in comps)
 rt_fail += sum(AugmentTier.model_validate_json(t.model_dump_json()) != t for t in tiers[:500])
 rt_fail += sum(UnitItemStats.model_validate_json(r.model_dump_json()) != r for r in uis[:2000])
-out["loaded"] = {"comps": len(comps), "augment_tiers": len(tiers), "unit_item_stats": len(uis), "unit_stats": len(us)}
+out["loaded"] = {"comps": len(comps), "augment_tiers": len(tiers), "unit_item_stats": len(uis),
+                 "unit_build_stats": len(ubs), "item_stats": len(doc.get("item_stats", [])), "unit_stats": len(us),
+                 "holds_multi_item_rows": sum(len(r.item_ids) != 1 for r in uis)}
 out["roundtrip_mismatch"] = rt_fail
 
 # 2. 필드 채움

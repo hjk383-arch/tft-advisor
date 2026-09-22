@@ -110,10 +110,8 @@ def test_converted_comp_ids_resolve_in_static(comps, static):
 
 
 @needs_stats
-@pytest.mark.xfail(strict=True, reason="QA recheck 03: buildup 보드에 비챔피언 유닛 8건"
-                   "(DA_Elderwood18_Protector, DA_TheTower_TrainingDummy, DA_TrainingDummy). "
-                   "stats-researcher가 SUMMON_IDS 확장 또는 champions 존재 필터를 넣으면 XPASS -> 마커 제거")
 def test_converted_buildup_units_are_champions(comps, static):
+    """QA recheck 03 N6 해소(stats Phase 3): SUMMON_IDS 확장 + 상점 풀 챔피언 필터."""
     bad = sorted({x for c in comps for bs in c.buildup.values() for b in bs for x in b.units
                   if static.get("champions", x) is None})
     assert not bad, bad

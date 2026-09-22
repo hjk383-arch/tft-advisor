@@ -1,0 +1,45 @@
+{
+ "description": "1-4, 아이템·증강·보드 없음 → 방향 미정 완화로 2~3개, stat_norm 순",
+ "state": {
+  "screen_mode": "planning",
+  "stage": "1-4",
+  "level": 3,
+  "gold": 4,
+  "hp": 100,
+  "shop": [
+   {
+    "kind": "champion",
+    "id": "DA_18_Ornn"
+   },
+   {
+    "kind": "champion",
+    "id": "DA_18_Veigar"
+   },
+   {
+    "kind": "champion",
+    "id": "DA_18_Yorick"
+   },
+   {
+    "kind": "champion",
+    "id": "DA_18_RekSai"
+   },
+   {
+    "kind": "champion",
+    "id": "DA_18_Varus"
+   }
+  ],
+  "board": [],
+  "bench": [],
+  "items": {},
+  "augments_owned": []
+ },
+ "expect": {
+  "n_target_min": 2,
+  "n_target_max": 3,
+  "item_is_none": true,
+  "augment_is_none": true,
+  "targets_sorted_by_stat": true,
+  "undecided": true
+ },
+ "stats": "tests/fixtures/stats/mini_18.json"
+}

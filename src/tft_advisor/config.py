@@ -47,19 +47,75 @@ class AppCfg(_Cfg):
 
 
 class CaptureCfg(_Cfg):
-    monitor: int = 1
-    poll_interval_ms: int = Field(500, ge=50)
-    stable_frames: int = Field(3, ge=1)
+    """캡처 대상. 캡처 주기·안정 프레임은 `[vision] capture_fps` / `change_stable_frames`(Phase 3 config round에서
+    옛 `poll_interval_ms`·`stable_frames`를 대체. 두 키는 아무 코드도 읽지 않았고, 같은 뜻의 키가 둘이면 어긋난다)."""
+
+    monitor: int = Field(1, ge=0)   # mss 모니터 번호(0 = 전체 가상 화면, 1 = 주 모니터)
+
+
+ContentBox = tuple[Unit, Unit, Unit, Unit]
+"""프레임 안 게임 화면 영역 (x1, y1, x2, y2) — 캡처 프레임 크기에 대한 비율, 0 <= x1 < x2 <= 1, 0 <= y1 < y2 <= 1."""
 
 
 class VisionCfg(_Cfg):
+    """vision 인식 설정. 키별 연결 위치: `vision.recognizer.Recognizer`(cfg), `vision.change.ChangeDetector.from_cfg`,
+    `vision.ocr.create_ocr(backend=)`, app 루프(capture_fps, traits_every_s — Phase 4)."""
+
     profile: str = "1920x1080"
     shop_fuzzy_min: float = Field(85, ge=0, le=100)
     icon_match_min: float = Field(0.8, ge=0, le=1)
     state_min_confidence: float = Field(0.6, ge=0, le=1)
+    # 게임 화면 영역(창모드·레터박스·테두리 보정). None(키 생략 또는 []) = 프레임 전체 = (0, 0, 1, 1).
+    # 비율인 이유: 창 크기·DPI가 바뀌어도 같은 값이 유효하고, 원본 캡처가 없는 지금 픽셀 값을 정할 근거가 없다.
+    content_box: ContentBox | None = None
+    ocr_backend: Literal["auto", "onnxruntime", "openvino", "none"] = "auto"   # none = OCR 끔(진단용)
+    name_fuzzy_min_margin: float = Field(10, ge=0, le=100)      # 점수 >= shop_fuzzy_min 수락에도 필요한 2위와의 차
+    name_fuzzy_relaxed_margin: float = Field(15, ge=0, le=100)  # 점수 60~85 구간 수락에 필요한 2위와의 차
+    item_match_margin: float = Field(0.05, ge=0, le=1)          # 아이콘 1위와 다른 아이템 1위의 점수 차 하한
+    change_threshold: float = Field(24, ge=0, le=255)           # ROI 서명 픽셀 절대차 최댓값이 이보다 크면 "변화"
+    change_stable_frames: int = Field(2, ge=1, le=30)           # 변화 후 이 프레임 수 연속 같아야 재인식
+    capture_fps: float = Field(4, gt=0, le=30)                  # 앱 루프 캡처 주기(Phase 4)
+    traits_every_s: float = Field(3, gt=0)                      # 앱 루프: 특성 패널("traits" 묶음)을 읽는 주기(초)
+
+    @field_validator("content_box", mode="before")
+    @classmethod
+    def _empty_box_is_full_frame(cls, v: object) -> object:
+        """TOML에는 null이 없다 → `content_box = []`도 "프레임 전체"(None)로 받는다."""
+        return None if isinstance(v, (list, tuple)) and len(v) == 0 else v
+
+    @model_validator(mode="after")
+    def _constraints(self) -> VisionCfg:
+        if self.content_box is not None:
+            x1, y1, x2, y2 = self.content_box
+            if not (x1 < x2 and y1 < y2):
+                raise ValueError(f"vision: content_box는 (x1, y1, x2, y2), x1 < x2 · y1 < y2 여야 한다(현재 {self.content_box})")
+        if not self.name_fuzzy_min_margin <= self.name_fuzzy_relaxed_margin:
+            raise ValueError(
+                f"vision: name_fuzzy_min_margin({self.name_fuzzy_min_margin}) <= "
+                f"name_fuzzy_relaxed_margin({self.name_fuzzy_relaxed_margin}) 이어야 한다"
+            )
+        return self
+
+    def content_px(self, frame_w: int, frame_h: int) -> tuple[int, int, int, int] | None:
+        """content_box(비율) → vision `FrameMapper(content=)`/`recognize(content=)` 형식 (left, top, width, height) px.
+
+        None 또는 (0, 0, 1, 1)이면 None(= 프레임 전체, vision의 기존 기본 경로).
+        """
+        if self.content_box is None or self.content_box == (0.0, 0.0, 1.0, 1.0):
+            return None
+        x1, y1, x2, y2 = self.content_box
+        left, top = round(x1 * frame_w), round(y1 * frame_h)
+        return left, top, max(1, round(x2 * frame_w) - left), max(1, round(y2 * frame_h) - top)
+
+
+JevBackendName = Literal["mock", "live", "off"]
 
 
 class AdvisorCfg(_Cfg):
+    # Jev 백엔드. 기본 "mock"(네트워크·과금 없음). "live"는 사용자가 명시할 때만 — TYPESAFE_API_KEY가 있다는 이유로
+    # 자동 전환하지 않는다. "off" = Jev 없이 통계 전용(fallback_reason=jev_disabled). CLI `--no-jev`(Phase 4) → "off".
+    # `create_advisor(mode)`의 명시 mode가 이 값보다 우선한다.
+    jev_backend: JevBackendName = "mock"
     jev_enabled: bool = True                 # false → fallback_reason=jev_disabled
     timeout_s: float = Field(2.0, gt=0)      # 추천 1회 전체 예산
     max_candidate_comps: int = Field(8, ge=1, le=20)
@@ -88,6 +144,7 @@ class StatsCfg(_Cfg):
     days: int = 3
     rank_filter: str = "CHALLENGER,DIAMOND,GRANDMASTER,MASTER"   # 저장 시 정렬·정규화(normalize_rank_filter)
     request_interval_s: float = Field(1.2, ge=1.0)
+    keep_snapshots: int = Field(5, ge=1)     # 출처별 보존 스냅샷 수(stats/refresh.py)
     user_agent: str = "tft-advisor-research/0.1 (personal use)"
 
     @field_validator("rank_filter")
@@ -134,6 +191,7 @@ class CompWeights(_Cfg):
     show_ratio: Unit = 0.75
     max_shown: int = Field(3, ge=1, le=3)
     hysteresis_bonus: Unit = 0.05
+    hysteresis_other_share: Unit = 0.25   # 직전 표시 2·3위 덱의 H(c) 비율(직전 1위 = 1). advisor Scorer.hysteresis_weight
     stat_avg_best: float = Field(4.0, ge=1, le=8)
     stat_avg_worst: float = Field(5.2, ge=1, le=8)
     show_ratio_undecided: Unit = 0.6
@@ -315,6 +373,7 @@ class ItemWeights(_Cfg):
     place_change_span: float = Field(1.0, gt=0)
     hold_bis_max: Unit = 0.4
     hold_until_stage: int = Field(4, ge=1, le=10)   # stage 번호 < 이 값일 때만 hold
+    overall_stat_games_factor: Unit = 0.25   # §6.3 st(x): 덱 한정 행 없이 전체(파생) 행을 쓸 때 표본 수 할인
 
     @model_validator(mode="after")
     def _constraints(self) -> ItemWeights:

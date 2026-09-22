@@ -1,0 +1,1091 @@
+{
+ "results": [
+  {
+   "name": "라운드 1-4",
+   "fields": {
+    "screen_mode": {
+     "expected": "planning",
+     "got": "planning",
+     "status": "ok",
+     "conf": 0.7,
+     "estimated_label": false
+    },
+    "stage": {
+     "expected": "1-4",
+     "got": "1-4",
+     "status": "ok",
+     "conf": 0.983,
+     "estimated_label": false
+    },
+    "level": {
+     "expected": 3,
+     "got": 3,
+     "status": "ok",
+     "conf": 0.998,
+     "estimated_label": false
+    },
+    "xp": {
+     "expected": [
+      0,
+      6
+     ],
+     "got": [
+      0,
+      6
+     ],
+     "status": "ok",
+     "conf": 0.998,
+     "estimated_label": false
+    },
+    "gold": {
+     "expected": 12,
+     "got": 12,
+     "status": "ok",
+     "conf": 0.76,
+     "estimated_label": false
+    },
+    "streak": {
+     "expected": 0,
+     "got": 0,
+     "status": "ok",
+     "conf": 0.995,
+     "estimated_label": false
+    },
+    "hp": {
+     "expected": 100,
+     "got": 100,
+     "status": "ok",
+     "conf": 0.697,
+     "estimated_label": false
+    },
+    "shop_odds": {
+     "expected": [
+      75,
+      25,
+      0,
+      0,
+      0
+     ],
+     "got": [
+      75,
+      25,
+      0,
+      0,
+      0
+     ],
+     "status": "ok",
+     "conf": 0.987,
+     "estimated_label": false
+    },
+    "shop": {
+     "expected": [
+      [
+       "champion",
+       "DA_18_Sentry"
+      ],
+      [
+       "champion",
+       "DA_18_Xayah"
+      ],
+      [
+       "empty",
+       null
+      ],
+      [
+       "champion",
+       "DA_18_Camille"
+      ],
+      [
+       "champion",
+       "DA_18_Akali_AD"
+      ]
+     ],
+     "got": [
+      [
+       "champion",
+       "DA_18_Sentry"
+      ],
+      [
+       "champion",
+       "DA_18_Xayah"
+      ],
+      [
+       "empty",
+       null
+      ],
+      [
+       "champion",
+       "DA_18_Camille"
+      ],
+      [
+       "champion",
+       "DA_18_Akali_AD"
+      ]
+     ],
+     "status": "ok",
+     "conf": 0.767,
+     "estimated_label": false
+    }
+   },
+   "shop_slots": [
+    {
+     "slot": 0,
+     "expected": [
+      "champion",
+      "DA_18_Sentry"
+     ],
+     "got": [
+      "champion",
+      "DA_18_Sentry"
+     ],
+     "ok": true
+    },
+    {
+     "slot": 1,
+     "expected": [
+      "champion",
+      "DA_18_Xayah"
+     ],
+     "got": [
+      "champion",
+      "DA_18_Xayah"
+     ],
+     "ok": true
+    },
+    {
+     "slot": 2,
+     "expected": [
+      "empty",
+      null
+     ],
+     "got": [
+      "empty",
+      null
+     ],
+     "ok": true
+    },
+    {
+     "slot": 3,
+     "expected": [
+      "champion",
+      "DA_18_Camille"
+     ],
+     "got": [
+      "champion",
+      "DA_18_Camille"
+     ],
+     "ok": true
+    },
+    {
+     "slot": 4,
+     "expected": [
+      "champion",
+      "DA_18_Akali_AD"
+     ],
+     "got": [
+      "champion",
+      "DA_18_Akali_AD"
+     ],
+     "ok": true
+    }
+   ]
+  },
+  {
+   "name": "라운드 2-1 증강선택",
+   "fields": {
+    "screen_mode": {
+     "expected": "augment_select",
+     "got": "augment_select",
+     "status": "ok",
+     "conf": 0.95,
+     "estimated_label": false
+    },
+    "stage": {
+     "expected": "2-1",
+     "got": "2-1",
+     "status": "ok",
+     "conf": 0.96,
+     "estimated_label": false
+    },
+    "hp": {
+     "expected": 100,
+     "got": 100,
+     "status": "ok",
+     "conf": 0.699,
+     "estimated_label": false
+    },
+    "augment_offer": {
+     "expected": [
+      "DA_SeraphimsStaff",
+      "DA_Warpath",
+      "DA_Hustler"
+     ],
+     "got": [
+      "DA_SeraphimsStaff",
+      "DA_Warpath",
+      "DA_Hustler"
+     ],
+     "status": "ok",
+     "conf": 0.985,
+     "estimated_label": false
+    }
+   },
+   "shop_slots": []
+  },
+  {
+   "name": "라운드 2-1",
+   "fields": {
+    "screen_mode": {
+     "expected": "planning",
+     "got": "planning",
+     "status": "ok",
+     "conf": 0.7,
+     "estimated_label": false
+    },
+    "stage": {
+     "expected": "2-1",
+     "got": "2-1",
+     "status": "ok",
+     "conf": 0.975,
+     "estimated_label": false
+    },
+    "level": {
+     "expected": 3,
+     "got": 3,
+     "status": "ok",
+     "conf": 0.755,
+     "estimated_label": true
+    },
+    "xp": {
+     "expected": [
+      2,
+      6
+     ],
+     "got": [
+      2,
+      6
+     ],
+     "status": "ok",
+     "conf": 0.944,
+     "estimated_label": false
+    },
+    "gold": {
+     "expected": 17,
+     "got": 17,
+     "status": "ok",
+     "conf": 0.74,
+     "estimated_label": false
+    },
+    "streak": {
+     "expected": 0,
+     "got": 0,
+     "status": "ok",
+     "conf": 0.992,
+     "estimated_label": false
+    },
+    "hp": {
+     "expected": 96,
+     "got": 96,
+     "status": "ok",
+     "conf": 0.699,
+     "estimated_label": false
+    },
+    "shop_odds": {
+     "expected": [
+      75,
+      25,
+      0,
+      0,
+      0
+     ],
+     "got": [
+      75,
+      25,
+      0,
+      0,
+      0
+     ],
+     "status": "ok",
+     "conf": 0.987,
+     "estimated_label": false
+    },
+    "shop": {
+     "expected": [
+      [
+       "champion",
+       "DA_18_Camille"
+      ],
+      [
+       "champion",
+       "DA_18_Warwick"
+      ],
+      [
+       "champion",
+       "DA_Karma18"
+      ],
+      [
+       "champion",
+       "DA_18_Akali_AD"
+      ],
+      [
+       "champion",
+       "DA_18_Camille"
+      ]
+     ],
+     "got": [
+      [
+       "champion",
+       "DA_18_Camille"
+      ],
+      [
+       "unknown",
+       null
+      ],
+      [
+       "champion",
+       "DA_Karma18"
+      ],
+      [
+       "champion",
+       "DA_18_Akali_AD"
+      ],
+      [
+       "champion",
+       "DA_18_Camille"
+      ]
+     ],
+     "status": "wrong",
+     "conf": 0.822,
+     "estimated_label": false
+    }
+   },
+   "shop_slots": [
+    {
+     "slot": 0,
+     "expected": [
+      "champion",
+      "DA_18_Camille"
+     ],
+     "got": [
+      "champion",
+      "DA_18_Camille"
+     ],
+     "ok": true
+    },
+    {
+     "slot": 1,
+     "expected": [
+      "champion",
+      "DA_18_Warwick"
+     ],
+     "got": [
+      "unknown",
+      null
+     ],
+     "ok": false
+    },
+    {
+     "slot": 2,
+     "expected": [
+      "champion",
+      "DA_Karma18"
+     ],
+     "got": [
+      "champion",
+      "DA_Karma18"
+     ],
+     "ok": true
+    },
+    {
+     "slot": 3,
+     "expected": [
+      "champion",
+      "DA_18_Akali_AD"
+     ],
+     "got": [
+      "champion",
+      "DA_18_Akali_AD"
+     ],
+     "ok": true
+    },
+    {
+     "slot": 4,
+     "expected": [
+      "champion",
+      "DA_18_Camille"
+     ],
+     "got": [
+      "champion",
+      "DA_18_Camille"
+     ],
+     "ok": true
+    }
+   ]
+  },
+  {
+   "name": "라운드 2-4 아이템선택",
+   "fields": {
+    "screen_mode": {
+     "expected": "carousel",
+     "got": "carousel",
+     "status": "ok",
+     "conf": 0.65,
+     "estimated_label": false
+    },
+    "stage": {
+     "expected": "2-4",
+     "got": "2-4",
+     "status": "ok",
+     "conf": 0.983,
+     "estimated_label": false
+    },
+    "hp": {
+     "expected": 86,
+     "got": 86,
+     "status": "ok",
+     "conf": 0.7,
+     "estimated_label": false
+    }
+   },
+   "shop_slots": []
+  },
+  {
+   "name": "라운드 2-5",
+   "fields": {
+    "screen_mode": {
+     "expected": "planning",
+     "got": "planning",
+     "status": "ok",
+     "conf": 0.7,
+     "estimated_label": false
+    },
+    "stage": {
+     "expected": "2-5",
+     "got": "2-5",
+     "status": "ok",
+     "conf": 0.844,
+     "estimated_label": false
+    },
+    "level": {
+     "expected": 4,
+     "got": 4,
+     "status": "ok",
+     "conf": 0.999,
+     "estimated_label": false
+    },
+    "xp": {
+     "expected": [
+      2,
+      10
+     ],
+     "got": [
+      2,
+      10
+     ],
+     "status": "ok",
+     "conf": 0.999,
+     "estimated_label": false
+    },
+    "gold": {
+     "expected": 31,
+     "got": 31,
+     "status": "ok",
+     "conf": 0.99,
+     "estimated_label": false
+    },
+    "streak": {
+     "expected": 1,
+     "got": 1,
+     "status": "ok",
+     "conf": 0.6,
+     "estimated_label": false
+    },
+    "hp": {
+     "expected": 86,
+     "got": 86,
+     "status": "ok",
+     "conf": 0.7,
+     "estimated_label": false
+    },
+    "shop_odds": {
+     "expected": [
+      55,
+      30,
+      15,
+      0,
+      0
+     ],
+     "got": [
+      55,
+      30,
+      15,
+      0,
+      0
+     ],
+     "status": "ok",
+     "conf": 0.981,
+     "estimated_label": false
+    },
+    "shop": {
+     "expected": [
+      [
+       "champion",
+       "DA_18_Varus"
+      ],
+      [
+       "champion",
+       "DA_18_Ornn"
+      ],
+      [
+       "champion",
+       "DA_18_Camille"
+      ],
+      [
+       "champion",
+       "DA_18_Teemo"
+      ],
+      [
+       "champion",
+       "DA_18_Xayah"
+      ]
+     ],
+     "got": [
+      [
+       "champion",
+       "DA_18_Varus"
+      ],
+      [
+       "champion",
+       "DA_18_Ornn"
+      ],
+      [
+       "champion",
+       "DA_18_Camille"
+      ],
+      [
+       "champion",
+       "DA_18_Teemo"
+      ],
+      [
+       "champion",
+       "DA_18_Xayah"
+      ]
+     ],
+     "status": "ok",
+     "conf": 0.976,
+     "estimated_label": false
+    }
+   },
+   "shop_slots": [
+    {
+     "slot": 0,
+     "expected": [
+      "champion",
+      "DA_18_Varus"
+     ],
+     "got": [
+      "champion",
+      "DA_18_Varus"
+     ],
+     "ok": true
+    },
+    {
+     "slot": 1,
+     "expected": [
+      "champion",
+      "DA_18_Ornn"
+     ],
+     "got": [
+      "champion",
+      "DA_18_Ornn"
+     ],
+     "ok": true
+    },
+    {
+     "slot": 2,
+     "expected": [
+      "champion",
+      "DA_18_Camille"
+     ],
+     "got": [
+      "champion",
+      "DA_18_Camille"
+     ],
+     "ok": true
+    },
+    {
+     "slot": 3,
+     "expected": [
+      "champion",
+      "DA_18_Teemo"
+     ],
+     "got": [
+      "champion",
+      "DA_18_Teemo"
+     ],
+     "ok": true
+    },
+    {
+     "slot": 4,
+     "expected": [
+      "champion",
+      "DA_18_Xayah"
+     ],
+     "got": [
+      "champion",
+      "DA_18_Xayah"
+     ],
+     "ok": true
+    }
+   ]
+  },
+  {
+   "name": "라운드 3-3",
+   "fields": {
+    "screen_mode": {
+     "expected": "planning",
+     "got": "planning",
+     "status": "ok",
+     "conf": 0.7,
+     "estimated_label": false
+    },
+    "stage": {
+     "expected": "3-3",
+     "got": "3-3",
+     "status": "ok",
+     "conf": 0.951,
+     "estimated_label": false
+    },
+    "level": {
+     "expected": 6,
+     "got": 6,
+     "status": "ok",
+     "conf": 0.798,
+     "estimated_label": true
+    },
+    "xp": {
+     "expected": [
+      2,
+      36
+     ],
+     "got": [
+      2,
+      36
+     ],
+     "status": "ok",
+     "conf": 0.998,
+     "estimated_label": false
+    },
+    "gold": {
+     "expected": 62,
+     "got": 62,
+     "status": "ok",
+     "conf": 0.989,
+     "estimated_label": false
+    },
+    "streak": {
+     "expected": 1,
+     "got": 1,
+     "status": "ok",
+     "conf": 0.6,
+     "estimated_label": false
+    },
+    "hp": {
+     "expected": 62,
+     "got": 62,
+     "status": "ok",
+     "conf": 0.699,
+     "estimated_label": false
+    },
+    "shop_odds": {
+     "expected": [
+      30,
+      40,
+      25,
+      5,
+      0
+     ],
+     "got": [
+      30,
+      40,
+      25,
+      5,
+      0
+     ],
+     "status": "ok",
+     "conf": 0.984,
+     "estimated_label": false
+    },
+    "shop": {
+     "expected": [
+      [
+       "champion",
+       "DA_Karma18"
+      ],
+      [
+       "champion",
+       "DA_Nidalee18_AP"
+      ],
+      [
+       "champion",
+       "DA_18_Rammus"
+      ],
+      [
+       "champion",
+       "DA_18_Rakan"
+      ],
+      [
+       "special",
+       "DA_ThreeMe18"
+      ]
+     ],
+     "got": [
+      [
+       "champion",
+       "DA_Karma18"
+      ],
+      [
+       "champion",
+       "DA_Nidalee18_AP"
+      ],
+      [
+       "champion",
+       "DA_18_Rammus"
+      ],
+      [
+       "champion",
+       "DA_18_Rakan"
+      ],
+      [
+       "special",
+       "DA_ThreeMe18"
+      ]
+     ],
+     "status": "ok",
+     "conf": 0.94,
+     "estimated_label": false
+    }
+   },
+   "shop_slots": [
+    {
+     "slot": 0,
+     "expected": [
+      "champion",
+      "DA_Karma18"
+     ],
+     "got": [
+      "champion",
+      "DA_Karma18"
+     ],
+     "ok": true
+    },
+    {
+     "slot": 1,
+     "expected": [
+      "champion",
+      "DA_Nidalee18_AP"
+     ],
+     "got": [
+      "champion",
+      "DA_Nidalee18_AP"
+     ],
+     "ok": true
+    },
+    {
+     "slot": 2,
+     "expected": [
+      "champion",
+      "DA_18_Rammus"
+     ],
+     "got": [
+      "champion",
+      "DA_18_Rammus"
+     ],
+     "ok": true
+    },
+    {
+     "slot": 3,
+     "expected": [
+      "champion",
+      "DA_18_Rakan"
+     ],
+     "got": [
+      "champion",
+      "DA_18_Rakan"
+     ],
+     "ok": true
+    },
+    {
+     "slot": 4,
+     "expected": [
+      "special",
+      "DA_ThreeMe18"
+     ],
+     "got": [
+      "special",
+      "DA_ThreeMe18"
+     ],
+     "ok": true
+    }
+   ]
+  },
+  {
+   "name": "라운드 3-5",
+   "fields": {
+    "screen_mode": {
+     "expected": "planning",
+     "got": "planning",
+     "status": "ok",
+     "conf": 0.7,
+     "estimated_label": false
+    },
+    "stage": {
+     "expected": "3-5",
+     "got": "3-5",
+     "status": "ok",
+     "conf": 0.858,
+     "estimated_label": false
+    },
+    "level": {
+     "expected": 6,
+     "got": 6,
+     "status": "ok",
+     "conf": 0.998,
+     "estimated_label": false
+    },
+    "xp": {
+     "expected": [
+      4,
+      36
+     ],
+     "got": [
+      4,
+      36
+     ],
+     "status": "ok",
+     "conf": 0.998,
+     "estimated_label": false
+    },
+    "gold": {
+     "expected": 62,
+     "got": 62,
+     "status": "ok",
+     "conf": 0.986,
+     "estimated_label": false
+    },
+    "streak": {
+     "expected": 2,
+     "got": 2,
+     "status": "ok",
+     "conf": 0.6,
+     "estimated_label": false
+    },
+    "hp": {
+     "expected": 62,
+     "got": 62,
+     "status": "ok",
+     "conf": 0.699,
+     "estimated_label": false
+    },
+    "shop_odds": {
+     "expected": [
+      30,
+      40,
+      25,
+      5,
+      0
+     ],
+     "got": [
+      30,
+      40,
+      25,
+      5,
+      0
+     ],
+     "status": "ok",
+     "conf": 0.967,
+     "estimated_label": false
+    },
+    "shop": {
+     "expected": [
+      [
+       "champion",
+       "DA_18_Yorick"
+      ],
+      [
+       "champion",
+       "DA_18_Hecarim"
+      ],
+      [
+       "champion",
+       "DA_18_Alistar"
+      ],
+      [
+       "champion",
+       "DA_Scuttlecrab18"
+      ],
+      [
+       "champion",
+       "DA_18_RekSai"
+      ]
+     ],
+     "got": [
+      [
+       "champion",
+       "DA_18_Yorick"
+      ],
+      [
+       "champion",
+       "DA_18_Hecarim"
+      ],
+      [
+       "champion",
+       "DA_18_Alistar"
+      ],
+      [
+       "champion",
+       "DA_Scuttlecrab18"
+      ],
+      [
+       "champion",
+       "DA_18_RekSai"
+      ]
+     ],
+     "status": "ok",
+     "conf": 0.557,
+     "estimated_label": false
+    }
+   },
+   "shop_slots": [
+    {
+     "slot": 0,
+     "expected": [
+      "champion",
+      "DA_18_Yorick"
+     ],
+     "got": [
+      "champion",
+      "DA_18_Yorick"
+     ],
+     "ok": true
+    },
+    {
+     "slot": 1,
+     "expected": [
+      "champion",
+      "DA_18_Hecarim"
+     ],
+     "got": [
+      "champion",
+      "DA_18_Hecarim"
+     ],
+     "ok": true
+    },
+    {
+     "slot": 2,
+     "expected": [
+      "champion",
+      "DA_18_Alistar"
+     ],
+     "got": [
+      "champion",
+      "DA_18_Alistar"
+     ],
+     "ok": true
+    },
+    {
+     "slot": 3,
+     "expected": [
+      "champion",
+      "DA_Scuttlecrab18"
+     ],
+     "got": [
+      "champion",
+      "DA_Scuttlecrab18"
+     ],
+     "ok": true
+    },
+    {
+     "slot": 4,
+     "expected": [
+      "champion",
+      "DA_18_RekSai"
+     ],
+     "got": [
+      "champion",
+      "DA_18_RekSai"
+     ],
+     "ok": true
+    }
+   ]
+  }
+ ],
+ "summary": {
+  "screen_mode": {
+   "ok": 7,
+   "wrong": 0,
+   "none": 0,
+   "total": 7
+  },
+  "stage": {
+   "ok": 7,
+   "wrong": 0,
+   "none": 0,
+   "total": 7
+  },
+  "level": {
+   "ok": 3,
+   "wrong": 0,
+   "none": 0,
+   "total": 3
+  },
+  "xp": {
+   "ok": 5,
+   "wrong": 0,
+   "none": 0,
+   "total": 5
+  },
+  "gold": {
+   "ok": 5,
+   "wrong": 0,
+   "none": 0,
+   "total": 5
+  },
+  "streak": {
+   "ok": 5,
+   "wrong": 0,
+   "none": 0,
+   "total": 5
+  },
+  "hp": {
+   "ok": 7,
+   "wrong": 0,
+   "none": 0,
+   "total": 7
+  },
+  "shop_odds": {
+   "ok": 5,
+   "wrong": 0,
+   "none": 0,
+   "total": 5
+  },
+  "shop": {
+   "ok": 4,
+   "wrong": 1,
+   "none": 0,
+   "total": 5
+  },
+  "augment_offer": {
+   "ok": 1,
+   "wrong": 0,
+   "none": 0,
+   "total": 1
+  },
+  "shop_slot": {
+   "ok": 24,
+   "wrong": 0,
+   "none": 1,
+   "total": 25
+  }
+ }
+}

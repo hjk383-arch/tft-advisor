@@ -1,0 +1,71 @@
+{
+ "description": "MVP: 3-2 Lv6, hp/board/bench/active_traits=None, 재료 2개(BIS 아님), 상점 5칸",
+ "state": {
+  "screen_mode": "planning",
+  "stage": "3-2",
+  "level": 6,
+  "gold": 30,
+  "shop": [
+   {
+    "kind": "champion",
+    "id": "DA_18_Zyra"
+   },
+   {
+    "kind": "champion",
+    "id": "DA_18_Varus"
+   },
+   {
+    "kind": "champion",
+    "id": "DA_18_Ornn"
+   },
+   {
+    "kind": "champion",
+    "id": "DA_18_LeBlanc"
+   },
+   {
+    "kind": "champion",
+    "id": "DA_18_Sejuani"
+   }
+  ],
+  "items": {
+   "components": [
+    {
+     "id": "DA_Component_Spatula"
+    },
+    {
+     "id": "DA_Component_NegatronCloak"
+    }
+   ]
+  },
+  "augments_owned": []
+ },
+ "expect": {
+  "state_absent_keys": [
+   "game.health",
+   "game.health_status",
+   "board",
+   "bench",
+   "active_traits"
+  ],
+  "shop_state_absent_keys": [
+   "copies_owned",
+   "buy_makes_2star"
+  ],
+  "question_text_contains": {
+   "shop_now_0": "The player's current units are not known",
+   "item_pick": "game.stage_phase"
+  },
+  "question_text_absent": {
+   "item_pick": "health"
+  },
+  "no_reason_tag": "two_star",
+  "owned_missing_empty": true,
+  "reason_contains": "보드 미인식",
+  "hold": true,
+  "next_buildup_level": 7,
+  "question_absent_prefix": [
+   "comp_board_fit_"
+  ]
+ },
+ "stats": "tests/fixtures/stats/mini_18.json"
+}

@@ -1,0 +1,85 @@
+{
+ "description": "3-2 Lv6, 저코스트 보드, 벤치에 대천사의 지팡이 + 쓸데없이 큰 지팡이 → AP(자이라) 덱",
+ "state": {
+  "screen_mode": "planning",
+  "stage": "3-2",
+  "level": 6,
+  "gold": 34,
+  "hp": 62,
+  "shop": [
+   {
+    "kind": "champion",
+    "id": "DA_18_Zyra"
+   },
+   {
+    "kind": "champion",
+    "id": "DA_18_Varus"
+   },
+   {
+    "kind": "champion",
+    "id": "DA_18_Ornn"
+   },
+   {
+    "kind": "champion",
+    "id": "DA_18_LeBlanc"
+   },
+   {
+    "kind": "champion",
+    "id": "DA_18_Sejuani"
+   }
+  ],
+  "board": [
+   {
+    "id": "DA_18_Yorick",
+    "star": 2
+   },
+   {
+    "id": "DA_18_Rakan",
+    "star": 1
+   },
+   {
+    "id": "DA_Karma18",
+    "star": 1
+   },
+   {
+    "id": "DA_18_Ornn",
+    "star": 1
+   },
+   {
+    "id": "DA_18_Alistar",
+    "star": 1
+   },
+   {
+    "id": "DA_18_Xayah",
+    "star": 1
+   }
+  ],
+  "bench": [
+   {
+    "id": "DA_18_Varus",
+    "star": 1
+   }
+  ],
+  "augments_owned": [],
+  "items": {
+   "completed": [
+    {
+     "id": "DA_ArchangelsStaff"
+    }
+   ],
+   "components": [
+    {
+     "id": "DA_Component_NeedlesslyLargeRod"
+    }
+   ]
+  }
+ },
+ "expect": {
+  "top_comp": "juggernaut-zyra-amumu",
+  "items_ready_status": {
+   "DA_ArchangelsStaff": "owned"
+  },
+  "jev_used": true
+ },
+ "stats": "tests/fixtures/stats/mini_18.json"
+}

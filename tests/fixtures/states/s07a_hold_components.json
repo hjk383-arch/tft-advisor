@@ -1,0 +1,67 @@
+{
+ "description": "2-5, 재료 뒤집개 + 음전자 망토(스프라이킨 상징, 후보 덱 BIS 아님), HP 90 → 재료 보관",
+ "state": {
+  "screen_mode": "planning",
+  "stage": "2-5",
+  "level": 5,
+  "gold": 20,
+  "shop": [
+   {
+    "kind": "champion",
+    "id": "DA_18_Ornn"
+   },
+   {
+    "kind": "champion",
+    "id": "DA_18_Veigar"
+   },
+   {
+    "kind": "champion",
+    "id": "DA_18_Yorick"
+   },
+   {
+    "kind": "champion",
+    "id": "DA_18_RekSai"
+   },
+   {
+    "kind": "champion",
+    "id": "DA_18_Varus"
+   }
+  ],
+  "board": [
+   {
+    "id": "DA_18_Ornn",
+    "star": 1
+   },
+   {
+    "id": "DA_18_Varus",
+    "star": 1
+   },
+   {
+    "id": "DA_18_Xayah",
+    "star": 1
+   },
+   {
+    "id": "DA_18_Shen",
+    "star": 1
+   }
+  ],
+  "bench": [],
+  "items": {
+   "components": [
+    {
+     "id": "DA_Component_Spatula"
+    },
+    {
+     "id": "DA_Component_NegatronCloak"
+    }
+   ]
+  },
+  "augments_owned": [],
+  "hp": 90
+ },
+ "expect": {
+  "hold": true,
+  "suggestions_min": 1
+ },
+ "stats": "tests/fixtures/stats/mini_18.json"
+}

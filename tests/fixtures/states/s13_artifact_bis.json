@@ -1,0 +1,72 @@
+{
+ "description": "QA WARN N5a: 벤치 others에 유물 리치베인(칸짓스 덱 BIS) → owned, 유물은 craftable로 판정되지 않음",
+ "state": {
+  "screen_mode": "planning",
+  "stage": "3-2",
+  "level": 6,
+  "gold": 30,
+  "hp": 60,
+  "shop": [
+   {
+    "kind": "champion",
+    "id": "DA_18_Zyra"
+   },
+   {
+    "kind": "champion",
+    "id": "DA_18_Varus"
+   },
+   {
+    "kind": "champion",
+    "id": "DA_18_Ornn"
+   },
+   {
+    "kind": "champion",
+    "id": "DA_18_LeBlanc"
+   },
+   {
+    "kind": "champion",
+    "id": "DA_18_Sejuani"
+   }
+  ],
+  "board": [
+   {
+    "id": "DA_18_KhaZix",
+    "star": 1
+   },
+   {
+    "id": "DA_18_Ornn",
+    "star": 1
+   },
+   {
+    "id": "DA_18_Hecarim",
+    "star": 1
+   }
+  ],
+  "bench": [],
+  "items": {
+   "others": [
+    {
+     "id": "DA_Artifact_LichBane",
+     "category": "artifact"
+    }
+   ],
+   "components": [
+    {
+     "id": "DA_Component_BFSword"
+    },
+    {
+     "id": "DA_Component_ChainVest"
+    }
+   ]
+  },
+  "augments_owned": []
+ },
+ "expect": {
+  "top_comp": "executioner-khazix",
+  "items_ready_status": {
+   "DA_Artifact_LichBane": "owned"
+  },
+  "state_completed_items_contains": "Lich Bane"
+ },
+ "stats": "tests/fixtures/stats/mini_18.json"
+}

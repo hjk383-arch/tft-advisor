@@ -20,11 +20,13 @@ vision = [
     "opencv-python>=4.10,<5",   # 5.0 메이저 변경 회피
     "rapidfuzz>=3.14",
     "rapidocr>=3.4",
-    "onnxruntime>=1.23",
+    # onnxruntime은 macOS x86_64용 cp314 휠이 없다 → 그 플랫폼(개발 머신)만 openvino로 대체 (04_vision-engineer_impl.md)
+    "onnxruntime>=1.23; sys_platform != 'darwin' or platform_machine != 'x86_64'",
+    "openvino>=2025.1; sys_platform == 'darwin' and platform_machine == 'x86_64'",
 ]
 # TypeSafe Jev. API 키는 환경변수 TYPESAFE_API_KEY 에서만 읽는다.
 advisor = [
-    "typesafe_sdk",
+    "typesafe_sdk>=0.7.1,<0.8",   # 0.7.1에서 검증(AsyncTypeSafeClient, RetryPolicy(timeout=)). 0.x라 마이너 상한
 ]
 # 통계 수집기(실시간 루프 밖 배치).
 stats = [

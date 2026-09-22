@@ -52,6 +52,12 @@ SHOP_ODDS_SOURCES = ["https://tftflow.com/tables/set18/shop-odds-pool-size-xp-ta
                      "https://www.esportstales.com/teamfight-tactics/champion-pool-size-and-draw-chances",
                      "https://metabot.gg/en/TFT/rolldown-odds"]
 SHOP_ODDS_CONFLICTS = {"7": {"metabot.gg": [19, 30, 40, 10, 1]}}
+# 레벨 L → L+1에 필요한 경험치(화면 "a/b"의 b). CDragon에 없음 -> tftflow.com Set 18(18.2) 표(2026-09-22 조회).
+# 화면 관측(fixture): 3→6, 4→10, 6→36 일치. 나머지는 단일 출처(metabot·esportstales 해당 페이지엔 XP 표 없음).
+# 주의: vision parse.XP_TO_NEXT 폴백의 7/8/9레벨 값(48/76/84)은 이 표(56/68/68)와 다르다 -> 7레벨 이상 캡처로 확정.
+XP_TO_NEXT = {"1": 2, "2": 2, "3": 6, "4": 10, "5": 20, "6": 36, "7": 56, "8": 68, "9": 68}
+XP_TO_NEXT_OBSERVED_LEVELS = [3, 4, 6]
+XP_SOURCES = ["https://tftflow.com/tables/set18/shop-odds-pool-size-xp-table"]
 
 _TAG_RE = re.compile(r"<[^>]+>")
 _VAR_RE = re.compile(r"@([A-Za-z0-9_{}.:]+)(\*100)?@")
@@ -312,6 +318,10 @@ def main() -> None:
         "shop_odds_pct": SHOP_ODDS_PCT,
         "shop_odds_sources": SHOP_ODDS_SOURCES,
         "shop_odds_conflicts": SHOP_ODDS_CONFLICTS,
+        "xp_to_next": XP_TO_NEXT,
+        "xp_to_next_observed_levels": XP_TO_NEXT_OBSERVED_LEVELS,
+        "xp_sources": XP_SOURCES,
+        "xp_note": "레벨 L → L+1 필요 경험치(화면 a/b의 b). 10레벨이 최대. 3/4/6레벨만 화면 관측으로 확인, 나머지는 출처 값",
         "notes": ["증강 tier는 tags 해시 기반 추정", "TFT_* 와 DA_* 동명 중복은 aliases 로 연결"],
     }
     for name, obj in [("champions", champs), ("traits", traits), ("items", items), ("augments", augs),

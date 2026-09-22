@@ -7,6 +7,8 @@
 |---|---|
 | 2026-09-21 | 초판 |
 | 2026-09-22 | Phase 2 QA FAIL 해소(부분 재실행). 추가: §4.3 결측 필드(hp/board/bench/장착 아이템=None) 규칙, §5.4 `TargetComp`·`Recommendation` 메타 필드 채우기 규칙, **§10a 최종 설정 키 표(app-integrator 구현 기준, 이 표가 §10의 키 목록을 대체)**, §10 계약 제안 1~5 채택 결정. 수정: 공식 내부 상수를 설정 키로 분리(§2.2, §5.2, §5.3), `item_usage` 임계값을 pcnt(덱당 평균 개수) 기준으로 재정의, `commit_by_stage` 1·5+ 조회 규칙(§7), `fallback_reason` 닫힌 9종(§8.1), §2.1 수치(548/694/751/884), §3.2 MVP augment_select 46문항, S1/I1/A2 문구 변형(결측 필드 참조 금지), QUESTIONS_VERSION q1→q2 |
+| 2026-09-22 (Phase 3) | 구현(`src/tft_advisor/advisor/`, 보고 `04_jev-strategist_impl.md`)과 함께 QA 재검증 5절 jev 1~5 반영: 유물·찬란한 BIS를 자원 풀에 포함하고 제작 불가 BIS는 craftable/재료 우선순위에서 제외(§2.2, §4.3 c, §5.4), `main_carry`=`CompStats.carry`·role 의미(§4.2), 레벨 추정 공집합 규칙(§5.4), 특수 상품 설명 `?` 처리(S3), 수치 갱신(§0, §2.1, §7, §11) |
+| 2026-09-22 (Phase 3 fix) | QA `04_qa_advisor.md` 반영: **상징 적합 규칙 구체화**(§2.2·§6-2, 곁가지/구간 불변 특성은 `emblem_other`), **히스테리시스를 직전 1위 중심으로**(§5.2·§8.4, 직전 1위 H=1 · 직전 2·3위 H=0.25, 보호 중인 1위는 타이브레이커로 뒤집지 않음), 직전 추천 없는 carousel은 Jev 미호출·결과를 세션 직전 추천으로 저장(§1.1), `timeout_s`를 Jev 한도 계산에 사용(§8.2·§10a), §6-3 덱 한정 행 없을 때 전체값 폴백+할인 수축, 증강 반사실에도 설명 손실 gate(§7) |
 
 표기: **[문서]** = TypeSafe 문서에서 확인 / **[데이터]** = 로컬 캐시·정적 데이터에서 확인 / **[추측]** = 근거 없는 설계 가정(Phase 3에서 측정·튜닝 대상)
 
@@ -36,7 +38,7 @@
 
 **언어 결정: instructions·criteria·state 모두 영어. UI 표시만 한국어(`name_ko`).**
 근거: (1) 문서가 영어를 주 학습 언어로 명시했다. (2) 정적 데이터에 `name_en`, 증강 `desc_en`이 모두 있다 [데이터]. (3) Set 18 완성템은 `desc_ko`가 비어 있어서 Jev는 아이템 이름에서 기능을 떠올려야 한다. 영어 이름("Archangel's Staff")이 모델의 사전 지식과 더 잘 맞을 가능성이 높다 [추측]. 챔피언 `name_en`은 상점 풀 74명 중 중복이 없고, 완성/상징 아이템은 "Flora Fatalis Emblem" 1건만 중복이다 [데이터]. 중복 건은 접미사로 구분한다.
-대가: 증강 `desc_en` 592개 중 193개에 치환되지 않은 `?` 값이 있다 [데이터]. 의미 판단에는 큰 지장이 없다고 보지만, `?`는 "X"로 바꿔 보낸다 [추측].
+대가: 증강 `desc_en` 597개 중 193개에 치환되지 않은 `?` 값이 있다(2026-09-22) [데이터]. 그중 145개는 `desc_en_opgg`에 `?` 없는 설명이 있어 그것을 쓰고, 남은 48개만 `?`를 "X"로 바꿔 보낸다. 설명 선택 순서: `desc_en`(`?` 없음) → `desc_en_opgg`(`?` 없음) → `desc_en`(`?`→X). 치환 후 숫자가 하나도 없으면(의미 손실) 해당 증강의 A1/A2 gate를 `jev.low_confidence_scale`로 강제한다.
 
 ---
 
@@ -62,7 +64,7 @@ GameState ─┐
 |---|---|---|---|
 | `planning` | 상점 5칸 집합, 자원 시그니처(8절), 레벨, 스테이지 중 하나가 바뀌었을 때 | C1 `comp_item_fit_k`, C2 `comp_augment_fit_k`, C3 `comp_board_fit_k`(각 k=0..N-1), C4 `comp_pick`, S1 `shop_now_i`, S2 `shop_path_i`(챔피언 칸), S3 `special_value_i`(특수 상품 칸), I1 `item_pick`(조합 가능 완성템 ≥1) | 기본 모드 |
 | `augment_select` | 제시 증강 3개가 바뀔 때(리롤 포함) | C1~C4 + A1 `aug_comp_fit_a_k`(3×N), A2 `aug_standalone_a`(3), A3 `aug_pick` | 상점이 보이지 않으므로 S* 없음. I1은 재료가 있으면 포함(값싼 추측 질문) |
-| `carousel` | 진입 시 1회 | **Jev 호출 없음.** 코드가 목표 덱들의 BIS 부족 재료 우선순위를 계산 | 캐러셀 유닛·아이템은 GameState에 없다 → 10절 제안 |
+| `carousel` | 진입 시 1회 | **Jev 호출 없음.** 코드가 목표 덱들의 BIS 부족 재료 우선순위를 계산. 결과(직전 추천 사본 + 새 component_priority)를 세션의 직전 추천으로 저장한다. 직전 추천이 없으면(게임 시작 1-1) 통계 전용 경로(상점·증강 제외, `jev_used=False`, `fallback_reason=jev_disabled`, debug `fallback_detail`에 모드 사유)로 만들고 역시 저장 | 캐러셀 유닛·아이템은 GameState에 없다 → 10절 제안 |
 | `item_select` | 제시 아이템이 바뀔 때 | (계약 확장 후) I2 `item_offer_pick` + C1~C4 | 제시 아이템 필드가 계약에 없다 → 10절 제안. 그전에는 호출 안 함 |
 | `combat` | 없음 | 직전 추천 유지 | 전투 후 아이템 획득은 다음 planning에서 반영 |
 | `loading` / `unknown` | 없음 | 직전 추천 유지(unknown), 초기화(loading) | |
@@ -77,7 +79,7 @@ C2는 보유 증강이 없으면, C3은 보드·벤치가 신뢰 가능하지 �
 입력: 현재 패치의 `CompStats` 전체(현재 MetaTFT 57 클러스터 [데이터]).
 
 ### 2.1 사전 정리
-1. `games < prefilter.min_games`(기본 1000) 제외. 2026-09-21 캐시 기준으로 548/694/751/884판짜리 덱 4개가 빠진다 [데이터]. stats 재수집 후 수치는 달라질 수 있다.
+1. `games < prefilter.min_games`(기본 1000) 제외. 2026-09-22 스냅샷 기준으로 604/713/772/919판짜리 덱 4개가 빠진다 [데이터](09-21 캐시는 548/694/751/884). stats 재수집 후 수치는 달라질 수 있다.
 2. **중복 제거**: 최종 보드 유닛 집합의 Jaccard ≥ `prefilter.dedupe_jaccard`(0.75)이고 carry가 같으면 표본이 많은 쪽만 남긴다. 예: "Blossom, Sett, Ahri"(Fast 8)와 "Blossom, Ahri, Sett"(Fast 9), comp_augment_tiers의 "APHELIOS > Lvl 8 push" 2건(424001, 424003) [데이터]. 그러지 않으면 2·3위에 사실상 같은 덱이 나온다.
 
 ### 2.2 1차 점수 p(c) (모든 항 0~1)
@@ -89,11 +91,11 @@ b(x,c)  아이템 x의 덱 c 적합도 (위에서부터 첫 번째로 맞는 규
         = item_fit.carry_bis (1.0)         x ∈ carry_bis_items
         = item_fit.core_unit (0.7)         x ∈ 다른 is_core 유닛의 CompUnit.items
         = item_fit.usage (0.4)             item_usage[x] ≥ item_fit.usage_min_pcnt (0.3)   ※ 아래 pcnt 정의
-        = 상징: item_fit.emblem_key_trait (1.0)  상징 특성 ∈ key_traits(c)
+        = 상징: item_fit.emblem_key_trait (1.0)  emblem_advances(t, c) (아래 "상징 규칙")
                 item_fit.emblem_other (0.2)      그 외
         = 0
 I(c) = min(1, (Σ_{x∈보유 완성템·상징} b(x,c) + pf.craftable_factor·Σ_{y∈조합 가능 완성템} b(y,c)) / pf.item_saturation)   # 0.5, saturation=2
-        "보유 완성템" = 아이템 벤치 completed + 장착 아이템(보드가 신뢰 가능하면 UnitOnBoard.items, 아니면 §4.3 추적 장착분)
+        "보유 완성템" = 아이템 벤치 completed + emblems + ItemState.others 중 category ∈ {artifact, radiant}(QA N5a) + 장착 아이템(보드가 신뢰 가능하면 UnitOnBoard.items, 아니면 §4.3 추적 장착분)
 A(c) = 보유 증강 a마다 t(a,c)의 평균, 증강 없으면 pf.aug_neutral (0.5)
         t(a,c) = 1.0             a.associated_traits ∩ key_traits(c) ≠ ∅   (augments.json, 19개 [데이터])
                = tier_score(comp_augment_tiers[c][a])   덱별 등급에 있으면
@@ -188,6 +190,7 @@ S(c) = stat_norm(c)   (5.1절과 같은 함수)
 - levels: 0 `Not useful for this player now.` / 1 `Some value: a modest boost the player can use.` / 2 `High value: it directly strengthens the current team or the top candidate comp.`
 - path 항은 0으로 두고 now만 쓴다. 가격(9골드 등)은 CDragon에 없다 [데이터]. 골드 판단은 코드가 하지 않고 표시만 한다. 단, vision이 `ShopSlot.cost`를 읽으면 그 값을 buy 골드 누적(5.3)에 쓴다.
 - 설명은 `shop_specials.json`의 `desc_en`을 쓴다. `desc_en`이 없으면 `"description"` 키를 빼고 이름만 보낸 뒤 S3 gate를 `jev.low_confidence_scale`로 강제한다(증강 신규 설명 없음과 같은 처리).
+- (2026-09-22, QA N8) `desc_en`에 `?`가 있으면 증강과 같은 규칙으로 `?`→`X`로 바꿔 보낸다. 치환 후 숫자가 하나도 없는 설명(예 "Gain X gold.", 147개)은 S3 gate를 `jev.low_confidence_scale`로 강제한다(가치 판단의 핵심 수치가 없다).
 
 ### A1 `aug_comp_fit_{a}_{k}` — Score(4), 추측적 팬아웃 3×N
 - 조건: augment_select, a∈{0,1,2}, k∈{0..N-1}
@@ -294,7 +297,7 @@ S(c) = stat_norm(c)   (5.1절과 같은 함수)
 ```
 - `candidate_comps`는 1차 필터 p(c) 순으로 넣는다(S2 문구가 이 순서를 참조한다).
 - 덱당 `buildup`은 **현재 레벨과 다음 레벨** 보드만 넣는다. 레벨마다 count가 가장 많은 보드 1안이고, 소환물(`DA_Elderwood18_Lifeblossom` 등)은 뺀다 [데이터]. 최종 보드는 가장 흔한 레벨(8 또는 levelling에 맞는 레벨)의 1안만 넣는다.
-- `role`: 코드가 builds에서 정한다. 3아이템 빌드 표본 1위 유닛이 carry, 탱커 아이템(Gargoyle, Warmog 등 탱커 아이템 ID 목록)을 든 유닛이 tank, 나머지는 support. champions.json `role`은 상점 풀 74명 중 72명이 비어 있어 쓸 수 없다 [데이터].
+- `main_carry`는 **`CompStats.carry`만** 쓴다(stats R7: 3아이템 판 수 1위). `CompUnit.role`은 stats R10 의미다: `"carry"`는 "딜러"라 덱당 1~5명이다. 그래서 state의 `final_board[].role`은 carry 유닛이면 `"main carry"`, 그 밖의 role=carry는 `"secondary carry"`, 나머지는 role 값(`tank`/`support`) 그대로 넣는다. `tanks` = role=="tank"인 유닛. role None(455 중 5)은 role 키를 빼고 보낸다(추론하지 않는다). champions.json `role`은 상점 풀 74명 중 72명이 비어 있어 쓸 수 없다 [데이터]. carry가 is_core=False인 2덱(blossom-amumu, inferno-amumu)에서는 U(c)/μ에서 carry가 final 등급(unit_w_final, mu_final)을 받는다(정의된 동작).
 - 덱 이름: MetaTFT `name_string`(특성, 유닛)을 영어 이름으로 바꿔 만든다(예 "Juggernaut Zyra"). UI는 `CompStats.name`(한국어)을 쓴다.
 - 구간 라벨 규칙(코드, 값은 [추측]): health ≥70 "healthy", 40~69 "moderate", 20~39 "low", <20 "critical". gold ≥50 "rich (interest capped)", 30~49 "can afford …", 10~29 "tight", <10 "broke". stage_phase는 스테이지별 고정 문장.
 - 구간 경계와 라벨 문장은 **설정 키가 아니라 `jev_state.py` 코드 상수**다. 문장이 곧 질문 입력이라 바꾸면 `QUESTIONS_VERSION`을 올려야 하기 때문이다(가중치 튜닝과 분리).
@@ -331,7 +334,8 @@ S(c) = stat_norm(c)   (5.1절과 같은 함수)
 **(c) 장착 아이템을 모를 때 (C1, I(c), items_ready)**
 - 보드가 신뢰 가능하면 `UnitOnBoard.items`를 장착 아이템으로 쓴다.
 - 아니면 advisor 세션이 **추적 장착분(`equipped_tracked`)** 을 유지한다: 연속된 두 planning 요청 사이에 아이템 벤치 `completed`(또는 `emblems`)에서 사라진 완성템·상징을 "장착됨"으로 기록한다. TFT에서 완성템은 팔거나 없앨 수 없으므로 벤치에서 사라진 완성템은 유닛에 들어간 것이다. 조건: 두 요청 모두 `items` 신뢰도 ≥ 0.6. 유닛 판매로 아이템이 벤치에 돌아오면(같은 ID가 다시 나타나면) 추적분에서 하나 뺀다. 재료가 사라진 경우는 추적하지 않는다(유닛 위에서 조합됐는지 알 수 없다). `game_over`/`loading`에서 비운다.
-- C1 state: `resources.completed_items` / `resources.emblems`에 벤치분 + 장착분(보드 또는 `equipped_tracked`)을 **합쳐** 넣는다(장착 위치는 질문과 무관). 합친 목록이 비고 재료도 없으면 C1은 보내지 않는다(기존 규칙).
+- 추적 대상은 완성템·상징과 ItemState.others 중 유물·찬란한 아이템이다(QA N5a).
+- C1 state: `resources.completed_items` / `resources.emblems`에 벤치분 + 장착분(보드 또는 `equipped_tracked`)을 **합쳐** 넣는다(장착 위치는 질문과 무관). 유물·찬란한 아이템은 `completed_items`에 넣는다(BIS 비교 대상). 그 밖의 others(전략가·소모품 등)는 `other_items`. 합친 목록이 비고 재료도 없으면 C1은 보내지 않는다(기존 규칙).
 - I(c), 자원 시그니처(8.4), items_ready(5.4)도 같은 합친 목록을 쓴다.
 - `items` 자체를 모르면(None/신뢰도 미만): C1·I1 미전송, I(c)=0, items_ready는 전부 `missing` + reason "아이템 미인식".
 
@@ -352,6 +356,14 @@ adj(c)         = 보유 완성템 중 item_conditional에 있는 것이 있으�
                    mean_i shrink(avg_{c|i}, games_{c|i}, prior = shrink(avg_c, games_c, shrinkage.prior_avg_place))
                  없으면 shrink(avg_c, games_c, shrinkage.prior_avg_place)
 ```
+- **상징 규칙(Phase 3 fix, `features.emblem_advances`)**: 상징 x의 특성 t, 덱 c에 대해
+  `req` = key_traits(c)에서 t의 목표 인원(없으면 0), `n` = c의 최종 보드 유닛(ID 중복 제거) 중 t를 가진 수, `T = max(req, n)`, `bp` = `trait_breakpoints(t)`.
+  `emblem_advances(t,c) ⇔ req ≥ 2 ∧ ( n < req  ∨  T+1 ∈ bp )`.
+  - `n < req`: 덱이 목표 인원을 상징으로 채운다(예 rapidfire-aphelios Rapidfire 5/보드 4) → 상징이 곧 핵심 자원.
+  - `T+1 ∈ bp`: 상징 1개로 다음 구간에 닿는다(예 Hunter 2→3, 구간 2/3/4/5).
+  - 그 외는 `emblem_other`: 곁가지 특성(req 1, 예 Battlemage 1·FloraFatalis 1), 이미 최고 구간(Juggernaut 6/6), +1로 구간이 안 바뀜(Juggernaut·Vanguard·Brawler·Defender 2→3, 구간 2/4/6; Sprykin 3→4, 구간 3/5/7).
+  - "구간 쪽으로 다가감"(+1이 다음 구간 미만)은 key로 치지 않는다. 최고 구간이 아닌 거의 모든 특성이 해당해 과대평가(QA 1f)를 그대로 재현하기 때문이다. 중간 등급을 두려면 새 설정 키가 필요하다(보고서 제안).
+  - 기준 인원은 **덱 최종 보드**(목표)다. 현재 보드의 활성 인원은 쓰지 않는다: b(x,c)는 덱 적합도이고 I(c)·bis·holder가 같은 값을 공유해야 해서다. 실제 57덱 기준 상징 경로 key 판정 (상징, 덱) 쌍 274 → 68(Juggernaut 29→0, Vanguard 25→0, Brawler 21→0, Defender 21→0).
 - 고정 구간(best/worst)으로 정규화하는 이유: 후보 집합 안의 상대 정규화는 후보가 바뀔 때마다 점수가 흔들린다. 고정 구간은 요청 간에 안정적이다.
 - item_conditional은 **게임 종료 시점** 보유 기준이다(생존 편향) [stats 보고서]. 그래서 wt 안에서만 쓴다.
 - `ShrinkageWeights.adjust`는 prior가 고정이다. 아이템 조건부에는 덱 평균을 prior로 써야 하므로 `adjust(x, games, prior=None)` 확장을 제안한다(10절).
@@ -366,7 +378,9 @@ final(c)      = min(1, comp_score(c) + comp.hysteresis_bonus · H(c))
 - **자원이 없거나(avail=0) 확신이 낮으면(gate<1) 그 질량이 통계로 넘어간다.** "confidence 낮으면 통계 가중치를 높인다" 원칙을 수식으로 옮긴 것이다. 자원이 모두 확실하면 통계는 wt=0.2로, 타이브레이커 역할만 한다.
 - 표시 컷: 1위는 항상 표시한다. 2·3위는 `final ≥ comp.show_ratio · final(1위)`일 때만 표시하고 `min(comp.max_shown, ui.max_target_comps)`(3)까지다. `comp_pick`의 `P(undecided) ≥ comp.undecided_min_p`(0.5)이면 이번 요청에서는 show_ratio 대신 `comp.show_ratio_undecided`(0.6)를 쓴다(초반에 넓게 보여준다).
 - 타이브레이커: `|final(1) - final(2)| < comp.tie_eps`(0.02)이면 `comp_pick.probabilities`가 큰 쪽을 1위로 둔다.
-- H(c) = 1: c가 직전 추천에 표시됐고 자원 시그니처가 바뀌지 않았을 때(8.2).
+- H(c)(Phase 3 fix): 자원 시그니처가 바뀌지 않았을 때(8.4) **직전 1위 = 1**, 직전 표시 2·3위 = `hysteresis_other_share`(0.25, 설정 키 제안 — 현재 코드 상수 `scoring.HYSTERESIS_OTHER_SHARE`, weights에 키가 생기면 그 값), 그 외 0. 시그니처가 바뀌면 모두 0.
+  - 효과: 직전 1위는 표시된 다른 덱보다 (1−0.25)·bonus = 0.0375, 미표시 덱보다 bonus = 0.05만큼 보호된다. 표시/미표시 경계도 직전 2·3위에 0.25·bonus가 남아 약하게 유지된다. (이전: 표시 덱 전부 H=1이라 표시 덱끼리의 1위 교체를 막지 못했다 — QA 1g.)
+  - 1위 보호 중(`order[0]`의 H=1)이면 comp_pick 타이브레이커로 1·2위를 뒤집지 않는다. Jev는 히스테리시스를 모르므로 타이브레이커가 널뛰기 경로가 되기 때문이다.
 
 ### 5.3 상점
 ```
@@ -407,15 +421,15 @@ reason_tag = argmax{ now_power: ws·now, final_comp: wp·path의 final 기여분
 - owned_units/missing_units는 **덱 c의 유닛만** 다룬다(덱과 무관한 보유 유닛은 넣지 않는다). 별 수는 따지지 않는다(1성도 owned).
 
 **items_ready** (`CompStats.carry_bis_items`의 항목 하나당 `ItemReadiness` 하나, 목록 순서·중복 유지. 예: 대천사 2개면 2항목)
-1. 자원 풀: 완성템 multiset P = 벤치 `completed` + `emblems` + 장착분(보드 `UnitOnBoard.items` 또는 `equipped_tracked`, §4.3 c). 재료 multiset Q = 벤치 `components`. 모두 신뢰도 ≥ 0.6인 ItemRef만.
+1. 자원 풀: 완성템 multiset P = 벤치 `completed` + `emblems` + `others` 중 category ∈ {artifact, radiant}(QA N5a: carry_bis_items 13/57덱에 유물·찬란한 아이템) + 장착분(보드 `UnitOnBoard.items` 또는 `equipped_tracked`, §4.3 c). 재료 multiset Q = 벤치 `components`. 모두 신뢰도 ≥ 0.6인 ItemRef만.
 2. 1차(owned): carry_bis_items를 순서대로 보며 P에 같은 ID가 남아 있으면 `owned`로 두고 P에서 하나 뺀다. 장착 위치가 carry가 아니어도 owned다(옮기기는 사용자 몫).
-3. 2차(craftable): 아직 판정되지 않은 항목을 순서대로 보며 `items.json composition`의 재료 2개가 Q에 모두 남아 있으면 `craftable`로 두고 Q에서 두 재료를 뺀다(재료 중복 사용 방지, 목록 앞쪽 BIS 우선).
+3. 2차(craftable): 아직 판정되지 않은 항목을 순서대로 보며 `items.json composition`의 재료 2개가 Q에 모두 남아 있으면 `craftable`로 두고 Q에서 두 재료를 뺀다(재료 중복 사용 방지, 목록 앞쪽 BIS 우선). **조합표에 없는 BIS(유물·찬란한·증강 상징 등)는 절대 craftable이 아니다** → owned 또는 missing. `component_priority`(§10-2) 계산에서도 부족 재료를 정의할 수 없으므로 건너뛴다.
 4. 나머지는 `missing`.
 5. `holder_unit_id` = `CompStats.carry`(carry_bis_items는 carry의 아이템이다). carry가 None이면 None.
 6. `items`를 모르면 모든 항목 `missing` + reasons에 `"아이템 미인식"`. carry_bis_items가 비었으면 `items_ready = []`.
 
 **next_buildup_board**
-1. 현재 레벨 L = `GameState.level`(신뢰 가능할 때). 모르면 stage로 추정한다: `L = max{lv : level_timing[lv] ≤ stage}`(stage_tuple 비교). 그것도 안 되면(stage None 또는 level_timing 비어 있음) `next_buildup_board = None`.
+1. 현재 레벨 L = `GameState.level`(신뢰 가능할 때). 모르면 stage로 추정한다: `L = max{lv : level_timing[lv] ≤ stage}`(stage_tuple 비교). **집합이 비면**(stage가 모든 level_timing보다 이름, 최소 키는 3/4/5) `L = max(1, min(level_timing 키) − 1)`. 그것도 안 되면(stage None 또는 level_timing 비어 있음) `next_buildup_board = None`. §2.2 U(c)·§4.2 state buildup·§5.3 C_path의 "현재 레벨"도 같은 덱별 L을 쓴다. 덱과 무관한 값(§5.3 S_now)은 후보 덱별 L 추정의 최빈값(동률이면 낮은 값)을 쓴다.
 2. **L ≥ 10이면 None.**
 3. 목표 레벨 T: `level_timing`에 L보다 큰 레벨 키가 있으면 그중 최솟값(덱의 다음 레벨업 지점, 예 Fast 8 덱이 L=6이면 level_timing이 7을 건너뛰면 8). level_timing이 비었거나 L보다 큰 키가 없으면 T = L + 1.
 4. 보드 레벨 T* = `buildup` 키 중 T 이상이면서 보드가 1개 이상 있는 최솟값. 없으면 None(덱의 최종 보드 레벨에 이미 도달 → 오버레이는 owned/missing으로 안내).
@@ -445,8 +459,9 @@ reason_tag = argmax{ now_power: ws·now, final_comp: wp·path의 final 기여분
 ## 6. 아이템 추천
 
 1. **후보 생성(코드)**: 아이템 벤치 재료 multiset에서 서로 다른 무순서 쌍 (i ≤ j, 같은 재료 두 개는 2개 이상 보유 시)을 만든다. `items.json`에서 `composition`의 정렬 튜플 → 결과 아이템 조회표로 바꾼다. 조회표는 `DA_*`, `set_native`만 대상으로 하고, 일반 완성템·상징(뒤집개/프라이팬 조합)·전략가 아이템(망토/왕관/방패)을 포함한다 [데이터 1.6절]. 같은 결과가 여러 쌍에서 나오면 하나로 합친다.
-2. **BIS 매칭**: `bis(x) = max_c rel(c)·b(x,c)`. b는 2.2절과 같고 상징은 "상징 특성 ∈ key_traits이고 +1명이면 구간 도달"일 때 1.0이다(구간 계산은 코드).
+2. **BIS 매칭**: `bis(x) = max_c rel(c)·b(x,c)`. b는 2.2절과 같고 상징은 §2.2 "상징 규칙"(`emblem_advances`)이 참일 때만 1.0이다.
 3. **통계**: 보유자 h(아래 규칙)의 `UnitItemStats.place_change`(음수가 좋음). `st(x) = clip(0.5 - place_change/item.place_change_span, 0, 1)`(span 1.0). 표본이 적으면 shrink로 0에 가깝게 당긴다.
+   - (Phase 3 fix) 1위 덱 한정 행이 없으면(실제 통계 final_board 유닛×아이템 984쌍 중 12쌍) `unit_item_stat(h, x, c, fallback_overall=True)`의 **전체 파생값**(덱 한정 행 games 가중 평균)을 쓰고, 표본을 `OVERALL_ITEM_STAT_GAMES_FACTOR`(0.25, 설정 키 제안)만큼 할인한 뒤 같은 shrink(prior 0)를 건다. 다른 덱 표본이 섞인 값이라 더 강하게 중립 쪽으로 당긴다. 전체 행도 없으면 0.5.
 4. **Jev**: I1의 `probabilities[x]`. `pj(x) = P(x) / max_y P(y)`(hold 포함). 상대 비교이므로 같은 질문 안에서만 정규화한다.
 5. **합성**: `item_score(x) = item.w_bis·bis + item.w_jev·gate·pj + item.w_stat·st`(0.5/0.35/0.15). gate<1이면 줄어든 질량을 bis로 옮긴다.
 6. **보유자(holder)**: 1위 덱 중 b(x,c) ≥ `item_fit.used_by_min`(0.7)인 유닛. 우선순위는 carry > is_core > 기타이고, 보드에 있으면 가산한다. 없으면 None("목표 덱 캐리용"으로 표시).
@@ -476,9 +491,9 @@ aug_score(a) = w_jev·jev_aug(a) + w_editorial·ed(a)       # 0.7 / 0.3 (현재 
 pick         = argmax aug_score; 1·2위 차이가 augment.tie_eps(0.03) 미만이면 aug_pick 확률로 결정
 ```
 - **반사실 덱 재평가**: 증강 a를 가정해 C2 값을 `(n·C2(c) + A1_{a,c}) / (n+1)`로 바꾸고(n = 보유 증강 수) 5.2절 공식을 다시 계산한다. `AugmentChoice.reasons`에 "선택 시 목표 덱: X"를 넣는다. 오버레이는 증강 화면에서 선택 후 목표 덱을 미리 보여줄 수 있다.
-- 편집자 등급 해석: 덱별 등급 37개 덱은 S/A가 95%다(예 424000: S 50, A 40, B 5) [데이터]. 변별력이 낮으므로 w_editorial은 0.3 이하로 유지한다. **등급에 없는 증강은 나쁜 것이 아니라 "미평가"(0.5)** 로 처리한다. 전체 티어 라벨 S~D는 `tierList[].label`로 확인했다 [데이터].
+- 편집자 등급 해석: 덱별 등급은 32개 덱에 채택됐다(원본 37개 중 stats R13 기각 5). S/A가 95%다(예 424000: S 50, A 40, B 5) [데이터]. 변별력이 낮으므로 w_editorial은 0.3 이하로 유지한다. **등급에 없는 증강은 나쁜 것이 아니라 "미평가"(0.5)** 로 처리한다. 전체 티어 라벨 S~D는 `tierList[].label`로 확인했다 [데이터].
 - `associated_traits`(19개 특성 증강)와 후보 덱 key_traits가 겹치면 reasons에 "특성 증강: X 덱"을 넣는다(코드). 폴백에서는 이 겹침을 fit_{a,c}=1.0 대용으로 쓴다.
-- 증강 설명 텍스트: `augments.json desc_en`. 미매핑 신규 증강 10개는 설명이 없다 [stats 4절]. 이 경우 `"description": "unknown (new augment)"`로 넣고 A1/A2 gate를 강제로 low_confidence_scale로 둔다.
+- 증강 설명 텍스트: `augments.json desc_en`(선택 순서는 §0). 미매핑 신규 증강은 OP.GG 보완 후 5개가 남았고 augments.json에 레코드가 없다 [stats 03 fixes]. 이 경우 `"description": "unknown (new augment)"`로 넣고 A1/A2 gate를 강제로 low_confidence_scale로 둔다.
 
 ---
 
@@ -520,6 +535,7 @@ pick         = argmax aug_score; 1·2위 차이가 augment.tie_eps(0.03) 미만�
 | Jev 호출 | 타임아웃 1.2s, `RetryPolicy(max_retries=1, backoff_initial=0.1, backoff_max=0.2, http_statuses={429,500,502,503,504,529}, respect_retry_after=True, timeout=1.5)`. 총 예산 1.5s를 넘길 재시도는 SDK가 하지 않는다 [문서] |
 | 합성 | ≤ 10ms |
 | 합계 최악 | ≈ 1.6s, 평상시 0.4~1.0s [추측] |
+- (Phase 3 fix) 전체 예산 가드: 게이트웨이 `wait_for` 한도는 `min(jev_retry_budget_s, settings.advisor.timeout_s − 진입 후 경과 − 0.1s)`. 평상시에는 retry 예산(1.5s)이 더 작아 그대로 쓰이고, 앞단(필터·state 구성)이 느려진 경우에만 전체 예산이 한도를 줄인다.
 - 클라이언트는 앱 수명 동안 하나(`AsyncTypeSafeClient`)를 유지해 연결을 재사용한다.
 - 이전 호출이 진행 중일 때 새 트리거가 오면 이전 결과를 버린다(최신 state만 반영).
 - `usage.input_tokens`, `model`, `request_id`, 지연을 recommendation 로그에 남긴다.
@@ -532,7 +548,7 @@ pick         = argmax aug_score; 1·2위 차이가 augment.tie_eps(0.03) 미만�
 ### 8.4 히스테리시스와 자원 시그니처
 - `resource_sig = hash(sorted(완성템 + 상징 + 기타 아이템(유물·찬란한 등), 장착분 포함(§4.3 c)) + sorted(보유 증강) + sorted(2성 이상 4~5코스트 보유 유닛))`.
 - 재료는 시그니처에서 뺀다. 매 라운드 바뀌어서 넣으면 히스테리시스가 무력화된다. 대신 재료로 새로 조합 가능해진 **BIS**는 반영된다(I(c)가 바뀐다).
-- 시그니처가 바뀐 요청에서는 H(c)=0(즉시 재평가)이고, 그 결과가 새 기준 표시 목록이 된다. 바뀌지 않으면 직전 표시 덱에 bonus를 더한다.
+- 시그니처가 바뀐 요청에서는 H(c)=0(즉시 재평가)이고, 그 결과가 새 기준 표시 목록이 된다. 바뀌지 않으면 직전 1위에 bonus 전액, 직전 2·3위에 `hysteresis_other_share`·bonus를 더한다(§5.2).
 - 세션 상태(직전 표시 덱, 시그니처)는 advisor 인스턴스 메모리에 둔다. 앱 재시작 시 초기화된다.
 
 ---
@@ -664,7 +680,7 @@ weights 신규 키 합계: comp 5 + prefilter 15 + item_fit 7 + shop 10 + augmen
 | 섹션 | 키 | 타입 | 기본값 | 허용 범위 | 상태 | 제약 / 사용처 |
 |---|---|---|---|---|---|---|
 | `[advisor]` | `jev_enabled` | bool | true | — | 기존 | false → fallback `jev_disabled` |
-| `[advisor]` | `timeout_s` | float | 2.0 | > 0 | 기존 | **추천 1회 전체 예산**으로 해석 |
+| `[advisor]` | `timeout_s` | float | 2.0 | > 0 | 기존 | **추천 1회 전체 예산**. Jev 한도 = `min(jev_retry_budget_s, timeout_s − 경과 − 0.1s)`(0.1s = 합성 몫, `engine.CODE_RESERVE_S`). 남은 시간 ≤ 0이면 호출 없이 `timeout` 폴백(서킷 실패로 세지 않음) |
 | `[advisor]` | `max_candidate_comps` | int | 8 | [1, 20] | 기존(상한 추가) | 2.3 N |
 | `[advisor]` | `cache_size` | int | 64 | ≥ 0 | 기존 | 8.3 LRU (0 = 캐시 끔) |
 | `[advisor]` | `jev_model` | str | `"jev-latest"` | 패턴 `^jev-(latest\|\d+\.\d+\.\d+)$` | 신규 | SDK 호출 `model`, 캐시 키·state_hash에 포함. 튜닝 후 `"jev-1.13.0"` 고정 가능 |
@@ -715,7 +731,7 @@ def adjust(self, x: float, games: int | None, prior: float | None = None) -> flo
 | 지연 실측 없음 | 2s 목표 불확실 | Phase 3 첫 작업: 대표 state 1회 호출로 latency·usage 측정(키는 환경변수, 로그에 남기지 않음) |
 | rate limit 동적 조정 중 [문서] | 429 증가 | 호출은 상태 변화 시에만(라운드당 1~3회). 재시도 1회 후 폴백, 서킷 브레이커 |
 | `jev-latest` 별칭 이동 시 답 분포 변화 [문서] | confidence 임계값 등 튜닝값 무효화 | `settings.advisor.jev_model`(§10a)로 튜닝 후 `jev-1.13.0` 고정. 응답 `model`을 로그에 남긴다 |
-| 신규 증강 10개 설명 없음, desc `?` 193개 | 해당 증강 판단 약화 | 7절 gate 강제 축소 + OP.GG 증강 설명으로 보완 요청(stats) |
+| 신규 증강 5개 설명 없음, desc `?` 193개(OP.GG 대체 후 48개) | 해당 증강 판단 약화 | 7절 gate 강제 축소 + OP.GG 증강 설명으로 보완 요청(stats) |
 | 특수 상품 가격 정보 없음 | 특수 상품 구매 추천이 골드를 고려하지 못함 | 표시만 하고 buy는 점수 임계값만 적용. 가격표는 수동 입력 또는 OCR 요청 |
 | TYPESAFE_LOG_LEVEL=debug는 본문을 기록 | 게임 상태 로그 유출(키는 가려짐) | 기본 info, 문서화. 키는 코드에서 절대 읽어 쓰지 않고 SDK가 환경변수에서 읽게 둔다 |
 

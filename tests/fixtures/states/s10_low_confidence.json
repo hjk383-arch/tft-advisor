@@ -1,0 +1,98 @@
+{
+ "description": "상점 2번 칸 confidence 0.3, items 필드 confidence 0.4 → 해당 질문 없음, 아이템 없는 것으로 처리",
+ "state": {
+  "screen_mode": "planning",
+  "stage": "3-2",
+  "level": 6,
+  "gold": 34,
+  "hp": 62,
+  "shop": [
+   {
+    "kind": "champion",
+    "id": "DA_18_Zyra"
+   },
+   {
+    "kind": "champion",
+    "id": "DA_18_Varus"
+   },
+   {
+    "kind": "champion",
+    "id": "DA_18_Ornn",
+    "confidence": 0.3
+   },
+   {
+    "kind": "champion",
+    "id": "DA_18_LeBlanc"
+   },
+   {
+    "kind": "champion",
+    "id": "DA_18_Sejuani"
+   }
+  ],
+  "board": [
+   {
+    "id": "DA_18_Yorick",
+    "star": 2
+   },
+   {
+    "id": "DA_18_Rakan",
+    "star": 1
+   },
+   {
+    "id": "DA_Karma18",
+    "star": 1
+   },
+   {
+    "id": "DA_18_Ornn",
+    "star": 1
+   },
+   {
+    "id": "DA_18_Alistar",
+    "star": 1
+   },
+   {
+    "id": "DA_18_Xayah",
+    "star": 1
+   }
+  ],
+  "bench": [
+   {
+    "id": "DA_18_Varus",
+    "star": 1
+   }
+  ],
+  "augments_owned": [],
+  "items": {
+   "completed": [
+    {
+     "id": "DA_ArchangelsStaff"
+    }
+   ],
+   "components": [
+    {
+     "id": "DA_Component_NeedlesslyLargeRod"
+    }
+   ]
+  },
+  "confidence": {
+   "items": 0.4
+  }
+ },
+ "expect": {
+  "question_absent": [
+   "shop_now_2",
+   "shop_path_2",
+   "item_pick"
+  ],
+  "question_absent_prefix": [
+   "comp_item_fit_"
+  ],
+  "slot_buy": {
+   "2": false
+  },
+  "reason_contains": "아이템 미인식",
+  "item_is_none": true,
+  "all_items_missing": true
+ },
+ "stats": "tests/fixtures/stats/mini_18.json"
+}

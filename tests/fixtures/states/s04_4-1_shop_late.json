@@ -1,0 +1,85 @@
+{
+ "description": "4-1 Lv7, 달의 아펠리오스 덱 자원 확정(BIS 3개 보유). 상점: 핵심 4코(센티널) + 무관 2코(워윅) 등",
+ "state": {
+  "screen_mode": "planning",
+  "stage": "4-1",
+  "level": 7,
+  "gold": 50,
+  "hp": 55,
+  "shop": [
+   {
+    "kind": "champion",
+    "id": "DA_18_Warwick"
+   },
+   {
+    "kind": "champion",
+    "id": "DA_Sentinel18"
+   },
+   {
+    "kind": "champion",
+    "id": "DA_18_Rakan"
+   },
+   {
+    "kind": "champion",
+    "id": "DA_18_Yorick"
+   },
+   {
+    "kind": "champion",
+    "id": "DA_18_Caitlyn"
+   }
+  ],
+  "board": [
+   {
+    "id": "DA_18_Varus",
+    "star": 2
+   },
+   {
+    "id": "DA_18_Diana",
+    "star": 1
+   },
+   {
+    "id": "DA_Vi18",
+    "star": 1
+   },
+   {
+    "id": "DA_KogMaw18_AD",
+    "star": 1
+   },
+   {
+    "id": "DA_Nidalee18_AP",
+    "star": 1
+   },
+   {
+    "id": "DA_18_Akali_AD",
+    "star": 1
+   },
+   {
+    "id": "DA_18_Shen",
+    "star": 1
+   }
+  ],
+  "bench": [],
+  "items": {
+   "completed": [
+    {
+     "id": "DA_Deathblade"
+    },
+    {
+     "id": "DA_GuinsoosRageblade"
+    },
+    {
+     "id": "DA_KrakensFury"
+    }
+   ]
+  },
+  "augments_owned": []
+ },
+ "expect": {
+  "top_comp": "lunar-aphelios-nidalee_ap",
+  "top_slot": 1,
+  "top_slot_reason_in": [
+   "final_comp"
+  ]
+ },
+ "stats": "tests/fixtures/stats/mini_18.json"
+}

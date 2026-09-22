@@ -10,7 +10,8 @@
 - R2 levels          : stage/round가 빈 문자열인 행은 건너뛴다. 같은 레벨이 여러 행이면 count 최대 행
 - R3 itemNames.units : 키가 없을 수 있다(.get). 없으면 UnitItemStats를 만들지 않는다(덱 조건부 통계는 유지).
                        itemNames[].units[](아이템 1개)와 builds[](1~3개)를 UnitItemStats(comp_id=덱)로 만든다
-- R4 보드 키         : early_options는 `unit_list`, options는 `units_list`
+- R4 보드 키         : early_options는 `unit_list`, options는 `units_list`. 소환물(SUMMON_IDS)과 상점 풀 챔피언이
+                       아닌 유닛(나무정령 수호자, 훈련용 허수아비 등)은 보드에서 뺀다(QA recheck 03 N6)
 - R5 레벨 키         : early_options의 `level`(float, 예 4.028)은 그 보드를 가진 참가자들의 평균 레벨이다.
                        buildup 키는 dict 키 문자열의 int를 쓴다(float 반올림 금지). 4~10 밖 키, 빈 목록 버림
 - R6 early `win`     : 1등 비율이 아니라 **top4 비율**로 해석한다(평균등수 3.5~4.0 보드의 평균 win이 0.63).
@@ -28,6 +29,9 @@
 - R13 comp_augment_tiers: 키는 덱(클러스터) ID. 제목 첫 구간의 챔피언이 덱 최종 보드에 있고 distance <= 0.5일 때만 채택
 - R14 rank_filter    : 문자열이 아니라 집합으로 비교. 저장은 정렬 정규화 문자열
 - R15 item_usage     : comps_data build_items[].pcnt(덱당 평균 보유 개수, 0~1.38 관측) — 비율이 아니다. float >= 0
+- R16 유닛+아이템 분리 : itemNames[].units[] = "유닛이 아이템 x를 (다른 아이템과 함께) 든 판"(`unit_item_stats`),
+                       builds[] = "유닛의 아이템 구성이 정확히 이 1~3개인 판"(`unit_build_stats`). 의미가 달라 따로 저장
+- R17 item_stats    : /tft-stat-api/items places[8] -> 아이템 전체 등수 통계(rank_filter = units와 같음)
 """
 from __future__ import annotations
 
@@ -35,7 +39,7 @@ import argparse
 import datetime as dt
 import json
 import re
-from collections.abc import Iterable, Mapping
+from collections.abc import Callable, Iterable, Mapping
 from pathlib import Path
 from typing import Any, Literal
 
@@ -57,8 +61,12 @@ from tft_advisor.static_data import PROJECT_ROOT, StaticData, load_static
 
 # --------------------------------------------------------------------------- 상수(근거는 보고서 2절)
 
-SUMMON_IDS = frozenset({"DA_Elderwood18_Lifeblossom", "DA_Elderwood18_StonebarkTree"})
-"""빌드업 보드에 섞여 나오는 나무정령 소환물. 챔피언이 아니므로 보드에서 제거."""
+SUMMON_IDS = frozenset({
+    "DA_Elderwood18_Lifeblossom", "DA_Elderwood18_StonebarkTree", "DA_Elderwood18_Protector",
+    "DA_TheTower_TrainingDummy", "DA_TrainingDummy",
+})
+"""빌드업 보드에 섞여 나오는 비챔피언 유닛(나무정령 소환물·수호자, 훈련용 허수아비). 보드에서 제거.
+build_all은 여기에 더해 정적 데이터의 상점 풀 챔피언이 아닌 ID를 모두 뺀다(`champion_filter`)."""
 CORE_MIN_PICK = 0.75
 BIS_MIN_COUNT = 50
 COMP_ID_REUSE_JACCARD = 0.75
@@ -171,17 +179,33 @@ def level_timing(levels: Iterable[Mapping[str, Any]]) -> dict[int, str]:
 # --------------------------------------------------------------------------- R4~R6 빌드업
 
 
-def board_units(board: Mapping[str, Any], summons: frozenset[str] = SUMMON_IDS) -> list[str]:
-    """R4: early_options=`unit_list`, options=`units_list`. '&' 구분, 소환물 제거."""
+UnitFilter = Callable[[str], bool]
+
+
+def champion_filter(static: StaticData, dropped: set[str] | None = None) -> UnitFilter:
+    """상점 풀 챔피언만 통과시키는 필터. 걸러진 ID는 `dropped`에 모은다(report용)."""
+    def keep(u: str) -> bool:
+        rec = static.get("champions", u)
+        ok = rec is not None and bool(rec.get("shop_pool"))
+        if not ok and dropped is not None:
+            dropped.add(u)
+        return ok
+    return keep
+
+
+def board_units(board: Mapping[str, Any], summons: frozenset[str] = SUMMON_IDS,
+                keep: UnitFilter | None = None) -> list[str]:
+    """R4: early_options=`unit_list`, options=`units_list`. '&' 구분, 소환물·비챔피언 제거."""
     raw = board.get("unit_list")
     if raw is None:
         raw = board.get("units_list")
-    return [u for u in split_ids(raw, "&") if u not in summons]
+    return [u for u in split_ids(raw, "&") if u not in summons and (keep is None or keep(u))]
 
 
-def to_buildup_board(level: int, board: Mapping[str, Any], summons: frozenset[str] = SUMMON_IDS) -> BuildupBoard | None:
+def to_buildup_board(level: int, board: Mapping[str, Any], summons: frozenset[str] = SUMMON_IDS,
+                     keep: UnitFilter | None = None) -> BuildupBoard | None:
     """R5/R6. early의 `win`은 top4 비율로 넣는다. 소환물 제거 후 빈 보드는 None."""
-    units = board_units(board, summons)
+    units = board_units(board, summons, keep)
     if not units:
         return None
     win = board.get("win")
@@ -190,7 +214,7 @@ def to_buildup_board(level: int, board: Mapping[str, Any], summons: frozenset[st
 
 
 def buildup(early: Mapping[str, list], options: Mapping[str, list], top_n: int = BUILDUP_TOP_N,
-            summons: frozenset[str] = SUMMON_IDS) -> dict[int, list[BuildupBoard]]:
+            summons: frozenset[str] = SUMMON_IDS, keep: UnitFilter | None = None) -> dict[int, list[BuildupBoard]]:
     """R5: 레벨 키 = dict 키의 int. 4~7은 early_options, 8~10은 options, 7은 early가 없을 때 options.
 
     각 레벨은 count 내림차순 상위 top_n. 계약 범위(4~10) 밖 키(options '11'은 11기 보드 등)와 빈 목록은 버린다.
@@ -198,7 +222,7 @@ def buildup(early: Mapping[str, list], options: Mapping[str, list], top_n: int =
     out: dict[int, list[BuildupBoard]] = {}
 
     def add(lv: int, boards: list) -> None:
-        rows = [b for b in (to_buildup_board(lv, x, summons) for x in boards or []) if b is not None]
+        rows = [b for b in (to_buildup_board(lv, x, summons, keep) for x in boards or []) if b is not None]
         rows.sort(key=lambda b: -(b.games or 0))
         if rows:
             out[lv] = rows[:top_n]
@@ -489,8 +513,12 @@ def item_usage(build_items: Mapping[str, Mapping[str, Any]]) -> dict[str, float]
 
 
 def convert_comp(cluster_id: str, cd: Mapping[str, Any], det: Mapping[str, Any] | None, static: StaticData,
-                 comp_id: str, prov: Mapping[str, Any], unmapped: set[str] | None = None) -> tuple[CompStats, dict]:
-    """comps_data 1덱 + comp_details -> (CompStats, extra). extra: 덱 한정 UnitItemStats 목록(comp_id 채움)."""
+                 comp_id: str, prov: Mapping[str, Any], unmapped: set[str] | None = None,
+                 dropped_units: set[str] | None = None) -> tuple[CompStats, dict]:
+    """comps_data 1덱 + comp_details -> (CompStats, extra).
+
+    extra: `unit_item`(itemNames: 아이템 x 보유 판), `unit_build`(builds: 정확한 1~3아이템 구성), 모두 comp_id 채움.
+    """
     det = det or {}
     final_units = split_ids(cd["units_string"])
     us = unit_stats_index(det.get("unit_stats"))
@@ -510,7 +538,8 @@ def convert_comp(cluster_id: str, cd: Mapping[str, Any], det: Mapping[str, Any] 
         carry=carry,
         carry_bis_items=pick_bis(builds, carry) if carry else [],
         key_traits=key_traits(cd.get("traits_string") or "", static, unmapped),
-        buildup=buildup(det.get("early_options") or {}, det.get("options") or {}),
+        buildup=buildup(det.get("early_options") or {}, det.get("options") or {},
+                        keep=champion_filter(static, dropped_units)),
         level_timing=level_timing(det.get("levels") or []),
         item_conditional=item_conditional(det.get("itemNames") or [], static, unmapped),
         levelling=cd.get("levelling"),
@@ -518,7 +547,8 @@ def convert_comp(cluster_id: str, cd: Mapping[str, Any], det: Mapping[str, Any] 
         avg_place=cd["overall"]["avg"], games=cd["overall"]["count"],
         **prov,
     )
-    extra = {"unit_item": unit_item_rows(det.get("itemNames") or [], prov, comp_id, det.get("builds")),
+    extra = {"unit_item": unit_item_rows(det.get("itemNames") or [], prov, comp_id),
+             "unit_build": unit_item_rows([], prov, comp_id, det.get("builds")),
              "has_details": bool(det)}
     return comp, extra
 
@@ -543,13 +573,14 @@ def build_all(raw: Path, static: StaticData | None = None, previous: Mapping[str
     clusters = _load(raw / "comps_data.json")["results"]["data"]["cluster_details"]
     ids = assign_comp_ids(clusters, previous)
     unmapped: set[str] = set()
+    dropped_units: set[str] = set()
     comps, extras, missing_details = [], {}, []
     for cid in sorted(clusters):
         p = raw / f"comp_details_{cid}.json"
         det = _load(p)["results"] if p.is_file() else None
         if det is None:
             missing_details.append(cid)
-        comp, extra = convert_comp(cid, clusters[cid], det, static, ids[cid], comp_prov, unmapped)
+        comp, extra = convert_comp(cid, clusters[cid], det, static, ids[cid], comp_prov, unmapped, dropped_units)
         comps.append(comp)
         extras[comp.comp_id] = extra
 
@@ -584,6 +615,14 @@ def build_all(raw: Path, static: StaticData | None = None, previous: Mapping[str
     for r in (units_raw or {}).get("results") or []:
         unit_rows.append(UnitStats(unit_id=r["unit"], **placement_from_places(r["places"]).model_dump(), **prov))
 
+    items_raw = _load(raw / "items.json") if (raw / "items.json").is_file() else None
+    item_rows = []
+    for r in (items_raw or {}).get("results") or []:
+        if static.get("items", r["itemName"]) is None:
+            unmapped.add(r["itemName"])
+        item_rows.append({"item_id": r["itemName"],
+                          **placement_from_places(r["places"]).model_dump(exclude_none=True)})
+
     usage = [x for c in comps for x in c.item_usage.values()]
     report = {
         "patch": patch, "rank_filter_units": rank, "clusters": len(clusters),
@@ -594,13 +633,17 @@ def build_all(raw: Path, static: StaticData | None = None, previous: Mapping[str
         "item_usage_gt1": sum(x > 1 for x in usage),
         "unmapped_ids": sorted(unmapped), "unmapped_augments": sorted(aug_unmapped),
         "carry_none": [c.comp_id for c in comps if c.carry is None],
+        "non_champion_units_dropped": sorted(dropped_units - SUMMON_IDS),
+        "raw_dir": raw.name,
+        "fetched_at": fetched.isoformat(),
     }
     return {"comps": comps, "extras": extras, "augment_tiers": tiers, "unit_stats": unit_rows,
-            "comp_ids": ids, "report": report}
+            "item_stats": item_rows, "comp_ids": ids, "report": report}
 
 
 def dump(result: dict, out_dir: Path) -> Path:
-    """JSON 1파일(data/stats/metatft_{patch}.json). SQLite 적재는 app 쪽 로더가 이 파일을 읽어 한다."""
+    """JSON 1파일(data/stats/metatft_{patch}.json, 사람이 읽고 diff하는 중간 산출물).
+    런타임 DB(SQLite) 적재는 `tft_advisor.stats.db.write_snapshot`이 한다."""
     out_dir.mkdir(parents=True, exist_ok=True)
     patch = result["report"]["patch"] or "unknown"
     p = out_dir / f"metatft_{patch}.json"
@@ -610,6 +653,9 @@ def dump(result: dict, out_dir: Path) -> Path:
         "comps": [c.model_dump(mode="json") for c in result["comps"]],
         "unit_item_stats": [r.model_dump(mode="json", exclude_none=True)
                             for v in result["extras"].values() for r in v["unit_item"]],
+        "unit_build_stats": [r.model_dump(mode="json", exclude_none=True)
+                             for v in result["extras"].values() for r in v.get("unit_build", [])],
+        "item_stats": result.get("item_stats", []),
         "augment_tiers": [t.model_dump(mode="json", exclude_none=True) for t in result["augment_tiers"]],
         "unit_stats": [u.model_dump(mode="json", exclude_none=True) for u in result["unit_stats"]],
     }

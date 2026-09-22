@@ -154,3 +154,86 @@ $ .venv/bin/python -m pytest -q -rxs
 56 passed, 7 skipped in 0.58s
 ```
 skip 7건은 모두 `MetaTFT 원본 캐시 없음`이다(이 macOS 체크아웃에는 `data/raw/metatft/2026-09-21`이 없다). 원본 캐시 기반 변환 테스트는 이 환경에서 다시 확인하지 못했다.
+
+---
+
+# 2026-09-22 Phase 3 config round (app-integrator)
+
+기준: `04_stats-researcher_impl.md` §9·Fix round, `04_jev-strategist_impl.md` §8·Fix round §5~6, `04_vision-engineer_impl.md` §7·F10, QA `04_qa_stats.md`/`04_qa_advisor.md`/`04_qa_vision.md`의 app-integrator 항목. CONTRACT_VERSION은 그대로 0.2.0(contracts.py 변경 없음).
+
+## C1. 새 설정 키
+| 키 | 기본 | 범위·제약 | 읽는 곳 |
+|---|---|---|---|
+| `[stats] keep_snapshots` | 5 | int ≥ 1 | `stats/refresh.keep_snapshots()` — getattr 폴백을 지우고 `settings.stats.keep_snapshots`를 직접 읽는다 |
+| `[comp] hysteresis_other_share` | 0.25 | [0,1] | `advisor/scoring.Scorer.hysteresis_weight` (상수 `HYSTERESIS_OTHER_SHARE` 삭제) |
+| `[item] overall_stat_games_factor` | 0.25 | [0,1] | `advisor/scoring.Scorer.item_stat` (상수 `OVERALL_ITEM_STAT_GAMES_FACTOR` 삭제) |
+| `[advisor] jev_backend` | `"mock"` | `"mock"｜"live"｜"off"` (`"auto"`는 거부) | `advisor/engine.create_advisor` |
+| `[vision] content_box` | 없음(None) = 프레임 전체 | `[x1,y1,x2,y2]` 비율, 각 [0,1], x1<x2, y1<y2. `[]`도 None | `Recognizer.recognize(content=None)` → `cfg.content_px(w,h)`. `ChangeDetector.update(content=cfg.content_px(w,h))`(app) |
+| `[vision] ocr_backend` | `"auto"` | `auto｜onnxruntime｜openvino｜none` | `ocr.create_ocr(backend=)` ← `Recognizer.__init__` |
+| `[vision] name_fuzzy_min_margin` | 10 | [0,100], ≤ relaxed | `NameMatcher(min_margin=)` (상점·증강·특성 3개 모두) |
+| `[vision] name_fuzzy_relaxed_margin` | 15 | [0,100] | `NameMatcher(relaxed_margin=)` |
+| `[vision] item_match_margin` | 0.05 | [0,1] | `Recognizer._read_items` (상수 `ITEM_MIN_MARGIN` 삭제) |
+| `[vision] change_threshold` | 24 | [0,255] | `ChangeDetector.from_cfg(profile, cfg)` (신규 classmethod) |
+| `[vision] change_stable_frames` | 2 | int [1,30] | `ChangeDetector.from_cfg` |
+| `[vision] capture_fps` | 4 | (0,30] | app 루프(Phase 4) |
+| `[vision] traits_every_s` | 3 | > 0 | app 루프(Phase 4): 이 주기마다 `groups`에 "traits" 추가 |
+
+- **`[capture] poll_interval_ms`, `stable_frames` 삭제.** 아무 코드도 읽지 않았고, `capture_fps`·`change_stable_frames`와 같은 뜻이라 두 곳에 두면 어긋난다(기본값도 500ms/3 vs 250ms/2로 이미 달랐다). `[capture]`에는 `monitor`만 남는다(≥0). 모르는 키는 거부되므로 옛 키를 쓴 설정 파일은 로드 오류로 바로 드러난다.
+- vision 모듈 기본값(`matching.MIN_MARGIN/RELAXED_MARGIN`, `ChangeDetector` 기본 인자)은 설정 없이 쓰는 경로용으로 그대로 두고, 설정 기본값과 같음을 테스트로 고정했다.
+- 보정 계수(streak/hp/traits factor)와 `ocr_lang`은 QA R2 판정대로 설정에 넣지 않았다.
+
+### content_box 결정과 이유
+- vision은 "필수"라고 했지만 **원본 캡처가 아직 없어서 올바른 값을 정할 근거가 없다.** 그래서 필수 값 대신 **선택 값 + 명시적 기본 의미**로 했다: 키 생략(또는 `[]`, `[0,0,1,1]`) = 프레임 전체. 전체 화면 1920x1080(사용자 기본 환경)은 설정 없이 맞고, 창모드에서 빠뜨리면 QA #8대로 틀린 값이 아니라 None/UNKNOWN으로 안전하게 실패한다.
+- **픽셀이 아니라 비율 (x1,y1,x2,y2)** 로 받는다. 창·모니터 해상도가 바뀌어도 값이 유효하고, 범위 검증이 단순하다(0≤x1<x2≤1). vision의 기존 인자 형식(left, top, width, height px)은 `VisionCfg.content_px(frame_w, frame_h)`가 변환한다(전체 프레임이면 None → vision 기존 경로와 완전히 같음).
+- 우선순위: `recognize(content=…)` 명시 인자 > 설정. evaluate/테스트는 설정 기본값(None)이라 기준선이 그대로다(screen_mode 7/7 … shop 칸 24/25 재확인).
+- 자동 탐지는 없다. 원본 캡처가 오면 창모드 캡처로 값 예시를 settings.toml 주석에 갱신한다.
+
+### jev_backend 결정
+- 기본 `"mock"`: 네트워크·과금 없음. `create_advisor()`/`create_advisor("auto")`는 이제 **설정값을 따른다**. `TYPESAFE_API_KEY`가 있다는 이유만으로 live가 되지 않는다(QA advisor 5w).
+- 명시 `create_advisor("mock"|"live"|"off")`는 설정보다 우선(테스트·리플레이·CLI 오버라이드 경로 유지). `"live"`인데 키가 없으면 경고 로그 후 게이트웨이가 `auth` 폴백(네트워크 호출 없음).
+- `"off"`와 기존 `jev_enabled=false`는 결과가 같다(`fallback_reason=jev_disabled`). `jev_enabled`는 게이트웨이 스위치로 남긴다.
+- **CLI (Phase 4)**: `--no-jev` → `create_advisor("off")`(설정보다 우선). `__main__.py` help 문구만 갱신했다. live를 CLI로 켜는 플래그(`--jev live`)는 만들지 않고 설정 파일로만 켜는 것을 제안한다(실수 과금 방지).
+
+## C2. fixtures.py (vision R1a/R1b)
+- `items`: `{"components"|"completed"|"emblems"|"others": [이름|apiName]}` 또는 평면 리스트. `vision.item_ids.ItemCatalog.resolve`로 **묶음 대표 ID**로 바꾼다 → vision 출력과 ID가 바로 같다(자석 제거기 = `DA_Consumable_ItemRemover`). 버킷은 정적 데이터 `category`로 정하고, 라벨 버킷이 다르면 ValueError. 해석 못 하는 이름은 KeyError.
+- `item_bench`: GameState 밖 → `ExpectedScreen.extras["item_bench"]`(10칸 이하, 대표 ID|None). `items`가 없으면 item_bench로 `items`를 채워 정확도 비교 대상이 된다. 둘 다 있으면 다중집합이 같아야 한다.
+- `ItemCatalog`은 numpy·rapidfuzz(vision extra)를 import하므로 items/item_bench가 있을 때만 지연 import한다(현 fixture 7장은 영향 없음).
+- `vision/evaluate._norm`에 `items` → 대표 ID 정렬 리스트 비교를 넣었다(ItemState 전체 비교는 신뢰도 차이로 항상 wrong이 된다).
+- 캡처 요청서 부록 B의 "fixtures 미반영" 메모를 반영 완료로 고쳤다. `templates.harvest-items`는 원본 JSON의 `item_bench`를 그대로 읽는다(같은 해석기라 결과 동일).
+
+## C3. Phase 4 계약 메모 (기록만, 구현 안 함)
+1. **augments_owned 추적은 app 루프 세션 상태**(vision은 무상태). 증강 화면의 `augment_offer`만으로는 사용자가 무엇을 골랐는지 알 수 없다 → **추천 1위를 골랐다고 가정하지 않는다.** 확정 신호는 HUD 보유 증강 판독(vision, 캡처 #6 필요) 또는 선택 카드 강조 감지. 새로고침이 있으면 마지막으로 본 offer 기준. 확정되면 `field_source["augments_owned"]="tracked"`, 판독 전에는 None(advisor §4.3이 빈 목록으로 처리). 수동 입력 UI를 두면 `"manual"`. 세션은 loading/game_over에서 초기화(`_state/session.json` 제안 유지).
+2. **UI는 `Recommendation.target_comps`를 advisor 순서 그대로 표시한다.** 타이브레이커·히스테리시스 보호 때문에 `score`가 단조가 아닐 수 있다. 점수로 재정렬 금지. 표시 개수는 `min(comp.max_shown, ui.max_target_comps)`가 이미 적용된 목록 길이를 따른다.
+3. **advisor 화면 모드 계약**(`Advisor.advise/recommend` 반환):
+   - `loading`/`game_over`: advisor가 세션·캐시를 초기화하고 `None` → app도 세션(보유 증강 추적, 직전 GameState 병합본)을 초기화하고 오버레이를 비운다.
+   - `combat`/`item_select`/`unknown`: **직전 Recommendation 객체를 그대로** 반환(없으면 None) → app은 동일 객체면 다시 그리지 않는다.
+   - `carousel`: Jev 호출 없음. 직전 추천이 있으면 `component_priority`만 다시 계산한 사본, 없으면 통계 전용(`jev_used=False`, `fallback_reason=jev_disabled`, `shop=[]`, augment 없음). UI는 이 경우를 "Jev 미사용"이 아니라 "캐러셀(통계)"로 표시(`debug.fallback_detail` 참고).
+   - `planning`: 덱+상점+아이템. `augment_select`: 덱+증강+아이템(`shop=[]`). 증강·아이템 추천은 해당 화면에서만 표시.
+4. **루프 뼈대**: `capture_fps`로 캡처 → `ChangeDetector.from_cfg(profile, settings.vision).update(img, content=cfg.content_px(w,h))` → 바뀐 묶음만 `recognize(groups=…)`(content는 설정에서 자동) → `FIELD_GROUP` 기준으로 직전 GameState에 병합 → "stage" 묶음이 바뀌면 전체 인식. `traits_every_s`마다 "traits" 추가. 추천은 백그라운드 스레드(advisor 전용 이벤트 루프), 새 state가 오면 이전 태스크 취소(`CancelledError` 전달됨). 앱 시작 시 Advisor 생성 + 워밍업 1회(jev 권고 §7-7, live일 때만 의미).
+5. 기타 미결(이월): UI 백엔드 결정, L1 openvino-telemetry 안내, `--screenshot` 경로 연결.
+
+## C4. 변경 파일
+- 설정: `src/tft_advisor/config.py`, `config/settings.toml`, `config/weights.toml`
+- 연결: `src/tft_advisor/stats/refresh.py`(+`db.py` 주석), `src/tft_advisor/advisor/{scoring,engine,__init__}.py`, `src/tft_advisor/vision/{recognizer,ocr,change,evaluate}.py`, `src/tft_advisor/__main__.py`(help 문구), `src/tft_advisor/fixtures.py`
+- 테스트: 신규 `tests/test_config_round.py`(64건: 새 키 기본값·파일값 13, 범위 거부 22, content_box 거부 8·변환·경계, jev_backend 기본/키 무시/명시 우선 6, vision 연결 3, fixtures items/item_bench 9, evaluate 1). 수정 `tests/test_stats_refresh.py`(keep_snapshots를 Settings로), `tests/advisor/test_advisor_fixround.py`(상수 → weights, `test_hysteresis_other_share_from_weights` 추가)
+- QA 스크립트: `_workspace/qa_scripts/config_proposal_check.py`에 Phase 3 키 12개(content_box 제외) 추가
+- 문서: `_workspace/04_vision-engineer_capture_request.md` 부록 B 한 줄
+
+## C5. 다른 에이전트 영향
+- **vision-engineer**: `Recognizer`가 `cfg`에서 margin·item margin·ocr_backend·content_box를 읽는다. `ChangeDetector.from_cfg` 추가, `create_ocr(lang, backend="auto")`. 상수 `ITEM_MIN_MARGIN` 삭제. F10 표의 "연결하려면 인자 추가 필요"(ocr_backend)는 이번에 넣었다(명시 런타임을 못 쓰면 경고 후 NullOcr — 조용히 다른 런타임으로 바꾸지 않음).
+- **jev-strategist**: `HYSTERESIS_OTHER_SHARE`/`OVERALL_ITEM_STAT_GAMES_FACTOR` 상수 삭제, weights에서 읽는다. `create_advisor("auto")` 의미 변경(키 → 설정).
+- **stats-researcher**: `keep_snapshots()`가 설정을 직접 읽는다(SimpleNamespace 입력은 더 이상 지원 안 함).
+- **qa-validator**: `config_proposal_check.py` 키 수 73 → 85.
+
+## C6. 검증 (실제 출력)
+```
+$ .venv/bin/python _workspace/qa_scripts/config_proposal_check.py
+§10a keys checked: 85 (Phase 3 config round 키 포함)
+rejected keys: 0
+config files differ from §10a defaults: 0
+
+$ .venv/bin/python -m pytest -rxs
+SKIPPED [3] tests/advisor/test_advisor_live.py: live Jev 호출: TFT_LIVE_JEV=1 로 실행
+509 passed, 3 skipped in 95.71s
+```
+`python -m tft_advisor.vision.evaluate`: 기준선 불변(screen_mode 7/7, stage 7/7, level 3/3, xp 5/5, gold 5/5, streak 5/5, hp 7/7, odds 5/5, shop 4/5·칸 24/25, augment 1/1). live Jev 호출 없음.

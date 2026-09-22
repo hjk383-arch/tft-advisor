@@ -1,0 +1,1252 @@
+{
+ "pairs": [
+  {
+   "matcher": "shop",
+   "n_keys": 474,
+   "pairs_ge_85": [
+    [
+     91.7,
+     "5단계 집결",
+     "4단계 집결",
+     "DA_18_AllFives",
+     "DA_18_AllFours"
+    ],
+    [
+     91.7,
+     "5단계 집결",
+     "3단계 집결",
+     "DA_18_AllFives",
+     "DA_18_AllThrees"
+    ],
+    [
+     91.7,
+     "5단계 집결",
+     "2단계 집결",
+     "DA_18_AllFives",
+     "DA_18_AllTwos"
+    ],
+    [
+     91.7,
+     "5단계 집결",
+     "1단계 집결",
+     "DA_18_AllFives",
+     "DA_18_AllOnes"
+    ],
+    [
+     91.7,
+     "4단계 집결",
+     "3단계 집결",
+     "DA_18_AllFours",
+     "DA_18_AllThrees"
+    ],
+    [
+     91.7,
+     "4단계 집결",
+     "2단계 집결",
+     "DA_18_AllFours",
+     "DA_18_AllTwos"
+    ],
+    [
+     91.7,
+     "4단계 집결",
+     "1단계 집결",
+     "DA_18_AllFours",
+     "DA_18_AllOnes"
+    ],
+    [
+     91.7,
+     "3단계 집결",
+     "2단계 집결",
+     "DA_18_AllThrees",
+     "DA_18_AllTwos"
+    ],
+    [
+     91.7,
+     "1단계 집결",
+     "3단계 집결",
+     "DA_18_AllOnes",
+     "DA_18_AllThrees"
+    ],
+    [
+     91.7,
+     "1단계 집결",
+     "2단계 집결",
+     "DA_18_AllOnes",
+     "DA_18_AllTwos"
+    ],
+    [
+     87.0,
+     "상급 혼돈",
+     "하급 혼돈",
+     "DA_GreaterChaos18",
+     "DA_LesserChaos18"
+    ],
+    [
+     85.7,
+     "상급 변이",
+     "하급 변이",
+     "DA_18_MajorPolymorph",
+     "DA_18_MinorPolymorph"
+    ],
+    [
+     85.7,
+     "Thingamajig Bag",
+     "Thingamajig Jar",
+     "DA_ThingamajigBag18",
+     "DA_ThingamajigJar18"
+    ],
+    [
+     85.7,
+     "Major Polymorph",
+     "Minor Polymorph",
+     "DA_18_MajorPolymorph",
+     "DA_18_MinorPolymorph"
+    ]
+   ],
+   "pairs_60_85": 198,
+   "top10": [
+    [
+     91.7,
+     "5단계 집결",
+     "4단계 집결",
+     "DA_18_AllFives",
+     "DA_18_AllFours"
+    ],
+    [
+     91.7,
+     "5단계 집결",
+     "3단계 집결",
+     "DA_18_AllFives",
+     "DA_18_AllThrees"
+    ],
+    [
+     91.7,
+     "5단계 집결",
+     "2단계 집결",
+     "DA_18_AllFives",
+     "DA_18_AllTwos"
+    ],
+    [
+     91.7,
+     "5단계 집결",
+     "1단계 집결",
+     "DA_18_AllFives",
+     "DA_18_AllOnes"
+    ],
+    [
+     91.7,
+     "4단계 집결",
+     "3단계 집결",
+     "DA_18_AllFours",
+     "DA_18_AllThrees"
+    ],
+    [
+     91.7,
+     "4단계 집결",
+     "2단계 집결",
+     "DA_18_AllFours",
+     "DA_18_AllTwos"
+    ],
+    [
+     91.7,
+     "4단계 집결",
+     "1단계 집결",
+     "DA_18_AllFours",
+     "DA_18_AllOnes"
+    ],
+    [
+     91.7,
+     "3단계 집결",
+     "2단계 집결",
+     "DA_18_AllThrees",
+     "DA_18_AllTwos"
+    ],
+    [
+     91.7,
+     "1단계 집결",
+     "3단계 집결",
+     "DA_18_AllOnes",
+     "DA_18_AllThrees"
+    ],
+    [
+     91.7,
+     "1단계 집결",
+     "2단계 집결",
+     "DA_18_AllOnes",
+     "DA_18_AllTwos"
+    ]
+   ]
+  },
+  {
+   "matcher": "augments",
+   "n_keys": 715,
+   "pairs_ge_85": [
+    [
+     97.4,
+     "판도라의 아이템 II",
+     "판도라의 아이템 III",
+     "DA_PandorasItemsII",
+     "DA_PandorasItemsIII"
+    ],
+    [
+     97.4,
+     "임시변통 방어구 I",
+     "임시변통 방어구 II",
+     "DA_MakeshiftArmorI",
+     "DA_MakeshiftArmorII"
+    ],
+    [
+     97.4,
+     "Investment Strategy II",
+     "Investment Strategy I",
+     "DA_InvestmentStrategy",
+     "DA_InvestmentStrategyI"
+    ],
+    [
+     97.4,
+     "Celestial Blessing II",
+     "Celestial Blessing III",
+     "DA_CelestialBlessingII",
+     "DA_CelestialBlessingIII"
+    ],
+    [
+     97.3,
+     "판도라의 아이템 I",
+     "판도라의 아이템 II",
+     "DA_PandorasItemsI",
+     "DA_PandorasItemsII"
+    ],
+    [
+     97.3,
+     "영원한 브론즈 I",
+     "영원한 브론즈 II",
+     "DA_BronzeForLifeI",
+     "DA_BronzeForLifeII"
+    ],
+    [
+     97.3,
+     "Celestial Blessing I",
+     "Celestial Blessing II",
+     "DA_CelestialBlessingI",
+     "DA_CelestialBlessingII"
+    ],
+    [
+     97.1,
+     "판도라의 아이템 I",
+     "판도라의 아이템",
+     "DA_PandorasItemsI",
+     "TFT6_Augment_PandorasItems"
+    ],
+    [
+     97.1,
+     "천상의 축복 II",
+     "천상의 축복 III",
+     "DA_CelestialBlessingII",
+     "DA_CelestialBlessingIII"
+    ],
+    [
+     97.0,
+     "천상의 축복 I",
+     "천상의 축복 II",
+     "DA_CelestialBlessingI",
+     "DA_CelestialBlessingII"
+    ],
+    [
+     96.8,
+     "아이템 수집가 I",
+     "아이템 수집가 II",
+     "TFT_Augment_ItemCollector1",
+     "TFT_Augment_ItemCollector2"
+    ],
+    [
+     96.8,
+     "새로고침의 날",
+     "새로고침의 날 I",
+     "DA_RollingForDays",
+     "TFT9_Augment_Commander_RollingForDays"
+    ],
+    [
+     96.8,
+     "불타는 영혼 I",
+     "불타는 영혼 II",
+     "TFT_Augment_BlazingSoul",
+     "TFT_Augment_BlazingSoul2"
+    ],
+    [
+     96.8,
+     "Pandora's Items II",
+     "Pandora's Items III",
+     "DA_PandorasItemsII",
+     "DA_PandorasItemsIII"
+    ],
+    [
+     96.8,
+     "Makeshift Armor I",
+     "Makeshift Armor II",
+     "DA_MakeshiftArmorI",
+     "DA_MakeshiftArmorII"
+    ],
+    [
+     96.8,
+     "Climb The Ladder I",
+     "Climb The Ladder II",
+     "TFT_Augment_ClimbTheLadder1",
+     "TFT_Augment_ClimbTheLadder2"
+    ],
+    [
+     96.8,
+     "Charge Transfer I",
+     "Charge Transfer II",
+     "TFT_Augment_ChargeTransfer1",
+     "TFT_Augment_ChargeTransfer2"
+    ],
+    [
+     96.6,
+     "Rolling For Days",
+     "Rolling For Days I",
+     "DA_RollingForDays",
+     "TFT9_Augment_Commander_RollingForDays"
+    ],
+    [
+     96.6,
+     "Pandora's Items I",
+     "Pandora's Items II",
+     "DA_PandorasItemsI",
+     "DA_PandorasItemsII"
+    ],
+    [
+     96.6,
+     "Item Collector I",
+     "Item Collector II",
+     "TFT_Augment_ItemCollector1",
+     "TFT_Augment_ItemCollector2"
+    ],
+    [
+     96.6,
+     "Electrocharge I",
+     "Electrocharge II",
+     "DA_ElectrochargeI",
+     "DA_ElectrochargeII"
+    ],
+    [
+     96.6,
+     "Bronze For Life I",
+     "Bronze For Life II",
+     "DA_BronzeForLifeI",
+     "DA_BronzeForLifeII"
+    ],
+    [
+     96.3,
+     "커다란 친구 I",
+     "커다란 친구 II",
+     "TFT7_Augment_BigFriend",
+     "TFT7_Augment_BigFriend2"
+    ],
+    [
+     96.3,
+     "준비 운동 II",
+     "준비 운동 III",
+     "TFT9_Augment_PumpingUp2",
+     "TFT9_Augment_PumpingUp3"
+    ],
+    [
+     96.3,
+     "아이템 꾸러미 I",
+     "아이템 꾸러미",
+     "DA_ItemGrabBag",
+     "TFT6_Augment_ItemGrabBag1"
+    ],
+    [
+     96.3,
+     "Verticality II",
+     "Verticality III",
+     "DA_VerticalityII",
+     "DA_VerticalityIII"
+    ],
+    [
+     96.3,
+     "Spoils of War II",
+     "Spoils of War III",
+     "TFT9_Augment_DravenSpoilsOfWar2",
+     "TFT9_Augment_DravenSpoilsOfWar3"
+    ],
+    [
+     96.3,
+     "Pandora's Items I",
+     "Pandora's Items",
+     "DA_PandorasItemsI",
+     "TFT6_Augment_PandorasItems"
+    ],
+    [
+     96.3,
+     "Jeweled Lotus I",
+     "Jeweled Lotus II",
+     "DA_JeweledLotus_I",
+     "DA_JeweledLotus_II"
+    ],
+    [
+     96.3,
+     "Capital Gains I",
+     "Capital Gains II",
+     "DA_CapitalGainsI",
+     "DA_CapitalGainsII"
+    ],
+    [
+     96.0,
+     "회복의 구 I",
+     "회복의 구 II",
+     "DA_HealingOrbsI",
+     "DA_HealingOrbsII"
+    ],
+    [
+     96.0,
+     "준비 운동 I",
+     "준비 운동 II",
+     "TFT9_Augment_PumpingUp",
+     "TFT9_Augment_PumpingUp2"
+    ],
+    [
+     96.0,
+     "전기 충전 I",
+     "전기 충전 II",
+     "DA_ElectrochargeI",
+     "DA_ElectrochargeII"
+    ],
+    [
+     96.0,
+     "서열 상승 I",
+     "서열 상승 II",
+     "TFT_Augment_ClimbTheLadder1",
+     "TFT_Augment_ClimbTheLadder2"
+    ],
+    [
+     96.0,
+     "보석 연꽃 I",
+     "보석 연꽃 II",
+     "DA_JeweledLotus_I",
+     "DA_JeweledLotus_II"
+    ],
+    [
+     96.0,
+     "Verticality I",
+     "Verticality II",
+     "DA_VerticalityI",
+     "DA_VerticalityII"
+    ],
+    [
+     96.0,
+     "Spoils of War I",
+     "Spoils of War II",
+     "TFT9_Augment_DravenSpoilsOfWar",
+     "TFT9_Augment_DravenSpoilsOfWar2"
+    ],
+    [
+     96.0,
+     "Preparation I",
+     "Preparation II",
+     "TFT7_Augment_Preparation",
+     "TFT7_Augment_Preparation2"
+    ],
+    [
+     96.0,
+     "Healing Orbs I",
+     "Healing Orbs II",
+     "DA_HealingOrbsI",
+     "DA_HealingOrbsII"
+    ],
+    [
+     96.0,
+     "Glass Cannon II",
+     "Glass Cannon I",
+     "DA_GlassCannon_Gold",
+     "DA_GlassCannon_Silver"
+    ],
+    [
+     96.0,
+     "Blazing Soul I",
+     "Blazing Soul II",
+     "TFT_Augment_BlazingSoul",
+     "TFT_Augment_BlazingSoul2"
+    ],
+    [
+     96.0,
+     "Best Friends I",
+     "Best Friends II",
+     "TFT7_Augment_BestFriends1",
+     "TFT7_Augment_BestFriends2"
+    ],
+    [
+     95.7,
+     "투자 전략 II",
+     "투자 전략 I",
+     "DA_InvestmentStrategy",
+     "DA_InvestmentStrategyI"
+    ],
+    [
+     95.7,
+     "전하 이동 I",
+     "전하 이동 II",
+     "TFT_Augment_ChargeTransfer1",
+     "TFT_Augment_ChargeTransfer2"
+    ],
+    [
+     95.7,
+     "자본 이익 I",
+     "자본 이익 II",
+     "DA_CapitalGainsI",
+     "DA_CapitalGainsII"
+    ],
+    [
+     95.7,
+     "단체 포옹 I",
+     "단체 포옹 II",
+     "DA_GroupHugI",
+     "DA_GroupHugII"
+    ],
+    [
+     95.7,
+     "Water Lotus I",
+     "Water Lotus II",
+     "TFT_Augment_WaterLotus1",
+     "TFT_Augment_WaterLotus2"
+    ],
+    [
+     95.7,
+     "Tomb Raider I",
+     "Tomb Raider II",
+     "TFT_Augment_TombRaider1",
+     "TFT_Augment_TombRaider2"
+    ],
+    [
+     95.7,
+     "Pumping Up II",
+     "Pumping Up III",
+     "TFT9_Augment_PumpingUp2",
+     "TFT9_Augment_PumpingUp3"
+    ],
+    [
+     95.7,
+     "Ones Two Three",
+     "One Two Three",
+     "DA_18_OnesTwosThree",
+     "TFT9_Augment_OneTwosThree"
+    ],
+    [
+     95.7,
+     "Item Grab Bag I",
+     "Item Grab Bag",
+     "DA_ItemGrabBag",
+     "TFT6_Augment_ItemGrabBag1"
+    ],
+    [
+     95.7,
+     "Exclusive Customization",
+     "Exclusive Customization II",
+     "DA_ExclusiveCustomization",
+     "TFT_Augment_ExclusiveCustomization2"
+    ],
+    [
+     95.2,
+     "전리품 II",
+     "전리품 III",
+     "TFT9_Augment_DravenSpoilsOfWar2",
+     "TFT9_Augment_DravenSpoilsOfWar3"
+    ],
+    [
+     95.2,
+     "삼인방 I",
+     "삼인방 II",
+     "TFT_Augment_Trifecta1",
+     "TFT_Augment_Trifecta2"
+    ],
+    [
+     95.2,
+     "Pumping Up I",
+     "Pumping Up II",
+     "TFT9_Augment_PumpingUp",
+     "TFT9_Augment_PumpingUp2"
+    ],
+    [
+     95.2,
+     "Big Friend I",
+     "Big Friend II",
+     "TFT7_Augment_BigFriend",
+     "TFT7_Augment_BigFriend2"
+    ],
+    [
+     94.7,
+     "판도라의 아이템 I",
+     "판도라의 아이템 III",
+     "DA_PandorasItemsI",
+     "DA_PandorasItemsIII"
+    ],
+    [
+     94.7,
+     "특별 맞춤 설정",
+     "특별 맞춤 설정 II",
+     "DA_ExclusiveCustomization",
+     "TFT_Augment_ExclusiveCustomization2"
+    ],
+    [
+     94.7,
+     "전리품 I",
+     "전리품 II",
+     "TFT9_Augment_DravenSpoilsOfWar",
+     "TFT9_Augment_DravenSpoilsOfWar2"
+    ],
+    [
+     94.7,
+     "유리 대포 II",
+     "유리 대포 I",
+     "DA_GlassCannon_Gold",
+     "DA_GlassCannon_Silver"
+    ],
+    [
+     94.7,
+     "도굴꾼 I",
+     "도굴꾼 II",
+     "TFT_Augment_TombRaider1",
+     "TFT_Augment_TombRaider2"
+    ],
+    [
+     94.7,
+     "고단수 II",
+     "고단수 III",
+     "DA_VerticalityII",
+     "DA_VerticalityIII"
+    ],
+    [
+     94.7,
+     "Trifecta I",
+     "Trifecta II",
+     "TFT_Augment_Trifecta1",
+     "TFT_Augment_Trifecta2"
+    ],
+    [
+     94.7,
+     "Magic Roll",
+     "A Magic Roll",
+     "DA_MagicRoll",
+     "TFT_Augment_MagicRoll"
+    ],
+    [
+     94.7,
+     "Group Hug I",
+     "Group Hug II",
+     "DA_GroupHugI",
+     "DA_GroupHugII"
+    ],
+    [
+     94.7,
+     "Celestial Blessing I",
+     "Celestial Blessing III",
+     "DA_CelestialBlessingI",
+     "DA_CelestialBlessingIII"
+    ],
+    [
+     94.4,
+     "판도라의 아이템 II",
+     "판도라의 아이템",
+     "DA_PandorasItemsII",
+     "TFT6_Augment_PandorasItems"
+    ],
+    [
+     94.1,
+     "추방자 I",
+     "추방자 II",
+     "TFT6_Augment_Distancing",
+     "TFT6_Augment_Distancing2"
+    ],
+    [
+     94.1,
+     "천상의 축복 I",
+     "천상의 축복 III",
+     "DA_CelestialBlessingI",
+     "DA_CelestialBlessingIII"
+    ],
+    [
+     94.1,
+     "고단수 I",
+     "고단수 II",
+     "DA_VerticalityI",
+     "DA_VerticalityII"
+    ],
+    [
+     94.1,
+     "Keepers I",
+     "Keepers II",
+     "TFT6_Augment_Keepers1",
+     "TFT6_Augment_Keepers2"
+    ],
+    [
+     93.8,
+     "기다림의 미학",
+     "기다림의 미학 II",
+     "DA_WorththeWait",
+     "DA_WorththeWaitII"
+    ],
+    [
+     93.3,
+     "수호자 I",
+     "수호자 II",
+     "TFT6_Augment_Keepers1",
+     "TFT6_Augment_Keepers2"
+    ],
+    [
+     93.3,
+     "단짝 I",
+     "단짝 II",
+     "TFT7_Augment_BestFriends1",
+     "TFT7_Augment_BestFriends2"
+    ],
+    [
+     93.3,
+     "Pandora's Items I",
+     "Pandora's Items III",
+     "DA_PandorasItemsI",
+     "DA_PandorasItemsIII"
+    ],
+    [
+     93.3,
+     "Exiles I",
+     "Exiles II",
+     "TFT6_Augment_Distancing",
+     "TFT6_Augment_Distancing2"
+    ],
+    [
+     92.9,
+     "재생의 바람",
+     "재생의 바람 II",
+     "TFT6_Augment_SecondWind1",
+     "TFT6_Augment_SecondWind2"
+    ],
+    [
+     92.9,
+     "Pandora's Items II",
+     "Pandora's Items",
+     "DA_PandorasItemsII",
+     "TFT6_Augment_PandorasItems"
+    ],
+    [
+     92.9,
+     "Band of Thieves",
+     "Band of Thieves II",
+     "DA_BandOfThieves",
+     "DA_BandOfThievesII"
+    ],
+    [
+     92.3,
+     "준비 운동 I",
+     "준비 운동 III",
+     "TFT9_Augment_PumpingUp",
+     "TFT9_Augment_PumpingUp3"
+    ],
+    [
+     92.3,
+     "준비 I",
+     "준비 II",
+     "TFT7_Augment_Preparation",
+     "TFT7_Augment_Preparation2"
+    ],
+    [
+     92.3,
+     "수련 I",
+     "수련 II",
+     "TFT_Augment_WaterLotus1",
+     "TFT_Augment_WaterLotus2"
+    ],
+    [
+     92.3,
+     "Worth the Wait",
+     "Worth the Wait II",
+     "DA_WorththeWait",
+     "DA_WorththeWaitII"
+    ],
+    [
+     92.3,
+     "Verticality I",
+     "Verticality III",
+     "DA_VerticalityI",
+     "DA_VerticalityIII"
+    ],
+    [
+     92.3,
+     "Spoils of War I",
+     "Spoils of War III",
+     "TFT9_Augment_DravenSpoilsOfWar",
+     "TFT9_Augment_DravenSpoilsOfWar3"
+    ],
+    [
+     91.9,
+     "판도라의 아이템 III",
+     "판도라의 아이템",
+     "DA_PandorasItemsIII",
+     "TFT6_Augment_PandorasItems"
+    ],
+    [
+     91.9,
+     "사이버네틱 통신",
+     "사이버네틱 통신 III",
+     "DA_CyberneticUplink_Gold",
+     "TFT6_Augment_CyberneticUplink3"
+    ],
+    [
+     91.4,
+     "Cybernetic Uplink",
+     "Cybernetic Uplink III",
+     "DA_CyberneticUplink_Gold",
+     "TFT6_Augment_CyberneticUplink3"
+    ],
+    [
+     90.9,
+     "Second Wind",
+     "Second Wind II",
+     "TFT6_Augment_SecondWind1",
+     "TFT6_Augment_SecondWind2"
+    ],
+    [
+     90.9,
+     "Pumping Up I",
+     "Pumping Up III",
+     "TFT9_Augment_PumpingUp",
+     "TFT9_Augment_PumpingUp3"
+    ],
+    [
+     90.9,
+     "Buried Treasures III",
+     "Buried Treasures",
+     "DA_BuriedTreasuresIII",
+     "TFT9_Augment_BuildingACollectionPlusPlus"
+    ],
+    [
+     90.0,
+     "전리품 I",
+     "전리품 III",
+     "TFT9_Augment_DravenSpoilsOfWar",
+     "TFT9_Augment_DravenSpoilsOfWar3"
+    ],
+    [
+     90.0,
+     "도둑 무리",
+     "도둑 무리 II",
+     "DA_BandOfThieves",
+     "DA_BandOfThievesII"
+    ],
+    [
+     90.0,
+     "꼬마 거인",
+     "꼬꼬마 거인",
+     "TFT6_Augment_TinyTitans",
+     "TFT9_Augment_TiniestTitanPlus"
+    ],
+    [
+     89.7,
+     "파묻힌 보물 III",
+     "파묻힌 보물",
+     "DA_BuriedTreasuresIII",
+     "TFT9_Augment_BuildingACollectionPlusPlus"
+    ],
+    [
+     89.7,
+     "Pandora's Items III",
+     "Pandora's Items",
+     "DA_PandorasItemsIII",
+     "TFT6_Augment_PandorasItems"
+    ],
+    [
+     88.9,
+     "고단수 I",
+     "고단수 III",
+     "DA_VerticalityI",
+     "DA_VerticalityIII"
+    ],
+    [
+     85.7,
+     "Component Quest",
+     "Component Heist",
+     "DA_ComponentQuest",
+     "TFT_Augment_MuseumHeist"
+    ]
+   ],
+   "pairs_60_85": 260,
+   "top10": [
+    [
+     97.4,
+     "판도라의 아이템 II",
+     "판도라의 아이템 III",
+     "DA_PandorasItemsII",
+     "DA_PandorasItemsIII"
+    ],
+    [
+     97.4,
+     "임시변통 방어구 I",
+     "임시변통 방어구 II",
+     "DA_MakeshiftArmorI",
+     "DA_MakeshiftArmorII"
+    ],
+    [
+     97.4,
+     "Investment Strategy II",
+     "Investment Strategy I",
+     "DA_InvestmentStrategy",
+     "DA_InvestmentStrategyI"
+    ],
+    [
+     97.4,
+     "Celestial Blessing II",
+     "Celestial Blessing III",
+     "DA_CelestialBlessingII",
+     "DA_CelestialBlessingIII"
+    ],
+    [
+     97.3,
+     "판도라의 아이템 I",
+     "판도라의 아이템 II",
+     "DA_PandorasItemsI",
+     "DA_PandorasItemsII"
+    ],
+    [
+     97.3,
+     "영원한 브론즈 I",
+     "영원한 브론즈 II",
+     "DA_BronzeForLifeI",
+     "DA_BronzeForLifeII"
+    ],
+    [
+     97.3,
+     "Celestial Blessing I",
+     "Celestial Blessing II",
+     "DA_CelestialBlessingI",
+     "DA_CelestialBlessingII"
+    ],
+    [
+     97.1,
+     "판도라의 아이템 I",
+     "판도라의 아이템",
+     "DA_PandorasItemsI",
+     "TFT6_Augment_PandorasItems"
+    ],
+    [
+     97.1,
+     "천상의 축복 II",
+     "천상의 축복 III",
+     "DA_CelestialBlessingII",
+     "DA_CelestialBlessingIII"
+    ],
+    [
+     97.0,
+     "천상의 축복 I",
+     "천상의 축복 II",
+     "DA_CelestialBlessingI",
+     "DA_CelestialBlessingII"
+    ]
+   ]
+  },
+  {
+   "matcher": "traits",
+   "n_keys": 72,
+   "pairs_ge_85": [],
+   "pairs_60_85": 8,
+   "top10": [
+    [
+     72.7,
+     "Primal",
+     "Rival",
+     "DA_Primal18",
+     "DA_18_Rival"
+    ],
+    [
+     63.2,
+     "Adaptor",
+     "Apex Predator",
+     "DA_18_Adaptor",
+     "DA_18_ApexPredator"
+    ],
+    [
+     62.5,
+     "일월식",
+     "원시",
+     "DA_18_Eclipse",
+     "DA_Primal18"
+    ],
+    [
+     62.5,
+     "사냥꾼",
+     "싸움꾼",
+     "DA_18_Hunter",
+     "DA_18_Brawler"
+    ],
+    [
+     61.5,
+     "Avatar",
+     "Ravager",
+     "DA_18_LuxUniqueTrait",
+     "DA_18_Slayer"
+    ],
+    [
+     61.5,
+     "Avatar",
+     "Adaptor",
+     "DA_18_LuxUniqueTrait",
+     "DA_18_Adaptor"
+    ],
+    [
+     60.9,
+     "악의 여단",
+     "가시의 여인",
+     "DA_18_Coven",
+     "DA_18_ZyraUniqueTrait"
+    ],
+    [
+     60.0,
+     "Solar",
+     "Lunar",
+     "DA_18_Solar",
+     "DA_18_Lunar"
+    ]
+   ]
+  }
+ ],
+ "adversarial": [
+  {
+   "matcher": "shop",
+   "variants": 53070,
+   "wrong_accepted": 109,
+   "rate": 0.00205,
+   "worst_names": [
+    [
+     "4단계 집결",
+     23
+    ],
+    [
+     "1단계 집결",
+     23
+    ],
+    [
+     "3단계 집결",
+     23
+    ],
+    [
+     "2단계 집결",
+     23
+    ],
+    [
+     "렝가",
+     3
+    ],
+    [
+     "레오나",
+     2
+    ],
+    [
+     "변이",
+     2
+    ],
+    [
+     "베이가",
+     1
+    ],
+    [
+     "요릭",
+     1
+    ],
+    [
+     "아리",
+     1
+    ]
+   ],
+   "examples": [
+    [
+     "베이가",
+     "ㄹㅔㅇㅣㄱㅏ",
+     "DA_18_Rengar",
+     90.9,
+     7.6
+    ],
+    [
+     "요릭",
+     "ㅇㅏㄹㅣㄱ",
+     "DA_18_Ahri",
+     88.9,
+     8.9
+    ],
+    [
+     "아리",
+     "ㅌㅏㄹㅣ",
+     "DA_Taric18",
+     88.9,
+     13.9
+    ],
+    [
+     "엘리스",
+     "ㅇㅏㄹㄹㅣㅅㅡ",
+     "DA_18_Alistar",
+     87.5,
+     1.8
+    ],
+    [
+     "바이",
+     "ㅂㄴㅇㅣ",
+     "DA_18_Polymorph",
+     88.9,
+     13.9
+    ],
+    [
+     "레오나",
+     "ㄹㅔㅇㅗㄱㅏ",
+     "DA_18_Rengar",
+     90.9,
+     7.6
+    ],
+    [
+     "레오나",
+     "ㄹㅔㅇㄱㄴㅏ",
+     "DA_18_Rengar",
+     90.9,
+     7.6
+    ],
+    [
+     "렝가",
+     "ㄹㅔㅇㄴㅏ",
+     "DA_18_Leona",
+     90.9,
+     10.9
+    ],
+    [
+     "렝가",
+     "ㅂㅔㅇㄱㅏ",
+     "DA_18_Veigar",
+     90.9,
+     10.9
+    ],
+    [
+     "렝가",
+     "ㄹㅔㅇㅗㅏ",
+     "DA_18_Leona",
+     90.9,
+     10.9
+    ]
+   ]
+  },
+  {
+   "matcher": "augments",
+   "variants": 99994,
+   "wrong_accepted": 1579,
+   "rate": 0.01579,
+   "worst_names": [
+    [
+     "천상의 축복 III",
+     67
+    ],
+    [
+     "판도라의 아이템 III",
+     67
+    ],
+    [
+     "고단수 III",
+     67
+    ],
+    [
+     "전리품 III",
+     67
+    ],
+    [
+     "준비 운동 III",
+     67
+    ],
+    [
+     "영원한 브론즈 II",
+     45
+    ],
+    [
+     "자본 이익 II",
+     45
+    ],
+    [
+     "천상의 축복 II",
+     45
+    ],
+    [
+     "전기 충전 II",
+     45
+    ],
+    [
+     "유리 대포 II",
+     45
+    ]
+   ],
+   "examples": [
+    [
+     "하나, 둘, 셋",
+     "ㅎㅏㄴㅏㄷㅜㄹㅅㅓㅅ",
+     "DA_18_OneTwoFive",
+     90.9,
+     0.9
+    ],
+    [
+     "영원한 브론즈 II",
+     "ㅇㅕㅇㅇㅜㅓㄴㅎㅏㄴㅂㅡㄹㅗㄴㅈㅡㅇi",
+     "DA_BronzeForLifeI",
+     97.3,
+     2.6
+    ],
+    [
+     "영원한 브론즈 II",
+     "ㅇㅕㅇㅇㅜㅓㄴㅎㅏㄴㅂㅡㄹㅗㄴㅈㅡㄱi",
+     "DA_BronzeForLifeI",
+     97.3,
+     2.6
+    ],
+    [
+     "영원한 브론즈 II",
+     "ㅇㅕㅇㅇㅜㅓㄴㅎㅏㄴㅂㅡㄹㅗㄴㅈㅡㅐi",
+     "DA_BronzeForLifeI",
+     97.3,
+     2.6
+    ],
+    [
+     "영원한 브론즈 II",
+     "ㅇㅕㅇㅇㅜㅓㄴㅎㅏㄴㅂㅡㄹㅗㄴㅈㅡㅊi",
+     "DA_BronzeForLifeI",
+     97.3,
+     2.6
+    ],
+    [
+     "영원한 브론즈 II",
+     "ㅇㅕㅇㅇㅜㅓㄴㅎㅏㄴㅂㅡㄹㅗㄴㅈㅡiㅌ",
+     "DA_BronzeForLifeI",
+     97.3,
+     2.6
+    ],
+    [
+     "영원한 브론즈 II",
+     "ㅇㅕㅇㅇㅜㅓㄴㅎㅏㄴㅂㅡㄹㅗㄴㅈㅡiㄷ",
+     "DA_BronzeForLifeI",
+     97.3,
+     2.6
+    ],
+    [
+     "영원한 브론즈 II",
+     "ㅇㅕㅇㅇㅜㅓㄴㅎㅏㄴㅂㅡㄹㅗㄴㅈㅡㅅi",
+     "DA_BronzeForLifeI",
+     97.3,
+     2.6
+    ],
+    [
+     "영원한 브론즈 II",
+     "ㅇㅕㅇㅇㅜㅓㄴㅎㅏㄴㅂㅡㄹㅗㄴㅈㅡiㅣ",
+     "DA_BronzeForLifeI",
+     97.3,
+     2.6
+    ],
+    [
+     "영원한 브론즈 II",
+     "ㅇㅕㅇㅇㅜㅓㄴㅎㅏㄴㅂㅡㄹㅗㄴㅈㅡㄹi",
+     "DA_BronzeForLifeI",
+     97.3,
+     2.6
+    ]
+   ]
+  }
+ ]
+}

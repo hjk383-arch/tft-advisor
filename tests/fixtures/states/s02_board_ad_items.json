@@ -1,0 +1,86 @@
+{
+ "description": "#1과 같은 보드, 아이템: 무한의 대검 + 구인수의 격노검 → AD 캐리 덱(1위가 #1과 달라야 함)",
+ "state": {
+  "screen_mode": "planning",
+  "stage": "3-2",
+  "level": 6,
+  "gold": 34,
+  "hp": 62,
+  "shop": [
+   {
+    "kind": "champion",
+    "id": "DA_18_Zyra"
+   },
+   {
+    "kind": "champion",
+    "id": "DA_18_Varus"
+   },
+   {
+    "kind": "champion",
+    "id": "DA_18_Ornn"
+   },
+   {
+    "kind": "champion",
+    "id": "DA_18_LeBlanc"
+   },
+   {
+    "kind": "champion",
+    "id": "DA_18_Sejuani"
+   }
+  ],
+  "board": [
+   {
+    "id": "DA_18_Yorick",
+    "star": 2
+   },
+   {
+    "id": "DA_18_Rakan",
+    "star": 1
+   },
+   {
+    "id": "DA_Karma18",
+    "star": 1
+   },
+   {
+    "id": "DA_18_Ornn",
+    "star": 1
+   },
+   {
+    "id": "DA_18_Alistar",
+    "star": 1
+   },
+   {
+    "id": "DA_18_Xayah",
+    "star": 1
+   }
+  ],
+  "bench": [
+   {
+    "id": "DA_18_Varus",
+    "star": 1
+   }
+  ],
+  "augments_owned": [],
+  "items": {
+   "completed": [
+    {
+     "id": "DA_InfinityEdge"
+    },
+    {
+     "id": "DA_GuinsoosRageblade"
+    }
+   ],
+   "components": []
+  }
+ },
+ "expect": {
+  "top_comp_in": [
+   "lunar-aphelios-nidalee_ap",
+   "elderwood-aphelios",
+   "juggernaut-elderdragon",
+   "juggernaut-caitlyn"
+  ],
+  "top_comp_differs_from": "s01_board_ap_items"
+ },
+ "stats": "tests/fixtures/stats/mini_18.json"
+}
