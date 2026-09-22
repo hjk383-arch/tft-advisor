@@ -44,6 +44,7 @@ class AppCfg(_Cfg):
     set_number: int = 18
     data_dir: str = "data"
     log_dir: str = "logs"
+    state_dir: str = "_state"   # 세션·오버레이 위치 같은 실행 상태(gitignore). app/session.py, app/overlay.py
 
 
 class CaptureCfg(_Cfg):
@@ -203,10 +204,39 @@ class StatsCfg(_Cfg):
 
 
 class UiCfg(_Cfg):
-    backend: Literal["auto", "tkinter", "pyside6"] = "auto"
+    """공통 UI 설정. 오버레이 창의 위치·크기·투명도는 `[overlay]`(OverlayCfg)에 있다.
+
+    `backend`: Phase 4에서 **PySide6로 확정**했다(사용자 결정). "auto"는 PySide6가 설치돼 있으면 오버레이,
+    없으면 콘솔이다. "console"은 오버레이를 만들지 않는다(= CLI `--no-overlay`). "tkinter"는 구현하지 않았고
+    지정하면 경고 후 콘솔로 내려간다(조용히 다른 툴킷으로 바꾸지 않는다).
+    """
+
+    backend: Literal["auto", "tkinter", "pyside6", "console"] = "auto"
     opacity: float = Field(0.85, gt=0, le=1)
     click_through: bool = True
     max_target_comps: int = Field(3, ge=1, le=3)
+
+
+class OverlayCfg(_Cfg):
+    """오버레이 창(PySide6). 위치는 `anchor`(모서리) + `x`/`y`(그 모서리로부터의 여백 px)로 정한다.
+
+    - `opacity`/`click_through`가 None이면 `[ui]`의 같은 이름 값을 쓴다(한 곳에서만 고치면 되게).
+    - 사용자가 창을 끌어 옮긴 뒤 트레이 메뉴 "위치 저장"을 누르면 `{app.state_dir}/overlay.json`에 픽셀 좌표가
+      저장되고, 다음 실행부터 그 값이 이 설정보다 우선한다(설정 파일은 앱이 고치지 않는다).
+    """
+
+    enabled: bool = True
+    anchor: Literal["top_left", "top_right", "bottom_left", "bottom_right"] = "top_right"
+    x: int = Field(24, ge=0)          # anchor 모서리로부터 가로 여백 px
+    y: int = Field(24, ge=0)          # anchor 모서리로부터 세로 여백 px
+    width: int = Field(380, ge=200, le=1600)
+    scale: float = Field(1.0, ge=0.5, le=3.0)       # 글꼴·여백 배율(고DPI·큰 화면)
+    opacity: float | None = Field(None, gt=0, le=1)  # None = [ui] opacity
+    click_through: bool | None = None                # None = [ui] click_through
+    locked: bool = True               # True = 클릭 통과(이동 불가). False = 일반 창처럼 드래그 가능
+    always_on_top: bool = True
+    screen: int = Field(0, ge=0)      # 여러 모니터일 때 오버레이를 띄울 Qt 화면 번호
+    remember_position: bool = True    # overlay.json의 저장된 위치를 읽을지
 
 
 class LoggingCfg(_Cfg):
@@ -224,7 +254,16 @@ class Settings(_Cfg):
     advisor: AdvisorCfg = AdvisorCfg()
     stats: StatsCfg = StatsCfg()
     ui: UiCfg = UiCfg()
+    overlay: OverlayCfg = OverlayCfg()
     logging: LoggingCfg = LoggingCfg()
+
+    def overlay_opacity(self) -> float:
+        """오버레이 불투명도: `[overlay] opacity` > `[ui] opacity`."""
+        return self.ui.opacity if self.overlay.opacity is None else self.overlay.opacity
+
+    def overlay_click_through(self) -> bool:
+        """클릭 통과: `[overlay] click_through` > `[ui] click_through`."""
+        return self.ui.click_through if self.overlay.click_through is None else self.overlay.click_through
 
 
 # --- weights.toml ---

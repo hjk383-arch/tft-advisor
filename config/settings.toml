@@ -5,6 +5,7 @@
 set_number = 18
 data_dir = "data"
 log_dir = "logs"
+state_dir = "_state"     # 세션 상태(_state/session.json)·오버레이 위치(overlay.json). git에 올리지 않는다
 
 [capture]
 monitor = 1              # mss 모니터 번호(1 = 주 모니터)
@@ -65,10 +66,26 @@ keep_snapshots = 5            # 출처별 보존 스냅샷 수 (>= 1)
 user_agent = "tft-advisor-research/0.1 (personal use)"
 
 [ui]
-backend = "auto"         # "auto" | "tkinter" | "pyside6" (결정 보류)
-opacity = 0.85
-click_through = true
-max_target_comps = 3
+# Phase 4에서 오버레이는 PySide6로 확정. "auto" = PySide6가 있으면 오버레이, 없으면 콘솔.
+# "console" = 오버레이 없이 콘솔 출력(CLI --no-overlay와 같음). "tkinter"는 미구현(경고 후 콘솔).
+backend = "auto"
+opacity = 0.85           # [overlay] opacity 가 없을 때의 값
+click_through = true     # [overlay] click_through 가 없을 때의 값
+max_target_comps = 3     # 오버레이에 표시할 목표 덱 수(advisor 순서 그대로, 점수로 재정렬하지 않음)
+
+[overlay]
+enabled = true
+anchor = "top_right"     # "top_left" | "top_right" | "bottom_left" | "bottom_right"
+x = 24                   # anchor 모서리로부터 가로 여백 px
+y = 24                   # 세로 여백 px
+width = 380              # 창 너비 px
+scale = 1.0              # 글꼴·여백 배율 (0.5 ~ 3.0)
+# opacity = 0.85         # 생략하면 [ui] opacity
+# click_through = true   # 생략하면 [ui] click_through
+locked = true            # true = 클릭 통과(게임 입력을 가리지 않음). false = 드래그로 이동 가능
+always_on_top = true
+screen = 0               # 여러 모니터일 때 Qt 화면 번호
+remember_position = true # _state/overlay.json 에 저장된 위치를 우선 사용
 
 [logging]
 level = "INFO"

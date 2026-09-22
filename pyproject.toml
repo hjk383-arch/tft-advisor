@@ -32,7 +32,11 @@ advisor = [
 stats = [
     "httpx>=0.28",
 ]
-# UI: 기본은 stdlib tkinter(추가 설치 없음). Qt 오버레이를 택하면 이 그룹을 설치한다. 결정 보류.
+# UI: 오버레이는 PySide6(사용자 결정, Phase 4). 설치하지 않으면 앱은 콘솔 모드로 동작한다(--no-overlay와 같음).
+ui = [
+    "PySide6>=6.10",
+]
+# 옛 이름(Phase 2). 같은 내용을 가리킨다.
 ui-qt = [
     "PySide6>=6.10",
 ]
