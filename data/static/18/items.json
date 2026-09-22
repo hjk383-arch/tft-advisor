@@ -1,0 +1,5898 @@
+[
+ {
+  "apiName": "DA_18_EmblemBlackthorn",
+  "name_ko": "검은 가시 상징",
+  "name_en": "Blackthorn Emblem",
+  "category": "emblem",
+  "composition": [
+   "DA_Component_Spatula",
+   "DA_Component_GiantsBelt"
+  ],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/particles/tft/item_icons/traits/spatula/set18/tft18_emblem_blackthorn.tex",
+  "set_native": true,
+  "aliases": []
+ },
+ {
+  "apiName": "DA_18_EmblemBlossom",
+  "name_ko": "개화 상징",
+  "name_en": "Blossom Emblem",
+  "category": "emblem",
+  "composition": [
+   "DA_Component_Spatula",
+   "DA_Component_NeedlesslyLargeRod"
+  ],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/particles/tft/item_icons/traits/spatula/set18/tft18_emblem_blossom.tex",
+  "set_native": true,
+  "aliases": []
+ },
+ {
+  "apiName": "DA_18_EmblemBrawler",
+  "name_ko": "싸움꾼 상징",
+  "name_en": "Brawler Emblem",
+  "category": "emblem",
+  "composition": [
+   "DA_Component_FryingPan",
+   "DA_Component_GiantsBelt"
+  ],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/particles/tft/item_icons/traits/spatula/set18/tft18_emblem_brawler.tex",
+  "set_native": true,
+  "aliases": []
+ },
+ {
+  "apiName": "DA_18_EmblemCoven",
+  "name_ko": "악의 여단 상징",
+  "name_en": "Coven Emblem",
+  "category": "emblem",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/particles/tft/item_icons/traits/spatula/set18/tft18_emblem_coven.tex",
+  "set_native": true,
+  "aliases": []
+ },
+ {
+  "apiName": "DA_18_EmblemDefender",
+  "name_ko": "엄호대 상징",
+  "name_en": "Defender Emblem",
+  "category": "emblem",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/particles/tft/item_icons/traits/spatula/set18/tft18_emblem_defender.tex",
+  "set_native": true,
+  "aliases": []
+ },
+ {
+  "apiName": "DA_18_EmblemElderwood",
+  "name_ko": "나무정령 상징",
+  "name_en": "Elderwood Emblem",
+  "category": "emblem",
+  "composition": [
+   "DA_Component_Spatula",
+   "DA_Component_ChainVest"
+  ],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/particles/tft/item_icons/traits/spatula/set18/tft18_emblem_elderwood.tex",
+  "set_native": true,
+  "aliases": []
+ },
+ {
+  "apiName": "DA_18_EmblemExecutioner",
+  "name_ko": "처형자 상징",
+  "name_en": "Executioner Emblem",
+  "category": "emblem",
+  "composition": [
+   "DA_Component_FryingPan",
+   "DA_Component_SparringGloves"
+  ],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/particles/tft/item_icons/traits/spatula/set18/tft18_emblem_executioner.tex",
+  "set_native": true,
+  "aliases": []
+ },
+ {
+  "apiName": "DA_18_EmblemFae",
+  "name_ko": "요정 상징",
+  "name_en": "Fae Emblem",
+  "category": "emblem",
+  "composition": [
+   "DA_Component_Spatula",
+   "DA_Component_BFSword"
+  ],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/particles/tft/item_icons/traits/spatula/set18/tft18_emblem_fae.tex",
+  "set_native": true,
+  "aliases": []
+ },
+ {
+  "apiName": "DA_18_EmblemFloraFatalis",
+  "name_ko": "치명적인 꽃 상징",
+  "name_en": "Flora Fatalis Emblem",
+  "category": "emblem",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/particles/tft/item_icons/traits/spatula/set18/tft18_emblem_florafatalis.tex",
+  "set_native": true,
+  "aliases": [
+   "DA_18_EmblemFloraFatalisAugment"
+  ]
+ },
+ {
+  "apiName": "DA_18_EmblemFloraFatalisAugment",
+  "name_ko": "치명적인 꽃 상징",
+  "name_en": "Flora Fatalis Emblem",
+  "category": "emblem",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/particles/tft/item_icons/traits/spatula/set18/tft18_emblem_florafatalis.tex",
+  "set_native": true,
+  "aliases": [
+   "DA_18_EmblemFloraFatalis"
+  ]
+ },
+ {
+  "apiName": "DA_18_EmblemHunter",
+  "name_ko": "사냥꾼 상징",
+  "name_en": "Hunter Emblem",
+  "category": "emblem",
+  "composition": [
+   "DA_Component_FryingPan",
+   "DA_Component_BFSword"
+  ],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/particles/tft/item_icons/traits/spatula/set18/tft18_emblem_hunter.tex",
+  "set_native": true,
+  "aliases": []
+ },
+ {
+  "apiName": "DA_18_EmblemInferno",
+  "name_ko": "지옥불 상징",
+  "name_en": "Inferno Emblem",
+  "category": "emblem",
+  "composition": [
+   "DA_Component_Spatula",
+   "DA_Component_RecurveBow"
+  ],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/particles/tft/item_icons/traits/spatula/set18/tft18_emblem_inferno.tex",
+  "set_native": true,
+  "aliases": []
+ },
+ {
+  "apiName": "DA_18_EmblemInvoker",
+  "name_ko": "기원자 상징",
+  "name_en": "Invoker Emblem",
+  "category": "emblem",
+  "composition": [
+   "DA_Component_FryingPan",
+   "DA_Component_TearOfTheGoddess"
+  ],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/particles/tft/item_icons/traits/spatula/set18/tft18_emblem_invoker.tex",
+  "set_native": true,
+  "aliases": []
+ },
+ {
+  "apiName": "DA_18_EmblemJuggernaut",
+  "name_ko": "전쟁기계 상징",
+  "name_en": "Juggernaut Emblem",
+  "category": "emblem",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/particles/tft/item_icons/traits/spatula/set18/tft18_emblem_juggernaut.tex",
+  "set_native": true,
+  "aliases": []
+ },
+ {
+  "apiName": "DA_18_EmblemLunar",
+  "name_ko": "달빛 상징",
+  "name_en": "Lunar Emblem",
+  "category": "emblem",
+  "composition": [
+   "DA_Component_Spatula",
+   "DA_Component_TearOfTheGoddess"
+  ],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/particles/tft/item_icons/traits/spatula/set18/tft18_emblem_lunar.tex",
+  "set_native": true,
+  "aliases": []
+ },
+ {
+  "apiName": "DA_18_EmblemPrimal",
+  "name_ko": "원시 상징",
+  "name_en": "Primal Emblem",
+  "category": "emblem",
+  "composition": [
+   "DA_Component_Spatula",
+   "DA_Component_SparringGloves"
+  ],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/particles/tft/item_icons/traits/spatula/set18/tft18_emblem_primal.tex",
+  "set_native": true,
+  "aliases": []
+ },
+ {
+  "apiName": "DA_18_EmblemRapidfire",
+  "name_ko": "속사포 상징",
+  "name_en": "Rapidfire Emblem",
+  "category": "emblem",
+  "composition": [
+   "DA_Component_FryingPan",
+   "DA_Component_RecurveBow"
+  ],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/particles/tft/item_icons/traits/spatula/set18/tft18_emblem_rapidfire.tex",
+  "set_native": true,
+  "aliases": []
+ },
+ {
+  "apiName": "DA_18_EmblemSlayer",
+  "name_ko": "약탈자 상징",
+  "name_en": "Ravager Emblem",
+  "category": "emblem",
+  "composition": [
+   "DA_Component_FryingPan",
+   "DA_Component_NegatronCloak"
+  ],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/particles/tft/item_icons/traits/spatula/set18/tft18_emblem_ravager.tex",
+  "set_native": true,
+  "aliases": []
+ },
+ {
+  "apiName": "DA_18_EmblemSpellweaver",
+  "name_ko": "주문술사 상징",
+  "name_en": "Spellweaver Emblem",
+  "category": "emblem",
+  "composition": [
+   "DA_Component_FryingPan",
+   "DA_Component_NeedlesslyLargeRod"
+  ],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/particles/tft/item_icons/traits/spatula/set18/tft18_emblem_spellweaver.tex",
+  "set_native": true,
+  "aliases": []
+ },
+ {
+  "apiName": "DA_18_EmblemSprykin",
+  "name_ko": "날렵이 상징",
+  "name_en": "Sprykin Emblem",
+  "category": "emblem",
+  "composition": [
+   "DA_Component_Spatula",
+   "DA_Component_NegatronCloak"
+  ],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/particles/tft/item_icons/traits/spatula/set18/tft18_emblem_sprykin.tex",
+  "set_native": true,
+  "aliases": []
+ },
+ {
+  "apiName": "DA_18_EmblemVanguard",
+  "name_ko": "선봉대 상징",
+  "name_en": "Vanguard Emblem",
+  "category": "emblem",
+  "composition": [
+   "DA_Component_FryingPan",
+   "DA_Component_ChainVest"
+  ],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/particles/tft/item_icons/traits/spatula/set18/tft18_emblem_vanguard.tex",
+  "set_native": true,
+  "aliases": []
+ },
+ {
+  "apiName": "DA_AbilityBooster18",
+  "name_ko": "주문력 강화",
+  "name_en": "Ability Power Booster",
+  "category": "consumable",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/tft18/tft18_abilitybooster.tex",
+  "set_native": true,
+  "aliases": []
+ },
+ {
+  "apiName": "DA_AdaptiveHelm",
+  "name_ko": "적응형 투구",
+  "name_en": "Adaptive Helm",
+  "category": "completed",
+  "composition": [
+   "DA_Component_TearOfTheGoddess",
+   "DA_Component_NegatronCloak"
+  ],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_adaptivehelm.tex",
+  "set_native": true,
+  "aliases": [
+   "TFT_Item_AdaptiveHelm"
+  ]
+ },
+ {
+  "apiName": "DA_AdaptiveHelm_Radiant",
+  "name_ko": "찬란한 적응형 투구",
+  "name_en": "Radiant Adaptive Helm",
+  "category": "radiant",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft5_item_adaptivehelmradiant.tex",
+  "set_native": true,
+  "aliases": [
+   "TFT5_Item_AdaptiveHelmRadiant"
+  ]
+ },
+ {
+  "apiName": "DA_ArchangelsStaff",
+  "name_ko": "대천사의 지팡이",
+  "name_en": "Archangel's Staff",
+  "category": "completed",
+  "composition": [
+   "DA_Component_NeedlesslyLargeRod",
+   "DA_Component_TearOfTheGoddess"
+  ],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_archangelsstaff.tex",
+  "set_native": true,
+  "aliases": [
+   "TFT_Item_ArchangelsStaff"
+  ]
+ },
+ {
+  "apiName": "DA_ArchangelsStaffRadiant",
+  "name_ko": "찬란한 대천사의 지팡이",
+  "name_en": "Radiant Archangel's Staff",
+  "category": "radiant",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft5_item_archangelsstaffradiant.tex",
+  "set_native": true,
+  "aliases": [
+   "TFT5_Item_ArchangelsStaffRadiant"
+  ]
+ },
+ {
+  "apiName": "DA_ArmorMRBooster18",
+  "name_ko": "방어력 및 마법 저항력 강화",
+  "name_en": "Armor and Magic Resist Booster",
+  "category": "consumable",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/tft18/tft18_armormrbooster.tex",
+  "set_native": true,
+  "aliases": []
+ },
+ {
+  "apiName": "DA_Artifact_AegisOfDawn",
+  "name_ko": "새벽의 방패",
+  "name_en": "Aegis of Dawn",
+  "category": "artifact",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_artifact_aegisofdawn.tex",
+  "set_native": true,
+  "aliases": [
+   "TFT_Item_Artifact_AegisOfDawn"
+  ]
+ },
+ {
+  "apiName": "DA_Artifact_AegisOfDusk",
+  "name_ko": "황혼의 방패",
+  "name_en": "Aegis of Dusk",
+  "category": "artifact",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_artifact_aegisofdusk.tex",
+  "set_native": true,
+  "aliases": [
+   "TFT_Item_Artifact_AegisOfDusk"
+  ]
+ },
+ {
+  "apiName": "DA_Artifact_BlightingJewel",
+  "name_ko": "역병의 보석",
+  "name_en": "Blighting Jewel",
+  "category": "artifact",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_artifact_blightingjewel.tex",
+  "set_native": true,
+  "aliases": [
+   "TFT_Item_Artifact_BlightingJewel"
+  ]
+ },
+ {
+  "apiName": "DA_Artifact_Dawncore",
+  "name_ko": "새벽심장",
+  "name_en": "Dawncore",
+  "category": "artifact",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_artifact_dawncore.tex",
+  "set_native": true,
+  "aliases": [
+   "TFT_Item_Artifact_Dawncore"
+  ]
+ },
+ {
+  "apiName": "DA_Artifact_EternalPact",
+  "name_ko": "영원한 서약",
+  "name_en": "Eternal Pact",
+  "category": "artifact",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft16_artifact_eternalpact.tex",
+  "set_native": true,
+  "aliases": [
+   "TFT_Item_Artifact_EternalPact"
+  ]
+ },
+ {
+  "apiName": "DA_Artifact_Fishbones",
+  "name_ko": "생선대가리",
+  "name_en": "Fishbones",
+  "category": "artifact",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_artifact_fishbones.tex",
+  "set_native": true,
+  "aliases": [
+   "TFT_Item_Artifact_Fishbones"
+  ]
+ },
+ {
+  "apiName": "DA_Artifact_ForbiddenIdol",
+  "name_ko": "금지된 우상",
+  "name_en": "Forbidden Idol",
+  "category": "artifact",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_artifact_forbiddenidol.tex",
+  "set_native": true,
+  "aliases": [
+   "TFT_Item_Artifact_ForbiddenIdol"
+  ]
+ },
+ {
+  "apiName": "DA_Artifact_GamblersBlade",
+  "name_ko": "도박꾼의 칼날",
+  "name_en": "Gambler's Blade",
+  "category": "artifact",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft7_item_shimmerscalegamblersblade.tex",
+  "set_native": true,
+  "aliases": [
+   "TFT7_Item_ShimmerscaleGamblersBlade",
+   "TFT7_Item_ShimmerscaleGamblersBlade_HR"
+  ]
+ },
+ {
+  "apiName": "DA_Artifact_GoldCollector",
+  "name_ko": "황금 징수의 총",
+  "name_en": "Gold Collector",
+  "category": "artifact",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft4_item_ornnthecollector.tex",
+  "set_native": true,
+  "aliases": [
+   "TFT4_Item_OrnnTheCollector"
+  ]
+ },
+ {
+  "apiName": "DA_Artifact_HellfireHatchet",
+  "name_ko": "지옥불 손도끼",
+  "name_en": "Hellfire Hatchet",
+  "category": "artifact",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_artifact_hellfirehatchet.tex",
+  "set_native": true,
+  "aliases": [
+   "TFT_Item_Artifact_HellfireHatchet"
+  ]
+ },
+ {
+  "apiName": "DA_Artifact_HorizonFocus",
+  "name_ko": "지평선의 초점",
+  "name_en": "Horizon Focus",
+  "category": "artifact",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_artifact_horizonfocus.tex",
+  "set_native": true,
+  "aliases": []
+ },
+ {
+  "apiName": "DA_Artifact_InfinityForce",
+  "name_ko": "무한한 삼위일체",
+  "name_en": "Infinity Force",
+  "category": "artifact",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft4_item_ornninfinityforce.tex",
+  "set_native": true,
+  "aliases": [
+   "TFT4_Item_OrnnInfinityForce"
+  ]
+ },
+ {
+  "apiName": "DA_Artifact_LichBane",
+  "name_ko": "리치베인",
+  "name_en": "Lich Bane",
+  "category": "artifact",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/particles/tft/item_icons/ornn_items/tft_item_artifact_lichbane.tex",
+  "set_native": true,
+  "aliases": [
+   "TFT_Item_Artifact_LichBane"
+  ]
+ },
+ {
+  "apiName": "DA_Artifact_LightshieldCrest",
+  "name_ko": "라이트실드 문장",
+  "name_en": "Lightshield Crest",
+  "category": "artifact",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_artifact_lightshieldcrest.tex",
+  "set_native": true,
+  "aliases": [
+   "TFT_Item_Artifact_LightshieldCrest"
+  ]
+ },
+ {
+  "apiName": "DA_Artifact_LudensTempest",
+  "name_ko": "루덴의 폭풍",
+  "name_en": "Luden's Tempest",
+  "category": "artifact",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_artifact_ludenstempest.tex",
+  "set_native": true,
+  "aliases": [
+   "TFT_Item_Artifact_LudensTempest"
+  ]
+ },
+ {
+  "apiName": "DA_Artifact_Manazane",
+  "name_ko": "마나자네",
+  "name_en": "Manazane",
+  "category": "artifact",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft4_item_ornnmuramana.tex",
+  "set_native": true,
+  "aliases": [
+   "TFT4_Item_OrnnMuramana"
+  ]
+ },
+ {
+  "apiName": "DA_Artifact_Mittens",
+  "name_ko": "방한 장갑",
+  "name_en": "Mittens",
+  "category": "artifact",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_artifact_mittens.tex",
+  "set_native": true,
+  "aliases": [
+   "TFT_Item_Artifact_Mittens"
+  ]
+ },
+ {
+  "apiName": "DA_Artifact_MogulsMail",
+  "name_ko": "거물의갑옷",
+  "name_en": "Mogul'sMail",
+  "category": "artifact",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft7_item_shimmerscalemogulsmail.tex",
+  "set_native": true,
+  "aliases": []
+ },
+ {
+  "apiName": "DA_Artifact_NavoriFlickerblade",
+  "name_ko": "명멸검",
+  "name_en": "Flickerblades",
+  "category": "artifact",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_artifact_navoriflickerplade.tex",
+  "set_native": true,
+  "aliases": [
+   "TFT_Item_Artifact_NavoriFlickerblades"
+  ]
+ },
+ {
+  "apiName": "DA_Artifact_RapidFireCannon",
+  "name_ko": "고속 연사포",
+  "name_en": "Rapid Firecannon",
+  "category": "artifact",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_artifact_rapidfirecannon.tex",
+  "set_native": true,
+  "aliases": [
+   "TFT_Item_Artifact_RapidFirecannon"
+  ]
+ },
+ {
+  "apiName": "DA_Artifact_SeekersArmguard",
+  "name_ko": "추적자의 팔목 보호대",
+  "name_en": "Seeker's Armguard",
+  "category": "artifact",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_artifact_seekersarmguard.tex",
+  "set_native": true,
+  "aliases": [
+   "TFT_Item_Artifact_SeekersArmguard"
+  ]
+ },
+ {
+  "apiName": "DA_Artifact_SilvermereDawn",
+  "name_ko": "은빛 여명",
+  "name_en": "Silvermere Dawn",
+  "category": "artifact",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_artifact_silvermeredawn.tex",
+  "set_native": true,
+  "aliases": [
+   "TFT_Item_Artifact_SilvermereDawn"
+  ]
+ },
+ {
+  "apiName": "DA_Artifact_StatikkShiv",
+  "name_ko": "스태틱의 단검",
+  "name_en": "Statikk Shiv",
+  "category": "artifact",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_artifact_stattikshiv.tex",
+  "set_native": true,
+  "aliases": [
+   "TFT_Item_Artifact_StatikkShiv"
+  ]
+ },
+ {
+  "apiName": "DA_Artifact_TheIndomitable",
+  "name_ko": "불굴",
+  "name_en": "The Indomitable",
+  "category": "artifact",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_artifact_theindomitable.tex",
+  "set_native": true,
+  "aliases": [
+   "TFT_Item_Artifact_TheIndomitable"
+  ]
+ },
+ {
+  "apiName": "DA_Artifact_TitanicHydra",
+  "name_ko": "거대한 히드라",
+  "name_en": "Titanic Hydra",
+  "category": "artifact",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_artifact_titanichydra.tex",
+  "set_native": true,
+  "aliases": [
+   "TFT_Item_Artifact_TitanicHydra"
+  ]
+ },
+ {
+  "apiName": "DA_Artifact_VoidGauntlet",
+  "name_ko": "공허 건틀릿",
+  "name_en": "Void Gauntlet",
+  "category": "artifact",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft16_artifact_voidgauntlet.tex",
+  "set_native": true,
+  "aliases": [
+   "TFT_Item_Artifact_VoidGauntlet"
+  ]
+ },
+ {
+  "apiName": "DA_Artifact_WitsEnd",
+  "name_ko": "마법사의 최후",
+  "name_en": "Wit's End",
+  "category": "artifact",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_artifact_witsend.tex",
+  "set_native": true,
+  "aliases": [
+   "TFT_Item_Artifact_WitsEnd"
+  ]
+ },
+ {
+  "apiName": "DA_Artifact_ZhonyasParadox",
+  "name_ko": "존야의 역설",
+  "name_en": "Zhonya's Paradox",
+  "category": "artifact",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft4_item_ornnzhonyasparadox.tex",
+  "set_native": true,
+  "aliases": [
+   "TFT4_Item_OrnnZhonyasParadox"
+  ]
+ },
+ {
+  "apiName": "DA_AttackBooster18",
+  "name_ko": "공격력 강화",
+  "name_en": "Attack Damage Booster",
+  "category": "consumable",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/tft18/tft18_attackbooster.tex",
+  "set_native": true,
+  "aliases": []
+ },
+ {
+  "apiName": "DA_BlastPotion18",
+  "name_ko": "폭발 물약",
+  "name_en": "Blast Potion",
+  "category": "other",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/tft18/tft18_blastpotion.tex",
+  "set_native": true,
+  "aliases": []
+ },
+ {
+  "apiName": "DA_BlastPotion18_Radiant",
+  "name_ko": "찬란한 폭발 물약",
+  "name_en": "Radiant Blast Potion",
+  "category": "radiant",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/tft18/tft18_blastpotion.tex",
+  "set_native": true,
+  "aliases": []
+ },
+ {
+  "apiName": "DA_Bloodthirster",
+  "name_ko": "피바라기",
+  "name_en": "Bloodthirster",
+  "category": "completed",
+  "composition": [
+   "DA_Component_BFSword",
+   "DA_Component_NegatronCloak"
+  ],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_bloodthirster.tex",
+  "set_native": true,
+  "aliases": [
+   "TFT_Item_Bloodthirster"
+  ]
+ },
+ {
+  "apiName": "DA_BloodthirsterRadiant",
+  "name_ko": "찬란한 피바라기",
+  "name_en": "Radiant Bloodthirster",
+  "category": "radiant",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft5_item_bloodthirsterradiant.tex",
+  "set_native": true,
+  "aliases": [
+   "TFT5_Item_BloodthirsterRadiant"
+  ]
+ },
+ {
+  "apiName": "DA_BlueBuff",
+  "name_ko": "푸른 파수꾼",
+  "name_en": "Blue Buff",
+  "category": "completed",
+  "composition": [
+   "DA_Component_TearOfTheGoddess",
+   "DA_Component_TearOfTheGoddess"
+  ],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_bluebuff.tex",
+  "set_native": true,
+  "aliases": [
+   "TFT_Item_BlueBuff"
+  ]
+ },
+ {
+  "apiName": "DA_BlueBuffRadiant",
+  "name_ko": "찬란한 푸른 파수꾼",
+  "name_en": "Radiant Blue Buff",
+  "category": "radiant",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft5_item_bluebuffradiant.tex",
+  "set_native": true,
+  "aliases": [
+   "TFT5_Item_BlueBuffRadiant"
+  ]
+ },
+ {
+  "apiName": "DA_BrambleVest",
+  "name_ko": "덤불 조끼",
+  "name_en": "Bramble Vest",
+  "category": "completed",
+  "composition": [
+   "DA_Component_ChainVest",
+   "DA_Component_ChainVest"
+  ],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_bramblevest.tex",
+  "set_native": true,
+  "aliases": [
+   "TFT_Item_BrambleVest"
+  ]
+ },
+ {
+  "apiName": "DA_BrambleVestRadiant",
+  "name_ko": "찬란한 덤불 조끼",
+  "name_en": "Radiant Bramble Vest",
+  "category": "radiant",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft5_item_bramblevestradiant.tex",
+  "set_native": true,
+  "aliases": [
+   "TFT5_Item_BrambleVestRadiant"
+  ]
+ },
+ {
+  "apiName": "DA_Component_BFSword",
+  "name_ko": "B.F. 대검",
+  "name_en": "B.F. Sword",
+  "category": "component",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_bfsword.tex",
+  "set_native": true,
+  "aliases": [
+   "TFT_Item_BFSword"
+  ]
+ },
+ {
+  "apiName": "DA_Component_ChainVest",
+  "name_ko": "쇠사슬 조끼",
+  "name_en": "Chain Vest",
+  "category": "component",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_chainvest.tex",
+  "set_native": true,
+  "aliases": [
+   "TFT_Item_ChainVest"
+  ]
+ },
+ {
+  "apiName": "DA_Component_FryingPan",
+  "name_ko": "프라이팬",
+  "name_en": "Frying Pan",
+  "category": "component",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_fryingpan.tex",
+  "set_native": true,
+  "aliases": [
+   "TFT_Item_FryingPan"
+  ]
+ },
+ {
+  "apiName": "DA_Component_GiantsBelt",
+  "name_ko": "거인의 허리띠",
+  "name_en": "Giant's Belt",
+  "category": "component",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_giantsbelt.tex",
+  "set_native": true,
+  "aliases": [
+   "TFT_Item_GiantsBelt"
+  ]
+ },
+ {
+  "apiName": "DA_Component_NeedlesslyLargeRod",
+  "name_ko": "쓸데없이 큰 지팡이",
+  "name_en": "Needlessly Large Rod",
+  "category": "component",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_needlesslylargerod.tex",
+  "set_native": true,
+  "aliases": [
+   "TFT_Item_NeedlesslyLargeRod"
+  ]
+ },
+ {
+  "apiName": "DA_Component_NegatronCloak",
+  "name_ko": "음전자 망토",
+  "name_en": "Negatron Cloak",
+  "category": "component",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_negatroncloak.tex",
+  "set_native": true,
+  "aliases": [
+   "TFT_Item_NegatronCloak"
+  ]
+ },
+ {
+  "apiName": "DA_Component_RecurveBow",
+  "name_ko": "곡궁",
+  "name_en": "Recurve Bow",
+  "category": "component",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_recurvebow.tex",
+  "set_native": true,
+  "aliases": [
+   "TFT_Item_RecurveBow"
+  ]
+ },
+ {
+  "apiName": "DA_Component_SparringGloves",
+  "name_ko": "연습용 장갑",
+  "name_en": "Sparring Gloves",
+  "category": "component",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_sparringgloves.tex",
+  "set_native": true,
+  "aliases": [
+   "TFT_Item_SparringGloves"
+  ]
+ },
+ {
+  "apiName": "DA_Component_Spatula",
+  "name_ko": "뒤집개",
+  "name_en": "Spatula",
+  "category": "component",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_spatula.tex",
+  "set_native": true,
+  "aliases": [
+   "TFT_Item_Spatula"
+  ]
+ },
+ {
+  "apiName": "DA_Component_TearOfTheGoddess",
+  "name_ko": "여신의 눈물",
+  "name_en": "Tear Of The Goddess",
+  "category": "component",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_tearofthegoddess.tex",
+  "set_native": true,
+  "aliases": [
+   "TFT_Item_TearOfTheGoddess"
+  ]
+ },
+ {
+  "apiName": "DA_Consumable_ChampionDuplicator",
+  "name_ko": "챔피언 복제기",
+  "name_en": "Champion Duplicator",
+  "category": "consumable",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_consumable_neekoshelp.tex",
+  "set_native": true,
+  "aliases": [
+   "TFT_Consumable_NeekosHelp"
+  ]
+ },
+ {
+  "apiName": "DA_Consumable_GoldenItemRemover",
+  "name_ko": "황금 아이템 제거기",
+  "name_en": "Golden Item Remover",
+  "category": "consumable",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft9_consumable_goldenitemremover.tex",
+  "set_native": true,
+  "aliases": [
+   "TFT9_Consumable_GoldenItemRemover"
+  ]
+ },
+ {
+  "apiName": "DA_Consumable_ItemRemover",
+  "name_ko": "아이템 제거기",
+  "name_en": "Item Remover",
+  "category": "consumable",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_consumable_itemremover.tex",
+  "set_native": true,
+  "aliases": []
+ },
+ {
+  "apiName": "DA_Consumable_LesserChampionDuplicator",
+  "name_ko": "하급 챔피언 복제기",
+  "name_en": "Lesser Champion Duplicator",
+  "category": "consumable",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_consumable_championduplicator_iii.tex",
+  "set_native": true,
+  "aliases": [
+   "TFT_Consumable_ChampionDuplicator_III"
+  ]
+ },
+ {
+  "apiName": "DA_Crownguard",
+  "name_ko": "크라운가드",
+  "name_en": "Crownguard",
+  "category": "completed",
+  "composition": [
+   "DA_Component_NeedlesslyLargeRod",
+   "DA_Component_ChainVest"
+  ],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_crownguard.tex",
+  "set_native": true,
+  "aliases": [
+   "TFT_Item_Crownguard"
+  ]
+ },
+ {
+  "apiName": "DA_CrownguardRadiant",
+  "name_ko": "찬란한 크라운가드",
+  "name_en": "Radiant Crownguard",
+  "category": "radiant",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft5_item_crownguardradiant.tex",
+  "set_native": true,
+  "aliases": [
+   "TFT5_Item_CrownguardRadiant"
+  ]
+ },
+ {
+  "apiName": "DA_Deathblade",
+  "name_ko": "죽음의 검",
+  "name_en": "Deathblade",
+  "category": "completed",
+  "composition": [
+   "DA_Component_BFSword",
+   "DA_Component_BFSword"
+  ],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_deathblade.tex",
+  "set_native": true,
+  "aliases": [
+   "TFT_Item_Deathblade"
+  ]
+ },
+ {
+  "apiName": "DA_DeathbladeRadiant",
+  "name_ko": "찬란한 죽음의 검",
+  "name_en": "Radiant Deathblade",
+  "category": "radiant",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft5_item_deathbladeradiant.tex",
+  "set_native": true,
+  "aliases": [
+   "TFT5_Item_DeathbladeRadiant"
+  ]
+ },
+ {
+  "apiName": "DA_DragonsClaw",
+  "name_ko": "용의 발톱",
+  "name_en": "Dragon's Claw",
+  "category": "completed",
+  "composition": [
+   "DA_Component_NegatronCloak",
+   "DA_Component_NegatronCloak"
+  ],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_dragonsclaw.tex",
+  "set_native": true,
+  "aliases": [
+   "TFT_Item_DragonsClaw"
+  ]
+ },
+ {
+  "apiName": "DA_DragonsClawRadiant",
+  "name_ko": "찬란한 용의 발톱",
+  "name_en": "Radiant Dragon's Claw",
+  "category": "radiant",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft5_item_dragonsclawradiant.tex",
+  "set_native": true,
+  "aliases": [
+   "TFT5_Item_DragonsClawRadiant"
+  ]
+ },
+ {
+  "apiName": "DA_EdgeOfNight",
+  "name_ko": "밤의 끝자락",
+  "name_en": "Edge of Night",
+  "category": "completed",
+  "composition": [
+   "DA_Component_BFSword",
+   "DA_Component_ChainVest"
+  ],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_guardianangel.tex",
+  "set_native": true,
+  "aliases": [
+   "TFT_Item_GuardianAngel"
+  ]
+ },
+ {
+  "apiName": "DA_EdgeOfNightRadiant",
+  "name_ko": "찬란한 밤의 끝자락",
+  "name_en": "Radiant Edge of Night",
+  "category": "radiant",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft5_item_guardianangelradiant.tex",
+  "set_native": true,
+  "aliases": [
+   "TFT5_Item_GuardianAngelRadiant"
+  ]
+ },
+ {
+  "apiName": "DA_Evenshroud",
+  "name_ko": "저녁갑주",
+  "name_en": "Evenshroud",
+  "category": "completed",
+  "composition": [
+   "DA_Component_NegatronCloak",
+   "DA_Component_GiantsBelt"
+  ],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_spectralgauntlet.tex",
+  "set_native": true,
+  "aliases": [
+   "TFT_Item_SpectralGauntlet"
+  ]
+ },
+ {
+  "apiName": "DA_EvenshroudRadiant",
+  "name_ko": "찬란한 저녁갑주",
+  "name_en": "Radiant Evenshroud",
+  "category": "radiant",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft5_item_spectralgauntletradiant.tex",
+  "set_native": true,
+  "aliases": [
+   "TFT5_Item_SpectralGauntletRadiant"
+  ]
+ },
+ {
+  "apiName": "DA_GargoyleStoneplate",
+  "name_ko": "가고일 돌갑옷",
+  "name_en": "Gargoyle Stoneplate",
+  "category": "completed",
+  "composition": [
+   "DA_Component_ChainVest",
+   "DA_Component_NegatronCloak"
+  ],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_gargoylestoneplate.tex",
+  "set_native": true,
+  "aliases": [
+   "TFT_Item_GargoyleStoneplate"
+  ]
+ },
+ {
+  "apiName": "DA_GargoyleStoneplate_Radiant",
+  "name_ko": "찬란한 가고일 돌갑옷",
+  "name_en": "Radiant Gargoyle Stoneplate",
+  "category": "radiant",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft5_item_gargoylestoneplateradiant.tex",
+  "set_native": true,
+  "aliases": [
+   "TFT5_Item_GargoyleStoneplateRadiant"
+  ]
+ },
+ {
+  "apiName": "DA_GiantSlayer",
+  "name_ko": "거인 학살자",
+  "name_en": "Giant Slayer",
+  "category": "completed",
+  "composition": [
+   "DA_Component_RecurveBow",
+   "DA_Component_BFSword"
+  ],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_madredsbloodrazor.tex",
+  "set_native": true,
+  "aliases": [
+   "TFT_Item_MadredsBloodrazor"
+  ]
+ },
+ {
+  "apiName": "DA_GiantSlayer_Radiant",
+  "name_ko": "찬란한 거인 학살자",
+  "name_en": "Radiant Giant Slayer",
+  "category": "radiant",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft5_item_giantslayerradiant.tex",
+  "set_native": true,
+  "aliases": [
+   "TFT5_Item_GiantSlayerRadiant"
+  ]
+ },
+ {
+  "apiName": "DA_GuinsoosRageblade",
+  "name_ko": "구인수의 격노검",
+  "name_en": "Guinsoo's Rageblade",
+  "category": "completed",
+  "composition": [
+   "DA_Component_RecurveBow",
+   "DA_Component_NeedlesslyLargeRod"
+  ],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_guinsoosrageblade.tex",
+  "set_native": true,
+  "aliases": [
+   "TFT_Item_GuinsoosRageblade"
+  ]
+ },
+ {
+  "apiName": "DA_GuinsoosRagebladeRadiant",
+  "name_ko": "찬란한 구인수의 격노검",
+  "name_en": "Radiant Guinsoo's Rageblade",
+  "category": "radiant",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft5_item_guinsoosragebladeradiant.tex",
+  "set_native": true,
+  "aliases": [
+   "TFT5_Item_GuinsoosRagebladeRadiant"
+  ]
+ },
+ {
+  "apiName": "DA_HandOfJustice",
+  "name_ko": "정의의 손길",
+  "name_en": "Hand Of Justice",
+  "category": "completed",
+  "composition": [
+   "DA_Component_TearOfTheGoddess",
+   "DA_Component_SparringGloves"
+  ],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_unstableconcoction.tex",
+  "set_native": true,
+  "aliases": [
+   "TFT_Item_UnstableConcoction"
+  ]
+ },
+ {
+  "apiName": "DA_HandOfJusticeRadiant",
+  "name_ko": "찬란한 정의의 손길",
+  "name_en": "Radiant Hand of Justice",
+  "category": "radiant",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft5_item_handofjusticeradiant.tex",
+  "set_native": true,
+  "aliases": [
+   "TFT5_Item_HandOfJusticeRadiant"
+  ]
+ },
+ {
+  "apiName": "DA_HealthBooster18",
+  "name_ko": "체력 강화",
+  "name_en": "Health Booster",
+  "category": "consumable",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/tft18/tft18_healthbooster.tex",
+  "set_native": true,
+  "aliases": []
+ },
+ {
+  "apiName": "DA_HealthPotion18",
+  "name_ko": "체력 물약",
+  "name_en": "Health Potion",
+  "category": "other",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/tft18/tft18_healthpotion.tex",
+  "set_native": true,
+  "aliases": []
+ },
+ {
+  "apiName": "DA_HealthPotion18_Radiant",
+  "name_ko": "찬란한 체력 물약",
+  "name_en": "Radiant Health Potion",
+  "category": "radiant",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/tft18/tft18_healthpotion.tex",
+  "set_native": true,
+  "aliases": []
+ },
+ {
+  "apiName": "DA_HextechGunblade",
+  "name_ko": "마법공학 총검",
+  "name_en": "Hextech Gunblade",
+  "category": "completed",
+  "composition": [
+   "DA_Component_BFSword",
+   "DA_Component_NeedlesslyLargeRod"
+  ],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_hextechgunblade.tex",
+  "set_native": true,
+  "aliases": [
+   "TFT_Item_HextechGunblade"
+  ]
+ },
+ {
+  "apiName": "DA_HextechGunbladeRadiant",
+  "name_ko": "찬란한 마법공학 총검",
+  "name_en": "Radiant Hextech Gunblade",
+  "category": "radiant",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft5_item_hextechgunbladeradiant.tex",
+  "set_native": true,
+  "aliases": [
+   "TFT5_Item_HextechGunbladeRadiant"
+  ]
+ },
+ {
+  "apiName": "DA_InfinityEdge",
+  "name_ko": "무한의 대검",
+  "name_en": "Infinity Edge",
+  "category": "completed",
+  "composition": [
+   "DA_Component_BFSword",
+   "DA_Component_SparringGloves"
+  ],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_infinityedge.tex",
+  "set_native": true,
+  "aliases": [
+   "TFT_Item_InfinityEdge"
+  ]
+ },
+ {
+  "apiName": "DA_InfinityEdgeRadiant",
+  "name_ko": "찬란한 무한의 대검",
+  "name_en": "Radiant Infinity Edge",
+  "category": "radiant",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft5_item_infinityedgeradiant.tex",
+  "set_native": true,
+  "aliases": [
+   "TFT5_Item_InfinityEdgeRadiant"
+  ]
+ },
+ {
+  "apiName": "DA_IonicSpark",
+  "name_ko": "이온 충격기",
+  "name_en": "Ionic Spark",
+  "category": "completed",
+  "composition": [
+   "DA_Component_NeedlesslyLargeRod",
+   "DA_Component_NegatronCloak"
+  ],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_ionicspark.tex",
+  "set_native": true,
+  "aliases": [
+   "TFT_Item_IonicSpark"
+  ]
+ },
+ {
+  "apiName": "DA_IonicSparkRadiant",
+  "name_ko": "찬란한 이온 충격기",
+  "name_en": "Radiant Ionic Spark",
+  "category": "radiant",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft5_item_ionicsparkradiant.tex",
+  "set_native": true,
+  "aliases": [
+   "TFT5_Item_IonicSparkRadiant"
+  ]
+ },
+ {
+  "apiName": "DA_Item_Artifact_TalismanOfAscension",
+  "name_ko": "승천의 부적",
+  "name_en": "Talisman of Ascension",
+  "category": "artifact",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_artifact_talismanofascension.tex",
+  "set_native": true,
+  "aliases": [
+   "TFT_Item_Artifact_TalismanOfAscension"
+  ]
+ },
+ {
+  "apiName": "DA_JeweledGauntlet",
+  "name_ko": "보석 건틀릿",
+  "name_en": "Jeweled Gauntlet",
+  "category": "completed",
+  "composition": [
+   "DA_Component_SparringGloves",
+   "DA_Component_NeedlesslyLargeRod"
+  ],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_jeweledgauntlet.tex",
+  "set_native": true,
+  "aliases": [
+   "TFT_Item_JeweledGauntlet"
+  ]
+ },
+ {
+  "apiName": "DA_JeweledGauntletRadiant",
+  "name_ko": "찬란한 보석 건틀릿",
+  "name_en": "Radiant Jeweled Gauntlet",
+  "category": "radiant",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft5_item_jeweledgauntletradiant.tex",
+  "set_native": true,
+  "aliases": [
+   "TFT5_Item_JeweledGauntletRadiant"
+  ]
+ },
+ {
+  "apiName": "DA_KrakensFury",
+  "name_ko": "크라켄의 분노",
+  "name_en": "Kraken's Fury",
+  "category": "completed",
+  "composition": [
+   "DA_Component_RecurveBow",
+   "DA_Component_NegatronCloak"
+  ],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_krakenslayer.tex",
+  "set_native": true,
+  "aliases": [
+   "TFT_Item_RunaansHurricane"
+  ]
+ },
+ {
+  "apiName": "DA_KrakensFury_Radiant",
+  "name_ko": "찬란한 크라켄의 분노",
+  "name_en": "Radiant Kraken's Fury",
+  "category": "radiant",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_krakenslayerradiant.tex",
+  "set_native": true,
+  "aliases": [
+   "TFT5_Item_RunaansHurricaneRadiant"
+  ]
+ },
+ {
+  "apiName": "DA_LastWhisper",
+  "name_ko": "최후의 속삭임",
+  "name_en": "Last Whisper",
+  "category": "completed",
+  "composition": [
+   "DA_Component_RecurveBow",
+   "DA_Component_SparringGloves"
+  ],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_lastwhisper.tex",
+  "set_native": true,
+  "aliases": [
+   "TFT_Item_LastWhisper"
+  ]
+ },
+ {
+  "apiName": "DA_LastWhisperRadiant",
+  "name_ko": "찬란한 최후의 속삭임",
+  "name_en": "Radiant Last Whisper",
+  "category": "radiant",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft5_item_lastwhisperradiant.tex",
+  "set_native": true,
+  "aliases": [
+   "TFT5_Item_LastWhisperRadiant"
+  ]
+ },
+ {
+  "apiName": "DA_LuckyItemChest",
+  "name_ko": "행운의 아이템 상자",
+  "name_en": "Lucky Item Chest",
+  "category": "consumable",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_consumable_luckyitemchest.tex",
+  "set_native": true,
+  "aliases": []
+ },
+ {
+  "apiName": "DA_ManaPotion18",
+  "name_ko": "마나 물약",
+  "name_en": "Mana Potion",
+  "category": "other",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/tft18/tft18_manapotion.tex",
+  "set_native": true,
+  "aliases": []
+ },
+ {
+  "apiName": "DA_ManaPotion18_Radiant",
+  "name_ko": "찬란한 마나 물약",
+  "name_en": "Radiant Mana Potion",
+  "category": "radiant",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/tft18/tft18_manapotion.tex",
+  "set_native": true,
+  "aliases": []
+ },
+ {
+  "apiName": "DA_ManaRegenBooster18",
+  "name_ko": "마나 재생 강화",
+  "name_en": "Mana Regen Booster",
+  "category": "consumable",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/tft18/tft18_manaregenbooster.tex",
+  "set_native": true,
+  "aliases": []
+ },
+ {
+  "apiName": "DA_MasterworkUpgrade",
+  "name_ko": "걸작 업그레이드",
+  "name_en": "Masterwork Upgrade",
+  "category": "consumable",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_consumable_masterworkupgrade.tex",
+  "set_native": true,
+  "aliases": [
+   "TFT_Consumable_MasterworkUpgrade"
+  ]
+ },
+ {
+  "apiName": "DA_Morellonomicon",
+  "name_ko": "모렐로노미콘",
+  "name_en": "Morellonomicon",
+  "category": "completed",
+  "composition": [
+   "DA_Component_GiantsBelt",
+   "DA_Component_NeedlesslyLargeRod"
+  ],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_morellonomicon.tex",
+  "set_native": true,
+  "aliases": [
+   "TFT_Item_Morellonomicon"
+  ]
+ },
+ {
+  "apiName": "DA_MorellonomiconRadiant",
+  "name_ko": "찬란한 모렐로노미콘",
+  "name_en": "Radiant Morellonomicon",
+  "category": "radiant",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft5_item_morellonomiconradiant.tex",
+  "set_native": true,
+  "aliases": [
+   "TFT5_Item_MorellonomiconRadiant"
+  ]
+ },
+ {
+  "apiName": "DA_NashorsTooth",
+  "name_ko": "내셔의 이빨",
+  "name_en": "Nashor's Tooth",
+  "category": "completed",
+  "composition": [
+   "DA_Component_RecurveBow",
+   "DA_Component_GiantsBelt"
+  ],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_leviathan.tex",
+  "set_native": true,
+  "aliases": [
+   "TFT_Item_Leviathan"
+  ]
+ },
+ {
+  "apiName": "DA_NashorsToothRadiant",
+  "name_ko": "찬란한 내셔의 이빨",
+  "name_en": "Radiant Nashor's Tooth",
+  "category": "radiant",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft5_item_leviathanradiant.tex",
+  "set_native": true,
+  "aliases": [
+   "TFT5_Item_LeviathanRadiant"
+  ]
+ },
+ {
+  "apiName": "DA_ProtectorsVow",
+  "name_ko": "수호자의 맹세",
+  "name_en": "Protector's Vow",
+  "category": "completed",
+  "composition": [
+   "DA_Component_ChainVest",
+   "DA_Component_TearOfTheGoddess"
+  ],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_frozenheart.tex",
+  "set_native": true,
+  "aliases": [
+   "TFT_Item_FrozenHeart"
+  ]
+ },
+ {
+  "apiName": "DA_ProtectorsVowRadiant",
+  "name_ko": "찬란한 수호자의 맹세",
+  "name_en": "Radiant Protector's Vow",
+  "category": "radiant",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft5_item_frozenheartradiant.tex",
+  "set_native": true,
+  "aliases": [
+   "TFT5_Item_FrozenHeartRadiant"
+  ]
+ },
+ {
+  "apiName": "DA_Quicksilver",
+  "name_ko": "수은",
+  "name_en": "Quicksilver",
+  "category": "completed",
+  "composition": [
+   "DA_Component_NegatronCloak",
+   "DA_Component_SparringGloves"
+  ],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_quicksilver.tex",
+  "set_native": true,
+  "aliases": [
+   "TFT_Item_Quicksilver"
+  ]
+ },
+ {
+  "apiName": "DA_QuicksilverRadiant",
+  "name_ko": "찬란한 수은",
+  "name_en": "Radiant Quicksilver",
+  "category": "radiant",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft5_item_quicksilverradiant.tex",
+  "set_native": true,
+  "aliases": [
+   "TFT5_Item_QuicksilverRadiant"
+  ]
+ },
+ {
+  "apiName": "DA_RabadonsDeathcap",
+  "name_ko": "라바돈의 죽음모자",
+  "name_en": "Rabadon's Deathcap",
+  "category": "completed",
+  "composition": [
+   "DA_Component_NeedlesslyLargeRod",
+   "DA_Component_NeedlesslyLargeRod"
+  ],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_rabadonsdeathcap.tex",
+  "set_native": true,
+  "aliases": [
+   "TFT_Item_RabadonsDeathcap"
+  ]
+ },
+ {
+  "apiName": "DA_RabadonsDeathcap_Radiant",
+  "name_ko": "찬란한 라바돈의 죽음모자",
+  "name_en": "Radiant Rabadon's Deathcap",
+  "category": "radiant",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft5_item_rabadonsdeathcapradiant.tex",
+  "set_native": true,
+  "aliases": [
+   "TFT5_Item_RabadonsDeathcapRadiant"
+  ]
+ },
+ {
+  "apiName": "DA_RadiantLuckyItemChest",
+  "name_ko": "찬란한 행운의 아이템 상자",
+  "name_en": "Radiant Lucky Item Chest",
+  "category": "radiant",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_consumable_luckyitemchest.tex",
+  "set_native": true,
+  "aliases": []
+ },
+ {
+  "apiName": "DA_RedBuff",
+  "name_ko": "붉은 덩굴정령",
+  "name_en": "Red Buff",
+  "category": "completed",
+  "composition": [
+   "DA_Component_RecurveBow",
+   "DA_Component_RecurveBow"
+  ],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_rapidfirecannon.tex",
+  "set_native": true,
+  "aliases": [
+   "TFT_Item_RapidFireCannon"
+  ]
+ },
+ {
+  "apiName": "DA_RedBuffRadiant",
+  "name_ko": "찬란한 붉은 덩굴정령",
+  "name_en": "Radiant Red Buff",
+  "category": "radiant",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft5_item_rapidfirecannonradiant.tex",
+  "set_native": true,
+  "aliases": [
+   "TFT5_Item_RapidFirecannonRadiant"
+  ]
+ },
+ {
+  "apiName": "DA_Reforger",
+  "name_ko": "재조합기",
+  "name_en": "Reforger",
+  "category": "consumable",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_consumable_itemreroller.tex",
+  "set_native": true,
+  "aliases": [
+   "TFT_Consumable_ItemReroller",
+   "TFT_Consumable_TrashToTreasure_Reforger"
+  ]
+ },
+ {
+  "apiName": "DA_SpearOfShojin",
+  "name_ko": "쇼진의 창",
+  "name_en": "Spear of Shojin",
+  "category": "completed",
+  "composition": [
+   "DA_Component_TearOfTheGoddess",
+   "DA_Component_BFSword"
+  ],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_spearofshojin.tex",
+  "set_native": true,
+  "aliases": [
+   "TFT_Item_SpearOfShojin"
+  ]
+ },
+ {
+  "apiName": "DA_SpearOfShojinRadiant",
+  "name_ko": "찬란한 쇼진의 창",
+  "name_en": "Radiant Spear of Shojin",
+  "category": "radiant",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft5_item_spearofshojinradiant.tex",
+  "set_native": true,
+  "aliases": [
+   "TFT5_Item_SpearOfShojinRadiant"
+  ]
+ },
+ {
+  "apiName": "DA_SpeedBooster18",
+  "name_ko": "공격 속도 강화",
+  "name_en": "Attack Speed Booster",
+  "category": "consumable",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/tft18/tft18_speedbooster.tex",
+  "set_native": true,
+  "aliases": []
+ },
+ {
+  "apiName": "DA_SpiritVisage",
+  "name_ko": "정령의 형상",
+  "name_en": "Spirit Visage",
+  "category": "completed",
+  "composition": [
+   "DA_Component_GiantsBelt",
+   "DA_Component_TearOfTheGoddess"
+  ],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_spiritvisagerr.tex",
+  "set_native": true,
+  "aliases": [
+   "TFT_Item_Redemption"
+  ]
+ },
+ {
+  "apiName": "DA_SpiritVisage_Radiant",
+  "name_ko": "찬란한 정령의 형상",
+  "name_en": "Radiant Spirit Visage",
+  "category": "radiant",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_spiritvisagerr.tex",
+  "set_native": true,
+  "aliases": [
+   "TFT5_Item_RedemptionRadiant"
+  ]
+ },
+ {
+  "apiName": "DA_SteadfastHeart",
+  "name_ko": "굳건한 심장",
+  "name_en": "Steadfast Heart",
+  "category": "completed",
+  "composition": [
+   "DA_Component_ChainVest",
+   "DA_Component_SparringGloves"
+  ],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_nightharvester.tex",
+  "set_native": true,
+  "aliases": [
+   "TFT_Item_NightHarvester"
+  ]
+ },
+ {
+  "apiName": "DA_SteadfastHeartRadiant",
+  "name_ko": "찬란한 굳건한 심장",
+  "name_en": "Radiant Steadfast Heart",
+  "category": "radiant",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft5_item_nightharvesterradiant.tex",
+  "set_native": true,
+  "aliases": [
+   "TFT5_Item_NightHarvesterRadiant"
+  ]
+ },
+ {
+  "apiName": "DA_SteraksGage",
+  "name_ko": "스테락의 도전",
+  "name_en": "Sterak's Gage",
+  "category": "completed",
+  "composition": [
+   "DA_Component_BFSword",
+   "DA_Component_GiantsBelt"
+  ],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_steraksgage.tex",
+  "set_native": true,
+  "aliases": [
+   "TFT_Item_SteraksGage"
+  ]
+ },
+ {
+  "apiName": "DA_SteraksGageRadiant",
+  "name_ko": "찬란한 스테락의 도전",
+  "name_en": "Radiant Sterak's Gage",
+  "category": "radiant",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft5_item_steraksgageradiant.tex",
+  "set_native": true,
+  "aliases": [
+   "TFT5_Item_SteraksGageRadiant"
+  ]
+ },
+ {
+  "apiName": "DA_StrikersFlail",
+  "name_ko": "타격대의 철퇴",
+  "name_en": "Striker's Flail",
+  "category": "completed",
+  "composition": [
+   "DA_Component_GiantsBelt",
+   "DA_Component_SparringGloves"
+  ],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_powergauntlet.tex",
+  "set_native": true,
+  "aliases": [
+   "TFT_Item_PowerGauntlet"
+  ]
+ },
+ {
+  "apiName": "DA_StrikersFlailRadiant",
+  "name_ko": "찬란한 타격대의 철퇴",
+  "name_en": "Radiant Striker's Flail",
+  "category": "radiant",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft5_item_trapclawradiant.tex",
+  "set_native": true,
+  "aliases": [
+   "TFT5_Item_TrapClawRadiant"
+  ]
+ },
+ {
+  "apiName": "DA_SunfireCape",
+  "name_ko": "태양불꽃 망토",
+  "name_en": "Sunfire Cape",
+  "category": "completed",
+  "composition": [
+   "DA_Component_ChainVest",
+   "DA_Component_GiantsBelt"
+  ],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_redbuff.tex",
+  "set_native": true,
+  "aliases": [
+   "TFT_Item_RedBuff"
+  ]
+ },
+ {
+  "apiName": "DA_SunfireCape_Radiant",
+  "name_ko": "찬란한 태양불꽃 망토",
+  "name_en": "Radiant Sunfire Cape",
+  "category": "radiant",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft5_item_sunfirecaperadiant.tex",
+  "set_native": true,
+  "aliases": [
+   "TFT5_Item_SunfireCapeRadiant"
+  ]
+ },
+ {
+  "apiName": "DA_TacticiansCape",
+  "name_ko": "전략가의 망토",
+  "name_en": "Tactician's Cape",
+  "category": "tactician",
+  "composition": [
+   "DA_Component_Spatula",
+   "DA_Component_FryingPan"
+  ],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_tacticiansring.tex",
+  "set_native": true,
+  "aliases": [
+   "TFT_Item_TacticiansRing"
+  ]
+ },
+ {
+  "apiName": "DA_TacticiansCrown",
+  "name_ko": "전략가의 왕관",
+  "name_en": "Tacticians Crown",
+  "category": "tactician",
+  "composition": [
+   "DA_Component_Spatula",
+   "DA_Component_Spatula"
+  ],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_forceofnature.tex",
+  "set_native": true,
+  "aliases": [
+   "TFT_Item_ForceOfNature"
+  ]
+ },
+ {
+  "apiName": "DA_TacticiansShield",
+  "name_ko": "전략가의 방패",
+  "name_en": "Tacticians Shield",
+  "category": "tactician",
+  "composition": [
+   "DA_Component_FryingPan",
+   "DA_Component_FryingPan"
+  ],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_tacticiansscepter.tex",
+  "set_native": true,
+  "aliases": [
+   "TFT_Item_TacticiansScepter"
+  ]
+ },
+ {
+  "apiName": "DA_ThiefsGloves",
+  "name_ko": "도적의 장갑",
+  "name_en": "Thief's Gloves",
+  "category": "completed",
+  "composition": [
+   "DA_Component_SparringGloves",
+   "DA_Component_SparringGloves"
+  ],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_thiefsgloves.tex",
+  "set_native": true,
+  "aliases": [
+   "TFT_Item_ThiefsGloves"
+  ]
+ },
+ {
+  "apiName": "DA_ThiefsGlovesRadiant",
+  "name_ko": "찬란한 도적의 장갑",
+  "name_en": "Radiant Thief's Gloves",
+  "category": "radiant",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft5_item_thiefsglovesradiant.tex",
+  "set_native": true,
+  "aliases": [
+   "TFT5_Item_ThiefsGlovesRadiant"
+  ]
+ },
+ {
+  "apiName": "DA_TitansResolve",
+  "name_ko": "거인의 결의",
+  "name_en": "Titan's Resolve",
+  "category": "completed",
+  "composition": [
+   "DA_Component_RecurveBow",
+   "DA_Component_ChainVest"
+  ],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_titansresolve.tex",
+  "set_native": true,
+  "aliases": [
+   "TFT_Item_TitansResolve"
+  ]
+ },
+ {
+  "apiName": "DA_TitansResolve_Radiant",
+  "name_ko": "찬란한 거인의 결의",
+  "name_en": "Radiant Titan's Resolve",
+  "category": "radiant",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft5_item_titansresolveradiant.tex",
+  "set_native": true,
+  "aliases": [
+   "TFT5_Item_TitansResolveRadiant"
+  ]
+ },
+ {
+  "apiName": "DA_VoidStaff",
+  "name_ko": "공허의 지팡이",
+  "name_en": "Void Staff",
+  "category": "completed",
+  "composition": [
+   "DA_Component_RecurveBow",
+   "DA_Component_TearOfTheGoddess"
+  ],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_voidstaff.tex",
+  "set_native": true,
+  "aliases": [
+   "TFT_Item_StatikkShiv"
+  ]
+ },
+ {
+  "apiName": "DA_VoidStaffRadiant",
+  "name_ko": "찬란한 공허의 지팡이",
+  "name_en": "Radiant Void Staff",
+  "category": "radiant",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft5_item_voidstaffradiant.tex",
+  "set_native": true,
+  "aliases": [
+   "TFT5_Item_StatikkShivRadiant"
+  ]
+ },
+ {
+  "apiName": "DA_WarmogsArmor",
+  "name_ko": "워모그의 갑옷",
+  "name_en": "Warmogs Armor",
+  "category": "completed",
+  "composition": [
+   "DA_Component_GiantsBelt",
+   "DA_Component_GiantsBelt"
+  ],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_warmogsarmor.tex",
+  "set_native": true,
+  "aliases": [
+   "TFT_Item_WarmogsArmor"
+  ]
+ },
+ {
+  "apiName": "DA_WarmogsArmorRadiant",
+  "name_ko": "찬란한 워모그의 갑옷",
+  "name_en": "Radiant Warmog's Armor",
+  "category": "radiant",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft5_item_warmogsarmorradiant.tex",
+  "set_native": true,
+  "aliases": [
+   "TFT5_Item_WarmogsArmorRadiant"
+  ]
+ },
+ {
+  "apiName": "TFT11_Item_ThiefsGlovesSupport",
+  "name_ko": "공범의 장갑",
+  "name_en": "Accomplice's Gloves",
+  "category": "other",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "매 라운드: 무작위 지원 아이템 2개 장착\n\n[아이템 슬롯 3개 차지]\n?",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft11_item_thiefsglovessupport.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT14_Consumable_Salvager",
+  "name_ko": "재활용 전문가",
+  "name_en": "Salvager",
+  "category": "consumable",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "챔피언에게 사용하면 장착한 모든 아이템을 제거하고 조합 아이템으로 분해합니다.\n\n[소모품 - 이 아이템은 사용하면 사라집니다.]",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft14_consumable_salvager.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT14_CypherArmoryItem_Specific5Costs",
+  "name_ko": "2성 자크, 오로라, 우르곳, 사미라",
+  "name_en": "2 star Zac, Aurora, Urgot, and Samira",
+  "category": "assist_reward",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "2성 자크, 오로라, 우르곳, 사미라",
+  "icon": "assets/maps/particles/tft/item_icons/pairs/doubleup_assistarmory_champ_5c.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT14_CypherArmoryItem_SpecificRadiantItems",
+  "name_ko": "찬란한 아이템 12개",
+  "name_en": "12 radiant items",
+  "category": "radiant",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "집단 충격기, 해신 작쇼, 철갑의 서약, 히라나의 창, 라바돈의 초월한 죽음모자, 눈부신 건틀릿, 구인수의 심판, 루난의 폭풍, 빛나는 죽음의 검, 천공의 대검, 공정의 주먹, 영겁의 속삭임",
+  "icon": "assets/maps/particles/tft/item_icons/pairs/doubleup_assistarmory_randomitem_radiant.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT16_Consumable_GwensScissors",
+  "name_ko": "그웬의 가위",
+  "name_en": "Gwen's Scissors",
+  "category": "consumable",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "챔피언에게 사용하면 장착한 모든 아이템이 제거되고 조합 아이템으로 분해됩니다.\n\n[소모품 - 이 아이템은 사용하면 사라집니다.]",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft16_consumable_gwensscissors.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT16_Consumable_GwensScissors_2",
+  "name_ko": "그웬의 가위 <rules>(2회 사용 가능!)</rules>",
+  "name_en": "Gwen's Scissors <rules>(2 uses left!)</rules>",
+  "category": "consumable",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "챔피언에게 사용하면 장착한 모든 아이템이 제거되고 조합 아이템으로 분해됩니다.\n\n[소모품 - 이 아이템은 사용하면 사라집니다.]",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft16_consumable_gwensscissors_2.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT16_Consumable_GwensScissors_3",
+  "name_ko": "그웬의 가위 <rules>(3회 사용 가능!)</rules>",
+  "name_en": "Gwen's Scissors <rules>(3 uses left!)</rules>",
+  "category": "consumable",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "챔피언에게 사용하면 장착한 모든 아이템이 제거되고 조합 아이템으로 분해됩니다.\n\n[소모품 - 이 아이템은 사용하면 사라집니다.]",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft16_consumable_gwensscissors_3.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT16_Consumable_GwensScissors_4",
+  "name_ko": "그웬의 가위 <rules>(4회 사용 가능!)</rules>",
+  "name_en": "Gwen's Scissors <rules>(4 uses left!)</rules>",
+  "category": "consumable",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "챔피언에게 사용하면 장착한 모든 아이템이 제거되고 조합 아이템으로 분해됩니다.\n\n[소모품 - 이 아이템은 사용하면 사라집니다.]",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft16_consumable_gwensscissors_4.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT16_Consumable_GwensScissors_5",
+  "name_ko": "그웬의 가위 <rules>(5회 사용 가능!)</rules>",
+  "name_en": "Gwen's Scissors <rules>(5 uses left!)</rules>",
+  "category": "consumable",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "챔피언에게 사용하면 장착한 모든 아이템이 제거되고 조합 아이템으로 분해됩니다.\n\n[소모품 - 이 아이템은 사용하면 사라집니다.]",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft16_consumable_gwensscissors_5.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT4_Item_OrnnDeathsDefiance",
+  "name_ko": "죽음의 저항",
+  "name_en": "Death's Defiance",
+  "category": "artifact",
+  "composition": [],
+  "unique": true,
+  "desc_ko": "받는 피해량의 50%를 4초 동안 치명적이지 않은 피해로 받음\n\n[고유 - 중복 적용 불가]",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft4_item_ornndeathsdefiance.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT4_Item_OrnnEternalWinter",
+  "name_ko": "영원한 겨울",
+  "name_en": "Eternal Winter",
+  "category": "artifact",
+  "composition": [],
+  "unique": true,
+  "desc_ko": "장착한 유닛에게 피해를 입힌 적에게 1.5초 동안 20%의 냉각 부여. 이 아이템으로 7번 냉각이 적용된 적은 다음번에 기절 (재사용 대기시간: 15초)\n\n[고유 - 중복 적용 불가]\n냉각: 공격 속도 감소\n기절: 이동, 공격, 스킬 사용 불가",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft4_item_ornneternalwinter.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT4_Item_OrnnInfinityForce",
+  "name_ko": "무한한 삼위일체",
+  "name_en": "Infinity Force",
+  "category": "artifact",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "없는 게 없습니다!",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft4_item_ornninfinityforce.tex",
+  "set_native": false,
+  "aliases": [
+   "DA_Artifact_InfinityForce"
+  ]
+ },
+ {
+  "apiName": "TFT4_Item_OrnnMuramana",
+  "name_ko": "마나자네",
+  "name_en": "Manazane",
+  "category": "artifact",
+  "composition": [],
+  "unique": true,
+  "desc_ko": "전투 중 처음으로 스킬을 사용하면 5초 동안 마나 100 획득\n\n[고유 - 중복 적용 불가]",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft4_item_ornnmuramana.tex",
+  "set_native": false,
+  "aliases": [
+   "DA_Artifact_Manazane"
+  ]
+ },
+ {
+  "apiName": "TFT4_Item_OrnnObsidianCleaver",
+  "name_ko": "흑요석 양날 도끼",
+  "name_en": "Obsidian Cleaver",
+  "category": "artifact",
+  "composition": [],
+  "unique": true,
+  "desc_ko": "피해를 입힐 경우 15초 동안 대상 30% 파쇄 및 30% 파열\n\n아군 모두가 공격력 8%, 주문력 8 획득\n\n​​​​[지원 아이템] [고유 - 중복 적용 불가]\n파쇄: 마법 저항력 감소\n파열: 방어력 감소",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft4_item_ornnobsidiancleaver.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT4_Item_OrnnRanduinsSanctum",
+  "name_ko": "란두인의 예언",
+  "name_en": "Randuin's Omen",
+  "category": "artifact",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "전투 시작: 인접한 모든 아군과 장착 유닛에게 %i:scaleArmor% 30의 방어력과 %i:scaleMR% 30의 마법 저항력 부여\n\n​​[지원 아이템]",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft4_item_ornnranduinssanctum.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT4_Item_OrnnTheCollector",
+  "name_ko": "황금 징수의 총",
+  "name_en": "Gold Collector",
+  "category": "artifact",
+  "composition": [],
+  "unique": true,
+  "desc_ko": "기본 공격 및 스킬로 최대 체력의 12%보다 체력이 낮은 적을 처형. 처형 시 33% 확률로 1골드%i:goldCoins%를 떨어뜨림\n\n모은 골드: ?골드\n[고유 - 중복 적용 불가]",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft4_item_ornnthecollector.tex",
+  "set_native": false,
+  "aliases": [
+   "DA_Artifact_GoldCollector"
+  ]
+ },
+ {
+  "apiName": "TFT4_Item_OrnnZhonyasParadox",
+  "name_ko": "존야의 역설",
+  "name_en": "Zhonya's Paradox",
+  "category": "artifact",
+  "composition": [],
+  "unique": true,
+  "desc_ko": "전투당 한 번, 체력이 40%일 때 3초 동안 대상으로 지정할 수 없는 무적 상태 진입\n\n[고유 - 중복 적용 불가]",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft4_item_ornnzhonyasparadox.tex",
+  "set_native": false,
+  "aliases": [
+   "DA_Artifact_ZhonyasParadox"
+  ]
+ },
+ {
+  "apiName": "TFT5_Item_AdaptiveHelmRadiant",
+  "name_ko": "찬란한 적응형 투구",
+  "name_en": "Radiant Adaptive Helm",
+  "category": "radiant",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "모든 요소로부터 얻는 마나 30% 증가. 장착 시 역할군에 따라 추가 효과 획득\n\n탱커/전사: 방어력 및 마법 저항력 80 획득\n\n원거리 딜러/마법사: 공격력 및 주문력 40% 획득",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft5_item_adaptivehelmradiant.tex",
+  "set_native": false,
+  "aliases": [
+   "DA_AdaptiveHelm_Radiant"
+  ]
+ },
+ {
+  "apiName": "TFT5_Item_ArchangelsStaffRadiant",
+  "name_ko": "찬란한 대천사의 지팡이",
+  "name_en": "Radiant Archangel's Staff",
+  "category": "radiant",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "전투 시작: 전투에서 5초마다 주문력 40% 획득",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft5_item_archangelsstaffradiant.tex",
+  "set_native": false,
+  "aliases": [
+   "DA_ArchangelsStaffRadiant"
+  ]
+ },
+ {
+  "apiName": "TFT5_Item_BloodthirsterRadiant",
+  "name_ko": "찬란한 피바라기",
+  "name_en": "Radiant Bloodthirster",
+  "category": "radiant",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "전투당 1회: 체력이 40%일 때 최대 체력의 50%에 해당하는 보호막 획득 후 최대 5초까지 유지",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft5_item_bloodthirsterradiant.tex",
+  "set_native": false,
+  "aliases": [
+   "DA_BloodthirsterRadiant"
+  ]
+ },
+ {
+  "apiName": "TFT5_Item_BlueBuffRadiant",
+  "name_ko": "찬란한 푸른 파수꾼",
+  "name_en": "Radiant Blue Buff",
+  "category": "radiant",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "모든 요소로부터 얻는 공격력 및 주문력 20% 증가",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft5_item_bluebuffradiant.tex",
+  "set_native": false,
+  "aliases": [
+   "DA_BlueBuffRadiant"
+  ]
+ },
+ {
+  "apiName": "TFT5_Item_BrambleVestRadiant",
+  "name_ko": "찬란한 덤불 조끼",
+  "name_en": "Radiant Bramble Vest",
+  "category": "radiant",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "12%의 최대 체력 획득\n기본 공격으로 받는 피해 10% 감소. 기본 공격에 맞을 경우 인접한 모든 적에게 200의 마법 피해\n재사용 대기시간: 2초",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft5_item_bramblevestradiant.tex",
+  "set_native": false,
+  "aliases": [
+   "DA_BrambleVestRadiant"
+  ]
+ },
+ {
+  "apiName": "TFT5_Item_CrownguardRadiant",
+  "name_ko": "찬란한 크라운가드",
+  "name_en": "Radiant Crownguard",
+  "category": "radiant",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "전투 시작: 8초 동안 최대 체력의 50%에 해당하는 보호막 획득\n\n보호막이 사라지면 주문력 50% 증가",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft5_item_crownguardradiant.tex",
+  "set_native": false,
+  "aliases": [
+   "DA_CrownguardRadiant"
+  ]
+ },
+ {
+  "apiName": "TFT5_Item_DeathbladeRadiant",
+  "name_ko": "찬란한 죽음의 검",
+  "name_en": "Radiant Deathblade",
+  "category": "radiant",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "주변에 적이 있으면 빛납니다. 사실 적이든 아군이든 생명체만 있으면 빛나죠.\n\n?",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft5_item_deathbladeradiant.tex",
+  "set_native": false,
+  "aliases": [
+   "DA_DeathbladeRadiant"
+  ]
+ },
+ {
+  "apiName": "TFT5_Item_DragonsClawRadiant",
+  "name_ko": "찬란한 용의 발톱",
+  "name_en": "Radiant Dragon's Claw",
+  "category": "radiant",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "최대 체력의 28% 획득\n\n2초마다 최대 체력의 5% 회복",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft5_item_dragonsclawradiant.tex",
+  "set_native": false,
+  "aliases": [
+   "DA_DragonsClawRadiant"
+  ]
+ },
+ {
+  "apiName": "TFT5_Item_FrozenHeartRadiant",
+  "name_ko": "찬란한 수호자의 맹세",
+  "name_en": "Radiant Protector's Vow",
+  "category": "radiant",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "전투 시작: 마나 40 획득\n\n체력이 40%일 때 마나 30 및 최대 체력의 50%에 해당하는 보호막 획득",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft5_item_frozenheartradiant.tex",
+  "set_native": false,
+  "aliases": [
+   "DA_ProtectorsVowRadiant"
+  ]
+ },
+ {
+  "apiName": "TFT5_Item_GargoyleStoneplateRadiant",
+  "name_ko": "찬란한 가고일 돌갑옷",
+  "name_en": "Radiant Gargoyle Stoneplate",
+  "category": "radiant",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "적의 공격 대상이 되면 방어력이 20, 마법 저항력이 20 증가. 공격하는 적이 늘어나면 중첩되어 적용",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft5_item_gargoylestoneplateradiant.tex",
+  "set_native": false,
+  "aliases": [
+   "DA_GargoyleStoneplate_Radiant"
+  ]
+ },
+ {
+  "apiName": "TFT5_Item_GiantSlayerRadiant",
+  "name_ko": "찬란한 거인 학살자",
+  "name_en": "Radiant Giant Slayer",
+  "category": "radiant",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "탱커를 상대로 추가 피해 증폭 30% 획득",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft5_item_giantslayerradiant.tex",
+  "set_native": false,
+  "aliases": [
+   "DA_GiantSlayer_Radiant"
+  ]
+ },
+ {
+  "apiName": "TFT5_Item_GuardianAngelRadiant",
+  "name_ko": "찬란한 밤의 끝자락",
+  "name_en": "Radiant Edge of Night",
+  "category": "radiant",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "체력이 60%일 때 잠시 대상으로 지정할 수 없게 되며 해로운 효과 제거 및 잃은 체력 모두 회복",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft5_item_guardianangelradiant.tex",
+  "set_native": false,
+  "aliases": [
+   "DA_EdgeOfNightRadiant"
+  ]
+ },
+ {
+  "apiName": "TFT5_Item_GuinsoosRagebladeRadiant",
+  "name_ko": "찬란한 구인수의 격노검",
+  "name_en": "Radiant Guinsoo's Rageblade",
+  "category": "radiant",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "매초 공격 속도 16% 획득 (중첩 가능)",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft5_item_guinsoosragebladeradiant.tex",
+  "set_native": false,
+  "aliases": [
+   "DA_GuinsoosRagebladeRadiant"
+  ]
+ },
+ {
+  "apiName": "TFT5_Item_HandOfJusticeRadiant",
+  "name_ko": "찬란한 정의의 손길",
+  "name_en": "Radiant Hand of Justice",
+  "category": "radiant",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "2가지 효과 획득:공격력 30%, 주문력 30%모든 피해 흡혈 24%\n\n체력이 50%를 넘을 때 공격력 및 주문력 두 배로 증가. 체력이 50% 아래일 때 모든 피해 흡혈 두 배로 증가",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft5_item_handofjusticeradiant.tex",
+  "set_native": false,
+  "aliases": [
+   "DA_HandOfJusticeRadiant"
+  ]
+ },
+ {
+  "apiName": "TFT5_Item_HextechGunbladeRadiant",
+  "name_ko": "찬란한 마법공학 총검",
+  "name_en": "Radiant Hextech Gunblade",
+  "category": "radiant",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "입힌 피해량의 40%만큼 체력 비율이 가장 낮은 아군의 체력 회복\n\n아군 체력 회복량: ?",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft5_item_hextechgunbladeradiant.tex",
+  "set_native": false,
+  "aliases": [
+   "DA_HextechGunbladeRadiant"
+  ]
+ },
+ {
+  "apiName": "TFT5_Item_InfinityEdgeRadiant",
+  "name_ko": "찬란한 무한의 대검",
+  "name_en": "Radiant Infinity Edge",
+  "category": "radiant",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "정밀을 얻습니다.\n\n{{TFT_Keyword_Precision}}",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft5_item_infinityedgeradiant.tex",
+  "set_native": false,
+  "aliases": [
+   "DA_InfinityEdgeRadiant"
+  ]
+ },
+ {
+  "apiName": "TFT5_Item_IonicSparkRadiant",
+  "name_ko": "찬란한 이온 충격기",
+  "name_en": "Radiant Ionic Spark",
+  "category": "radiant",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "2칸 내 적에게 파쇄 30% 적용. 해당 적은 스킬 사용 시 사용한 마나의 300%에 해당하는 마법 피해를 입음\n\n[직접 피해 아이템]\n파쇄: 마법 저항력 감소",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft5_item_ionicsparkradiant.tex",
+  "set_native": false,
+  "aliases": [
+   "DA_IonicSparkRadiant"
+  ]
+ },
+ {
+  "apiName": "TFT5_Item_JeweledGauntletRadiant",
+  "name_ko": "찬란한 보석 건틀릿",
+  "name_en": "Radiant Jeweled Gauntlet",
+  "category": "radiant",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "정밀을 얻습니다.\n\n{{TFT_Keyword_Precision}}",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft5_item_jeweledgauntletradiant.tex",
+  "set_native": false,
+  "aliases": [
+   "DA_JeweledGauntletRadiant"
+  ]
+ },
+ {
+  "apiName": "TFT5_Item_LastWhisperRadiant",
+  "name_ko": "찬란한 최후의 속삭임",
+  "name_en": "Radiant Last Whisper",
+  "category": "radiant",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "기본 공격 및 스킬로 피해를 입힐 경우 전투가 끝날 때까지 대상에게 파열을 30% 적용 (중첩 불가)\n\n파열: 방어력 감소",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft5_item_lastwhisperradiant.tex",
+  "set_native": false,
+  "aliases": [
+   "DA_LastWhisperRadiant"
+  ]
+ },
+ {
+  "apiName": "TFT5_Item_LeviathanRadiant",
+  "name_ko": "찬란한 내셔의 이빨",
+  "name_en": "Radiant Nashor's Tooth",
+  "category": "radiant",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "기본 공격 시 추가 마나 4 획득. 치명타 적중 시 6 획득",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft5_item_leviathanradiant.tex",
+  "set_native": false,
+  "aliases": [
+   "DA_NashorsToothRadiant"
+  ]
+ },
+ {
+  "apiName": "TFT5_Item_MorellonomiconRadiant",
+  "name_ko": "찬란한 모렐로노미콘",
+  "name_en": "Radiant Morellonomicon",
+  "category": "radiant",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "기본 공격 및 스킬이 10초 동안 적에게 불태우기 2% 및 상처 33% 적용\n\n불태우기: 매초 대상 최대 체력의 일정 비율만큼 고정 피해\n상처: 체력 회복량 감소",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft5_item_morellonomiconradiant.tex",
+  "set_native": false,
+  "aliases": [
+   "DA_MorellonomiconRadiant"
+  ]
+ },
+ {
+  "apiName": "TFT5_Item_NightHarvesterRadiant",
+  "name_ko": "찬란한 굳건한 심장",
+  "name_en": "Radiant Steadfast Heart",
+  "category": "radiant",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "내구력 10% 획득. 체력이 50% 이상일 때 대신 내구력 30% 획득\n\n?",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft5_item_nightharvesterradiant.tex",
+  "set_native": false,
+  "aliases": [
+   "DA_SteadfastHeartRadiant"
+  ]
+ },
+ {
+  "apiName": "TFT5_Item_QuicksilverRadiant",
+  "name_ko": "찬란한 수은",
+  "name_en": "Radiant Quicksilver",
+  "category": "radiant",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "전투 시작: 45초 동안 군중 제어 효과에 면역\n\n매초 공격 속도 6% 획득 (중첩 가능)",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft5_item_quicksilverradiant.tex",
+  "set_native": false,
+  "aliases": [
+   "DA_QuicksilverRadiant"
+  ]
+ },
+ {
+  "apiName": "TFT5_Item_RabadonsDeathcapRadiant",
+  "name_ko": "찬란한 라바돈의 죽음모자",
+  "name_en": "Radiant Rabadon's Deathcap",
+  "category": "radiant",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "기적과 재앙의 현장에 있기도 했고 직접 일으키기도 했습니다.\n\n?",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft5_item_rabadonsdeathcapradiant.tex",
+  "set_native": false,
+  "aliases": [
+   "DA_RabadonsDeathcap_Radiant"
+  ]
+ },
+ {
+  "apiName": "TFT5_Item_RapidFirecannonRadiant",
+  "name_ko": "찬란한 붉은 덩굴정령",
+  "name_en": "Radiant Red Buff",
+  "category": "radiant",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "기본 공격과 스킬이 5초 동안 적에게 불태우기를 2%, 상처를 33% 적용\n\n불태우기: 매초 대상 최대 체력의 일정 비율만큼 고정 피해\n상처: 체력 회복량 감소",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft5_item_rapidfirecannonradiant.tex",
+  "set_native": false,
+  "aliases": [
+   "DA_RedBuffRadiant"
+  ]
+ },
+ {
+  "apiName": "TFT5_Item_RedemptionRadiant",
+  "name_ko": "찬란한 정령의 형상",
+  "name_en": "Radiant Spirit Visage",
+  "category": "radiant",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "매초 잃은 체력의 4%만큼 체력 회복",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_spiritvisagerr.tex",
+  "set_native": false,
+  "aliases": [
+   "DA_SpiritVisage_Radiant"
+  ]
+ },
+ {
+  "apiName": "TFT5_Item_RunaansHurricaneRadiant",
+  "name_ko": "찬란한 크라켄의 분노",
+  "name_en": "Radiant Kraken's Fury",
+  "category": "radiant",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "기본 공격 시 공격력 7% (최대 15회 중첩) 획득. 기본 공격 15회 후 공격 속도 30% 획득",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_krakenslayerradiant.tex",
+  "set_native": false,
+  "aliases": [
+   "DA_KrakensFury_Radiant"
+  ]
+ },
+ {
+  "apiName": "TFT5_Item_SpearOfShojinRadiant",
+  "name_ko": "찬란한 쇼진의 창",
+  "name_en": "Radiant Spear of Shojin",
+  "category": "radiant",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "기본 공격 시 추가 마나 10 획득",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft5_item_spearofshojinradiant.tex",
+  "set_native": false,
+  "aliases": [
+   "DA_SpearOfShojinRadiant"
+  ]
+ },
+ {
+  "apiName": "TFT5_Item_SpectralGauntletRadiant",
+  "name_ko": "찬란한 저녁갑주",
+  "name_en": "Radiant Evenshroud",
+  "category": "radiant",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "3칸 내의 적에게 파열 30% 적용. 전투 시작 후 20초 동안 방어력 및 마법 저항력 50 획득\n\n파열: 방어력 감소",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft5_item_spectralgauntletradiant.tex",
+  "set_native": false,
+  "aliases": [
+   "DA_EvenshroudRadiant"
+  ]
+ },
+ {
+  "apiName": "TFT5_Item_StatikkShivRadiant",
+  "name_ko": "찬란한 공허의 지팡이",
+  "name_en": "Radiant Void Staff",
+  "category": "radiant",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "기본 공격 및 스킬로 피해를 입힐 경우 전투가 끝날 때까지 대상에게 파쇄를 30% 적용 (중첩 불가)\n\n파쇄: 마법 저항력 감소",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft5_item_voidstaffradiant.tex",
+  "set_native": false,
+  "aliases": [
+   "DA_VoidStaffRadiant"
+  ]
+ },
+ {
+  "apiName": "TFT5_Item_SteraksGageRadiant",
+  "name_ko": "찬란한 스테락의 도전",
+  "name_en": "Radiant Sterak's Gage",
+  "category": "radiant",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "체력이 60%일 때, 장착 유닛 최대 체력의 80%에 해당하는 보호막 획득. 보호막은 6초에 걸쳐 빠르게 사라짐",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft5_item_steraksgageradiant.tex",
+  "set_native": false,
+  "aliases": [
+   "DA_SteraksGageRadiant"
+  ]
+ },
+ {
+  "apiName": "TFT5_Item_SunfireCapeRadiant",
+  "name_ko": "찬란한 태양불꽃 망토",
+  "name_en": "Radiant Sunfire Cape",
+  "category": "radiant",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "최대 체력 16% 획득\n\n2초마다 2칸 내 적에게 10초 동안 불태우기 2% 및 상처 33% 적용\n\n불태우기: 매초 대상 최대 체력의 일정 비율만큼 고정 피해\n상처: 체력 회복량 감소",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft5_item_sunfirecaperadiant.tex",
+  "set_native": false,
+  "aliases": [
+   "DA_SunfireCape_Radiant"
+  ]
+ },
+ {
+  "apiName": "TFT5_Item_ThiefsGlovesRadiant",
+  "name_ko": "찬란한 도적의 장갑",
+  "name_en": "Radiant Thief's Gloves",
+  "category": "radiant",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "매 라운드: 무작위 찬란한 아이템 2개 장착\n\n[아이템 슬롯 3개 차지]\n?",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft5_item_thiefsglovesradiant.tex",
+  "set_native": false,
+  "aliases": [
+   "DA_ThiefsGlovesRadiant"
+  ]
+ },
+ {
+  "apiName": "TFT5_Item_TitansResolveRadiant",
+  "name_ko": "찬란한 거인의 결의",
+  "name_en": "Radiant Titan's Resolve",
+  "category": "radiant",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "공격하거나 피해를 받으면 공격력 4%, 주문력 4% 증가 (최대 25회 중첩)\n\n최대 중첩 시 피해 증폭 20% 획득 및 군중 제어 효과에 면역이 됨",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft5_item_titansresolveradiant.tex",
+  "set_native": false,
+  "aliases": [
+   "DA_TitansResolve_Radiant"
+  ]
+ },
+ {
+  "apiName": "TFT5_Item_TrapClawRadiant",
+  "name_ko": "찬란한 타격대의 철퇴",
+  "name_en": "Radiant Striker's Flail",
+  "category": "radiant",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "치명타 적중 시 5초 동안 피해 증폭 10% 획득 (최대 4회 중첩)",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft5_item_trapclawradiant.tex",
+  "set_native": false,
+  "aliases": [
+   "DA_StrikersFlailRadiant"
+  ]
+ },
+ {
+  "apiName": "TFT5_Item_WarmogsArmorRadiant",
+  "name_ko": "찬란한 워모그의 갑옷",
+  "name_en": "Radiant Warmog's Armor",
+  "category": "radiant",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "최대 체력 36% 획득",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft5_item_warmogsarmorradiant.tex",
+  "set_native": false,
+  "aliases": [
+   "DA_WarmogsArmorRadiant"
+  ]
+ },
+ {
+  "apiName": "TFT5_Item_ZzRotPortalRadiant",
+  "name_ko": "즈롯 차원문",
+  "name_en": "Zz'Rot Portal",
+  "category": "radiant",
+  "composition": [],
+  "unique": true,
+  "desc_ko": "스테이지마다 더 강력해지는 대형 공허 생물 소환\n\n​​​​[지원 아이템]\n[고유 - 중복 적용 불가]",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft5_item_zzrotportalradiant.tex",
+  "set_native": false,
+  "aliases": [
+   "TFT_Item_TitanicHydra"
+  ]
+ },
+ {
+  "apiName": "TFT6_Augment_FourScore",
+  "name_ko": null,
+  "name_en": null,
+  "category": "other",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/augments/hexcore/fourscore_i.tex",
+  "set_native": false,
+  "aliases": [
+   "TFT_Item_Blank"
+  ]
+ },
+ {
+  "apiName": "TFT7_Item_ShimmerscaleDeterminedInvestor",
+  "name_ko": "결단력 있는 투자자",
+  "name_en": "Determined Investor",
+  "category": "other",
+  "composition": [],
+  "unique": true,
+  "desc_ko": "전투 중 사망 8회 시 이 아이템이 파괴됨. 파괴 시 다이아몬드 손, 챔피언 복제기 1개, %i:goldCoins% 5골드 부여",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft7_item_shimmerscaledeterminedinvestor.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT7_Item_ShimmerscaleDiamondHands",
+  "name_ko": "다이아몬드 손",
+  "name_en": "Diamond Hands",
+  "category": "artifact",
+  "composition": [],
+  "unique": true,
+  "desc_ko": "전투당 1회: 체력이 50%일 때 1.5초 동안 무적 상태가 되고 1골드%i:goldCoins% 획득",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft7_item_shimmerscalediamondhands.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT7_Item_ShimmerscaleGamblersBlade",
+  "name_ko": "도박꾼의 칼날",
+  "name_en": "Gambler's Blade",
+  "category": "artifact",
+  "composition": [],
+  "unique": true,
+  "desc_ko": "보유한 골드%i:goldCoins%마다 추가 공격 속도%i:scaleAS% 1% 획득 (최대 30골드%i:goldCoins%)\n\n기본 공격할 때마다 6% 확률로 1골드%i:goldCoins% 획득\n\n이번 게임에서 획득한 골드: ?\n\n[고유 - 중복 적용 불가]",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft7_item_shimmerscalegamblersblade.tex",
+  "set_native": false,
+  "aliases": [
+   "DA_Artifact_GamblersBlade",
+   "TFT7_Item_ShimmerscaleGamblersBlade_HR"
+  ]
+ },
+ {
+  "apiName": "TFT7_Item_ShimmerscaleGamblersBlade_HR",
+  "name_ko": "도박꾼의 칼날",
+  "name_en": "Gambler's Blade",
+  "category": "artifact",
+  "composition": [],
+  "unique": true,
+  "desc_ko": "보유한 골드%i:goldCoins%마다 추가 공격 속도%i:scaleAS% 2% 획득 (최대 15골드%i:goldCoins%)\n\n기본 공격할 때마다 10% 확률로 1골드%i:goldCoins% 획득\n\n이번 게임에서 획득한 골드: ?\n\n[고유 - 중복 적용 불가]",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft7_item_shimmerscalegamblersblade_hr.tex",
+  "set_native": false,
+  "aliases": [
+   "DA_Artifact_GamblersBlade",
+   "TFT7_Item_ShimmerscaleGamblersBlade"
+  ]
+ },
+ {
+  "apiName": "TFT7_Item_ShimmerscaleHeartOfGold",
+  "name_ko": "쓸데없이 큰 보석",
+  "name_en": "Needlessly Big Gem",
+  "category": "other",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "아군이 피해 증폭 5% 획득. 장착 유닛이 생존했을 때, 아군이 매초 1%의 추가 피해 증폭 획득 (최대 20%)\n\n​​[지원 아이템]",
+  "icon": "assets/maps/particles/tft/item_icons/traits/set7_shimmerscale/shimmerscale_heartofgold_base.tex",
+  "set_native": false,
+  "aliases": [
+   "TFT7_Item_ShimmerscaleHeartOfGold_HR"
+  ]
+ },
+ {
+  "apiName": "TFT7_Item_ShimmerscaleHeartOfGold_HR",
+  "name_ko": "쓸데없이 큰 보석",
+  "name_en": "Needlessly Big Gem",
+  "category": "other",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "아군이 피해 증폭 25% 획득. 장착 유닛이 생존했을 때, 아군이 매초 ?%의 추가 피해 증폭 획득 (최대 ?%)\n\n​​[지원 아이템]",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft7_item_shimmerscaleheartofgold_hr.tex",
+  "set_native": false,
+  "aliases": [
+   "TFT7_Item_ShimmerscaleHeartOfGold"
+  ]
+ },
+ {
+  "apiName": "TFT7_Item_ShimmerscaleMogulsMail",
+  "name_ko": "거물의 갑옷",
+  "name_en": "Mogul's Mail",
+  "category": "artifact",
+  "composition": [],
+  "unique": true,
+  "desc_ko": "피해를 입으면 방어력 1, 마법 저항력 1, 체력 5 획득 (최대 35회 중첩)\n\n최대 중첩 시 1골드%i:goldCoins% 획득. 이후 11초마다 1골드%i:goldCoins% 획득\n\n이번 게임에서 획득한 골드: ?\n\n[고유 - 중복 적용 불가]",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft7_item_shimmerscalemogulsmail.tex",
+  "set_native": false,
+  "aliases": [
+   "TFT7_Item_ShimmerscaleMogulsMail_HR"
+  ]
+ },
+ {
+  "apiName": "TFT7_Item_ShimmerscaleMogulsMail_HR",
+  "name_ko": "거물의 갑옷",
+  "name_en": "Mogul's Mail",
+  "category": "artifact",
+  "composition": [],
+  "unique": true,
+  "desc_ko": "피해를 입으면 방어력 1, 마법 저항력 1, 체력 5 획득 (최대 35회 중첩)\n\n최대 중첩 시 3골드%i:goldCoins% 획득. 이후 11초마다 3골드%i:goldCoins% 획득\n\n이번 게임에서 획득한 골드: ?\n\n[고유 - 중복 적용 불가]",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft7_item_shimmerscalemogulsmail.tex",
+  "set_native": false,
+  "aliases": [
+   "TFT7_Item_ShimmerscaleMogulsMail"
+  ]
+ },
+ {
+  "apiName": "TFT7_Item_TreasureDragonBlankSlot",
+  "name_ko": "",
+  "name_en": "",
+  "category": "other",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft7_item_treasuredragonblankslot.tex",
+  "set_native": false,
+  "aliases": [
+   "TFT_Item_EmptyBag"
+  ]
+ },
+ {
+  "apiName": "TFT9_Consumable_GoldenItemRemover",
+  "name_ko": "황금 아이템 제거기",
+  "name_en": "Golden Item Remover",
+  "category": "consumable",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "챔피언에게 사용하면 모든 아이템 장착을 해제합니다. 몇 번이든 사용 가능합니다. 이후 모든 자석 제거기를 재조합기로 변환합니다.",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft9_consumable_goldenitemremover.tex",
+  "set_native": false,
+  "aliases": [
+   "DA_Consumable_GoldenItemRemover"
+  ]
+ },
+ {
+  "apiName": "TFT9_Item_OrnnDeathfireGrasp",
+  "name_ko": "죽음불꽃 손아귀",
+  "name_en": "Deathfire Grasp",
+  "category": "artifact",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "전투 시작: 현재 대상에게 대상 최대 체력의 40%만큼 마법 피해를 입힘. 이 효과를 13초마다 반복",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft9_item_ornndeathfiregrasp.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT9_Item_OrnnHorizonFocus",
+  "name_ko": "저격수의 집중",
+  "name_en": "Sniper's Focus",
+  "category": "artifact",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "4칸 이상 떨어진 대상을 상대로 피해 증폭 40% 획득",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft9_item_ornnhorizonfocus.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT9_Item_OrnnHullbreaker",
+  "name_ko": "선체분쇄자",
+  "name_en": "Hullcrusher",
+  "category": "artifact",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "전투 시작: 인접한 아군이 없다면 체력 400, 공격력10%, 주문력 10% 획득",
+  "icon": "assets/maps/particles/tft/item_icons/ornn_items/tft9_ornnitem_hullbreaker.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT9_Item_OrnnPrototypeForge",
+  "name_ko": "대장장이의 장갑",
+  "name_en": "Blacksmith's Gloves",
+  "category": "artifact",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "매 라운드: 무작위 오른 유물 2개 장착\n\n[아이템 슬롯 3개 차지]\n?",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft9_item_ornnprototypeforge.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT9_Item_OrnnTrickstersGlass",
+  "name_ko": "속임수 거울",
+  "name_en": "Trickster's Glass",
+  "category": "artifact",
+  "composition": [],
+  "unique": true,
+  "desc_ko": "장착 유닛의 분신 소환. 분신은 70%의 기본 체력, +10%의 최대 마나를 가지며 아이템 장착 불가\n\n분신에게도 특성 효과 적용\n\n[고유 - 중복 적용 불가]",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft9_item_ornntrickstersglass.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT_Assist_1x2cost",
+  "name_ko": "2단계 챔피언",
+  "name_en": "2-cost champion",
+  "category": "assist_reward",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "2단계 챔피언",
+  "icon": "assets/maps/particles/tft/item_icons/pairs/doubleup_assistarmory_champ_2c.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT_Assist_1x2star2cost",
+  "name_ko": "2단계 2성 챔피언",
+  "name_en": "2-star 2-cost champion",
+  "category": "assist_reward",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "2단계 2성 챔피언",
+  "icon": "assets/maps/particles/tft/item_icons/pairs/doubleup_assistarmory_champ_2c.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT_Assist_1x2star3cost",
+  "name_ko": "3단계 2성 챔피언",
+  "name_en": "2-star 3-cost champion",
+  "category": "assist_reward",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "3단계 2성 챔피언",
+  "icon": "assets/maps/particles/tft/item_icons/pairs/doubleup_assistarmory_champ_3c.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT_Assist_1x2star4cost",
+  "name_ko": "4단계 2성 챔피언",
+  "name_en": "2-star 4-cost champion",
+  "category": "assist_reward",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "4단계 2성 챔피언",
+  "icon": "assets/maps/particles/tft/item_icons/pairs/doubleup_assistarmory_champ_4c.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT_Assist_1x2star5cost",
+  "name_ko": "5단계 2성 챔피언",
+  "name_en": "2-star 5-cost champion",
+  "category": "assist_reward",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "5단계 2성 챔피언",
+  "icon": "assets/maps/particles/tft/item_icons/pairs/doubleup_assistarmory_champ_5c.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT_Assist_1x3cost",
+  "name_ko": "3단계 챔피언",
+  "name_en": "3-cost champion",
+  "category": "assist_reward",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "3단계 챔피언",
+  "icon": "assets/maps/particles/tft/item_icons/pairs/doubleup_assistarmory_champ_3c.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT_Assist_1x3star5cost",
+  "name_ko": "5단계 3성 챔피언",
+  "name_en": "3-star 5-cost champion",
+  "category": "assist_reward",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "5단계 3성 챔피언",
+  "icon": "assets/maps/particles/tft/item_icons/pairs/doubleup_assistarmory_champ_5c.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT_Assist_1x4cost",
+  "name_ko": "4단계 1성 챔피언",
+  "name_en": "1-star 4-cost champion",
+  "category": "assist_reward",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "4단계 1성 챔피언",
+  "icon": "assets/maps/particles/tft/item_icons/pairs/doubleup_assistarmory_champ_4c.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT_Assist_1x5cost",
+  "name_ko": "5단계 1성 챔피언",
+  "name_en": "1-star 5-cost champion",
+  "category": "assist_reward",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "5단계 1성 챔피언",
+  "icon": "assets/maps/particles/tft/item_icons/pairs/doubleup_assistarmory_champ_5c.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT_Assist_2x2star2cost",
+  "name_ko": "2단계 2성 챔피언 2명",
+  "name_en": "2 2-star 2-cost champions",
+  "category": "assist_reward",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "2단계 2성 챔피언 2명",
+  "icon": "assets/maps/particles/tft/item_icons/pairs/doubleup_assistarmory_champ_2c.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT_Assist_2x3cost",
+  "name_ko": "3단계 챔피언 2명",
+  "name_en": "2 3-cost champions",
+  "category": "assist_reward",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "3단계 챔피언 2명",
+  "icon": "assets/maps/particles/tft/item_icons/pairs/doubleup_assistarmory_champ_3c.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT_Assist_2x4cost",
+  "name_ko": "4단계 챔피언 2명",
+  "name_en": "2 4-cost champions",
+  "category": "assist_reward",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "4단계 챔피언 2명",
+  "icon": "assets/maps/particles/tft/item_icons/pairs/doubleup_assistarmory_champ_4c.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT_Assist_2x5cost",
+  "name_ko": "5단계 챔피언 2명",
+  "name_en": "2 5-cost champions",
+  "category": "assist_reward",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/particles/tft/item_icons/pairs/doubleup_assistarmory_champ_5c.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT_Assist_3x2cost",
+  "name_ko": "2단계 챔피언 3명",
+  "name_en": "3 2-cost champions",
+  "category": "assist_reward",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "2단계 챔피언 3명",
+  "icon": "assets/maps/particles/tft/item_icons/pairs/doubleup_assistarmory_champ_2c.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT_Assist_3x3cost",
+  "name_ko": "3단계 챔피언 3명",
+  "name_en": "3 3-cost champions",
+  "category": "assist_reward",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "3단계 챔피언 3명",
+  "icon": "assets/maps/particles/tft/item_icons/pairs/doubleup_assistarmory_champ_3c.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT_Assist_3x4cost",
+  "name_ko": "4단계 챔피언 3명",
+  "name_en": "3 4-cost champions",
+  "category": "assist_reward",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "4단계 챔피언 3명",
+  "icon": "assets/maps/particles/tft/item_icons/pairs/doubleup_assistarmory_champ_4c.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT_Assist_3x5cost",
+  "name_ko": "5단계 챔피언 3명",
+  "name_en": "3 5-cost champions",
+  "category": "assist_reward",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "5단계 챔피언 3명",
+  "icon": "assets/maps/particles/tft/item_icons/pairs/doubleup_assistarmory_champ_5c.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT_Assist_4x2cost",
+  "name_ko": "2단계 챔피언 4명",
+  "name_en": "4 2-cost champions",
+  "category": "assist_reward",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "2단계 챔피언 4명",
+  "icon": "assets/maps/particles/tft/item_icons/pairs/doubleup_assistarmory_champ_2c.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT_Assist_4x5cost",
+  "name_ko": "5단계 챔피언 4명",
+  "name_en": "4 5-cost champions",
+  "category": "assist_reward",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "5단계 챔피언 4명",
+  "icon": "assets/maps/particles/tft/item_icons/pairs/doubleup_assistarmory_champ_5c.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT_Assist_5x1cost",
+  "name_ko": "1단계 챔피언 5명",
+  "name_en": "5 1-cost champions",
+  "category": "assist_reward",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "1단계 챔피언 5명",
+  "icon": "assets/maps/particles/tft/item_icons/pairs/doubleup_assistarmory_champ_1c.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT_Assist_5x4cost",
+  "name_ko": "4단계 챔피언 5명",
+  "name_en": "5 4-cost champions",
+  "category": "assist_reward",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "4단계 챔피언 5명",
+  "icon": "assets/maps/particles/tft/item_icons/pairs/doubleup_assistarmory_champ_4c.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT_Assist_6x5cost",
+  "name_ko": "5단계 챔피언 6명",
+  "name_en": "6 5-cost champions",
+  "category": "assist_reward",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "5단계 챔피언 6명",
+  "icon": "assets/maps/particles/tft/item_icons/pairs/doubleup_assistarmory_champ_5c.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT_Assist_7x5cost",
+  "name_ko": "5단계 챔피언 7명",
+  "name_en": "7 5-cost champions",
+  "category": "assist_reward",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "5단계 챔피언 7명",
+  "icon": "assets/maps/particles/tft/item_icons/pairs/doubleup_assistarmory_champ_5c.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT_Assist_AllDoubleNonSpatItems",
+  "name_ko": "모든 조합 아이템 두 배",
+  "name_en": "All double component items",
+  "category": "assist_reward",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "죽음의 검, 라바돈의 죽음모자, 붉은 덩굴정령, 덤불 조끼, 용의 발톱, 워모그의 갑옷, 푸른 파수꾼, 도적의 장갑",
+  "icon": "assets/maps/particles/tft/item_icons/pairs/assistrandomcomponent.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT_Assist_ChampionDuplicator_2",
+  "name_ko": "챔피언 복제기 2개",
+  "name_en": "2 Champion Duplicators",
+  "category": "assist_reward",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "챔피언 복제기 2개",
+  "icon": "assets/maps/particles/tft/item_icons/consumables/championduplicator_v.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT_Assist_Deathblade_2",
+  "name_ko": "죽음의 검 2개",
+  "name_en": "2 Deathblades",
+  "category": "assist_reward",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "죽음의 검 2개",
+  "icon": "assets/maps/particles/tft/item_icons/standard/death_blade.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT_Assist_Dummy_2xLocked",
+  "name_ko": "강철의 솔라리 펜던트 2개를 장착한 훈련 봇",
+  "name_en": "Dummy with 2 Lockets",
+  "category": "assist_reward",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "전투 시작 시 아군에게 보호막을 부여하는 강철의 솔라리 펜던트 2개를 장착한 훈련 봇 1개",
+  "icon": "assets/characters/tft_trainingdummy/hud/icons2d/tft_trainingdummy_donothing.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT_Assist_Dummy_2xZekes",
+  "name_ko": "지크의 전령 2개를 장착한 훈련 봇",
+  "name_en": "Dummy with 2 Zeke's",
+  "category": "assist_reward",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "주변 아군에게 공격 속도를 제공하는 지크의 전령 2개를 장착한 훈련 봇 1개",
+  "icon": "assets/characters/tft_trainingdummy/hud/icons2d/tft_trainingdummy_donothing.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT_Assist_Dummy_Shroud",
+  "name_ko": "장막을 두른 훈련 봇",
+  "name_en": "Dummy with Shroud",
+  "category": "assist_reward",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "적의 마나 비용을 증가시키는 침묵의 장막 1개를 장착한 훈련 봇 1개",
+  "icon": "assets/characters/tft_trainingdummy/hud/icons2d/tft_trainingdummy_donothing.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT_Assist_Gold_1",
+  "name_ko": "1골드",
+  "name_en": "1 gold",
+  "category": "assist_reward",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "1골드",
+  "icon": "assets/maps/particles/tft/item_icons/pairs/assistgivegold.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT_Assist_Gold_10",
+  "name_ko": "10골드",
+  "name_en": "10 gold",
+  "category": "assist_reward",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "10골드",
+  "icon": "assets/maps/particles/tft/item_icons/pairs/assistgivegold.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT_Assist_Gold_15",
+  "name_ko": "15골드",
+  "name_en": "15 gold",
+  "category": "assist_reward",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "15골드",
+  "icon": "assets/maps/particles/tft/item_icons/pairs/assistgivegold.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT_Assist_Gold_2",
+  "name_ko": "2골드",
+  "name_en": "2 gold",
+  "category": "assist_reward",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "2골드",
+  "icon": "assets/maps/particles/tft/item_icons/pairs/assistgivegold.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT_Assist_Gold_20",
+  "name_ko": "20골드",
+  "name_en": "20 gold",
+  "category": "assist_reward",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "20골드",
+  "icon": "assets/maps/particles/tft/item_icons/pairs/assistgivegold.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT_Assist_Gold_3",
+  "name_ko": "3골드",
+  "name_en": "3 gold",
+  "category": "assist_reward",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "3골드",
+  "icon": "assets/maps/particles/tft/item_icons/pairs/assistgivegold.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT_Assist_Gold_30",
+  "name_ko": "30골드",
+  "name_en": "30 gold",
+  "category": "assist_reward",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "30골드",
+  "icon": "assets/maps/particles/tft/item_icons/pairs/assistgivegold.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT_Assist_Gold_34",
+  "name_ko": "34골드",
+  "name_en": "34 gold",
+  "category": "assist_reward",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "34골드",
+  "icon": "assets/maps/particles/tft/item_icons/pairs/assistgivegold.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT_Assist_Gold_4",
+  "name_ko": "4골드",
+  "name_en": "4 gold",
+  "category": "assist_reward",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "4골드",
+  "icon": "assets/maps/particles/tft/item_icons/pairs/assistgivegold.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT_Assist_Gold_5",
+  "name_ko": "5골드",
+  "name_en": "5 gold",
+  "category": "assist_reward",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "5골드",
+  "icon": "assets/maps/particles/tft/item_icons/pairs/assistgivegold.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT_Assist_Gold_55",
+  "name_ko": "55골드",
+  "name_en": "55 gold",
+  "category": "assist_reward",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "55골드",
+  "icon": "assets/maps/particles/tft/item_icons/pairs/assistgivegold.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT_Assist_Gold_6",
+  "name_ko": "6골드",
+  "name_en": "6 gold",
+  "category": "assist_reward",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "6골드",
+  "icon": "assets/maps/particles/tft/item_icons/pairs/assistgivegold.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT_Assist_Gold_7",
+  "name_ko": "7골드",
+  "name_en": "7 Gold",
+  "category": "assist_reward",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "7골드",
+  "icon": "assets/maps/particles/tft/item_icons/pairs/assistgivegold.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT_Assist_Gold_8",
+  "name_ko": "8골드",
+  "name_en": "8 gold",
+  "category": "assist_reward",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "8골드",
+  "icon": "assets/maps/particles/tft/item_icons/pairs/assistgivegold.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT_Assist_Gold_9",
+  "name_ko": "9골드",
+  "name_en": "9 gold",
+  "category": "assist_reward",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "9골드",
+  "icon": "assets/maps/particles/tft/item_icons/pairs/assistgivegold.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT_Assist_Golem_2xAegis",
+  "name_ko": "방패 2개를 장착한 골렘",
+  "name_en": "Golem with 2 Aegises.",
+  "category": "assist_reward",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "뒤에 있는 아군에게 방어력, 마법 저항력, 공격 속도를 제공하는 군단의 방패 2개를 장착한 골렘 1마리",
+  "icon": "assets/characters/tft_bluegolem/hud/tft_bluegolem_spell.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT_Assist_ItemArmoryCompleted",
+  "name_ko": "완성 아이템 모루",
+  "name_en": "Completed Item Anvil",
+  "category": "assist_reward",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "완성 아이템 모루",
+  "icon": "assets/characters/tft_armorykeycompleted/hud/icons2d/tft_armorykeycompleted_square.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT_Assist_ItemArmoryComponent",
+  "name_ko": "조합 아이템 모루",
+  "name_en": "Component Anvil",
+  "category": "assist_reward",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "조합 아이템 모루",
+  "icon": "assets/characters/tft_armorykeycomponent/hud/icons2d/tft_armorykeycomponent_square.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT_Assist_ItemArmoryOrnn",
+  "name_ko": "유물 모루",
+  "name_en": "Artifact Anvil",
+  "category": "artifact",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "유물 모루",
+  "icon": "assets/characters/tft_armorykeyornn/hud/icons2d/tft_armorykeyornn_square.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT_Assist_ItemArmorySupport",
+  "name_ko": "지원 아이템 모루",
+  "name_en": "Support Anvil",
+  "category": "assist_reward",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "지원 아이템 모루",
+  "icon": "assets/characters/tft_armorykeyornn/hud/icons2d/tft_armorykeyornn_square.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT_Assist_LesserDuplicator_3",
+  "name_ko": "하급 챔피언 복제기 3개",
+  "name_en": "3 Lesser Champion Duplicators",
+  "category": "assist_reward",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "하급 챔피언 복제기 3개",
+  "icon": "assets/maps/particles/tft/item_icons/consumables/championduplicator_iii.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT_Assist_LesserDuplicator_6",
+  "name_ko": "하급 챔피언 복제기 6개",
+  "name_en": "6 Lesser Champion Duplicators",
+  "category": "assist_reward",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "하급 챔피언 복제기 6개",
+  "icon": "assets/maps/particles/tft/item_icons/consumables/championduplicator_iii.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT_Assist_MasterworkUpgrade_3",
+  "name_ko": "걸작 업그레이드 3개",
+  "name_en": "3 Masterwork Upgrades",
+  "category": "assist_reward",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "걸작 업그레이드 3개",
+  "icon": "assets/maps/particles/tft/item_icons/consumables/masterworkupgrade.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT_Assist_RandomCompletedItem",
+  "name_ko": "완성 아이템",
+  "name_en": "Completed Item",
+  "category": "assist_reward",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "완성 아이템",
+  "icon": "assets/maps/particles/tft/item_icons/pairs/assistrandomcomponent.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT_Assist_RandomComponent",
+  "name_ko": "무작위 조합 아이템",
+  "name_en": "Random Component",
+  "category": "assist_reward",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "무작위 조합 아이템",
+  "icon": "assets/maps/particles/tft/item_icons/pairs/assistrandomcomponent.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT_Assist_RandomComponent_2",
+  "name_ko": "조합 아이템 2개",
+  "name_en": "2 Components",
+  "category": "assist_reward",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "조합 아이템 2개",
+  "icon": "assets/maps/particles/tft/item_icons/pairs/assistrandomcomponent.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT_Assist_RandomComponent_4",
+  "name_ko": "조합 아이템 4개",
+  "name_en": "4 components",
+  "category": "assist_reward",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "조합 아이템 4개",
+  "icon": "assets/maps/particles/tft/item_icons/pairs/assistrandomcomponent.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT_Assist_RandomComponent_9",
+  "name_ko": "조합 아이템 9개",
+  "name_en": "9 components",
+  "category": "assist_reward",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "조합 아이템 9개",
+  "icon": "assets/maps/particles/tft/item_icons/pairs/assistrandomcomponent.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT_Assist_RandomOrnnItem",
+  "name_ko": "유물 아이템",
+  "name_en": "Artifact Item",
+  "category": "artifact",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "유물 아이템",
+  "icon": "assets/maps/particles/tft/item_icons/pairs/doubleup_assistarmory_randomitem_ornn.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT_Assist_RandomRadiantItem",
+  "name_ko": "찬란한 아이템",
+  "name_en": "Radiant Item",
+  "category": "radiant",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "찬란한 아이템",
+  "icon": "assets/maps/particles/tft/item_icons/pairs/doubleup_assistarmory_randomitem_radiant.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT_Assist_RandomRadiantItem_2",
+  "name_ko": "찬란한 아이템 2개",
+  "name_en": "2 Radiant Items",
+  "category": "radiant",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "찬란한 아이템 2개",
+  "icon": "assets/maps/particles/tft/item_icons/pairs/doubleup_assistarmory_randomitem_radiant.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT_Assist_RandomRadiantItem_3",
+  "name_ko": "찬란한 아이템 3개",
+  "name_en": "3 Radiant Items",
+  "category": "radiant",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "찬란한 아이템 3개",
+  "icon": "assets/maps/particles/tft/item_icons/pairs/doubleup_assistarmory_randomitem_radiant.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT_Assist_Reforger_2",
+  "name_ko": "재조합기 2개",
+  "name_en": "2 Reforgers",
+  "category": "assist_reward",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "재조합기 2개",
+  "icon": "assets/maps/particles/tft/item_icons/consumables/tft_item_consumable_itemreroller.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT_Assist_Remover_2",
+  "name_ko": "아이템 제거기 2개",
+  "name_en": "2 Item Removers",
+  "category": "assist_reward",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "아이템 제거기 2개",
+  "icon": "assets/maps/particles/tft/item_icons/consumables/tft_item_consumable_itemremover.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT_Assist_Spatula_3",
+  "name_ko": "뒤집개 3개",
+  "name_en": "3 Spatulas",
+  "category": "assist_reward",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "뒤집개 3개",
+  "icon": "assets/maps/particles/tft/item_icons/standard/spatula.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT_Assist_TacticiansCape_2",
+  "name_ko": "전략가의 망토 2개",
+  "name_en": "2 Tacticians' Capes",
+  "category": "assist_reward",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "전략가의 망토 2개",
+  "icon": "assets/maps/particles/tft/item_icons/standard/tacticians_ring.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT_Consumable_ChampionDuplicator_I",
+  "name_ko": "소형 챔피언 복제기",
+  "name_en": "Tiny Champion Duplicator",
+  "category": "consumable",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "1단계 챔피언에게 사용하면 동일한 1성 챔피언을 생성할 수 있습니다.",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_consumable_championduplicator_i.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT_Consumable_ChampionDuplicator_III",
+  "name_ko": "하급 챔피언 복제기",
+  "name_en": "Lesser Champion Duplicator",
+  "category": "consumable",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "3단계 이하 챔피언에게 사용하면 대기석에 동일한 1성 챔피언을 생성할 수 있습니다.\n\n[소모품 - 이 아이템은 사용하면 사라집니다.]",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_consumable_championduplicator_iii.tex",
+  "set_native": false,
+  "aliases": [
+   "DA_Consumable_LesserChampionDuplicator"
+  ]
+ },
+ {
+  "apiName": "TFT_Consumable_ItemRemover",
+  "name_ko": "자석 제거기",
+  "name_en": "Magnetic Remover",
+  "category": "consumable",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "챔피언에게 사용하면 모든 아이템 장착을 해제합니다. \n\n [전투 중인 챔피언에게는 사용할 수 없습니다.]\n[소모품 - 이 아이템은 사용하면 사라집니다.]",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_consumable_itemremover.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT_Consumable_ItemRemover_UsesLeft10",
+  "name_ko": "자석 제거기 <rules>(10회 사용 가능!)</rules>",
+  "name_en": "Magnetic Remover <rules>(10 uses left!)</rules>",
+  "category": "consumable",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "챔피언에게 사용하면 모든 아이템 장착을 해제합니다. \n\n [전투 중인 챔피언에게는 사용할 수 없습니다.]\n[소모품 - 이 아이템은 사용하면 사라집니다.]",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_consumable_itemremover_usesleft10.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT_Consumable_ItemRemover_UsesLeft2",
+  "name_ko": "자석 제거기 <rules>(2회 사용 가능!)</rules>",
+  "name_en": "Magnetic Remover <rules>(2 uses left!)</rules>",
+  "category": "consumable",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "챔피언에게 사용하면 모든 아이템 장착을 해제합니다. \n\n [전투 중인 챔피언에게는 사용할 수 없습니다.]\n[소모품 - 이 아이템은 사용하면 사라집니다.]",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_consumable_itemremover_usesleft2.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT_Consumable_ItemRemover_UsesLeft3",
+  "name_ko": "자석 제거기 <rules>(3회 사용 가능!)</rules>",
+  "name_en": "Magnetic Remover <rules>(3 uses left!)</rules>",
+  "category": "consumable",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "챔피언에게 사용하면 모든 아이템 장착을 해제합니다. \n\n [전투 중인 챔피언에게는 사용할 수 없습니다.]\n[소모품 - 이 아이템은 사용하면 사라집니다.]",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_consumable_itemremover_usesleft3.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT_Consumable_ItemRemover_UsesLeft4",
+  "name_ko": "자석 제거기 <rules>(4회 사용 가능!)</rules>",
+  "name_en": "Magnetic Remover <rules>(4 uses left!)</rules>",
+  "category": "consumable",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "챔피언에게 사용하면 모든 아이템 장착을 해제합니다. \n\n [전투 중인 챔피언에게는 사용할 수 없습니다.]\n[소모품 - 이 아이템은 사용하면 사라집니다.]",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_consumable_itemremover_usesleft4.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT_Consumable_ItemRemover_UsesLeft5",
+  "name_ko": "자석 제거기 <rules>(5회 사용 가능!)</rules>",
+  "name_en": "Magnetic Remover <rules>(5 uses left!)</rules>",
+  "category": "consumable",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "챔피언에게 사용하면 모든 아이템 장착을 해제합니다. \n\n [전투 중인 챔피언에게는 사용할 수 없습니다.]\n[소모품 - 이 아이템은 사용하면 사라집니다.]",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_consumable_itemremover_usesleft5.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT_Consumable_ItemRemover_UsesLeft6",
+  "name_ko": "자석 제거기 <rules>(6회 사용 가능!)</rules>",
+  "name_en": "Magnetic Remover <rules>(6 uses left!)</rules>",
+  "category": "consumable",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "챔피언에게 사용하면 모든 아이템 장착을 해제합니다. \n\n [전투 중인 챔피언에게는 사용할 수 없습니다.]\n[소모품 - 이 아이템은 사용하면 사라집니다.]",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_consumable_itemremover_usesleft6.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT_Consumable_ItemRemover_UsesLeft7",
+  "name_ko": "자석 제거기 <rules>(7회 사용 가능!)</rules>",
+  "name_en": "Magnetic Remover <rules>(7 uses left!)</rules>",
+  "category": "consumable",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "챔피언에게 사용하면 모든 아이템 장착을 해제합니다. \n\n [전투 중인 챔피언에게는 사용할 수 없습니다.]\n[소모품 - 이 아이템은 사용하면 사라집니다.]",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_consumable_itemremover_usesleft7.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT_Consumable_ItemRemover_UsesLeft8",
+  "name_ko": "자석 제거기 <rules>(8회 사용 가능!)</rules>",
+  "name_en": "Magnetic Remover <rules>(8 uses left!)</rules>",
+  "category": "consumable",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "챔피언에게 사용하면 모든 아이템 장착을 해제합니다. \n\n [전투 중인 챔피언에게는 사용할 수 없습니다.]\n[소모품 - 이 아이템은 사용하면 사라집니다.]",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_consumable_itemremover_usesleft8.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT_Consumable_ItemRemover_UsesLeft9",
+  "name_ko": "자석 제거기 <rules>(9회 사용 가능!)</rules>",
+  "name_en": "Magnetic Remover <rules>(9 uses left!)</rules>",
+  "category": "consumable",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "챔피언에게 사용하면 모든 아이템 장착을 해제합니다. \n\n [전투 중인 챔피언에게는 사용할 수 없습니다.]\n[소모품 - 이 아이템은 사용하면 사라집니다.]",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_consumable_itemremover_usesleft9.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT_Consumable_ItemReroller",
+  "name_ko": "재조합기",
+  "name_en": "Reforger",
+  "category": "consumable",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "챔피언이 장착한 모든 아이템을 해제하고 유형과 등급이 비슷한 아이템으로 변경합니다.\n\n[소모품 - 이 아이템은 사용하면 사라집니다.]",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_consumable_itemreroller.tex",
+  "set_native": false,
+  "aliases": [
+   "DA_Reforger",
+   "TFT_Consumable_TrashToTreasure_Reforger"
+  ]
+ },
+ {
+  "apiName": "TFT_Consumable_ItemReroller_UsesLeft10",
+  "name_ko": "재조합기 <rules>(10회 사용 가능!)</rules>",
+  "name_en": "Reforger <rules>(10 uses left!)</rules>",
+  "category": "consumable",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "챔피언이 장착한 모든 아이템을 해제하고 유형과 등급이 비슷한 아이템으로 변경합니다.\n\n[소모품 - 이 아이템은 사용하면 사라집니다.]",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_consumable_itemreroller_usesleft10.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT_Consumable_ItemReroller_UsesLeft2",
+  "name_ko": "재조합기 <rules>(2회 사용 가능!)</rules>",
+  "name_en": "Reforger <rules>(2 uses left!)</rules>",
+  "category": "consumable",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "챔피언이 장착한 모든 아이템을 해제하고 유형과 등급이 비슷한 아이템으로 변경합니다.\n\n[소모품 - 이 아이템은 사용하면 사라집니다.]",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_consumable_itemreroller_usesleft2.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT_Consumable_ItemReroller_UsesLeft3",
+  "name_ko": "재조합기 <rules>(3회 사용 가능!)</rules>",
+  "name_en": "Reforger <rules>(3 uses left!)</rules>",
+  "category": "consumable",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "챔피언이 장착한 모든 아이템을 해제하고 유형과 등급이 비슷한 아이템으로 변경합니다.\n\n[소모품 - 이 아이템은 사용하면 사라집니다.]",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_consumable_itemreroller_usesleft3.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT_Consumable_ItemReroller_UsesLeft4",
+  "name_ko": "재조합기 <rules>(4회 사용 가능!)</rules>",
+  "name_en": "Reforger <rules>(4 uses left!)</rules>",
+  "category": "consumable",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "챔피언이 장착한 모든 아이템을 해제하고 유형과 등급이 비슷한 아이템으로 변경합니다.\n\n[소모품 - 이 아이템은 사용하면 사라집니다.]",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_consumable_itemreroller_usesleft4.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT_Consumable_ItemReroller_UsesLeft5",
+  "name_ko": "재조합기 <rules>(5회 사용 가능!)</rules>",
+  "name_en": "Reforger <rules>(5 uses left!)</rules>",
+  "category": "consumable",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "챔피언이 장착한 모든 아이템을 해제하고 유형과 등급이 비슷한 아이템으로 변경합니다.\n\n[소모품 - 이 아이템은 사용하면 사라집니다.]",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_consumable_itemreroller_usesleft5.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT_Consumable_ItemReroller_UsesLeft6",
+  "name_ko": "재조합기 <rules>(6회 사용 가능!)</rules>",
+  "name_en": "Reforger <rules>(6 uses left!)</rules>",
+  "category": "consumable",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "챔피언이 장착한 모든 아이템을 해제하고 유형과 등급이 비슷한 아이템으로 변경합니다.\n\n[소모품 - 이 아이템은 사용하면 사라집니다.]",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_consumable_itemreroller_usesleft6.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT_Consumable_ItemReroller_UsesLeft7",
+  "name_ko": "재조합기 <rules>(7회 사용 가능!)</rules>",
+  "name_en": "Reforger <rules>(7 uses left!)</rules>",
+  "category": "consumable",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "챔피언이 장착한 모든 아이템을 해제하고 유형과 등급이 비슷한 아이템으로 변경합니다.\n\n[소모품 - 이 아이템은 사용하면 사라집니다.]",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_consumable_itemreroller_usesleft7.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT_Consumable_ItemReroller_UsesLeft8",
+  "name_ko": "재조합기 <rules>(8회 사용 가능!)</rules>",
+  "name_en": "Reforger <rules>(8 uses left!)</rules>",
+  "category": "consumable",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "챔피언이 장착한 모든 아이템을 해제하고 유형과 등급이 비슷한 아이템으로 변경합니다.\n\n[소모품 - 이 아이템은 사용하면 사라집니다.]",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_consumable_itemreroller_usesleft8.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT_Consumable_ItemReroller_UsesLeft9",
+  "name_ko": "재조합기 <rules>(9회 사용 가능!)</rules>",
+  "name_en": "Reforger <rules>(9 uses left!)</rules>",
+  "category": "consumable",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "챔피언이 장착한 모든 아이템을 해제하고 유형과 등급이 비슷한 아이템으로 변경합니다.\n\n[소모품 - 이 아이템은 사용하면 사라집니다.]",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_consumable_itemreroller_usesleft9.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT_Consumable_MasterworkUpgrade",
+  "name_ko": "걸작 업그레이드",
+  "name_en": "Masterwork Upgrade",
+  "category": "consumable",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "챔피언에게 사용하면 해당 챔피언의 제작 가능한 완성 아이템의 찬란한 형태를 선택합니다. 선택한 아이템을 찬란한 아이템으로 업그레이드한 다음 장착을 해제합니다.",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_consumable_masterworkupgrade.tex",
+  "set_native": false,
+  "aliases": [
+   "DA_MasterworkUpgrade"
+  ]
+ },
+ {
+  "apiName": "TFT_Consumable_NeekosHelp",
+  "name_ko": "챔피언 복제기",
+  "name_en": "Champion Duplicator",
+  "category": "consumable",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "챔피언에게 사용하면 대기석에 동일한 1성 챔피언을 생성할 수 있습니다.\n\n[소모품 - 이 아이템은 사용하면 사라집니다.]",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_consumable_neekoshelp.tex",
+  "set_native": false,
+  "aliases": [
+   "DA_Consumable_ChampionDuplicator"
+  ]
+ },
+ {
+  "apiName": "TFT_Consumable_ShopReroller",
+  "name_ko": "사기 주사위",
+  "name_en": "Loaded Dice",
+  "category": "consumable",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "챔피언에게 사용하여 해당 챔피언과 특성을 공유하는 챔피언만 포함된 특별한 상점으로 새로고침할 수 있습니다. \n\n[소모품 - 이 아이템은 사용하면 사라집니다.]",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_consumable_shopreroller.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT_Consumable_TrainingDummy",
+  "name_ko": "훈련 봇",
+  "name_en": "Training Dummy",
+  "category": "consumable",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "챔피언에게 사용하면 근처에 배치 가능한 훈련 봇이 생성됩니다. \n\n [전투 시에는 사용할 수 없습니다. \n소모품 - 이 아이템은 사용하면 사라집니다.]",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_consumable_trainingdummy.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT_Consumable_TrashToTreasure_Reforger",
+  "name_ko": "재조합기",
+  "name_en": "Reforger",
+  "category": "consumable",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "챔피언이 장착한 모든 아이템을 해제하고 유형과 등급이 비슷한 아이템으로 변경합니다.\n쓰레기에서 보석으로: 완성 아이템이 유물로 변하고 재조합기를 소모하지 않습니다.\n\n[소모품 - 이 아이템은 사용하면 사라집니다.]",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_consumable_trashtotreasure_reforger.tex",
+  "set_native": false,
+  "aliases": [
+   "DA_Reforger",
+   "TFT_Consumable_ItemReroller"
+  ]
+ },
+ {
+  "apiName": "TFT_Item_AdaptiveHelm",
+  "name_ko": "적응형 투구",
+  "name_en": "Adaptive Helm",
+  "category": "completed",
+  "composition": [
+   "TFT_Item_NegatronCloak",
+   "TFT_Item_TearOfTheGoddess"
+  ],
+  "unique": false,
+  "desc_ko": "모든 요소로부터 얻는 마나 15% 증가. 장착 시 역할군에 따라 추가 효과 획득\n\n탱커, 전사: 방어력 및 마법 저항력 30 획득\n\n기타 역할군: 공격력 및 주문력 10% 획득",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_adaptivehelm.tex",
+  "set_native": false,
+  "aliases": [
+   "DA_AdaptiveHelm"
+  ]
+ },
+ {
+  "apiName": "TFT_Item_AegisOfTheLegion",
+  "name_ko": "군단의 방패",
+  "name_en": "Aegis of the Legion",
+  "category": "other",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "전투 시작: 장착 유닛, 가로로 같은 칸에 있는 인접 아군, 그 뒤 모든 아군이 12초 동안 공격 속도 25%, 방어력과 마법 저항력 15 증가\n\n​​[지원 아이템]",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_aegisofthelegion.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT_Item_ArchangelsStaff",
+  "name_ko": "대천사의 지팡이",
+  "name_en": "Archangel's Staff",
+  "category": "completed",
+  "composition": [
+   "TFT_Item_NeedlesslyLargeRod",
+   "TFT_Item_TearOfTheGoddess"
+  ],
+  "unique": false,
+  "desc_ko": "전투 시작: 전투 중 5초마다 주문력 20% 증가",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_archangelsstaff.tex",
+  "set_native": false,
+  "aliases": [
+   "DA_ArchangelsStaff"
+  ]
+ },
+ {
+  "apiName": "TFT_Item_Artifact_AegisOfDawn",
+  "name_ko": "새벽의 방패",
+  "name_en": "Aegis of Dawn",
+  "category": "artifact",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "2.5초마다 1칸 내 적의 방어력을 3 훔치고 장착 유닛 방어력의 ?%만큼 체력 회복\n\n황혼의 방패도 장착하고 있을 경우 이 아이템의 효과가 대신 1.25초마다 발동됨\n\n스테이지에 비례해 체력 회복량 증가",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_artifact_aegisofdawn.tex",
+  "set_native": false,
+  "aliases": [
+   "DA_Artifact_AegisOfDawn"
+  ]
+ },
+ {
+  "apiName": "TFT_Item_Artifact_AegisOfDusk",
+  "name_ko": "황혼의 방패",
+  "name_en": "Aegis of Dusk",
+  "category": "artifact",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "2.5초마다 1칸 내 적의 마법 저항력을 3 훔치고 장착 유닛 마법 저항력의 ?%만큼 마법 피해를 입힘\n\n새벽의 방패도 장착하고 있을 경우 이 아이템의 효과가 대신 1.25초마다 발동됨\n\n스테이지에 비례해 피해량 증가",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_artifact_aegisofdusk.tex",
+  "set_native": false,
+  "aliases": [
+   "DA_Artifact_AegisOfDusk"
+  ]
+ },
+ {
+  "apiName": "TFT_Item_Artifact_BlightingJewel",
+  "name_ko": "역병의 보석",
+  "name_en": "Blighting Jewel",
+  "category": "artifact",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "마법 피해를 입히면 대상의 마법 저항력 6 감소. 대상의 마법 저항력이 0이면 대신 장착 유닛이 마나 2 획득\n\n스킬 피해는 적 하나당 0.5초마다 발동됩니다.",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_artifact_blightingjewel.tex",
+  "set_native": false,
+  "aliases": [
+   "DA_Artifact_BlightingJewel"
+  ]
+ },
+ {
+  "apiName": "TFT_Item_Artifact_CappaJuice",
+  "name_ko": "카파 주스",
+  "name_en": "Cappa Juice",
+  "category": "artifact",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "장착 유닛이 처치에 관여할 때마다 모자 착용. 장착 유닛이 모자 하나당 공격력 및 주문력 1% 획득. 사망 시 모든 모자의 20% 상실 (모자 수: ?)",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft16_artifact_kappajuice.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT_Item_Artifact_CursedVampiricScepter",
+  "name_ko": "타락한 흡혈의 낫",
+  "name_en": "Corrupt Vampiric Scepter",
+  "category": "artifact",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "기본 공격 시 공격력%i:scaleAD%의 60%만큼 추가 물리 피해를 입히고 입힌 피해량만큼 장착 유닛의 체력 회복\n\n장착 시 스킬 사용 또는 마나 획득 불가",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_artifact_cursedvampiricscepter.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT_Item_Artifact_Dawncore",
+  "name_ko": "새벽심장",
+  "name_en": "Dawncore",
+  "category": "artifact",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "장착 시 최대 마나 10 감소. 이후 스킬 사용 시 최대 마나 10% 감소 (최소 10)",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_artifact_dawncore.tex",
+  "set_native": false,
+  "aliases": [
+   "DA_Artifact_Dawncore"
+  ]
+ },
+ {
+  "apiName": "TFT_Item_Artifact_EternalPact",
+  "name_ko": "영원한 서약",
+  "name_en": "Eternal Pact",
+  "category": "artifact",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "전투 시작: 체력이 가장 많은 아군 챔피언과 서약을 맺음. 해당 아군 사망 시 마나 재생 10, 주문력 40% 획득\n\n해당 아군이 스킬 사용 시 마나 15 획득. 6초마다 해당 아군에게 장착 유닛 주문력의 200%에 해당하는 보호막 부여",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft16_artifact_eternalpact.tex",
+  "set_native": false,
+  "aliases": [
+   "DA_Artifact_EternalPact"
+  ]
+ },
+ {
+  "apiName": "TFT_Item_Artifact_Fishbones",
+  "name_ko": "생선대가리",
+  "name_en": "Fishbones",
+  "category": "artifact",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "기본 공격 시 무작위 적을 대상으로 지정",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_artifact_fishbones.tex",
+  "set_native": false,
+  "aliases": [
+   "DA_Artifact_Fishbones"
+  ]
+ },
+ {
+  "apiName": "TFT_Item_Artifact_ForbiddenIdol",
+  "name_ko": "금지된 우상",
+  "name_en": "Forbidden Idol",
+  "category": "artifact",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "보호막 흡수량의 50%가 최대 체력으로 전환됩니다.",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_artifact_forbiddenidol.tex",
+  "set_native": false,
+  "aliases": [
+   "DA_Artifact_ForbiddenIdol"
+  ]
+ },
+ {
+  "apiName": "TFT_Item_Artifact_HellfireHatchet",
+  "name_ko": "지옥불 손도끼",
+  "name_en": "Hellfire Hatchet",
+  "category": "artifact",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "기본 공격 시 장착 유닛 최대 체력의 3%만큼 추가 물리 피해를 입힘. 잃은 체력 1%당 공격 속도 1% 획득",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_artifact_hellfirehatchet.tex",
+  "set_native": false,
+  "aliases": [
+   "DA_Artifact_HellfireHatchet"
+  ]
+ },
+ {
+  "apiName": "TFT_Item_Artifact_InnervatingLocket",
+  "name_ko": "활력증진의 펜던트",
+  "name_en": "Innervating Locket",
+  "category": "artifact",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "공격을 당할 때마다 총 마나의 1%씩 획득합니다.\n\n스킬을 사용할 때마다 3초 동안 최대 체력의 20%씩 회복합니다.",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_artifact_innervatinglocket.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT_Item_Artifact_LesserMirroredPersona",
+  "name_ko": "하급 거울의 환영",
+  "name_en": "Lesser Mirrored Persona",
+  "category": "artifact",
+  "composition": [],
+  "unique": true,
+  "desc_ko": "장착 유닛의 추가 공격력, 주문력, 공격 속도, 방어력, 마법 저항력, 체력의 15%를 다른 거울의 환영 장착 유닛과 공유\n\n재조합 불가\n고유: 중복 적용 불가",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft16_artifact_lessermirroredpersona.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT_Item_Artifact_LichBane",
+  "name_ko": "리치베인",
+  "name_en": "Lich Bane",
+  "category": "artifact",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "스킬을 사용한 후 첫 번째 기본 공격 시 ?의 추가 마법 피해를 입힘\n\n스테이지에 비례해 피해량 증가",
+  "icon": "assets/maps/particles/tft/item_icons/ornn_items/tft_item_artifact_lichbane.tex",
+  "set_native": false,
+  "aliases": [
+   "DA_Artifact_LichBane"
+  ]
+ },
+ {
+  "apiName": "TFT_Item_Artifact_LightshieldCrest",
+  "name_ko": "라이트실드 문장",
+  "name_en": "Lightshield Crest",
+  "category": "artifact",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "3초마다 체력 비율이 가장 낮은 아군에게 5초 동안 방어력과 마법 저항력을 합한 수치의 70%만큼 피해를 흡수하는 보호막을 씌움\n\n사망 시 모든 아군에게 이 보호막 부여",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_artifact_lightshieldcrest.tex",
+  "set_native": false,
+  "aliases": [
+   "DA_Artifact_LightshieldCrest"
+  ]
+ },
+ {
+  "apiName": "TFT_Item_Artifact_LudensTempest",
+  "name_ko": "루덴의 폭풍",
+  "name_en": "Luden's Tempest",
+  "category": "artifact",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "대상 처치 후 남는 피해량의 100%+100에 해당하는 마법 피해를 대상과 가장 가까운 적 두 명에게 입힙니다.",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_artifact_ludenstempest.tex",
+  "set_native": false,
+  "aliases": [
+   "DA_Artifact_LudensTempest"
+  ]
+ },
+ {
+  "apiName": "TFT_Item_Artifact_MendingEchoes",
+  "name_ko": "회복의 메아리",
+  "name_en": "Mending Echoes",
+  "category": "artifact",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "장착 유닛의 체력 회복량 25% 증가. 장착 유닛이 체력 회복을 주거나 받을 때 체력이 가장 낮은 아군 또한 체력 회복량의 40%만큼 체력 회복",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft16_artifact_mendingechoes.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT_Item_Artifact_MirroredPersona",
+  "name_ko": "거울의 환영",
+  "name_en": "Mirrored Persona",
+  "category": "artifact",
+  "composition": [],
+  "unique": true,
+  "desc_ko": "플레이어 대상 전투 6회마다 거울의 환영 하급 복사본 획득 (?/6) \n\n장착 유닛의 추가 공격력, 주문력, 공격 속도, 방어력, 마법 저항력, 체력의 15%를 다른 거울의 환영 장착 유닛과 공유\n\n재조합 불가, 하급 복사본은 복사본을 생성하지 않음\n고유: 중복 적용 불가",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft16_artifact_mirroredpersona.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT_Item_Artifact_Mittens",
+  "name_ko": "방한 장갑",
+  "name_en": "Mittens",
+  "category": "artifact",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "착용자의 몸집이 줄고 이동 속도가 증가하며 둔화, 화상, 상처 효과에 면역이 됨\n\n{{TFT_Keyword_Chill}}\n{{TFT_Keyword_Burn}}\n{{TFT_Keyword_Wound}}",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_artifact_mittens.tex",
+  "set_native": false,
+  "aliases": [
+   "DA_Artifact_Mittens"
+  ]
+ },
+ {
+  "apiName": "TFT_Item_Artifact_NavoriFlickerblades",
+  "name_ko": "명멸검",
+  "name_en": "Flickerblades",
+  "category": "artifact",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "기본 공격 시 중첩되는 공격 속도 5% 획득. 또한 기본 공격 3회마다 공격력 2%, 주문력 2% 획득",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_artifact_navoriflickerplade.tex",
+  "set_native": false,
+  "aliases": [
+   "DA_Artifact_NavoriFlickerblade"
+  ]
+ },
+ {
+  "apiName": "TFT_Item_Artifact_ProwlersClaw",
+  "name_ko": "자객의 발톱",
+  "name_en": "Prowler's Claw",
+  "category": "artifact",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "대상 처치 후 해로운 효과를 제거하고 4칸 내 가장 멀리 있는 대상에게 돌진. 다음 치명타 공격 2회가 50%의 추가 치명타 피해를 입힘",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_artifact_prowlersclaw.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT_Item_Artifact_RapidFirecannon",
+  "name_ko": "고속 연사포",
+  "name_en": "Rapid Firecannon",
+  "category": "artifact",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "공격 사거리가 +1 증가하며 적을 처치할 때마다 1씩 증가합니다.",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_artifact_rapidfirecannon.tex",
+  "set_native": false,
+  "aliases": [
+   "DA_Artifact_RapidFireCannon"
+  ]
+ },
+ {
+  "apiName": "TFT_Item_Artifact_SeekersArmguard",
+  "name_ko": "추적자의 팔목 보호대",
+  "name_en": "Seeker's Armguard",
+  "category": "artifact",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "처치 관여 시 장착 유닛의 방어력, 마법 저항력, 주문력 20 증가",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_artifact_seekersarmguard.tex",
+  "set_native": false,
+  "aliases": [
+   "DA_Artifact_SeekersArmguard"
+  ]
+ },
+ {
+  "apiName": "TFT_Item_Artifact_ShadowPuppet",
+  "name_ko": "그림자 꼭두각시",
+  "name_en": "Shadow Puppet",
+  "category": "artifact",
+  "composition": [],
+  "unique": true,
+  "desc_ko": "장착 유닛의 아이템을 복사하는 분신 1명 소환. 분신은 최대 체력의 60%에 해당하는 체력을 지니며 40%의 피해를 입힘\n\n[고유 - 중복 적용 불가]",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft16_artifact_shadowpuppet.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT_Item_Artifact_SilvermereDawn",
+  "name_ko": "은빛 여명",
+  "name_en": "Silvermere Dawn",
+  "category": "artifact",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "기절에 면역이 되며 기본 공격 시 대상을 0.8초 동안 기절시킴\n\n장착 유닛의 공격 속도는 0.5에서 고정",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_artifact_silvermeredawn.tex",
+  "set_native": false,
+  "aliases": [
+   "DA_Artifact_SilvermereDawn"
+  ]
+ },
+ {
+  "apiName": "TFT_Item_Artifact_SpectralCutlass",
+  "name_ko": "망령 해적검",
+  "name_en": "Spectral Cutlass",
+  "category": "artifact",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "전투 시작: 장착 유닛이 적 전장의 정반대 칸으로 순간이동. 8초 후 원래 위치로 복귀",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_artifact_spectralcutlass.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT_Item_Artifact_StatikkShiv",
+  "name_ko": "스태틱의 단검",
+  "name_en": "Statikk Shiv",
+  "category": "artifact",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "기본 공격 3회마다 4명의 적에게 30+장착 유닛 주문력의 50%만큼 추가 마법 피해를 입힘",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_artifact_stattikshiv.tex",
+  "set_native": false,
+  "aliases": [
+   "DA_Artifact_StatikkShiv"
+  ]
+ },
+ {
+  "apiName": "TFT_Item_Artifact_SuspiciousTrenchCoat",
+  "name_ko": "수상한 외투",
+  "name_en": "Suspicious Trench Coat",
+  "category": "artifact",
+  "composition": [],
+  "unique": true,
+  "desc_ko": "전투당 1회 체력이 60%일 때 각각 최대 체력의 33%를 보유한 3명으로 나뉨\n\n[고유 - 중복 적용 불가]",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_artifact_suspicioustrenchcoat.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT_Item_Artifact_TalismanOfAscension",
+  "name_ko": "승천의 부적",
+  "name_en": "Talisman Of Ascension",
+  "category": "artifact",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "22초 후 전투가 끝날 때까지 최대 체력의 100%와 피해 증폭 120% 획득",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_artifact_talismanofascension.tex",
+  "set_native": false,
+  "aliases": [
+   "DA_Item_Artifact_TalismanOfAscension"
+  ]
+ },
+ {
+  "apiName": "TFT_Item_Artifact_TheIndomitable",
+  "name_ko": "불굴",
+  "name_en": "The Indomitable",
+  "category": "artifact",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "장착 시 이동 속도 대폭 감소\n\n최대 체력 15%와 기절 면역을 획득하고 현재 대상을 근접 공격 사거리로 끌어당김",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_artifact_theindomitable.tex",
+  "set_native": false,
+  "aliases": [
+   "DA_Artifact_TheIndomitable"
+  ]
+ },
+ {
+  "apiName": "TFT_Item_Artifact_TitanicHydra",
+  "name_ko": "거대한 히드라",
+  "name_en": "Titanic Hydra",
+  "category": "artifact",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "기본 공격 시 대상 및 인접한 적에게 장착 유닛 최대 체력의 4% +공격력의 6%만큼 추가 물리 피해를 입힘",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_artifact_titanichydra.tex",
+  "set_native": false,
+  "aliases": [
+   "DA_Artifact_TitanicHydra"
+  ]
+ },
+ {
+  "apiName": "TFT_Item_Artifact_UnendingDespair",
+  "name_ko": "끝없는 절망",
+  "name_en": "Unending Despair",
+  "category": "artifact",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "장착 유닛에게 적용된 보호막이 깨질 때마다 해당 보호막 최초 피해 흡수량의 150%에 해당하는 마법 피해를 가장 가까운 적에게 입힙니다.",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_artifact_unendingdespair.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT_Item_Artifact_VoidGauntlet",
+  "name_ko": "공허 건틀릿",
+  "name_en": "Void Gauntlet",
+  "category": "artifact",
+  "composition": [],
+  "unique": true,
+  "desc_ko": "전투 시작: 최대 체력의 30% 저장 및 매초 2.5% 추가 저장. 사망 시 4칸 내 적에게 저장한 체력만큼의 마법 피해를 나누어 입힘\n\n[고유 - 중복 적용 불가]",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft16_artifact_voidgauntlet.tex",
+  "set_native": false,
+  "aliases": [
+   "DA_Artifact_VoidGauntlet"
+  ]
+ },
+ {
+  "apiName": "TFT_Item_Artifact_WitsEnd",
+  "name_ko": "마법사의 최후",
+  "name_en": "Wit's End",
+  "category": "artifact",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "기본 공격 시 ?의 추가 마법 피해를 입힘\n\n입히는 모든 마법 피해량의 30%만큼 장착 유닛이 체력 회복\n\n스테이지에 비례해 피해량 증가",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_artifact_witsend.tex",
+  "set_native": false,
+  "aliases": [
+   "DA_Artifact_WitsEnd"
+  ]
+ },
+ {
+  "apiName": "TFT_Item_BFSword",
+  "name_ko": "B.F. 대검",
+  "name_en": "B.F. Sword",
+  "category": "component",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "공격력 %i:scaleAD%+10%",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_bfsword.tex",
+  "set_native": false,
+  "aliases": [
+   "DA_Component_BFSword"
+  ]
+ },
+ {
+  "apiName": "TFT_Item_BansheesVeil",
+  "name_ko": "밴시의 장막",
+  "name_en": "Banshee's Veil",
+  "category": "other",
+  "composition": [],
+  "unique": true,
+  "desc_ko": "전투 시작: 장착 유닛과 가로로 1칸 내에 있는 모든 아군이 18초 동안 군중 제어 효과에 면역 및 공격 속도 25% 증가\n\n[지원 아이템] [고유 - 중복 적용 불가]",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_bansheesveil.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT_Item_Blank",
+  "name_ko": null,
+  "name_en": null,
+  "category": "other",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_blank.tex",
+  "set_native": false,
+  "aliases": [
+   "TFT6_Augment_FourScore"
+  ]
+ },
+ {
+  "apiName": "TFT_Item_Bloodthirster",
+  "name_ko": "피바라기",
+  "name_en": "Bloodthirster",
+  "category": "completed",
+  "composition": [
+   "TFT_Item_BFSword",
+   "TFT_Item_NegatronCloak"
+  ],
+  "unique": false,
+  "desc_ko": "전투당 한 번, 체력이 40%일 때 최대 체력의 25%에 해당하는 보호막 획득 후 최대 5초까지 유지",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_bloodthirster.tex",
+  "set_native": false,
+  "aliases": [
+   "DA_Bloodthirster"
+  ]
+ },
+ {
+  "apiName": "TFT_Item_BlueBuff",
+  "name_ko": "푸른 파수꾼",
+  "name_en": "Blue Buff",
+  "category": "completed",
+  "composition": [
+   "TFT_Item_TearOfTheGoddess",
+   "TFT_Item_TearOfTheGoddess"
+  ],
+  "unique": false,
+  "desc_ko": "모든 요소로부터 얻는 공격력 및 주문력 10% 증가",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_bluebuff.tex",
+  "set_native": false,
+  "aliases": [
+   "DA_BlueBuff"
+  ]
+ },
+ {
+  "apiName": "TFT_Item_BrambleVest",
+  "name_ko": "덤불 조끼",
+  "name_en": "Bramble Vest",
+  "category": "completed",
+  "composition": [
+   "TFT_Item_ChainVest",
+   "TFT_Item_ChainVest"
+  ],
+  "unique": false,
+  "desc_ko": "6%의 최대 체력 획득\n\n기본 공격으로 받는 피해 5% 감소. 기본 공격에 맞을 경우 인접한 모든 적에게 100의 마법 피해\n\n재사용 대기시간: 2초",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_bramblevest.tex",
+  "set_native": false,
+  "aliases": [
+   "DA_BrambleVest"
+  ]
+ },
+ {
+  "apiName": "TFT_Item_ChainVest",
+  "name_ko": "쇠사슬 조끼",
+  "name_en": "Chain Vest",
+  "category": "component",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "방어력 %i:scaleArmor% +20",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_chainvest.tex",
+  "set_native": false,
+  "aliases": [
+   "DA_Component_ChainVest"
+  ]
+ },
+ {
+  "apiName": "TFT_Item_Chalice",
+  "name_ko": "힘의 성배",
+  "name_en": "Chalice of Power",
+  "category": "other",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "전투 시작: 장착 유닛과 2칸 내에 있는 같은 열의 아군이 25의 주문력과 10의 마나 획득\n\n​​​​[지원 아이템]",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_chalice.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT_Item_Crownguard",
+  "name_ko": "크라운가드",
+  "name_en": "Crownguard",
+  "category": "completed",
+  "composition": [
+   "TFT_Item_NeedlesslyLargeRod",
+   "TFT_Item_ChainVest"
+  ],
+  "unique": false,
+  "desc_ko": "전투 시작: 8초 동안 최대 체력의 25%에 해당하는 보호막 획득\n\n보호막이 사라지면 주문력 25% 증가",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_crownguard.tex",
+  "set_native": false,
+  "aliases": [
+   "DA_Crownguard"
+  ]
+ },
+ {
+  "apiName": "TFT_Item_Deathblade",
+  "name_ko": "죽음의 검",
+  "name_en": "Deathblade",
+  "category": "completed",
+  "composition": [
+   "TFT_Item_BFSword",
+   "TFT_Item_BFSword"
+  ],
+  "unique": false,
+  "desc_ko": "이 검의 주인은 더없는 평화와 안정을 찾게 됩니다. 주인의 적들도 마찬가지고요.\n\n?",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_deathblade.tex",
+  "set_native": false,
+  "aliases": [
+   "DA_Deathblade"
+  ]
+ },
+ {
+  "apiName": "TFT_Item_DebugBase",
+  "name_ko": "MissingNo",
+  "name_en": "MissingNo",
+  "category": "consumable",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "404 오류: 디버그 명령 찾을 수 없음",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_debugbase.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT_Item_DebugCrit",
+  "name_ko": "치명타!",
+  "name_en": "Critical Hit!",
+  "category": "consumable",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "챔피언에게 치명타 확률을 100% 부여하며 스킬에 치명타 적용",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_debugcrit.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT_Item_DebugDamage",
+  "name_ko": "휴대용 고통",
+  "name_en": "Portable Pain",
+  "category": "consumable",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "피해량 ? 달성",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_debugdamage.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT_Item_DebugDamageAmp",
+  "name_ko": "피해 증폭",
+  "name_en": "Damage Amp",
+  "category": "consumable",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "이 유닛이 입히는 피해가 ?% 증가합니다. 이 효과는 중첩되지 않으며 유닛이 분해될 때까지 지속됩니다.",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_debugdamageamp.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT_Item_DebugFirstHit",
+  "name_ko": "에이스",
+  "name_en": "Ace",
+  "category": "consumable",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "이 유닛이 다음번 공격 시 ?%의 피해",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_debugfirsthit.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT_Item_DebugMana",
+  "name_ko": "적의 눈물",
+  "name_en": "The Tears of My Enemies",
+  "category": "consumable",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "마나 ? 획득",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_debugmana.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT_Item_DebugShield",
+  "name_ko": "펭구의 보호",
+  "name_en": "Pengu's Protection",
+  "category": "consumable",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "?의 피해를 흡수하는 보호막 획득",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_debugshield.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT_Item_DebugStun",
+  "name_ko": "망치 날리기",
+  "name_en": "Hammer to the Face",
+  "category": "consumable",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "?초 기절 효과",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_debugstun.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT_Item_DebugTaunt",
+  "name_ko": "도발",
+  "name_en": "Taunt",
+  "category": "consumable",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "대상을 공격할 수 있는 범위 내 모든 적을 도발",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_debugtaunt.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT_Item_DebugUnitID",
+  "name_ko": "내가 누군지 알아?",
+  "name_en": "Do You Know Who I Am?",
+  "category": "consumable",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "UnitID를 출력해 채팅",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_debugunitid.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT_Item_DragonsClaw",
+  "name_ko": "용의 발톱",
+  "name_en": "Dragon's Claw",
+  "category": "completed",
+  "composition": [
+   "TFT_Item_NegatronCloak",
+   "TFT_Item_NegatronCloak"
+  ],
+  "unique": false,
+  "desc_ko": "6%의 최대 체력 획득\n\n2초마다 최대 체력의 2.5% 회복",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_dragonsclaw.tex",
+  "set_native": false,
+  "aliases": [
+   "DA_DragonsClaw"
+  ]
+ },
+ {
+  "apiName": "TFT_Item_EmptyBag",
+  "name_ko": "",
+  "name_en": "",
+  "category": "other",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "전투 시작 시 무작위 아이템으로 변신!",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_emptybag.tex",
+  "set_native": false,
+  "aliases": [
+   "TFT7_Item_TreasureDragonBlankSlot"
+  ]
+ },
+ {
+  "apiName": "TFT_Item_EternalFlame",
+  "name_ko": "영원한 불꽃",
+  "name_en": "The Eternal Flame",
+  "category": "other",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "장착 유닛이 살아 있는 동안 모든 아군이 피해 증폭을 8% 얻고 모든 적에게 상처 33% 적용. 이 효과는 5초마다 초기화\n\n​​[지원 아이템]\n상처: 체력 회복량 감소",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_eternalflame.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT_Item_ForceOfNature",
+  "name_ko": "전략가의 왕관",
+  "name_en": "Tactician's Crown",
+  "category": "tactician",
+  "composition": [
+   "TFT_Item_Spatula",
+   "TFT_Item_Spatula"
+  ],
+  "unique": false,
+  "desc_ko": "아군의 최대 팀 규모 +1 증가.\n\n전투 승리 시 1골드를 획득할 확률 10%\n\n'...영웅의 심장...'",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_forceofnature.tex",
+  "set_native": false,
+  "aliases": [
+   "DA_TacticiansCrown"
+  ]
+ },
+ {
+  "apiName": "TFT_Item_FrozenHeart",
+  "name_ko": "수호자의 맹세",
+  "name_en": "Protector's Vow",
+  "category": "completed",
+  "composition": [
+   "TFT_Item_TearOfTheGoddess",
+   "TFT_Item_ChainVest"
+  ],
+  "unique": false,
+  "desc_ko": "전투 시작: 마나 20 획득\n\n체력이 40%일 때 마나 15 및 최대 체력의 20%에 해당하는 보호막 획득",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_frozenheart.tex",
+  "set_native": false,
+  "aliases": [
+   "DA_ProtectorsVow"
+  ]
+ },
+ {
+  "apiName": "TFT_Item_FryingPan",
+  "name_ko": "프라이팬",
+  "name_en": "Frying Pan",
+  "category": "component",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "... 이게 여기에 있는 이유가 달리 있을까요?",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_fryingpan.tex",
+  "set_native": false,
+  "aliases": [
+   "DA_Component_FryingPan"
+  ]
+ },
+ {
+  "apiName": "TFT_Item_GargoyleStoneplate",
+  "name_ko": "가고일 돌갑옷",
+  "name_en": "Gargoyle Stoneplate",
+  "category": "completed",
+  "composition": [
+   "TFT_Item_ChainVest",
+   "TFT_Item_NegatronCloak"
+  ],
+  "unique": false,
+  "desc_ko": "적의 공격 대상이 되면 방어력이 10, 마법 저항력이 10 증가. 공격하는 적이 늘어나면 중첩되어 적용",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_gargoylestoneplate.tex",
+  "set_native": false,
+  "aliases": [
+   "DA_GargoyleStoneplate"
+  ]
+ },
+ {
+  "apiName": "TFT_Item_GiantsBelt",
+  "name_ko": "거인의 허리띠",
+  "name_en": "Giant's Belt",
+  "category": "component",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "체력 %i:scaleHealth% +150",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_giantsbelt.tex",
+  "set_native": false,
+  "aliases": [
+   "DA_Component_GiantsBelt"
+  ]
+ },
+ {
+  "apiName": "TFT_Item_GuardianAngel",
+  "name_ko": "밤의 끝자락",
+  "name_en": "Edge of Night",
+  "category": "completed",
+  "composition": [
+   "TFT_Item_BFSword",
+   "TFT_Item_ChainVest"
+  ],
+  "unique": false,
+  "desc_ko": "체력이 60%일 때 잠시 대상으로 지정할 수 없게 되며 해로운 효과 제거 및 잃은 체력의 20% 회복",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_guardianangel.tex",
+  "set_native": false,
+  "aliases": [
+   "DA_EdgeOfNight"
+  ]
+ },
+ {
+  "apiName": "TFT_Item_GuinsoosRageblade",
+  "name_ko": "구인수의 격노검",
+  "name_en": "Guinsoo's Rageblade",
+  "category": "completed",
+  "composition": [
+   "TFT_Item_RecurveBow",
+   "TFT_Item_NeedlesslyLargeRod"
+  ],
+  "unique": false,
+  "desc_ko": "매초 공격 속도 7% 획득 (중첩 가능)",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_guinsoosrageblade.tex",
+  "set_native": false,
+  "aliases": [
+   "DA_GuinsoosRageblade"
+  ]
+ },
+ {
+  "apiName": "TFT_Item_HextechGunblade",
+  "name_ko": "마법공학 총검",
+  "name_en": "Hextech Gunblade",
+  "category": "completed",
+  "composition": [
+   "TFT_Item_BFSword",
+   "TFT_Item_NeedlesslyLargeRod"
+  ],
+  "unique": false,
+  "desc_ko": "입힌 피해량의 20%만큼 체력 비율이 가장 낮은 아군의 체력 회복\n\n아군 체력 회복량: ?",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_hextechgunblade.tex",
+  "set_native": false,
+  "aliases": [
+   "DA_HextechGunblade"
+  ]
+ },
+ {
+  "apiName": "TFT_Item_InfinityEdge",
+  "name_ko": "무한의 대검",
+  "name_en": "Infinity Edge",
+  "category": "completed",
+  "composition": [
+   "TFT_Item_BFSword",
+   "TFT_Item_SparringGloves"
+  ],
+  "unique": false,
+  "desc_ko": "정밀을 얻습니다.\n\n{{TFT_Keyword_Precision}}",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_infinityedge.tex",
+  "set_native": false,
+  "aliases": [
+   "DA_InfinityEdge"
+  ]
+ },
+ {
+  "apiName": "TFT_Item_IonicSpark",
+  "name_ko": "이온 충격기",
+  "name_en": "Ionic Spark",
+  "category": "completed",
+  "composition": [
+   "TFT_Item_NeedlesslyLargeRod",
+   "TFT_Item_NegatronCloak"
+  ],
+  "unique": false,
+  "desc_ko": "2칸 내 적에게 파쇄 30% 적용. 해당 적은 스킬 사용 시 사용한 마나의 150%에 해당하는 마법 피해를 입음\n\n파쇄: 마법 저항력 감소",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_ionicspark.tex",
+  "set_native": false,
+  "aliases": [
+   "DA_IonicSpark"
+  ]
+ },
+ {
+  "apiName": "TFT_Item_JeweledGauntlet",
+  "name_ko": "보석 건틀릿",
+  "name_en": "Jeweled Gauntlet",
+  "category": "completed",
+  "composition": [
+   "TFT_Item_NeedlesslyLargeRod",
+   "TFT_Item_SparringGloves"
+  ],
+  "unique": false,
+  "desc_ko": "정밀을 얻습니다.\n\n{{TFT_Keyword_Precision}}",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_jeweledgauntlet.tex",
+  "set_native": false,
+  "aliases": [
+   "DA_JeweledGauntlet"
+  ]
+ },
+ {
+  "apiName": "TFT_Item_LastWhisper",
+  "name_ko": "최후의 속삭임",
+  "name_en": "Last Whisper",
+  "category": "completed",
+  "composition": [
+   "TFT_Item_RecurveBow",
+   "TFT_Item_SparringGloves"
+  ],
+  "unique": false,
+  "desc_ko": "기본 공격 및 스킬로 피해를 입힐 경우 3초 동안 대상에게 파열을 30% 적용 (중첩 불가)\n\n파열: 방어력 감소",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_lastwhisper.tex",
+  "set_native": false,
+  "aliases": [
+   "DA_LastWhisper"
+  ]
+ },
+ {
+  "apiName": "TFT_Item_Leviathan",
+  "name_ko": "내셔의 이빨",
+  "name_en": "Nashor's Tooth",
+  "category": "completed",
+  "composition": [
+   "TFT_Item_RecurveBow",
+   "TFT_Item_GiantsBelt"
+  ],
+  "unique": false,
+  "desc_ko": "기본 공격 시 추가 마나 2 획득. 치명타 적중 시 4 획득",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_leviathan.tex",
+  "set_native": false,
+  "aliases": [
+   "DA_NashorsTooth"
+  ]
+ },
+ {
+  "apiName": "TFT_Item_LocketOfTheIronSolari",
+  "name_ko": "강철의 솔라리 펜던트",
+  "name_en": "Locket of the Iron Solari",
+  "category": "artifact",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "전투 시작: 장착한 유닛과 가로로 2칸 내에 있는 모든 아군이 20초 동안 250의 피해를 흡수하는 보호막, 방어력 20, 마법 저항력 20 획득\n\n​​[지원 아이템]",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_locketoftheironsolari.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT_Item_MadredsBloodrazor",
+  "name_ko": "거인 학살자",
+  "name_en": "Giant Slayer",
+  "category": "completed",
+  "composition": [
+   "TFT_Item_BFSword",
+   "TFT_Item_RecurveBow"
+  ],
+  "unique": false,
+  "desc_ko": "탱커를 상대로 추가 피해 증폭 15% 획득",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_madredsbloodrazor.tex",
+  "set_native": false,
+  "aliases": [
+   "DA_GiantSlayer"
+  ]
+ },
+ {
+  "apiName": "TFT_Item_Moonstone",
+  "name_ko": "월석 재생기",
+  "name_en": "Moonstone Renewer",
+  "category": "other",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "4초마다 체력 비율이 가장 낮은 아군 2명에게 4초 동안 55~325(스테이지에 비례)의 피해를 흡수하는 보호막 부여\n\n​​[지원 아이템]",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_moonstone.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT_Item_Morellonomicon",
+  "name_ko": "모렐로노미콘",
+  "name_en": "Morellonomicon",
+  "category": "completed",
+  "composition": [
+   "TFT_Item_NeedlesslyLargeRod",
+   "TFT_Item_GiantsBelt"
+  ],
+  "unique": false,
+  "desc_ko": "기본 공격 및 스킬로 피해를 입힐 경우 10초 동안 적에게 불태우기를 1%, 상처를 33% 적용\n\n불태우기: 매초 대상 최대 체력의 일정 비율만큼 고정 피해\n상처: 체력 회복량 감소",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_morellonomicon.tex",
+  "set_native": false,
+  "aliases": [
+   "DA_Morellonomicon"
+  ]
+ },
+ {
+  "apiName": "TFT_Item_NeedlesslyLargeRod",
+  "name_ko": "쓸데없이 큰 지팡이",
+  "name_en": "Needlessly Large Rod",
+  "category": "component",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "주문력 %i:scaleAP% +10",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_needlesslylargerod.tex",
+  "set_native": false,
+  "aliases": [
+   "DA_Component_NeedlesslyLargeRod"
+  ]
+ },
+ {
+  "apiName": "TFT_Item_NegatronCloak",
+  "name_ko": "음전자 망토",
+  "name_en": "Negatron Cloak",
+  "category": "component",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "마법 저항력 %i:scaleMR% +20",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_negatroncloak.tex",
+  "set_native": false,
+  "aliases": [
+   "DA_Component_NegatronCloak"
+  ]
+ },
+ {
+  "apiName": "TFT_Item_NightHarvester",
+  "name_ko": "굳건한 심장",
+  "name_en": "Steadfast Heart",
+  "category": "completed",
+  "composition": [
+   "TFT_Item_ChainVest",
+   "TFT_Item_SparringGloves"
+  ],
+  "unique": false,
+  "desc_ko": "내구력 5% 획득. 체력이 50% 이상일 때 대신 내구력 15% 획득\n\n?",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_nightharvester.tex",
+  "set_native": false,
+  "aliases": [
+   "DA_SteadfastHeart"
+  ]
+ },
+ {
+  "apiName": "TFT_Item_PowerGauntlet",
+  "name_ko": "타격대의 철퇴",
+  "name_en": "Striker's Flail",
+  "category": "completed",
+  "composition": [
+   "TFT_Item_GiantsBelt",
+   "TFT_Item_SparringGloves"
+  ],
+  "unique": false,
+  "desc_ko": "치명타 적중 시 5초 동안 피해 증폭 5% 획득 (최대 4회 중첩)",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_powergauntlet.tex",
+  "set_native": false,
+  "aliases": [
+   "DA_StrikersFlail"
+  ]
+ },
+ {
+  "apiName": "TFT_Item_Quicksilver",
+  "name_ko": "수은",
+  "name_en": "Quicksilver",
+  "category": "completed",
+  "composition": [
+   "TFT_Item_SparringGloves",
+   "TFT_Item_NegatronCloak"
+  ],
+  "unique": false,
+  "desc_ko": "전투 시작: 18초 동안 군중 제어 효과에 면역\n\n매초 공격 속도 3% 획득 (중첩 가능)",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_quicksilver.tex",
+  "set_native": false,
+  "aliases": [
+   "DA_Quicksilver"
+  ]
+ },
+ {
+  "apiName": "TFT_Item_RabadonsDeathcap",
+  "name_ko": "라바돈의 죽음모자",
+  "name_en": "Rabadon's Deathcap",
+  "category": "completed",
+  "composition": [
+   "TFT_Item_NeedlesslyLargeRod",
+   "TFT_Item_NeedlesslyLargeRod"
+  ],
+  "unique": false,
+  "desc_ko": "평범해 보이지만 우주를 창조하거나 파괴할 수 있는 모자입니다.\n\n?",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_rabadonsdeathcap.tex",
+  "set_native": false,
+  "aliases": [
+   "DA_RabadonsDeathcap"
+  ]
+ },
+ {
+  "apiName": "TFT_Item_RadiantVirtue",
+  "name_ko": "순교자의 미덕",
+  "name_en": "Virtue of the Martyr",
+  "category": "radiant",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "5초마다 아군이 각자 최대 체력의 7%만큼 회복. 장착 유닛이 처치되면 회복량이 최대 체력의 14%로 증가하고 이 효과는 2회 추가로 적용\n\n회복량: ?\n\n​​[지원 아이템]",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_radiantvirtue.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT_Item_RapidFireCannon",
+  "name_ko": "붉은 덩굴정령",
+  "name_en": "Red Buff",
+  "category": "completed",
+  "composition": [
+   "TFT_Item_RecurveBow",
+   "TFT_Item_RecurveBow"
+  ],
+  "unique": false,
+  "desc_ko": "기본 공격과 스킬이 5초 동안 적에게 불태우기를 1%, 상처를 33% 적용\n\n불태우기: 매초 대상 최대 체력의 일정 비율만큼 고정 피해\n상처: 체력 회복량 감소",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_rapidfirecannon.tex",
+  "set_native": false,
+  "aliases": [
+   "DA_RedBuff"
+  ]
+ },
+ {
+  "apiName": "TFT_Item_RecurveBow",
+  "name_ko": "곡궁",
+  "name_en": "Recurve Bow",
+  "category": "component",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "공격 속도 %i:scaleAS%+10%",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_recurvebow.tex",
+  "set_native": false,
+  "aliases": [
+   "DA_Component_RecurveBow"
+  ]
+ },
+ {
+  "apiName": "TFT_Item_RedBuff",
+  "name_ko": "태양불꽃 망토",
+  "name_en": "Sunfire Cape",
+  "category": "completed",
+  "composition": [
+   "TFT_Item_ChainVest",
+   "TFT_Item_GiantsBelt"
+  ],
+  "unique": false,
+  "desc_ko": "최대 체력 8% 획득\n\n2초마다 2칸 내에 있는 적 하나에게 10초 동안 불태우기를 1%, 상처를 33% 적용\n\n불태우기: 매초 대상 최대 체력의 일정 비율만큼 고정 피해\n상처: 체력 회복량 감소",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_redbuff.tex",
+  "set_native": false,
+  "aliases": [
+   "DA_SunfireCape"
+  ]
+ },
+ {
+  "apiName": "TFT_Item_Redemption",
+  "name_ko": "정령의 형상",
+  "name_en": "Spirit Visage",
+  "category": "completed",
+  "composition": [
+   "TFT_Item_TearOfTheGoddess",
+   "TFT_Item_GiantsBelt"
+  ],
+  "unique": false,
+  "desc_ko": "매초 잃은 체력의 2%만큼 체력 회복",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_spiritvisagerr.tex",
+  "set_native": false,
+  "aliases": [
+   "DA_SpiritVisage"
+  ]
+ },
+ {
+  "apiName": "TFT_Item_RunaansHurricane",
+  "name_ko": "크라켄의 분노",
+  "name_en": "Kraken's Fury",
+  "category": "completed",
+  "composition": [
+   "TFT_Item_NegatronCloak",
+   "TFT_Item_RecurveBow"
+  ],
+  "unique": false,
+  "desc_ko": "기본 공격 시 공격력 3.5% (최대 15회 중첩) 획득. 기본 공격 15회 후 공격 속도 15% 획득",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_krakenslayer.tex",
+  "set_native": false,
+  "aliases": [
+   "DA_KrakensFury"
+  ]
+ },
+ {
+  "apiName": "TFT_Item_SentinelSwarm",
+  "name_ko": "감시자 무리",
+  "name_en": "Sentinel Swarm",
+  "category": "other",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "3초마다 완성 아이템, 유물 아이템, 찬란한 아이템을 장착한 강력한 감시자 1마리 소환",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_sentinelswarm.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT_Item_Shroud",
+  "name_ko": "침묵의 장막",
+  "name_en": "Shroud of Stillness",
+  "category": "other",
+  "composition": [],
+  "unique": true,
+  "desc_ko": "전투 시작: 적에게 30%의 마나를 강탈하는 광선 발사\n\n아군의 체력 60 증가\n\n[지원 아이템] [고유 - 중복 적용 불가]\n마나 강탈: 스킬을 사용하기 전까지 최대 마나 증가\n?",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_shroud.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT_Item_SparringGloves",
+  "name_ko": "연습용 장갑",
+  "name_en": "Sparring Gloves",
+  "category": "component",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "치명타 확률 +20",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_sparringgloves.tex",
+  "set_native": false,
+  "aliases": [
+   "DA_Component_SparringGloves"
+  ]
+ },
+ {
+  "apiName": "TFT_Item_Spatula",
+  "name_ko": "뒤집개",
+  "name_en": "Spatula",
+  "category": "component",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "무슨 쓸모가 있을 텐데...",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_spatula.tex",
+  "set_native": false,
+  "aliases": [
+   "DA_Component_Spatula"
+  ]
+ },
+ {
+  "apiName": "TFT_Item_SpearOfShojin",
+  "name_ko": "쇼진의 창",
+  "name_en": "Spear of Shojin",
+  "category": "completed",
+  "composition": [
+   "TFT_Item_BFSword",
+   "TFT_Item_TearOfTheGoddess"
+  ],
+  "unique": false,
+  "desc_ko": "기본 공격 시 추가 마나 5 획득",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_spearofshojin.tex",
+  "set_native": false,
+  "aliases": [
+   "DA_SpearOfShojin"
+  ]
+ },
+ {
+  "apiName": "TFT_Item_SpectralGauntlet",
+  "name_ko": "저녁갑주",
+  "name_en": "Evenshroud",
+  "category": "completed",
+  "composition": [
+   "TFT_Item_NegatronCloak",
+   "TFT_Item_GiantsBelt"
+  ],
+  "unique": false,
+  "desc_ko": "2칸 내에 있는 적 30% 파열 전투 시작 후 15초 동안 방어력과 마법 저항력 15 증가\n\n파열: 방어력 감소",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_spectralgauntlet.tex",
+  "set_native": false,
+  "aliases": [
+   "DA_Evenshroud"
+  ]
+ },
+ {
+  "apiName": "TFT_Item_StatikkShiv",
+  "name_ko": "공허의 지팡이",
+  "name_en": "Void Staff",
+  "category": "completed",
+  "composition": [
+   "TFT_Item_RecurveBow",
+   "TFT_Item_TearOfTheGoddess"
+  ],
+  "unique": false,
+  "desc_ko": "기본 공격 및 스킬로 피해를 입힐 경우 5초 동안 대상에게 파쇄를 30% 적용 (중첩 불가)\n\n파쇄: 마법 저항력 감소",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_voidstaff.tex",
+  "set_native": false,
+  "aliases": [
+   "DA_VoidStaff"
+  ]
+ },
+ {
+  "apiName": "TFT_Item_SteraksGage",
+  "name_ko": "스테락의 도전",
+  "name_en": "Sterak's Gage",
+  "category": "completed",
+  "composition": [
+   "TFT_Item_BFSword",
+   "TFT_Item_GiantsBelt"
+  ],
+  "unique": false,
+  "desc_ko": "체력이 60%일 때, 장착 유닛 최대 체력의 40%에 해당하는 보호막 획득. 보호막은 4초에 걸쳐 빠르게 사라짐",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_steraksgage.tex",
+  "set_native": false,
+  "aliases": [
+   "DA_SteraksGage"
+  ]
+ },
+ {
+  "apiName": "TFT_Item_SupportKnightsVow",
+  "name_ko": "기사의 맹세",
+  "name_en": "Knight's Vow",
+  "category": "other",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "전투 시작: 장착 유닛과 1칸 내에 있는 같은 열의 아군이 200의 체력과 15%의 모든 피해 흡혈 획득\n\n​​[지원 아이템]",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_supportknightsvow.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT_Item_TacticiansRing",
+  "name_ko": "전략가의 망토",
+  "name_en": "Tactician's Cape",
+  "category": "tactician",
+  "composition": [
+   "TFT_Item_Spatula",
+   "TFT_Item_FryingPan"
+  ],
+  "unique": false,
+  "desc_ko": "아군의 최대 팀 규모 +1 증가.\n\n전투 시작 시 10초 후 1골드를 획득할 확률 10%\n\n'...그리고 약간의 행운.'",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_tacticiansring.tex",
+  "set_native": false,
+  "aliases": [
+   "DA_TacticiansCape"
+  ]
+ },
+ {
+  "apiName": "TFT_Item_TacticiansScepter",
+  "name_ko": "전략가의 방패",
+  "name_en": "Tactician's Shield",
+  "category": "tactician",
+  "composition": [
+   "TFT_Item_FryingPan",
+   "TFT_Item_FryingPan"
+  ],
+  "unique": false,
+  "desc_ko": "아군의 최대 팀 규모 +1 증가.\n\n장착 유닛 사망 시 1골드를 획득할 확률 10%\n\n'철학자의 지혜가 깃들어 있습니다.'",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_tacticiansscepter.tex",
+  "set_native": false,
+  "aliases": [
+   "DA_TacticiansShield"
+  ]
+ },
+ {
+  "apiName": "TFT_Item_TearOfTheGoddess",
+  "name_ko": "여신의 눈물",
+  "name_en": "Tear of the Goddess",
+  "category": "component",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "%i:TFTManaRegen% 마나 재생 +1",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_tearofthegoddess.tex",
+  "set_native": false,
+  "aliases": [
+   "DA_Component_TearOfTheGoddess"
+  ]
+ },
+ {
+  "apiName": "TFT_Item_ThiefsGloves",
+  "name_ko": "도적의 장갑",
+  "name_en": "Thief's Gloves",
+  "category": "completed",
+  "composition": [
+   "TFT_Item_SparringGloves",
+   "TFT_Item_SparringGloves"
+  ],
+  "unique": false,
+  "desc_ko": "매 라운드: 무작위 아이템 2개 장착\n\n[아이템 슬롯 3개 차지]\n?",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_thiefsgloves.tex",
+  "set_native": false,
+  "aliases": [
+   "DA_ThiefsGloves"
+  ]
+ },
+ {
+  "apiName": "TFT_Item_TitanicHydra",
+  "name_ko": "즈롯 차원문",
+  "name_en": "Zz'Rot Portal",
+  "category": "other",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "전투 시작: 도발합니다.\n사망 시 공허 생물이 깨어나 주변 적을 도발합니다. 소환된 유닛에서 생성된 공허 생물의 효과가 크게 감소했습니다.\n\n도발: 공격이 가능하고 사거리 내에 있는 적들을 도발해 공격하게 합니다.",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_titanichydra.tex",
+  "set_native": false,
+  "aliases": [
+   "TFT5_Item_ZzRotPortalRadiant"
+  ]
+ },
+ {
+  "apiName": "TFT_Item_TitansResolve",
+  "name_ko": "거인의 결의",
+  "name_en": "Titan's Resolve",
+  "category": "completed",
+  "composition": [
+   "TFT_Item_ChainVest",
+   "TFT_Item_RecurveBow"
+  ],
+  "unique": false,
+  "desc_ko": "공격하거나 피해를 받으면 공격력 2%, 주문력 2% 증가 (최대 25회 중첩)\n\n최대 중첩 시 피해 증폭 10% 획득 및 군중 제어 효과에 면역이 됨",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_titansresolve.tex",
+  "set_native": false,
+  "aliases": [
+   "DA_TitansResolve"
+  ]
+ },
+ {
+  "apiName": "TFT_Item_UnstableConcoction",
+  "name_ko": "정의의 손길",
+  "name_en": "Hand Of Justice",
+  "category": "completed",
+  "composition": [
+   "TFT_Item_TearOfTheGoddess",
+   "TFT_Item_SparringGloves"
+  ],
+  "unique": false,
+  "desc_ko": "2가지 효과 획득:공격력 15%, 주문력 15%모든 피해 흡혈 12%\n\n체력이 50%를 넘을 때 공격력 및 주문력 두 배로 증가. 체력이 50% 아래일 때 모든 피해 흡혈 두 배로 증가",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_unstableconcoction.tex",
+  "set_native": false,
+  "aliases": [
+   "DA_HandOfJustice"
+  ]
+ },
+ {
+  "apiName": "TFT_Item_UnstableTreasureChest",
+  "name_ko": "불안정한 보물 상자",
+  "name_en": "Unstable Treasure Chest",
+  "category": "other",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "장착 유닛이 죽으면 가장 체력 비율이 높은 아군 4명이 임시 완성 아이템 획득\n\n[지원 아이템]",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_unstabletreasurechest.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT_Item_UnusableSlot",
+  "name_ko": "사용할 수 없는 슬롯",
+  "name_en": "Unusable Slot",
+  "category": "other",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "이 슬롯에는 아이템을 장착할 수 없습니다.",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_unusableslot.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT_Item_WarmogsArmor",
+  "name_ko": "워모그의 갑옷",
+  "name_en": "Warmog's Armor",
+  "category": "completed",
+  "composition": [
+   "TFT_Item_GiantsBelt",
+   "TFT_Item_GiantsBelt"
+  ],
+  "unique": false,
+  "desc_ko": "최대 체력 18% 획득",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_warmogsarmor.tex",
+  "set_native": false,
+  "aliases": [
+   "DA_WarmogsArmor"
+  ]
+ },
+ {
+  "apiName": "TFT_Item_ZekesHerald",
+  "name_ko": "지크의 전령",
+  "name_en": "Zeke's Herald",
+  "category": "other",
+  "composition": [],
+  "unique": false,
+  "desc_ko": "전투 시작: 장착 유닛과 2칸 내에 있는 같은 열의 아군이 %i:scaleAS% 30%의 공격 속도 획득\n\n​​​​[지원 아이템]",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_zekesherald.tex",
+  "set_native": false,
+  "aliases": []
+ },
+ {
+  "apiName": "TFT_Item_Zephyr",
+  "name_ko": "서풍",
+  "name_en": "Zephyr",
+  "category": "other",
+  "composition": [],
+  "unique": true,
+  "desc_ko": "전투 시작: 결투장 반대편에 회오리바람을 소환해 회오리바람과 가장 가까운 적을 5초 동안 전투에서 제외 \n\n아군의 공격 속도 2% 증가\n\n​​[지원 아이템]\n[군중 제어 면역을 무시합니다.]\n[고유 - 중복 적용 불가]\n?",
+  "icon": "assets/maps/tft/icons/items/hexcore/tft_item_zephyr.tex",
+  "set_native": false,
+  "aliases": []
+ }
+]

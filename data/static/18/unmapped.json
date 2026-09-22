@@ -1,0 +1,10 @@
+{
+ "checked_at": "2026-09-21",
+ "note": "통계 소스 응답 ID 중 CDragon 스냅샷(data/static/raw_cdragon)에 없는 것. 스냅샷이 18.2b보다 오래됐을 가능성. OP.GG MCP tft_list_augments로 이름/설명/티어 보완 가능(일부).",
+ "units": {"metatft": ["TFT18_Akali", "TFT18_Gromp", "TFT18_MasterYi", "TFT18_NidaleeCougar"],
+           "summons_in_boards": ["DA_Elderwood18_Lifeblossom", "DA_Elderwood18_StonebarkTree"]},
+ "items": {"tactics_tools": ["DA_Artifact_Hullcrusher"]},
+ "augments": {"metatft_augments_tiers": ["DA_CalculatedLoss", "DA_18_FloraFatalisAugmentPlus", "DA_StarringUp", "DA_Lineup",
+   "DA_18_RivalsAugmentPlus", "DA_ConstructACompanion", "DA_DoubleTrouble", "DA_NestingDolls", "DA_ForgeAFriend", "DA_SubscriptionService"],
+   "opgg_only_DA": ["DA_CalculatedLoss", "DA_DoubleTrouble", "DA_18_FloraFatalisAugmentPlus", "DA_ConstructACompanion", "DA_ForgeAFriend"]}
+}

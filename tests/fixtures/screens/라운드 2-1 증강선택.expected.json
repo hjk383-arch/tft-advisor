@@ -1,0 +1,12 @@
+{
+  "_note": "DRAFT: Claude가 스크린샷을 보고 작성. 사용자 확인 필요. 방송 캡처(수동 크롭)라 픽셀 좌표 기준으로는 부적합.",
+  "screen_mode": "augment_select",
+  "stage": "2-1",
+  "hp": 100,
+  "augment_offer": [
+    "고위천사의 지팡이",
+    "출정",
+    "수완가"
+  ],
+  "note_overlay": "증강 아래 S/C/A 등급 표시는 OP.GG 오버레이(게임 UI 아님)"
+}

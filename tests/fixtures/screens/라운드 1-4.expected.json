@@ -1,0 +1,39 @@
+{
+  "_note": "DRAFT: Claude가 스크린샷을 보고 작성. 사용자 확인 필요. 방송 캡처(수동 크롭)라 픽셀 좌표 기준으로는 부적합.",
+  "screen_mode": "planning",
+  "stage": "1-4",
+  "level": 3,
+  "xp": [
+    0,
+    6
+  ],
+  "gold": 12,
+  "streak": 0,
+  "hp": 100,
+  "shop_odds": [
+    75,
+    25,
+    0,
+    0,
+    0
+  ],
+  "shop": [
+    {
+      "name": "조약돌",
+      "cost": 1
+    },
+    {
+      "name": "자야",
+      "cost": 1
+    },
+    null,
+    {
+      "name": "카밀",
+      "cost": 1
+    },
+    {
+      "name": "아칼리",
+      "cost": 1
+    }
+  ]
+}

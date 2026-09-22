@@ -1,0 +1,91 @@
+{
+ "set": 18,
+ "mutator": "TFTSet18",
+ "source": "raw.communitydragon.org latest cdragon/tft",
+ "raw_files": [
+  "C:\\Users\\hjk38\\Desktop\\LOL Chess\\data\\static\\raw_cdragon\\ko_kr.json",
+  "C:\\Users\\hjk38\\Desktop\\LOL Chess\\data\\static\\raw_cdragon\\en_us.json"
+ ],
+ "counts": {
+  "champions": 91,
+  "shop_pool_champions": 74,
+  "traits": 36,
+  "items": 426,
+  "augments": 592,
+  "shop_specials": 345
+ },
+ "augment_tier_tag_vs_icon_suffix": {
+  "agree": 465,
+  "disagree": 14,
+  "no_suffix": 113
+ },
+ "augment_opgg_check": {
+  "opgg_rows": 283,
+  "listed_in_cdragon_pool": 248,
+  "tier_mismatch": [],
+  "opgg_only": [
+   "DA_18_FloraFatalisAugmentPlus",
+   "DA_CalculatedLoss",
+   "DA_ConstructACompanion",
+   "DA_DoubleTrouble",
+   "DA_ForgeAFriend",
+   "TFT17_Augment_AatroxCarry",
+   "TFT17_Augment_AhriGodAugment",
+   "TFT17_Augment_AnimaSquad_Commander",
+   "TFT17_Augment_ApotheoticForge",
+   "TFT17_Augment_Arbiter_DivineAmendment",
+   "TFT17_Augment_AurelionSolGodAugment",
+   "TFT17_Augment_AurelionSolGodAugment_BoonOfResurrection",
+   "TFT17_Augment_Concentration",
+   "TFT17_Augment_DarkStar_WhiteHole",
+   "TFT17_Augment_EkkoGodAugment",
+   "TFT17_Augment_EvelynnGodAugment",
+   "TFT17_Augment_EvelynnGodAugment_BloodPrice",
+   "TFT17_Augment_GragasCarry",
+   "TFT17_Augment_JaxCarry",
+   "TFT17_Augment_KayleGodAugment",
+   "TFT17_Augment_KayleGodAugment_Scrapper",
+   "TFT17_Augment_LeonaCarry",
+   "TFT17_Augment_MordekaiserCarry",
+   "TFT17_Augment_NasusCarry",
+   "TFT17_Augment_PoppyCarry",
+   "TFT17_Augment_PrimordianPrismaticAugment",
+   "TFT17_Augment_PykeCarry",
+   "TFT17_Augment_SorakaGodAugment",
+   "TFT17_Augment_ThreshGodAugment",
+   "TFT17_Augment_Timebreaker_Timestream",
+   "TFT17_Augment_TourOfTheGalaxy",
+   "TFT17_Augment_VarusGodAugment_BoonOfStars",
+   "TFT17_Augment_YasuoGodAugment_GoldenHex",
+   "TFT17_Augment_YasuoGodAugment_MoreHexes",
+   "TFT17_Augment_YasuoGodAugment_PaintedPower"
+  ]
+ },
+ "observed_shop_odds_pct": {
+  "3": [
+   75,
+   25,
+   0,
+   0,
+   0
+  ],
+  "4": [
+   55,
+   30,
+   15,
+   0,
+   0
+  ],
+  "6": [
+   30,
+   40,
+   25,
+   5,
+   0
+  ]
+ },
+ "notes": [
+  "증강 tier는 tags 해시 기반 추정",
+  "TFT_* 와 DA_* 동명 중복은 aliases 로 연결"
+ ]
+}

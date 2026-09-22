@@ -1,0 +1,52 @@
+{
+ "champions": {
+  "카밀": true,
+  "워윅": true,
+  "카르마": true,
+  "아칼리": true,
+  "조약돌": true,
+  "자야": true,
+  "바루스": true,
+  "오른": true,
+  "티모": true,
+  "니달리": true,
+  "람머스": true,
+  "라칸": true,
+  "요릭": true,
+  "헤카림": true,
+  "알리스타": true,
+  "바위 게": true,
+  "렉사이": true
+ },
+ "traits": {
+  "검은 가시": true,
+  "엄호대": true,
+  "주문술사": true,
+  "나무정령": true,
+  "날렵이": true,
+  "악의 여단": true,
+  "약탈자": true,
+  "개화": true,
+  "지옥불": true,
+  "적응가": true,
+  "싸움꾼": true,
+  "치명적인 꽃": true,
+  "선봉대": true,
+  "햇빛": true,
+  "협곡야수": true,
+  "기원자": true,
+  "요정": true,
+  "속사포": true,
+  "전쟁기계": true,
+  "소환사": true,
+  "원시": true
+ },
+ "augments": {
+  "고위천사의 지팡이": true,
+  "출정": true,
+  "수완가": true
+ },
+ "shop_specials": {
+  "3단계와 함께": true
+ }
+}
