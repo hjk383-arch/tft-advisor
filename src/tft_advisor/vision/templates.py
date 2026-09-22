@@ -75,12 +75,19 @@ def harvest_items(image, labels: list[str | None], static, profile, out_dir: Pat
     """아이템 벤치 칸 → `out_dir/{대표 apiName}.png`. 반환 (저장한 ID들, 오류 메시지들).
 
     라벨은 표시 이름(한국어/영어, 마크업·공백 무시) 또는 apiName. 해석 불가·빈 칸 크롭은 저장하지 않는다.
+
+    **저장 형태**: 칸 크롭을 그대로 저장하지 않고 `IconMatcher`가 비교하는 기하와 같게 맞춘다
+    (SEARCH_SIZE로 키운 뒤 가운데 TEMPLATE_SIZE만 잘라 저장). `IconMatcher.match`는 크롭을 SEARCH_SIZE(38)로
+    키우고 TEMPLATE_SIZE(32) 템플릿을 ±3px 움직이며 맞춰 보므로, 칸 전체(테두리 포함)를 32로 줄여 저장하면
+    같은 아이콘인데도 점수가 0.5대로 떨어진다(실제 캡처에서 확인). 가운데만 잘라 저장하면 자기 자신과 1.0이 된다.
     """
     import cv2
 
-    from .icons import slot_is_empty
+    from .icons import SEARCH_SIZE, TEMPLATE_SIZE, slot_is_empty
     from .item_ids import ItemCatalog
     from .regions import FrameMapper
+
+    off = (SEARCH_SIZE - TEMPLATE_SIZE) // 2
 
     cat = ItemCatalog(static)
     m = FrameMapper.for_image(image, content)
@@ -100,7 +107,9 @@ def harvest_items(image, labels: list[str | None], static, profile, out_dir: Pat
             errors.append(f"{j}번 칸 {label!r}: 화면의 칸이 비어 있다(라벨 순서 확인)")
             continue
         out_dir.mkdir(parents=True, exist_ok=True)
-        if not cv2.imwrite(str(out_dir / f"{api}.png"), crop):
+        big = cv2.resize(crop, (SEARCH_SIZE, SEARCH_SIZE), interpolation=cv2.INTER_AREA)
+        tpl = big[off:off + TEMPLATE_SIZE, off:off + TEMPLATE_SIZE]
+        if not cv2.imwrite(str(out_dir / f"{api}.png"), tpl):
             errors.append(f"{j}번 칸 {label!r}: 저장 실패")
             continue
         saved.append(api)
@@ -112,11 +121,12 @@ def _main(argv: list[str] | None = None) -> int:
 
     from .capture import load_image
     from .ocr import DigitTemplateReader
-    from .regions import FrameMapper, draw_rois, get_profile
+    from .regions import FrameMapper, draw_rois, profile_for_frame
 
     ap = argparse.ArgumentParser(prog="tft_advisor.vision.templates")
     ap.add_argument("--set", type=int, default=18)
-    ap.add_argument("--profile", default="set18_16x9")
+    ap.add_argument("--profile", default="auto",
+                    help="ROI 프로파일. auto(기본)면 스크린샷 크기에서 비율을 재서 고른다")
     sub = ap.add_subparsers(dest="cmd", required=True)
     f = sub.add_parser("fetch-items")
     f.add_argument("--categories", default=",".join(DEFAULT_ITEM_CATEGORIES))
@@ -129,7 +139,6 @@ def _main(argv: list[str] | None = None) -> int:
     d.add_argument("screenshot", type=Path)
     d.add_argument("out", type=Path, nargs="?")
     args = ap.parse_args(argv)
-    profile = get_profile(args.profile)
 
     if args.cmd == "fetch-items":
         ok, failed = fetch_items(args.set, tuple(args.categories.split(",")), args.overwrite)
@@ -140,6 +149,8 @@ def _main(argv: list[str] | None = None) -> int:
 
     img = load_image(args.screenshot)
     m = FrameMapper.for_image(img)
+    profile = profile_for_frame(img.shape[1], img.shape[0], args.profile)
+    print(f"프로파일: {profile.name} ({img.shape[1]}x{img.shape[0]})")
     if args.cmd == "debug-rois":
         out = args.out or args.screenshot.with_suffix(".rois.png")
         cv2.imwrite(str(out), draw_rois(img, profile, m))

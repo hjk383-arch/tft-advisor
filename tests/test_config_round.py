@@ -24,6 +24,10 @@ NEW_DEFAULTS = {
     ("settings", "vision", "change_stable_frames"): 2,
     ("settings", "vision", "capture_fps"): 4,
     ("settings", "vision", "traits_every_s"): 3,
+    ("settings", "vision", "resolution"): "auto",
+    ("settings", "vision", "aspect"): "auto",
+    ("settings", "vision", "profile"): "auto",
+    ("settings", "vision", "content_box_auto"): True,
     ("weights", "comp", "hysteresis_other_share"): 0.25,
     ("weights", "item", "overall_stat_games_factor"): 0.25,
 }
@@ -76,6 +80,9 @@ def test_capture_superseded_keys_are_rejected():
         (VisionCfg, {"capture_fps": 0}),
         (VisionCfg, {"capture_fps": 60}),
         (VisionCfg, {"traits_every_s": 0}),
+        (VisionCfg, {"aspect": "16:11"}),            # 지원하지 않는 비율 이름
+        (VisionCfg, {"resolution": "1920"}),         # WxH 형식이 아님
+        (VisionCfg, {"resolution": "1920x1080", "aspect": "16:10"}),   # 해상도와 비율이 어긋남
         (VisionCfg, {"poll_interval_ms": 500}),       # 모르는 키
     ],
     ids=lambda v: v.__name__ if isinstance(v, type) else json.dumps(v),
@@ -277,3 +284,29 @@ def test_evaluate_compares_items_by_ids():
     a = ItemState(components=[ItemRef(id="DA_Component_BFSword", confidence=1.0)])
     b = ItemState(components=[ItemRef(id="DA_Component_BFSword", confidence=0.83, name_ko="B.F. 대검")])
     assert _norm("items", a) == _norm("items", b)
+
+
+# --------------------------------------------------------------------------- 화면 크기/비율 설정
+
+
+def test_screen_size_settings_resolve_in_priority_order():
+    """profile > aspect > resolution > "auto"(프레임에서 자동 판별)."""
+    assert VisionCfg().aspect_setting() == "auto"
+    assert VisionCfg(resolution="1280x800").aspect_setting() == "1280x800"
+    assert VisionCfg(aspect="16:10", resolution="1280x800").aspect_setting() == "16:10"
+    assert VisionCfg(profile="set18_16x9", aspect="16:10").aspect_setting() == "set18_16x9"
+    assert VisionCfg(profile="1920x1080").aspect_setting() == "1920x1080"   # 옛 기본값도 그대로 동작
+
+
+def test_resolution_size_and_matching_aspect_is_allowed():
+    assert VisionCfg().resolution_size() is None
+    assert VisionCfg(resolution="1920x1200").resolution_size() == (1920, 1200)
+    assert VisionCfg(resolution="1920x1200", aspect="16:10").aspect == "16:10"   # 일치 → 통과
+    assert VisionCfg(resolution="1279x797", aspect="16:10").aspect == "16:10"    # 허용 오차 안(실제 캡처)
+
+
+def test_settings_toml_screen_keys_are_documented():
+    """settings.toml 에 새 키가 주석과 함께 있어야 한다(사용자가 고칠 값이다)."""
+    text = (Path(__file__).resolve().parents[1] / "config" / "settings.toml").read_text(encoding="utf-8")
+    for key in ("resolution", "aspect", "profile", "content_box_auto"):
+        assert f"\n{key} = " in text, key

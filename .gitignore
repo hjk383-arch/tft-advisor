@@ -33,3 +33,9 @@ data/templates/*/items_screen/
 
 # Debug renders of screen crops (Riot art, regenerable)
 _workspace/*.png
+
+# Raw game captures: Riot art + other players' summoner names (repo is public)
+tests/fixtures/screens/raw/
+
+# macOS
+.DS_Store

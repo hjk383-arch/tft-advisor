@@ -27,7 +27,7 @@ from .icons import IconMatcher, slot_is_empty
 from .item_ids import ItemCatalog
 from .matching import NameMatcher
 from .ocr import OcrEngine, TextBox, create_ocr
-from .regions import FrameMapper, Profile, Rect, get_profile
+from .regions import FrameMapper, Profile, Rect, detect_content_box, profile_for_frame
 from .screen_mode import ModeSignals, classify, frame_is_dark, hud_panel_pixels
 
 log = logging.getLogger(__name__)
@@ -94,7 +94,9 @@ class Recognizer:
     ) -> None:
         self.static = static or load_static()
         self.cfg = cfg or VisionCfg()
-        self.profile = profile or get_profile(self.cfg.profile)
+        # profile을 직접 주면 프레임 크기와 무관하게 그것만 쓴다(테스트·디버그). 아니면 프레임마다 비율로 고른다.
+        self.pinned_profile = profile
+        self.profile_setting = "auto" if profile is not None else self.cfg.aspect_setting()
         self.ocr = ocr if ocr is not None else create_ocr("korean", backend=self.cfg.ocr_backend)
         margins = {"min_margin": self.cfg.name_fuzzy_min_margin, "relaxed_margin": self.cfg.name_fuzzy_relaxed_margin}
         self.shop_matcher = NameMatcher(self.static, ("champions", "shop_specials"), self.cfg.shop_fuzzy_min, **margins)
@@ -111,6 +113,31 @@ class Recognizer:
             dirs = list(item_template_dir)   # 여러 디렉터리 → ID별로 합친다
         self.item_matcher = IconMatcher.from_dirs(
             dirs, valid=lambda stem: self.static.get("items", stem) is not None, group=self.items.rep)
+
+    # ------------------------------------------------------------------ 프로파일
+    def profile_for(self, width: int, height: int) -> Profile:
+        """이 프레임 크기에 쓸 ROI 프로파일. 설정 `[vision] profile/aspect/resolution` → `profile_for_frame`."""
+        if self.pinned_profile is not None:
+            return self.pinned_profile
+        if self.profile_setting == "auto" and (width <= 0 or height <= 0):
+            return profile_for_frame(16, 9)   # 크기를 모를 때의 기본(16:9)
+        return profile_for_frame(width, height, self.profile_setting)
+
+    @property
+    def profile(self) -> Profile:
+        """설정으로 고정된(또는 기본 16:9) 프로파일. **프레임마다 달라질 수 있으므로** 인식 경로는 `profile_for()`를
+        쓴다. 이 속성은 `change.ChangeDetector`·`templates.debug-rois`처럼 프레임 크기를 모르는 호출자를 위한 것이다."""
+        return self.profile_for(0, 0)
+
+    def content_for(self, image: np.ndarray, content: tuple[int, int, int, int] | None,
+                    ) -> tuple[int, int, int, int] | None:
+        """이 프레임의 게임 화면 영역. 인자 > 설정 `content_box` > (content_box_auto면) 레터박스 자동 탐지."""
+        if content is not None:
+            return content
+        box = self.cfg.content_px(image.shape[1], image.shape[0])
+        if box is not None:
+            return box
+        return detect_content_box(image) if self.cfg.content_box_auto else None
 
     # ------------------------------------------------------------------ 공개 API
     def recognize(
@@ -133,11 +160,12 @@ class Recognizer:
         unknown_groups = g - set(GROUPS)
         if unknown_groups:
             raise ValueError(f"알 수 없는 묶음: {sorted(unknown_groups)} (가능: {GROUPS})")
-        if content is None:
-            content = self.cfg.content_px(image.shape[1], image.shape[0])
+        content = self.content_for(image, content)
         m = FrameMapper.for_image(image, content)
         out = _Out()
-        P = self.profile
+        # ROI 프로파일은 **게임 화면 영역의 비율**로 고른다(레터박스·창 테두리를 뺀 뒤). 설정으로 고정할 수도 있다.
+        _, _, box_w, box_h = m.box
+        P = self.profile_for(box_w, box_h)
 
         # 항상 읽는 4칸(스테이지, HUD 버튼 2개, 증강 제목)은 한 줄 인식 한 번(배치)으로 먼저 읽는다.
         pre = self._lines([m.crop(image, r) for r in (P.stage, P.xp_button, P.refresh_button, P.augment_title)])
@@ -150,7 +178,7 @@ class Recognizer:
         # 증강 화면에는 상점 HUD가 없다 → HUD 글자가 읽혔으면 제목은 한 줄 인식만(검출 생략).
         augment_title = self._find_keyword(image, m, (P.augment_title,), _TITLE_WORDS, detect=not hud_by_ocr,
                                            lines=pre[3:])
-        offers = self._read_augment_offer(image, m) if ((augment_title or not hud) and "augment" in g) else []
+        offers = self._read_augment_offer(image, m, P) if ((augment_title or not hud) and "augment" in g) else []
         sig = ModeSignals(
             shop_hud=hud, shop_hud_by_ocr=hud_by_ocr, augment_title=augment_title,
             augment_names_matched=sum(1 for a in offers if a is not None), stage=stage,
@@ -161,7 +189,7 @@ class Recognizer:
             out.put("screen_mode", mode, mode_conf)
 
         if "players" in g:
-            out_hp = self._read_hp(image, m)
+            out_hp = self._read_hp(image, m, P)
             if out_hp:
                 out.put("hp", *out_hp)
 
@@ -170,16 +198,16 @@ class Recognizer:
                 refs = [a for a, _ in offers]
                 out.put("augment_offer", refs, min(c for _, c in offers))
             if "items" in g:
-                self._read_items(image, m, out)
+                self._read_items(image, m, P, out)
         elif mode == ScreenMode.PLANNING:
             if "hud" in g:
-                self._read_hud_numbers(image, m, out)
+                self._read_hud_numbers(image, m, P, out)
             if "shop" in g:
-                self._read_shop(image, m, out)
+                self._read_shop(image, m, P, out)
             if "items" in g:
-                self._read_items(image, m, out)
+                self._read_items(image, m, P, out)
             if "traits" in g:
-                self._read_traits(image, m, out)
+                self._read_traits(image, m, P, out)
 
         values = dict(out.values)
         return GameState(
@@ -258,8 +286,7 @@ class Recognizer:
         return False
 
     # ------------------------------------------------------------------ 필드별
-    def _read_hud_numbers(self, image: np.ndarray, m: FrameMapper, out: _Out) -> None:
-        P = self.profile
+    def _read_hud_numbers(self, image: np.ndarray, m: FrameMapper, P: Profile, out: _Out) -> None:
         (level, level_conf), (xp, xp_conf), (gold, gold_conf), (odds, odds_conf), streak_n = self._read_parsed_many(
             image, m, [(P.level, parse.parse_level), (P.xp, lambda t: parse.parse_xp(t, self.xp_table)),
                        (P.gold, lambda t: parse.parse_int(t, 0, 999)), (P.shop_odds, parse.parse_odds),
@@ -284,11 +311,11 @@ class Recognizer:
             s *= 0.5   # 관측 확률표(meta.json)와 다르면 레벨 또는 확률 판독을 의심
         out.put("shop_odds", odds, s)
 
-        streak = self._read_streak(image, m, *streak_n)
+        streak = self._read_streak(image, m, P, *streak_n)
         if streak:
             out.put("streak", *streak)
 
-    def _read_streak(self, image: np.ndarray, m: FrameMapper, n: int | None, s: float) -> tuple[int, float] | None:
+    def _read_streak(self, image: np.ndarray, m: FrameMapper, P: Profile, n: int | None, s: float) -> tuple[int, float] | None:
         """n, s = 연승 숫자 칸 판독값과 점수. 부호는 아이콘 색으로."""
         import cv2
 
@@ -296,7 +323,7 @@ class Recognizer:
             return None
         if n == 0:
             return 0, s
-        icon = m.crop(image, self.profile.streak_icon)
+        icon = m.crop(image, P.streak_icon)
         hsv = cv2.cvtColor(icon, cv2.COLOR_BGR2HSV)
         vivid = (hsv[..., 1] > 120) & (hsv[..., 2] > 120)
         hues = hsv[..., 0][vivid]
@@ -310,13 +337,12 @@ class Recognizer:
             return -n, s * STREAK_SIGN_FACTOR
         return None
 
-    def _read_shop(self, image: np.ndarray, m: FrameMapper, out: _Out) -> None:
-        P = self.profile
+    def _read_shop(self, image: np.ndarray, m: FrameMapper, P: Profile, out: _Out) -> None:
         slots: list[ShopSlot] = []
         confs: list[float] = []
         names = self._lines([m.crop(image, r) for r in P.shop_names])   # 5칸 이름을 한 번에(배치)
         for i in range(len(P.shop_cards)):
-            slot, c = self._read_shop_slot(image, m, i, names[i])
+            slot, c = self._read_shop_slot(image, m, P, i, names[i])
             slots.append(slot)
             confs.append(c)
         known = [c for s, c in zip(slots, confs) if s.kind != ShopSlotKind.UNKNOWN]
@@ -327,8 +353,8 @@ class Recognizer:
         # UNKNOWN 칸은 계약상 명시적 "모름"이라 필드 신뢰도를 깎지 않는다.
         out.put("shop", slots, max(known))
 
-    def _read_shop_slot(self, image: np.ndarray, m: FrameMapper, i: int, tb: TextBox | None) -> tuple[ShopSlot, float]:
-        P = self.profile
+    def _read_shop_slot(self, image: np.ndarray, m: FrameMapper, P: Profile, i: int, tb: TextBox | None,
+                        ) -> tuple[ShopSlot, float]:
         if tb is None or not tb.text.strip():
             card = m.crop(image, P.shop_cards[i])
             if _card_is_empty(card):
@@ -346,9 +372,9 @@ class Recognizer:
         return ShopSlot(kind=ShopSlotKind.SPECIAL, id=rec["apiName"], name_ko=rec.get("name_ko"),
                         cost=cost, confidence=round(c, 3)), c
 
-    def _read_augment_offer(self, image: np.ndarray, m: FrameMapper) -> list[tuple[AugmentRef, float] | None]:
+    def _read_augment_offer(self, image: np.ndarray, m: FrameMapper, P: Profile) -> list[tuple[AugmentRef, float] | None]:
         res: list[tuple[AugmentRef, float] | None] = []
-        reads = self._read_parsed_many(image, m, [(r, self.augment_matcher.match) for r in self.profile.augment_names])
+        reads = self._read_parsed_many(image, m, [(r, self.augment_matcher.match) for r in P.augment_names])
         for match, score in reads:
             if match is None:
                 res.append(None)
@@ -359,13 +385,13 @@ class Recognizer:
                                    confidence=round(c, 3)), c))
         return res
 
-    def _read_items(self, image: np.ndarray, m: FrameMapper, out: _Out) -> None:
+    def _read_items(self, image: np.ndarray, m: FrameMapper, P: Profile, out: _Out) -> None:
         """아이템 벤치 10칸. 빈 칸이 아닌데 매칭 실패한 칸이 하나라도 있으면 items=None(부분 목록은 오해를 낳는다)."""
         if len(self.item_matcher) == 0:
             return
         state = ItemState()
         confs: list[float] = []
-        for r in self.profile.item_slots:
+        for r in P.item_slots:
             crop = m.crop(image, r)
             if slot_is_empty(crop):
                 continue
@@ -380,9 +406,9 @@ class Recognizer:
             confs.append(match.score)
         out.put("items", state, min(confs) if confs else 0.9)
 
-    def _read_traits(self, image: np.ndarray, m: FrameMapper, out: _Out) -> None:
+    def _read_traits(self, image: np.ndarray, m: FrameMapper, P: Profile, out: _Out) -> None:
         """왼쪽 특성 패널: 행마다 [큰 숫자=인원][이름][구간]. 이름을 퍼지 매칭하고 같은 행 왼쪽 숫자를 인원으로."""
-        boxes = self._read(image, m, self.profile.traits_panel)
+        boxes = self._read(image, m, P.traits_panel)
         if not boxes:
             return
         numbers = [b for b in boxes if re.fullmatch(r"[0-9Il|]{1,2}", b.text.strip())]
@@ -393,7 +419,12 @@ class Recognizer:
             match = self.trait_matcher.match(b.text)
             if match is None or match.api_name in seen:
                 continue
-            row = [n for n in numbers if n.box[2] <= b.box[0] + 2 and abs(n.cy - b.cy) <= max(b.height, n.height) * 1.2]
+            # 인원수 숫자는 이름 **바로 왼쪽**에 붙어 있다. 거리 제한이 없으면 위/아래 행의 구간 사다리("2>4>6")
+            # 숫자를 집어 "약탈자 8" 같은 확신에 찬 오답이 나온다(16:10 캡처에서 관측).
+            row = [n for n in numbers
+                   if n.box[2] <= b.box[0] + 2
+                   and b.box[0] - n.box[2] <= max(b.height, n.height) * 1.5
+                   and abs(n.cy - b.cy) <= max(b.height, n.height) * 1.2]
             if not row:
                 continue
             num = max(row, key=lambda n: n.box[2])
@@ -401,6 +432,8 @@ class Recognizer:
             if count is None or count == 0:
                 continue
             bps = [bp for bp in (match.record.get("breakpoints") or []) if bp is not None]
+            if bps and count > max(bps) + 2:
+                continue   # 최고 구간보다 크게 넘는 인원수는 숫자를 잘못 붙인 것이다
             active = max((bp for bp in bps if bp <= count), default=None)
             nxt = min((bp for bp in bps if bp > count), default=None)
             seen.add(match.api_name)
@@ -410,10 +443,10 @@ class Recognizer:
         if traits:
             out.put("active_traits", traits, min(confs) * TRAITS_FACTOR)
 
-    def _read_hp(self, image: np.ndarray, m: FrameMapper) -> tuple[int, float] | None:
+    def _read_hp(self, image: np.ndarray, m: FrameMapper, P: Profile) -> tuple[int, float] | None:
         """플레이어 목록에서 내 HP: 내 칸은 숫자 글자가 다른 칸보다 크다(fixture 관측, 약 1.8배).
         숫자 박스(가로/세로 ≤ HP_BOX_MAX_ASPECT)만 인식해 이름 박스 인식 비용을 뺀다."""
-        boxes = self._read_boxes(image, m, self.profile.player_list,
+        boxes = self._read_boxes(image, m, P.player_list,
                                  lambda b: (b[2] - b[0]) <= HP_BOX_MAX_ASPECT * max(1e-6, b[3] - b[1]))
         nums = [(b, parse.parse_int(b.text, 0, 100)) for b in boxes if re.fullmatch(r"\s*\d{1,3}\s*", b.text)]
         nums = [(b, v) for b, v in nums if v is not None]

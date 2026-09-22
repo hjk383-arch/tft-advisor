@@ -22,7 +22,10 @@ from tft_advisor.vision.capture import ArraySource, FileSource, FrameSource, loa
 from tft_advisor.vision.icons import IconMatcher, slot_is_empty  # noqa: E402
 from tft_advisor.vision.matching import NameMatcher, to_jamo  # noqa: E402
 from tft_advisor.vision.ocr import DigitTemplateReader, NullOcr, TextBox  # noqa: E402
-from tft_advisor.vision.regions import PROFILES, SET18_16X9, FrameMapper, Rect, get_profile  # noqa: E402
+from tft_advisor.vision.regions import (  # noqa: E402
+    ANCHORS, ASPECTS, MEASURED_PROFILES, PROFILES, SET18_16X9, SET18_16X10, Anchor, FrameMapper, Rect,
+    derive_profile, detect_content_box, get_profile, parse_aspect, profile_for_frame,
+)
 from tft_advisor.vision.screen_mode import ModeSignals, classify  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -446,6 +449,28 @@ def test_harvest_items_maps_korean_labels_to_ids_and_supplements_cdragon(static,
     assert sorted(got) == sorted(ids)                                 # 실화면 템플릿이 없는 두 아이템도 인식
 
 
+def test_harvested_template_matches_its_own_slot(static, tmp_path):
+    """harvest-items가 저장한 템플릿은 **자기 칸과 거의 1.0** 으로 맞아야 한다.
+
+    `IconMatcher.match`는 크롭을 SEARCH_SIZE(38)로 키우고 TEMPLATE_SIZE(32) 템플릿을 ±3px 움직이며 본다.
+    예전처럼 칸 전체(테두리 포함)를 32로 줄여 저장하면 같은 아이콘인데도 0.5대가 나왔다(실제 캡처에서 발견).
+    """
+    from tft_advisor.vision.icons import IconMatcher, SEARCH_SIZE, TEMPLATE_SIZE
+    from tft_advisor.vision.regions import FrameMapper
+    from tft_advisor.vision.templates import harvest_items
+
+    img, _ = _frame_with_items([_icon(21)])
+    screen = tmp_path / "items_screen"
+    saved, errors = harvest_items(img, ["B.F. 대검"], static, SET18_16X9, screen)
+    assert saved == ["DA_Component_BFSword"] and not errors
+    tpl = cv2.imread(str(screen / "DA_Component_BFSword.png"))
+    assert tpl.shape[:2] == (TEMPLATE_SIZE, TEMPLATE_SIZE)
+    crop = FrameMapper.for_image(img).crop(img, SET18_16X9.item_slots[0])
+    m = IconMatcher.from_dirs([screen]).match(crop)
+    assert m is not None and m.score > 0.99, m
+    assert SEARCH_SIZE > TEMPLATE_SIZE
+
+
 def test_item_output_uses_group_representative(static, tmp_path):
     from tft_advisor.vision.recognizer import Recognizer
 
@@ -570,3 +595,145 @@ def test_xp_table_comes_from_static_meta(static):
     assert parse.level_from_xp((3, 56), table) == 7
     assert parse.level_from_xp((3, 68), table) is None                 # 8·9레벨 필요량이 같아 추정 불가
     assert parse.level_from_xp((1, 2), table) is None                  # 1·2레벨도 같다
+
+
+# ---------------------------------------------------------------- 화면 비율(aspect) 인식
+def test_config_aspect_names_match_regions():
+    """`config.VisionCfg.aspect`의 Literal과 `regions.ASPECTS`의 키가 같아야 한다(두 곳에 적혀 있다)."""
+    import typing
+
+    from tft_advisor.config import AspectName
+
+    assert set(typing.get_args(AspectName)) == {"auto", *ASPECTS}
+
+
+@pytest.mark.parametrize("text, want", [
+    ("16:9", 16 / 9), ("16x10", 1.6), ("1920x1200", 1.6), ("1280x800", 1.6),
+    ("3840x2160", 16 / 9), ("1.6", 1.6), ("4:3", 4 / 3), (" 21:9 ", 64 / 27),
+    ("", None), ("가로세로", None), ("16:0", None), ("21:9", 64 / 27),   # 이름은 ASPECTS 값 그대로
+])
+def test_parse_aspect(text, want):
+    got = parse_aspect(text)
+    assert got is None if want is None else got == pytest.approx(want)
+
+
+@pytest.mark.parametrize("w, h, name", [
+    (1920, 1080, "set18_16x9"), (2560, 1440, "set18_16x9"), (2001, 1126, "set18_16x9"),
+    (1920, 1200, "set18_16x10"), (1280, 800, "set18_16x10"), (1273, 795, "set18_16x10"),
+    (1274, 802, "set18_16x10"),   # 실제 캡처(가장자리 크롭으로 1.5885)
+])
+def test_profile_auto_detected_from_frame_size(w, h, name):
+    assert profile_for_frame(w, h).name == name
+
+
+def test_profile_setting_overrides_auto_detection():
+    """사용자가 [vision] aspect/profile 로 고정하면 프레임 크기와 무관하게 그 프로파일을 쓴다."""
+    assert profile_for_frame(1920, 1080, "16:10") is SET18_16X10
+    assert profile_for_frame(1280, 800, "16:9") is SET18_16X9
+    assert profile_for_frame(1280, 800, "1920x1080") is SET18_16X9     # 옛 profile 값
+    assert profile_for_frame(1280, 800, "set18_16x9") is SET18_16X9
+    with pytest.raises(KeyError):
+        profile_for_frame(1280, 800, "없는프로파일")
+
+
+def test_unmeasured_aspect_is_derived_not_rejected():
+    """실측 없는 비율(21:9 등)도 16:9에서 유도해 동작한다(경고만). HUD는 가운데로 모인다."""
+    p = profile_for_frame(3440, 1440)
+    assert p.name not in ("set18_16x9", "set18_16x10")
+    for name, r in p.all_rois().items():
+        assert 0 <= r.x1 < r.x2 <= 1 and 0 <= r.y1 < r.y2 <= 1, name
+    # 21:9(2.37)는 16:9보다 넓다 → 가운데 기준 요소는 중앙 쪽으로 모인다
+    assert 0.5 < p.gold.x1 < SET18_16X9.gold.x1                    # 중앙 오른쪽 → 왼쪽(중앙)으로
+    assert SET18_16X9.shop_names[0].x1 < p.shop_names[0].x1 < 0.5  # 중앙 왼쪽 → 오른쪽(중앙)으로
+    assert p.traits_panel.x1 < SET18_16X9.traits_panel.x1          # 왼쪽 가장자리 기준 → 더 좁게
+    assert p.player_list.x2 > SET18_16X9.player_list.x2            # 오른쪽 가장자리 기준
+
+
+def test_derive_profile_applies_anchor_rules():
+    """모듈 머리 주석의 규칙: CENTER는 중앙 기준, LEFT/RIGHT는 가장자리 기준으로 높이에 비례해 벌어진다."""
+    k = (16 / 9) / 1.6
+    p = derive_profile(SET18_16X9, "t", 1.6)
+    assert p.gold.x1 == pytest.approx(0.5 + (SET18_16X9.gold.x1 - 0.5) * k)          # CENTER
+    assert p.traits_panel.x1 == pytest.approx(SET18_16X9.traits_panel.x1 * k)        # LEFT
+    assert p.player_list.x2 == pytest.approx(1 - (1 - SET18_16X9.player_list.x2) * k)  # RIGHT
+    assert p.gold.y1 == SET18_16X9.gold.y1 and p.traits_panel.y2 == SET18_16X9.traits_panel.y2
+    # 같은 비율로 유도하면 항등이어야 한다
+    same = derive_profile(SET18_16X9, "t", 16 / 9)
+    assert same.all_rois() == SET18_16X9.all_rois()
+
+
+def test_every_profile_field_has_an_anchor():
+    assert set(ANCHORS) == {f for f in SET18_16X9.__dict__ if f != "name"}
+    assert set(ANCHORS.values()) == {Anchor.CENTER, Anchor.LEFT, Anchor.RIGHT}
+
+
+def test_16x10_profile_rois_are_valid_and_measured():
+    p = SET18_16X10
+    assert MEASURED_PROFILES["16:10"] is p and PROFILES["set18_16x10"] is p
+    assert PROFILES["1280x800"] is p and PROFILES["1920x1200"] is p
+    for name, r in p.all_rois().items():
+        assert 0 <= r.x1 < r.x2 <= 1 and 0 <= r.y1 < r.y2 <= 1, name
+    xs = [r.x1 for r in p.shop_cards]
+    assert xs == sorted(xs) and all(a.x2 <= b.x1 for a, b in zip(p.shop_cards, p.shop_cards[1:]))
+    # 실측 기반: 아이템 벤치 10칸은 세로로 같은 간격, 거의 정사각(1275x797 기준)
+    pitches = [b.y1 - a.y1 for a, b in zip(p.item_slots, p.item_slots[1:])]
+    assert max(pitches) - min(pitches) < 1e-9
+    w_px, h_px = (p.item_slots[0].x2 - p.item_slots[0].x1) * 1275, (p.item_slots[0].y2 - p.item_slots[0].y1) * 797
+    assert abs(w_px - h_px) < 2
+
+
+def test_detect_content_box_finds_letterbox_and_ignores_full_frame():
+    rng = np.random.default_rng(3)
+    game = rng.integers(40, 255, (400, 800, 3), dtype=np.uint8)
+    assert detect_content_box(game) is None                       # 띠 없음 = 프레임 전체
+    frame = np.zeros((500, 800, 3), np.uint8)
+    frame[50:450] = game
+    assert detect_content_box(frame) == (0, 50, 800, 400)         # 위아래 레터박스
+    pillar = np.zeros((400, 900, 3), np.uint8)
+    pillar[:, 50:850] = game
+    assert detect_content_box(pillar) == (50, 0, 800, 400)        # 좌우 필러박스
+    thin = np.zeros((404, 800, 3), np.uint8)
+    thin[2:402] = game
+    assert detect_content_box(thin) is None                       # 2px 테두리는 띠가 아니다
+
+
+def test_recognizer_picks_profile_per_frame(static):
+    """같은 Recognizer가 프레임 크기에 따라 다른 ROI 프로파일을 쓴다(설정 aspect = auto)."""
+    from tft_advisor.vision.recognizer import Recognizer
+
+    rec = Recognizer(static=static, ocr=NullOcr(), item_template_dir=Path("/nonexistent"))
+    assert rec.profile_for(1920, 1080) is SET18_16X9
+    assert rec.profile_for(1920, 1200) is SET18_16X10
+    # content_box가 있으면 **게임 화면 영역**의 비율로 고른다(프레임이 아니라)
+    frame = np.zeros((1200, 1920, 3), np.uint8)
+    state = rec.recognize(frame, content=(0, 60, 1920, 1080))
+    assert state.frame_size == (1920, 1200)
+
+
+def test_recognizer_profile_setting_is_pinned(static):
+    from tft_advisor.config import VisionCfg
+    from tft_advisor.vision.recognizer import Recognizer
+
+    kw = {"static": static, "ocr": NullOcr(), "item_template_dir": Path("/nonexistent")}
+    assert Recognizer(cfg=VisionCfg(aspect="16:10"), **kw).profile_for(1920, 1080) is SET18_16X10
+    assert Recognizer(cfg=VisionCfg(profile="1920x1080"), **kw).profile_for(1280, 800) is SET18_16X9
+    assert Recognizer(cfg=VisionCfg(resolution="1920x1200"), **kw).profile_for(1920, 1080) is SET18_16X10
+    assert Recognizer(profile=SET18_16X9, **kw).profile_for(1280, 800) is SET18_16X9   # 인자가 최우선
+
+
+def test_auto_content_box_trims_letterbox(static):
+    """content_box가 없고 content_box_auto면 레터박스를 자동으로 잘라 ROI 기준으로 삼는다."""
+    from tft_advisor.config import VisionCfg
+    from tft_advisor.vision.recognizer import Recognizer
+
+    kw = {"static": static, "ocr": NullOcr(), "item_template_dir": Path("/nonexistent")}
+    rng = np.random.default_rng(5)
+    frame = np.zeros((1200, 1920, 3), np.uint8)
+    frame[60:1140] = rng.integers(40, 255, (1080, 1920, 3), dtype=np.uint8)
+    rec = Recognizer(**kw)
+    assert rec.content_for(frame, None) == (0, 60, 1920, 1080)
+    assert rec.profile_for(1920, 1080) is SET18_16X9
+    off = Recognizer(cfg=VisionCfg(content_box_auto=False), **kw)
+    assert off.content_for(frame, None) is None
+    fixed = Recognizer(cfg=VisionCfg(content_box=[0.1, 0.1, 0.9, 0.9]), **kw)
+    assert fixed.content_for(frame, None) == (192, 120, 1536, 960)   # 설정이 자동 탐지보다 우선

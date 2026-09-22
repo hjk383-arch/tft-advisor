@@ -56,12 +56,32 @@ class CaptureCfg(_Cfg):
 ContentBox = tuple[Unit, Unit, Unit, Unit]
 """프레임 안 게임 화면 영역 (x1, y1, x2, y2) — 캡처 프레임 크기에 대한 비율, 0 <= x1 < x2 <= 1, 0 <= y1 < y2 <= 1."""
 
+# 화면 비율 이름 — `vision.regions.ASPECTS`의 키와 같아야 한다(test_vision이 검사한다).
+# config는 vision(numpy·cv2)을 import하지 않으므로 여기에 따로 적는다.
+AspectName = Literal["auto", "4:3", "16:10", "16:9", "21:9", "32:9"]
+_RESOLUTION_RE = r"^(auto|\d{3,5}x\d{3,5})$"
+_ASPECT_OF: dict[str, float] = {"4:3": 4 / 3, "16:10": 1.6, "16:9": 16 / 9, "21:9": 64 / 27, "32:9": 32 / 9}
+_ASPECT_TOL = 0.035   # vision.regions.ASPECT_MATCH_TOL
+
 
 class VisionCfg(_Cfg):
     """vision 인식 설정. 키별 연결 위치: `vision.recognizer.Recognizer`(cfg), `vision.change.ChangeDetector.from_cfg`,
-    `vision.ocr.create_ocr(backend=)`, app 루프(capture_fps, traits_every_s — Phase 4)."""
+    `vision.ocr.create_ocr(backend=)`, app 루프(capture_fps, traits_every_s — Phase 4).
 
-    profile: str = "1920x1080"
+    화면 크기·비율 (2026-09-22 추가)
+    - `resolution`: 게임 화면 크기. "auto"(기본)면 캡처한 프레임 크기를 그대로 믿는다. "1280x800"처럼 적으면
+      비율을 그 값에서 정하고, 실제 프레임 크기가 다르면 경고한다(캡처 영역 설정 실수 조기 발견).
+    - `aspect`: ROI 배치를 고를 화면 비율. "auto"(기본)면 프레임(또는 content_box) 비율에서 자동 판별한다.
+      16:9와 16:10은 실제 캡처로 측정했고, 나머지는 16:9에서 유도한다(미검증 → 경고).
+    - `profile`: 고급. ROI 프로파일을 이름으로 못박는다("set18_16x9", "1920x1080" 같은 옛 값도 그대로 동작).
+      "auto"(기본)가 아니면 `aspect`·`resolution`보다 우선한다.
+    - `content_box` / `content_box_auto`: 프레임 안에서 게임 화면이 차지하는 영역. 창모드·레터박스용.
+    """
+
+    profile: str = "auto"
+    resolution: str = Field("auto", pattern=_RESOLUTION_RE)
+    aspect: AspectName = "auto"
+    content_box_auto: bool = True   # content_box가 없을 때 레터박스(검은 띠)를 자동으로 잘라낸다
     shop_fuzzy_min: float = Field(85, ge=0, le=100)
     icon_match_min: float = Field(0.8, ge=0, le=1)
     state_min_confidence: float = Field(0.6, ge=0, le=1)
@@ -94,7 +114,36 @@ class VisionCfg(_Cfg):
                 f"vision: name_fuzzy_min_margin({self.name_fuzzy_min_margin}) <= "
                 f"name_fuzzy_relaxed_margin({self.name_fuzzy_relaxed_margin}) 이어야 한다"
             )
+        res = self.resolution_size()
+        if res is not None and self.aspect != "auto":
+            ratio = res[0] / res[1]
+            want = _ASPECT_OF[self.aspect]
+            if abs(ratio - want) / want > _ASPECT_TOL:
+                raise ValueError(
+                    f"vision: resolution({self.resolution}, 비율 {ratio:.4f})과 aspect({self.aspect}, "
+                    f"{want:.4f})가 어긋난다. 둘 중 하나를 \"auto\"로 두거나 맞춰라"
+                )
         return self
+
+    def resolution_size(self) -> tuple[int, int] | None:
+        """`resolution` → (width, height). "auto"면 None."""
+        if self.resolution == "auto":
+            return None
+        w, h = self.resolution.split("x")
+        return int(w), int(h)
+
+    def aspect_setting(self) -> str:
+        """ROI 프로파일 선택값 → `vision.regions.profile_for_frame(setting=)`에 넘길 문자열.
+
+        우선순위: `profile`(고급, 이름 고정) > `aspect` > `resolution` > "auto"(프레임에서 자동 판별).
+        """
+        if self.profile != "auto":
+            return self.profile
+        if self.aspect != "auto":
+            return self.aspect
+        if self.resolution != "auto":
+            return self.resolution
+        return "auto"
 
     def content_px(self, frame_w: int, frame_h: int) -> tuple[int, int, int, int] | None:
         """content_box(비율) → vision `FrameMapper(content=)`/`recognize(content=)` 형식 (left, top, width, height) px.
