@@ -40,6 +40,18 @@ SCREENSHOT_NAMES = {
 }
 # 화면에서 관측된 레벨별 상점 확률(%) — 관측된 레벨만. 나머지는 채우지 않는다.
 OBSERVED_SHOP_ODDS = {"3": [75, 25, 0, 0, 0], "4": [55, 30, 15, 0, 0], "6": [30, 40, 25, 5, 0]}
+# 레벨별 상점 확률(%) 1~5코스트. CDragon에 없음 -> 공개 표 3곳 교차 확인(2026-09-22 조회, Set 18 / 18.2b 표기).
+# 관측값(3/4/6)과 모두 일치. 7레벨만 출처가 갈린다: tftflow.com·esportstales.com = 16/30/43/10/1,
+# metabot.gg = 19/30/40/10/1 -> 다수(2/3)를 채택하고 대안을 SHOP_ODDS_CONFLICTS에 병기.
+SHOP_ODDS_PCT = {
+    "1": [100, 0, 0, 0, 0], "2": [100, 0, 0, 0, 0], "3": [75, 25, 0, 0, 0], "4": [55, 30, 15, 0, 0],
+    "5": [45, 33, 20, 2, 0], "6": [30, 40, 25, 5, 0], "7": [16, 30, 43, 10, 1], "8": [15, 20, 32, 30, 3],
+    "9": [10, 17, 25, 33, 15], "10": [5, 10, 20, 40, 25],
+}
+SHOP_ODDS_SOURCES = ["https://tftflow.com/tables/set18/shop-odds-pool-size-xp-table",
+                     "https://www.esportstales.com/teamfight-tactics/champion-pool-size-and-draw-chances",
+                     "https://metabot.gg/en/TFT/rolldown-odds"]
+SHOP_ODDS_CONFLICTS = {"7": {"metabot.gg": [19, 30, 40, 10, 1]}}
 
 _TAG_RE = re.compile(r"<[^>]+>")
 _VAR_RE = re.compile(r"@([A-Za-z0-9_{}.:]+)(\*100)?@")
@@ -75,6 +87,39 @@ def render_desc(desc: str | None, effects: dict | None) -> str:
     return re.sub(r"[ \t]+", " ", s).strip()
 
 
+OPGG_TIER = {"silver": 1, "gold": 2, "prism": 3, "prismatic": 3}
+
+
+def trait_breakpoints(effects: list[dict]) -> tuple[list[int], bool]:
+    """CDragon effects -> (breakpoints, unit_less).
+
+    minUnits가 null인 특성(Set 18 `DA_18_Eclipse`: 보유 챔피언 0명, effects 1개, maxUnits 25000)은 인원으로
+    켜지지 않는다. 이때 breakpoints는 단계 번호(1..n)로 채우고 unit_less=True로 표시한다.
+    MetaTFT `DA_18_Eclipse_1`의 `_1`은 단계 번호이므로 breakpoints[0]=1과 모순되지 않는다.
+    수집기는 unit_less 특성을 TraitReq(목표 인원)로 만들지 않는다.
+    """
+    mins = [e.get("minUnits") for e in effects]
+    if mins and all(m is None for m in mins):
+        return list(range(1, len(mins) + 1)), True
+    if any(m is None for m in mins):
+        raise ValueError(f"일부만 minUnits=null인 특성: {mins}")
+    return mins, False
+
+
+def load_opgg_table(path: Path) -> dict[str, dict]:
+    """OP.GG MCP tools/call 응답(또는 내부 표) -> {apiName: {헤더: 값}}."""
+    env = json.loads(path.read_text(encoding="utf-8"))
+    tbl = json.loads(env["result"]["content"][0]["text"]) if "result" in env else env
+    return {r[0]: dict(zip(tbl["headers"], r)) for r in tbl["rows"]}
+
+
+def _rel(p: Path) -> str:
+    try:
+        return p.resolve().relative_to(ROOT).as_posix()
+    except ValueError:
+        return str(p)
+
+
 def icon_tier_suffix(icon: str) -> int | None:
     m = re.search(r"[-_](i{1,3})(?:[-_.])", icon.rsplit("/", 1)[-1])
     return len(m.group(1)) if m else None
@@ -108,7 +153,9 @@ def main() -> None:
     ap.add_argument("--set", type=int, default=None, help="세트 번호 (기본: 최신)")
     ap.add_argument("--raw", default=str(ROOT / "data/static/raw_cdragon"))
     ap.add_argument("--opgg-augments", default=None,
-                    help="OP.GG MCP tft_list_augments 응답 JSON(선택). 라이브 증강 목록·티어 교차검증용")
+                    help="OP.GG MCP tft_list_augments(lang=ko_KR) 응답 JSON(선택). 라이브 증강 목록·티어 교차검증용")
+    ap.add_argument("--opgg-augments-en", default=None,
+                    help="같은 도구 lang=en_US 응답(선택). desc_en_opgg / OP.GG 전용 증강의 영어 이름·설명")
     args = ap.parse_args()
     raw = Path(args.raw)
     ko, en = load(raw, "ko_kr"), load(raw, "en_us")
@@ -127,13 +174,17 @@ def main() -> None:
     trait_name_to_api = {}
     for t in sko["traits"]:
         trait_name_to_api[t["name"]] = t["apiName"]
+        bps, unit_less = trait_breakpoints(t["effects"])
         traits.append({
             "apiName": t["apiName"], "name_ko": t["name"],
             "name_en": en_trait.get(t["apiName"], {}).get("name"),
-            "breakpoints": [e["minUnits"] for e in t["effects"]],
+            "breakpoints": bps,
             "styles": [e.get("style") for e in t["effects"]],
-            "unique": len(t["effects"]) == 1 and t["effects"][0]["minUnits"] == 1,
-            "desc_ko": render_desc(t.get("desc"), {}),
+            "unique": len(t["effects"]) == 1 and bps[0] == 1 and not unit_less,
+            # 보유 챔피언이 없어 인원으로 켤 수 없는 특성(예: DA_18_Eclipse). breakpoints는 단계 번호 자리표시(1..n)
+            "unit_less": unit_less,
+            # 단일 효과 특성만 변수 치환(다단계 특성은 <row>마다 값이 달라 1단계 값으로 채우면 오해 소지)
+            "desc_ko": render_desc(t.get("desc"), t["effects"][0].get("variables") if len(t["effects"]) == 1 else {}),
             "icon": t.get("icon"),
         })
     trait_en_by_api = {t["apiName"]: t["name_en"] for t in traits}
@@ -171,6 +222,8 @@ def main() -> None:
             # DA_* 가 세트 18 자체 ID. TFT_Item_* 는 같은 이름의 범용 ID (소스가 이쪽으로 보고할 수 있음)
             "set_native": a.startswith("DA_"),
         }
+        if row["category"] == "shop_special":  # jev state(영어)용
+            row["desc_en"] = render_desc(ie.get("desc"), ie.get("effects"))
         (specials if row["category"] == "shop_special" else items).append(row)
     # 같은 한국어 이름 alias
     by_name: dict[str, list[str]] = {}
@@ -204,17 +257,36 @@ def main() -> None:
     # OP.GG 증강 목록(라이브 풀로 추정)과 교차검증
     opgg_check = None
     if args.opgg_augments:
-        env = json.loads(Path(args.opgg_augments).read_text(encoding="utf-8"))
-        tbl = json.loads(env["result"]["content"][0]["text"]) if "result" in env else env
-        og = {r[0]: {"silver": 1, "gold": 2, "prism": 3, "prismatic": 3}.get(r[3]) for r in tbl["rows"]}
+        tbl = load_opgg_table(Path(args.opgg_augments))
+        tbl_en = load_opgg_table(Path(args.opgg_augments_en)) if args.opgg_augments_en else {}
+        og = {k: OPGG_TIER.get(r["tier"]) for k, r in tbl.items()}
         mism = []
         for r in augs:
             r["opgg_listed"] = r["apiName"] in og
             if r["opgg_listed"] and og[r["apiName"]] != r["tier"]:
                 mism.append(r["apiName"])
+            if r["opgg_listed"]:  # CDragon 변수 치환 실패('?') 보완용 — OP.GG 라이브 설명 병기(원문 desc_ko는 유지)
+                r["desc_ko_opgg"] = tbl[r["apiName"]]["desc"]
+                if r["apiName"] in tbl_en:
+                    r["desc_en_opgg"] = tbl_en[r["apiName"]]["desc"]
         mine = {r["apiName"] for r in augs}
-        opgg_check = {"opgg_rows": len(og), "listed_in_cdragon_pool": sum(r["opgg_listed"] for r in augs),
-                      "tier_mismatch": mism, "opgg_only": sorted(k for k in og if k not in mine)}
+        opgg_only = sorted(k for k in og if k not in mine)
+        added = []
+        for k in opgg_only:  # CDragon 스냅샷에 없는 라이브 DA_ 증강만 OP.GG로 보충(ID는 소스들이 쓰는 그대로)
+            if not k.startswith("DA_"):
+                continue
+            ko_r, en_r = tbl[k], tbl_en.get(k, {})
+            augs.append({
+                "apiName": k, "name_ko": ko_r["name"], "name_en": en_r.get("name"),
+                "tier": og[k], "tier_name": TIER_NAMES.get(og[k]),
+                "desc_ko": ko_r["desc"], "desc_en": en_r.get("desc", ""),
+                "associated_traits": [], "icon": ko_r.get("imageUrl"), "set_native": True,
+                "opgg_listed": True, "desc_ko_opgg": ko_r["desc"], "desc_en_opgg": en_r.get("desc"),
+                "source": "opgg_mcp",
+            })
+            added.append(k)
+        opgg_check = {"opgg_rows": len(og), "listed_in_cdragon_pool": len(og) - len(opgg_only),
+                      "tier_mismatch": mism, "opgg_only": opgg_only, "added_from_opgg": added}
     by_name = {}
     for r in augs:
         by_name.setdefault(r["name_ko"], []).append(r["apiName"])
@@ -230,13 +302,16 @@ def main() -> None:
 
     meta = {
         "set": set_no, "mutator": sko["mutator"], "source": "raw.communitydragon.org latest cdragon/tft",
-        "raw_files": [str(raw / "ko_kr.json"), str(raw / "en_us.json")],
+        "raw_files": [_rel(raw / "ko_kr.json"), _rel(raw / "en_us.json")],
         "counts": {"champions": len(champs), "shop_pool_champions": sum(c["shop_pool"] for c in champs),
                    "traits": len(traits), "items": len(items), "augments": len(augs),
                    "shop_specials": len(specials)},
         "augment_tier_tag_vs_icon_suffix": tier_check,
         "augment_opgg_check": opgg_check,
         "observed_shop_odds_pct": OBSERVED_SHOP_ODDS,
+        "shop_odds_pct": SHOP_ODDS_PCT,
+        "shop_odds_sources": SHOP_ODDS_SOURCES,
+        "shop_odds_conflicts": SHOP_ODDS_CONFLICTS,
         "notes": ["증강 tier는 tags 해시 기반 추정", "TFT_* 와 DA_* 동명 중복은 aliases 로 연결"],
     }
     for name, obj in [("champions", champs), ("traits", traits), ("items", items), ("augments", augs),

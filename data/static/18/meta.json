@@ -3,15 +3,15 @@
  "mutator": "TFTSet18",
  "source": "raw.communitydragon.org latest cdragon/tft",
  "raw_files": [
-  "C:\\Users\\hjk38\\Desktop\\LOL Chess\\data\\static\\raw_cdragon\\ko_kr.json",
-  "C:\\Users\\hjk38\\Desktop\\LOL Chess\\data\\static\\raw_cdragon\\en_us.json"
+  "data/static/raw_cdragon/ko_kr.json",
+  "data/static/raw_cdragon/en_us.json"
  ],
  "counts": {
   "champions": 91,
   "shop_pool_champions": 74,
   "traits": 36,
   "items": 426,
-  "augments": 592,
+  "augments": 597,
   "shop_specials": 345
  },
  "augment_tier_tag_vs_icon_suffix": {
@@ -59,6 +59,13 @@
    "TFT17_Augment_YasuoGodAugment_GoldenHex",
    "TFT17_Augment_YasuoGodAugment_MoreHexes",
    "TFT17_Augment_YasuoGodAugment_PaintedPower"
+  ],
+  "added_from_opgg": [
+   "DA_18_FloraFatalisAugmentPlus",
+   "DA_CalculatedLoss",
+   "DA_ConstructACompanion",
+   "DA_DoubleTrouble",
+   "DA_ForgeAFriend"
   ]
  },
  "observed_shop_odds_pct": {
@@ -83,6 +90,94 @@
    5,
    0
   ]
+ },
+ "shop_odds_pct": {
+  "1": [
+   100,
+   0,
+   0,
+   0,
+   0
+  ],
+  "2": [
+   100,
+   0,
+   0,
+   0,
+   0
+  ],
+  "3": [
+   75,
+   25,
+   0,
+   0,
+   0
+  ],
+  "4": [
+   55,
+   30,
+   15,
+   0,
+   0
+  ],
+  "5": [
+   45,
+   33,
+   20,
+   2,
+   0
+  ],
+  "6": [
+   30,
+   40,
+   25,
+   5,
+   0
+  ],
+  "7": [
+   16,
+   30,
+   43,
+   10,
+   1
+  ],
+  "8": [
+   15,
+   20,
+   32,
+   30,
+   3
+  ],
+  "9": [
+   10,
+   17,
+   25,
+   33,
+   15
+  ],
+  "10": [
+   5,
+   10,
+   20,
+   40,
+   25
+  ]
+ },
+ "shop_odds_sources": [
+  "https://tftflow.com/tables/set18/shop-odds-pool-size-xp-table",
+  "https://www.esportstales.com/teamfight-tactics/champion-pool-size-and-draw-chances",
+  "https://metabot.gg/en/TFT/rolldown-odds"
+ ],
+ "shop_odds_conflicts": {
+  "7": {
+   "metabot.gg": [
+    19,
+    30,
+    40,
+    10,
+    1
+   ]
+  }
  },
  "notes": [
   "증강 tier는 tags 해시 기반 추정",

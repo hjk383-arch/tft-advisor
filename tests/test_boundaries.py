@@ -3,9 +3,9 @@
 - static_data ID <-> MetaTFT 캐시 ID (unmapped.json 선언분 제외)
 - fixture 이름 -> ID -> 정적 코스트
 - MetaTFT 원본 -> 계약 모델(CompStats/AugmentTier/UnitStats/UnitItemStats) 변환 가능성
-- 설계(02_jev-strategist_design.md 10절) 제안 키의 config 수용 여부(xfail: 반영 전까지)
+- 설계(02_jev-strategist_design.md §10a) 최종 설정 키의 config 수용 여부
 
-네트워크 호출 없음. 원본 캐시(data/raw/metatft/2026-09-21)가 없으면 해당 테스트는 skip.
+네트워크 호출 없음. 원본 캐시(data/raw/metatft/{최신 날짜})가 없으면 해당 테스트는 skip.
 """
 from __future__ import annotations
 
@@ -32,7 +32,7 @@ from tft_advisor.contracts import (
 from tft_advisor.fixtures import load_expected
 from tft_advisor.static_data import PROJECT_ROOT, load_static
 
-RAW = PROJECT_ROOT / "data" / "raw" / "metatft" / "2026-09-21"
+RAW = max((PROJECT_ROOT / "data" / "raw" / "metatft").glob("????-??-??"), default=PROJECT_ROOT / "data" / "raw" / "metatft" / "none")  # 최신 날짜 캐시
 SCREENS = Path(__file__).parent / "fixtures" / "screens"
 needs_raw = pytest.mark.skipif(not (RAW / "comps_data.json").is_file(), reason="MetaTFT 원본 캐시 없음")
 
@@ -104,7 +104,6 @@ def test_metatft_trait_suffix_maps_to_breakpoint(static):
             assert int(n) <= len(bp), (t, bp)
 
 
-@pytest.mark.xfail(strict=True, reason="traits.json DA_18_Eclipse breakpoints=[None] (stats-researcher 수정 대기)")
 def test_trait_breakpoints_have_no_null(static):
     bad = [t["apiName"] for t in static.tables["traits"] if any(b is None for b in t["breakpoints"])]
     assert not bad, bad
@@ -225,19 +224,32 @@ def test_unit_and_unit_item_stats_convertible():
     assert n_without_units > 0
 
 
-@pytest.mark.xfail(strict=True, reason="UnitItemStats에 comp_id 없음: MetaTFT itemNames/builds는 덱 한정 통계 (app-integrator 반영 대기)")
 def test_unit_item_stats_has_comp_scope():
-    assert "comp_id" in UnitItemStats.model_fields
+    """MetaTFT itemNames/builds는 덱 한정 통계 -> UnitItemStats.comp_id (None = 전체 통계)."""
+    assert UnitItemStats.model_fields["comp_id"].default is None
+    row = UnitItemStats(unit_id="DA_18_Zyra", item_ids=["DA_ArchangelsStaff"], source=StatSource.METATFT,
+                        comp_id="lunar_aphelios", place_change=-0.4, games=120)
+    assert UnitItemStats.model_validate_json(row.model_dump_json()).comp_id == "lunar_aphelios"
 
 
 # --------------------------------------------------------------------------- 설계 <-> config
 
 
-@pytest.mark.xfail(strict=True, reason="02_jev-strategist_design.md 10절 weights/settings 키 미반영 (app-integrator 대기)")
 def test_config_accepts_design_keys():
+    """설계 §10a 최종 설정 키 표(기존+신규)를 로더가 받고, config/*.toml 값이 §10a 기본값과 같다."""
     import subprocess
     import sys
 
     r = subprocess.run([sys.executable, str(PROJECT_ROOT / "_workspace/qa_scripts/config_proposal_check.py")],
                        capture_output=True, text=True, encoding="utf-8")
+    assert r.returncode == 0, r.stderr
     assert "rejected keys: 0" in r.stdout, r.stdout
+    assert "config files differ from §10a defaults: 0" in r.stdout, r.stdout
+    # 스크립트와 별개로 §10a 신규 섹션·키가 모델에 있는지 직접 확인
+    from tft_advisor.config import AdvisorCfg, Weights
+
+    for sec in ("prefilter", "item_fit", "item"):
+        assert sec in Weights.model_fields
+    for k in ("jev_model", "jev_timeout_s", "jev_retry_budget_s", "jev_max_retries", "circuit_fail_threshold",
+              "circuit_cooldown_s"):
+        assert k in AdvisorCfg.model_fields

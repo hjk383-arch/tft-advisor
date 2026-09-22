@@ -20,7 +20,9 @@ from typing import Annotated, Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_validator, model_validator
 
-CONTRACT_VERSION = "0.1.0"
+CONTRACT_VERSION = "0.2.0"
+"""0.2.0 (2026-09-22): UnitItemStats.comp_id, CompStats.item_usage, CompUnit.role, TargetComp.levelling,
+Recommendation.component_priority 추가, fallback_reason → FallbackReason(닫힌 9종) + jev_used 일관성 validator."""
 
 # ---------------------------------------------------------------------------
 # 공통 타입
@@ -51,6 +53,23 @@ def stage_tuple(stage: str) -> tuple[int, int]:
     if not m:
         raise ValueError(f"잘못된 stage 형식: {stage!r}")
     return int(m.group(1)), int(m.group(2))
+
+
+def rank_filter_set(value: str) -> frozenset[str]:
+    """rank_filter 문자열 → 비교용 집합. 소스마다 순서가 다르므로(예 MetaTFT 응답) 문자열이 아니라 이 집합으로 비교한다."""
+    return frozenset(part.strip().upper() for part in value.split(",") if part.strip())
+
+
+def normalize_rank_filter(value: str) -> str:
+    """저장용 정규형: 대문자, 공백 제거, 중복 제거, 사전순 정렬 후 콤마 결합."""
+    return ",".join(sorted(rank_filter_set(value)))
+
+
+def same_rank_filter(a: str | None, b: str | None) -> bool:
+    """두 rank_filter가 같은 랭크 집합인지. 둘 다 None이면 True."""
+    if a is None or b is None:
+        return a is b
+    return rank_filter_set(a) == rank_filter_set(b)
 
 
 class ContractModel(BaseModel):
@@ -263,8 +282,13 @@ class Provenance(ContractModel):
 
     source: StatSource
     patch: str | None = None          # 예 "18.2b"
-    rank_filter: str | None = None    # 소스 고유 표기 그대로(예 "CHALLENGER,DIAMOND,GRANDMASTER,MASTER")
+    rank_filter: str | None = None    # 저장 시 normalize_rank_filter로 정렬(예 "CHALLENGER,DIAMOND,GRANDMASTER,MASTER")
     fetched_at: datetime | None = None
+
+    @field_validator("rank_filter")
+    @classmethod
+    def _norm_rank_filter(cls, v: str | None) -> str | None:
+        return None if v is None else normalize_rank_filter(v)
 
 
 class PlacementStats(ContractModel):
@@ -283,6 +307,7 @@ class CompUnit(ContractModel):
     items: list[ItemId] = Field(default_factory=list, max_length=3)
     star: Star | None = None
     is_core: bool = False
+    role: Literal["carry", "tank", "support"] | None = None   # 파생 규칙은 stats(명시적 기준). None이면 advisor 추론
 
 
 class TraitReq(ContractModel):
@@ -309,6 +334,7 @@ class CompStats(PlacementStats, Provenance):
     - buildup: {레벨: [보드안...]} — 스테이지가 아니라 레벨 키(소스가 레벨 단위로 제공)
     - level_timing: {레벨: 전형적 레벨업 라운드} 예 {5: "2-5", 6: "3-2", 8: "4-2"} — 스테이지 ↔ 레벨 변환용
     - item_conditional: {아이템 ID: 그 아이템을 가진 경우의 덱 성적} (MetaTFT comp_details.itemNames, 게임 종료 시점 기준)
+    - item_usage: {아이템 ID: 덱당 평균 보유 개수} (MetaTFT build_items[].pcnt). 비율이 아니므로 1을 넘을 수 있다(실측 최대 1.38)
     """
 
     comp_id: str
@@ -323,6 +349,7 @@ class CompStats(PlacementStats, Provenance):
     level_timing: dict[int, Stage] = Field(default_factory=dict)
     item_conditional: dict[ItemId, PlacementStats] = Field(default_factory=dict)
     levelling: str | None = None   # 예 "Fast 8", "Reroll 6"
+    item_usage: dict[ItemId, Annotated[float, Field(ge=0)]] = Field(default_factory=dict)
 
     @field_validator("buildup")
     @classmethod
@@ -363,9 +390,13 @@ class UnitStats(PlacementStats, Provenance):
 
 
 class UnitItemStats(PlacementStats, Provenance):
-    """유닛 + 아이템 1~3개 조합 성적. place_change: 유닛 평균 대비 등수 변화(음수가 좋음)."""
+    """유닛 + 아이템 1~3개 조합 성적. place_change: 유닛 평균 대비 등수 변화(음수가 좋음).
+
+    comp_id=None: 전체 통계, 값 있음: 해당 덱 한정 통계(MetaTFT comp_details itemNames[].units[], builds[]).
+    """
 
     unit_id: ChampionId
+    comp_id: str | None = None
     item_ids: list[ItemId] = Field(min_length=1, max_length=3)
     place_change: float | None = None
 
@@ -411,6 +442,7 @@ class TargetComp(ContractModel):
     name: str
     score: Confidence
     carry: ChampionId | None = None
+    levelling: str | None = None   # CompStats.levelling 복사(예 "Fast 8")
     reasons: list[str] = Field(default_factory=list)
     owned_units: list[ChampionId] = Field(default_factory=list)
     missing_units: list[ChampionId] = Field(default_factory=list)
@@ -463,10 +495,26 @@ class ItemAdvice(ContractModel):
     hold: bool = False
 
 
+class FallbackReason(StrEnum):
+    """Jev 미사용 사유(설계 8.1 닫힌 9종, ASCII). 판정 순서는 advisor 책임."""
+
+    JEV_DISABLED = "jev_disabled"
+    CIRCUIT_OPEN = "circuit_open"
+    AUTH = "auth"
+    RATE_LIMITED = "rate_limited"
+    OVERLOADED = "overloaded"
+    SERVER_ERROR = "server_error"
+    TIMEOUT = "timeout"
+    CONNECTION = "connection"
+    BAD_REQUEST = "bad_request"
+
+
 class Recommendation(ContractModel):
     """추천 1회 결과. target_comps는 보통 1~3개(인식/추천 실패 시 0개일 수 있음).
 
-    - jev_used=False: 통계 전용 폴백(UI에 "Jev 미사용" 표시). fallback_reason에 사유
+    - jev_used=False: 통계 전용 폴백(UI에 "Jev 미사용" 표시). fallback_reason에 사유(필수)
+    - jev_used=True ⇔ fallback_reason is None (validator)
+    - component_priority: 우선 확보할 재료 ID(캐러셀 표시용, 코드 계산, 최대 10)
     - debug: Jev 원시 답·통계 원값·합성 중간값 저장(가중치만 바꿔 재계산 가능하도록). UI는 읽지 않는다
     """
 
@@ -474,9 +522,16 @@ class Recommendation(ContractModel):
     shop: list[ShopAdvice] = Field(default_factory=list, max_length=5)
     augment: AugmentAdvice | None = None
     item: ItemAdvice | None = None
+    component_priority: list[ItemId] = Field(default_factory=list, max_length=10)
     jev_used: bool
-    fallback_reason: str | None = None
+    fallback_reason: FallbackReason | None = None
     latency_ms: Annotated[float, Field(ge=0)] | None = None
     state_hash: str | None = None
     created_at: datetime | None = None
     debug: dict[str, Any] = Field(default_factory=dict)
+
+    @model_validator(mode="after")
+    def _jev_used_matches_fallback(self) -> Recommendation:
+        if self.jev_used != (self.fallback_reason is None):
+            raise ValueError("jev_used=True 이면 fallback_reason은 None, jev_used=False 이면 fallback_reason 필수")
+        return self

@@ -11,6 +11,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/grab-bag-ii.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "무작위 조합 아이템 3개, 2골드, 재조합기 1개를 획득합니다.",
+  "desc_en_opgg": "Gain 3 random components, 2 gold, and 1 Reforger.",
   "aliases": [
    "TFT9_Augment_BigGrabBag"
   ]
@@ -29,6 +31,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/missing-t2.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "수호령을 구매하면 해당 수호령의 비용에 따라 무작위 개화 챔피언을 획득합니다. 유나라, 요릭, 카르마를 획득합니다.",
+  "desc_en_opgg": "When you buy a Wisp, gain a random Blossom champion based on the Wisp's cost. Gain a Yunara, a Yorick, and a Karma.",
   "aliases": []
  },
  {
@@ -43,6 +47,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/branching-out-i.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "무작위 상징 1개를 획득합니다.",
+  "desc_en_opgg": "Gain a random Emblem.",
   "aliases": [
    "TFT_Augment_BranchingOut"
   ]
@@ -59,6 +65,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/branching-out-i.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "무작위 상징과 재조합기를 획득합니다.",
+  "desc_en_opgg": "Gain a random Emblem and a Reforger.",
   "aliases": [
    "TFT_Augment_BranchingOutPlus"
   ]
@@ -75,6 +83,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/caretaker_s-chosen-i.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "즉시 무작위 2단계 챔피언 1명을 획득합니다. 레벨 업할 때마다 동일한 챔피언을 1명 획득합니다.<br><br><rules>챔피언: 0</rules>",
+  "desc_en_opgg": "Gain a random 2-cost champion now. Gain the same one again every time you level up.<br><br><rules>Champion: 0</rules>",
   "aliases": [
    "TFT9_Augment_BardPlaybook1"
   ]
@@ -93,6 +103,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/missing-t2.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "악의 여단 정기 계속 모으기를 선택하면 전략가 체력을 2 회복합니다. 카밀, 엘리스, 케이틀린을 획득합니다.",
+  "desc_en_opgg": "When you choose to continue gathering Coven essence, heal 2 Tactician health. Gain a Camille, an Elise, and a Caitlyn.",
   "aliases": []
  },
  {
@@ -109,6 +121,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/missing-t2.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "악의 여단 정기를 보상으로 전환하면 전리품 대신 악의 여단 챔피언이 주문력을 얻습니다. 카밀, 엘리스, 케이틀린을 획득합니다.",
+  "desc_en_opgg": "Converting Coven Essence to rewards grants Coven champions Ability Power instead of loot. Gain a Camille, an Elise, and a Caitlyn.",
   "aliases": []
  },
  {
@@ -123,6 +137,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/duoqueue_ii.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "무작위 5단계 2명과 무작위 조합 아이템 복사본 2개를 획득합니다.",
+  "desc_en_opgg": "Gain 2 random 5-cost champions and 2 copies of a random component.",
   "aliases": [
    "TFT_Augment_DuoQueue"
   ]
@@ -141,6 +157,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/missing-t2.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "나무정령 식물과 인접한 상태로 전투를 시작하는 챔피언이 공격 속도를 15% 얻고 2초마다 최대 체력의 2%만큼 체력을 회복합니다. 알리스타, 오른, 자야를 획득합니다.",
+  "desc_en_opgg": "Champions that start combat adjacent to an Elderwood plant gain 15% Attack Speed and heal 2% of their maximum Health every 2 seconds. Gain an Alistar, an Ornn, and a Xayah.",
   "aliases": []
  },
  {
@@ -155,6 +173,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/missing-t2.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "무작위 4단계 챔피언 1명을 획득합니다. 해당 챔피언이 장착한 아이템 하나당 아군이 체력을 100 얻습니다.",
+  "desc_en_opgg": "Gain a random 4-cost champion. For each item equipped to that champion, your team gains 100 health.",
   "aliases": []
  },
  {
@@ -171,6 +191,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/missing-t2.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "요정의 나비정령이 더 커지고 공격력 및 주문력을 50% 더 부여합니다. 요정 챔피언이 즉시 공격력 및 주문력을 10% 얻습니다. 자야와 라칸을 획득합니다.",
+  "desc_en_opgg": "Fae pixies are now larger and grant 50% more Attack Damage and Ability Power. Fae champions gain 10% Attack Damage and Ability Power immediately. Gain a Xayah and a Rakan.",
   "aliases": []
  },
  {
@@ -187,7 +209,11 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/missing-t2.tex",
   "set_native": true,
   "opgg_listed": true,
-  "aliases": []
+  "desc_ko_opgg": "치명적인 꽃 상징 1개와 3골드를 획득합니다. 상징을 장착한 챔피언에게 치명적인 꽃 특성 효과가 150%로 적용됩니다. 로비에서 한 명만 선택할 수 있습니다.",
+  "desc_en_opgg": "Gain a Flora Fatalis emblem and 3 gold. The emblem holder receives 150% of the normal Flora Fatalis trait benefits. Only one player per lobby can select this augment.",
+  "aliases": [
+   "DA_18_FloraFatalisAugmentPlus"
+  ]
  },
  {
   "apiName": "DA_18_GoodForSomethingI",
@@ -201,6 +227,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/good-for-something-i.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "아이템을 장착하지 않은 챔피언이 사망하면 40% 확률로 1골드를 떨어뜨립니다.",
+  "desc_en_opgg": "Champions that aren't holding items have a 40% chance to drop 1 gold on death.",
   "aliases": [
    "TFT10_Augment_GoodForSomethingSilver"
   ]
@@ -219,6 +247,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/missing-t1.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "아군 1, 2단계 지옥불 챔피언이 공격력 및 주문력을 0.2 얻습니다. 지난 전투에서 가장 많은 피해를 입힌 지옥불 챔피언은 두 배로 얻습니다. 바루스와 아칼리를 획득합니다.",
+  "desc_en_opgg": "Your 1 and 2-cost Inferno champions gain 0.2 Attack Damage and Ability Power. The one who did the most damage last combat gains double. Gain a Varus and an Akali.",
   "aliases": []
  },
  {
@@ -235,6 +265,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/missing-t2.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "아군 달빛 챔피언이 배치한 햇빛 챔피언 한 종류당 체력을 100, 피해 증폭을 8% 얻습니다. 레오나, 케일, 다이애나를 획득합니다.",
+  "desc_en_opgg": "Your Lunar champions gain 100 Health and 8% Damage Amp for each unique Solar champion fielded. Gain a Leona, a Kayle, and a Diana.",
   "aliases": []
  },
  {
@@ -251,6 +283,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/missing-t2.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "아군 달빛 챔피언이 배치한 햇빛 챔피언 한 종류당 체력을 100, 피해 증폭을 8% 얻습니다. 레오나, 케일, 아펠리오스를 획득합니다.",
+  "desc_en_opgg": "Your Lunar champions gain 100 Health and 8% Damage Amp for each unique Solar champion fielded. Gain a Leona, a Kayle, and an Aphelios.",
   "aliases": []
  },
  {
@@ -267,6 +301,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/missing-t3.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "무기고를 열어 3개의 특성 중 하나를 선택합니다. 해당 특성을 지닌 럭스와 쇼진의 창을 획득합니다.<br><br><dim>내 전장에 있는 특성이 무기고에 더 자주 등장합니다. 럭스는 선택한 특성 중첩에 +2를 추가합니다.</dim>",
+  "desc_en_opgg": "Open an armory and choose one of  3 traits. Gain a Lux with that trait and a Spear of Shojin.<br><br><dim>Traits on your board are more likely to appear in the armory. Lux provides +2 to her chosen trait</dim>",
   "aliases": []
  },
  {
@@ -281,6 +317,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/one-two-five-i.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "무작위 조합 아이템 1개, 2골드, 무작위 5단계 챔피언 1명을 획득합니다.",
+  "desc_en_opgg": "Gain 1 random component, 2 gold, and 1 random 5-cost champion.",
   "aliases": [
    "TFT6_Augment_OneTwoFive"
   ]
@@ -297,6 +335,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/missing-t1.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "1단계 챔피언 2명, 2단계 챔피언 1명, 3단계 챔피언 1명을 획득합니다.",
+  "desc_en_opgg": "Gain 2 1-cost champions, 1 2-cost champion, and 1 3-cost champion.",
   "aliases": [
    "TFT9_Augment_OneTwosThree"
   ]
@@ -315,6 +355,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/missing-t2.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "원시가 추가 축복을 부여합니다. 바이와 니달리를 획득합니다.",
+  "desc_en_opgg": "Primal grants an additional Blessing. Gain a Vi and a Nidalee.",
   "aliases": [
    "DA_18_PrimalAugmentPlus_Sivir"
   ]
@@ -333,6 +375,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/missing-t2.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "원시가 추가 축복을 부여합니다. 바이와 시비르를 획득합니다.",
+  "desc_en_opgg": "Primal grants an additional Blessing. Gain a Vi and a Sivir.",
   "aliases": [
    "DA_18_PrimalAugmentPlus_Nidalee"
   ]
@@ -351,6 +395,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/missing-t2.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "원시가 추가 축복을 부여합니다. 즉시 바이를 획득하고 3라운드 후 니달리를 획득합니다.",
+  "desc_en_opgg": "Primal grants an additional Blessing. Gain a Vi now and a Nidalee after 3 rounds.",
   "aliases": [
    "DA_18_PrimalAugment_Sivir"
   ]
@@ -369,6 +415,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/missing-t2.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "원시가 추가 축복을 부여합니다.  즉시 바이를 획득하고 3라운드 후 시비르를 획득합니다.",
+  "desc_en_opgg": "Primal grants an additional Blessing.  Gain a Vi now and a Sivir after 3 rounds.",
   "aliases": [
    "DA_18_PrimalAugment_Nidalee"
   ]
@@ -385,6 +433,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/missing-t1.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "아군이 체력을 60 얻습니다. 수호령을 구매할 때마다 이 효과가 10 증가합니다.",
+  "desc_en_opgg": "Your team gains 60 Health. Each time you purchase a Wisp, increase this by 10.",
   "aliases": []
  },
  {
@@ -399,6 +449,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/missing-t1.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "아군이 체력을 75 얻습니다. 수호령을 구매할 때마다 이 효과가 10 증가합니다.",
+  "desc_en_opgg": "Your team gains 75 Health. Each time you purchase a Wisp, increase this by 10.",
   "aliases": []
  },
  {
@@ -413,6 +465,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/missing-t1.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "아군이 체력을 90 얻습니다. 수호령을 구매할 때마다 이 효과가 10 증가합니다.",
+  "desc_en_opgg": "Your team gains 90 Health. Each time you purchase a Wisp, increase this by 10.",
   "aliases": []
  },
  {
@@ -429,6 +483,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/missing-t2.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "이제 두 번째 우두머리 협곡야수를 선택할 수 있습니다. 바위 게, 불타는 묘목, 조약돌을 획득합니다.",
+  "desc_en_opgg": "You can now choose a second Alpha Riftbeast. Gain a Scuttlecrab, a Cinderling, and a Pebbles.",
   "aliases": []
  },
  {
@@ -445,6 +501,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/missing-t2.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "렝가와 카직스를 페널티 없이 함께 배치할 수 있으며, 각자 스킬을 사용하면 서로에게 추가 효과를 제공합니다. 렝가와 카직스를 획득합니다.",
+  "desc_en_opgg": "You can field Rengar and Kha'Zix together with no penalties, and they gain bonuses when the other casts. Gain a Rengar and a Kha'Zix.",
   "aliases": []
  },
  {
@@ -461,6 +519,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/missing-t2.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "레오나, 케일, 세주아니를 획득합니다. 레오나가 라운드마다 영구히 70의 최대 체력을 얻습니다. 이 수치는 배치한 3성 챔피언 한 종류당 10 증가합니다.",
+  "desc_en_opgg": "Gain a Leona, a Kayle, and a Sejuani. Leona gains 70 permanent max Health each round, increased by 10 for each unique 3-star champion fielded.",
   "aliases": []
  },
  {
@@ -477,6 +537,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/missing-t2.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "날렵이 활성화 시 35%의 위력을 지닌 두 번째 커다란 털뭉치 친구를 획득합니다. 티모, 베이가, 코부코를 획득합니다.",
+  "desc_en_opgg": "While Sprykin is active, gain a second BFF summon that is 35% as powerful. Gain a Teemo, a Veigar, and a Kobuko.",
   "aliases": []
  },
  {
@@ -491,6 +553,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/missing-t2.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "챔피언을 처음 3성으로 업그레이드하면 게임이 끝날 때까지 라운드마다 해당 유닛의 복사본을 획득합니다. 동일한 챔피언을 다시 3성으로 업그레이드하면 추가 복사본을 획득합니다. 하급 챔피언 복제기와 소형 챔피언 복제기를 획득합니다.",
+  "desc_en_opgg": "The first time you 3-star a champion, gain a copy of them each round for the rest of the game. 3-starring the same champion again grants additional copies. Gain a Lesser Champion Duplicator and a Tiny Champion Duplicator.",
   "aliases": []
  },
  {
@@ -505,6 +569,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/missing-t1.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "수호령을 구매할 때마다 2골드를 획득합니다. 즉시 4골드를 획득합니다.",
+  "desc_en_opgg": "Each time you purchase a Wisp, gain 2 gold. Gain 4 gold now.",
   "aliases": []
  },
  {
@@ -519,6 +585,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/missing-t1.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "수호령을 구매할 때마다 2골드를 획득합니다. 즉시 8골드를 획득합니다.",
+  "desc_en_opgg": "Each time you purchase a Wisp, gain 2 gold. Gain 8 gold now.",
   "aliases": []
  },
  {
@@ -533,6 +601,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/advancedloan_ii.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "20골드를 획득합니다. 다음 증강이 한 등급 낮아집니다.",
+  "desc_en_opgg": "Gain 20 Gold. Your next augment is one tier lower.",
   "aliases": [
    "TFT_Augment_AdvancedLoan"
   ]
@@ -549,6 +619,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/advancedloan_ii.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "33골드를 획득합니다. 다음 증강이 한 등급 낮아집니다.",
+  "desc_en_opgg": "Gain 33 Gold. Your next augment is one tier lower.",
   "aliases": [
    "TFT_Augment_AdvancedLoanPlus"
   ]
@@ -565,6 +637,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/arcaneviktory_ii.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "전투 시작 8초 후, 적 팀을 1.5초 동안 기절시킵니다. 전투 시작 18초 후 이 효과를 반복합니다.<br><br><rules>2024 전략적 팀 전투 마카오 오픈</rules>",
+  "desc_en_opgg": "After 8 seconds of combat, stun the enemy team for 1.5 seconds. Repeat this after 18 seconds of combat.<br><br><rules>TFT Macao Open, 2024</rules>",
   "aliases": [
    "TFT_Augment_ArcaneViktory"
   ]
@@ -581,6 +655,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/ascension2.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "전투 시작 12초 후 아군 유닛이 피해 증폭을 35% 얻습니다.",
+  "desc_en_opgg": "After 12 seconds of combat, your units gain 35% Damage Amp.",
   "aliases": [
    "TFT9_Augment_Commander_Ascension"
   ]
@@ -597,6 +673,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/powerup_i.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "다음 증강이 한 등급 높아집니다.",
+  "desc_en_opgg": "Your next augment is one tier higher.",
   "aliases": [
    "TFT_Augment_PowerUp"
   ]
@@ -613,6 +691,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/backlineblueprint_ii.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "3단계 비탱커 챔피언 및 해당 챔피언의 직업 특성과 동일한 상징을 획득합니다.",
+  "desc_en_opgg": "Gain a 3-cost non-Tank champion and an Emblem that matches their class.",
   "aliases": [
    "TFT_Augment_BacklineBlueprint"
   ]
@@ -629,6 +709,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/recurvewrecker_i.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "곡궁 1개를 획득합니다. 아군 챔피언이 1000회 기본 공격한 후 2개 더 획득합니다.",
+  "desc_en_opgg": "Gain a Recurve Bow. After your champions attack 1000 times, get 2 more.",
   "aliases": [
    "TFT_Augment_ComponentQuestBow"
   ]
@@ -645,6 +727,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/bandthieves1.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "도적의 장갑 1개를 획득합니다.",
+  "desc_en_opgg": "Gain 1 Thief's Gloves.",
   "aliases": [
    "TFT7_Augment_BandOfThieves1"
   ]
@@ -661,6 +745,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/bandthieves3.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "도적의 장갑 2개를 획득합니다. 플레이어 대상 전투 5회 후 1개 더 획득합니다.",
+  "desc_en_opgg": "Gain 2 Thief's Gloves. After 5 player combats, gain another.",
   "aliases": [
    "TFT6_Augment_BandOfThieves2"
   ]
@@ -677,6 +763,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/bandthieves3.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "도적의 장갑 2개를 획득합니다. 플레이어 대상 전투 5회 후 1개 더 획득합니다.",
+  "desc_en_opgg": "Gain 2 Thief's Gloves. After 5 player combats, gain another.",
   "aliases": [
    "TFT6_Augment_BandOfThieves2Plus"
   ]
@@ -693,6 +781,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/bandthieves3.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "도적의 장갑 2개를 획득합니다. 플레이어 대상 전투 3회 후 1개 더 획득합니다.",
+  "desc_en_opgg": "Gain 2 Thief's Gloves. After 3 player combats, gain another.",
   "aliases": [
    "TFT6_Augment_BandOfThieves2PlusPlus"
   ]
@@ -709,6 +799,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/thebaronslair_iii.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "무작위 탱커 아이템 1개를 획득합니다. 전투 시작 8초 후, 아군이 전투가 끝날 때까지 매초 추가 공격력 및 주문력을 4% 얻습니다.<br><br><rules>2025 전략적 팀 전투 파리 오픈</rules>",
+  "desc_en_opgg": "Gain a random Tank item. After 8 seconds of combat, your team gains 4% bonus Attack Damage and Ability Power every second for the rest of combat.<br><br><rules>TFT Paris Open, 2025</rules>",
   "aliases": [
    "TFT_Augment_TheBaronsLair"
   ]
@@ -725,6 +817,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/beltoverflow_iii.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "거인의 허리띠 4개를 획득합니다. 거인의 허리띠가 추가 체력을 +85 제공합니다.",
+  "desc_en_opgg": "Gain 4 Giant's Belts. Your Giant's Belts grant +85 bonus Health.",
   "aliases": [
    "TFT_Augment_BeltOverflow"
   ]
@@ -741,6 +835,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/golden-gifts-iii.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "레벨 업할 때마다 2성 챔피언 1명과 1골드를 획득합니다. 획득하는 챔피언의 단계는 상점 레벨보다 4 낮습니다. (최대 5단계)",
+  "desc_en_opgg": "Gain a 2-star champion and 1 gold each time you level up. The champion's cost tier is your level minus 4 (max: 5-cost).",
   "aliases": [
    "TFT7_Augment_BirthdayPresents"
   ]
@@ -757,6 +853,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/birthdayreunion_ii.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "무작위 2단계 2성 챔피언 1명을 획득합니다. 6레벨에서 무작위 조합 아이템 1개를 획득합니다. 9레벨에서 무작위 5단계 2성 챔피언 1명을 획득합니다.<br><br><rules>2024 먹물 우화 전략가의 왕관</rules>",
+  "desc_en_opgg": "Gain a random 2-star 2-cost champion. At Level 6, gain a random item component. At Level 9, gain a random 2-star 5-cost champion.<br><br><rules>Inkborn Fables Tactician's Crown, 2024</rules>",
   "aliases": [
    "TFT_Augment_BirthdayReunion"
   ]
@@ -775,6 +873,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/missing-t2.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "검은 가시 칸에 챔피언을 처음 4번 희생시킬 때 각각 해당 챔피언이 장착한 무작위 조합 아이템 복사본 1개를 획득합니다. 베이가와 렉사이를 획득합니다.",
+  "desc_en_opgg": "The first 4 times you sacrifice a champion in the Blackthorn hex, gain a copy of a random component they're holding. Gain a Veigar and a Rek'Sai.",
   "aliases": []
  },
  {
@@ -789,6 +889,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/bodyguardstraining_ii.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "아군이 방어력 및 마법 저항력을 15 얻습니다. 이 수치는 플레이어 레벨당 2 증가합니다.<br><br><rules>2022 기계와 장치 챔피언십</rules>",
+  "desc_en_opgg": "Allies gain 15 Armor and Magic Resist, increased by 2 per player level.<br><br><rules>Gizmos & Gadgets Championship, 2022</rules>",
   "aliases": [
    "TFT_Augment_BodyguardTraining"
   ]
@@ -805,6 +907,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/missing-t2.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "전리품 구를 열 때마다 25% 확률로 회색 전리품 구를 획득합니다. 회색 전리품 구 1개를 획득합니다.",
+  "desc_en_opgg": "Whenever you open a loot orb, you have a 25% chance to gain a gray loot orb. Gain 1 gray loot orbs.",
   "aliases": []
  },
  {
@@ -819,6 +923,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/missing-t2.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "전리품 구를 열 때마다 25% 확률로 회색 전리품 구를 획득합니다. 회색 전리품 구 2개를 획득합니다.",
+  "desc_en_opgg": "Whenever you open a loot orb, you have a 25% chance to gain a gray loot orb. Gain 2 gray loot orbs.",
   "aliases": []
  },
  {
@@ -833,6 +939,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/boosterpack1_ii.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "총 12골드 가치의 무작위 챔피언을 획득합니다. (3단계 유닛 최소 1명 보장!)",
+  "desc_en_opgg": "Gain 12 gold of random champions. (At least one 3-cost guaranteed!)",
   "aliases": [
    "TFT_Augment_BoosterPack"
   ]
@@ -849,6 +957,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/boosterpack1_ii.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "총 18골드 가치의 무작위 챔피언을 획득합니다. (4단계 유닛 최소 1명 보장!)",
+  "desc_en_opgg": "Gain 18 gold of random champions. (At least one 4-cost guaranteed!)",
   "aliases": [
    "TFT_Augment_BoosterPackPlus"
   ]
@@ -865,6 +975,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/boosterpack1_ii.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "총 26골드 가치의 무작위 챔피언을 획득합니다. (5단계 유닛 최소 1명 보장!)",
+  "desc_en_opgg": "Gain 26 gold of random champions. (At least one 5-cost guaranteed!)",
   "aliases": [
    "TFT_Augment_BoosterPackPlusPlus"
   ]
@@ -881,6 +993,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/boxinglessons_i.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "아군이 전방에서 전투를 시작하는 챔피언 하나당 체력을 30 얻습니다.",
+  "desc_en_opgg": "Your team gains 30 Health for each champion that starts combat in the front row.",
   "aliases": [
    "TFT_Augment_BoxingLessons"
   ]
@@ -897,6 +1011,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/bronzeforlife_ii.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "아군이 브론즈 단계 특성당 피해 증폭을 2.5% 얻습니다.",
+  "desc_en_opgg": "Your team gains 2.5% Damage Amp for each Bronze-tier trait.",
   "aliases": [
    "TFT_Augment_BronzeForLifeI"
   ]
@@ -913,6 +1029,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/bronzeforlife_iii.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "아군이 브론즈 단계 특성당 피해 증폭을 2.5%, 방어력 및 마법 저항력을 4 얻습니다.",
+  "desc_en_opgg": "Your team gains 2.5% Damage Amp and 4 Armor and Magic Resist for each Bronze-tier trait.",
   "aliases": [
    "TFT_Augment_BronzeForLife2"
   ]
@@ -929,8 +1047,11 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/constructacompanion_iii.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "무작위 1단계 3성 챔피언 1명을 획득합니다. 6골드를 획득합니다.",
+  "desc_en_opgg": "Gain a random 3-star 1-cost champion. Gain 6 gold.",
   "aliases": [
-   "TFT11_Augment_Buildabud"
+   "TFT11_Augment_Buildabud",
+   "DA_ForgeAFriend"
   ]
  },
  {
@@ -945,6 +1066,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/buried-treasures-iii.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "즉시 및 다음 6번의 라운드 시작 시 무작위 조합 아이템 1개를 획득합니다.",
+  "desc_en_opgg": "Gain a random item component now and at the start of the next 6 rounds.",
   "aliases": []
  },
  {
@@ -959,6 +1082,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/calltochaos_iii.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "강력한 무작위 보상을 획득합니다.",
+  "desc_en_opgg": "Gain a powerful and random reward.",
   "aliases": [
    "TFT11_Augment_Calltochaos"
   ]
@@ -975,6 +1100,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/calledshot_i.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "연승을 +4연승으로 설정합니다. 4골드를 획득합니다.",
+  "desc_en_opgg": "Set your win streak to +4. Gain 4 gold.",
   "aliases": [
    "TFT_Augment_CalledShot"
   ]
@@ -991,6 +1118,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/missing-t1.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "획득하는 이자만큼 골드를 저장합니다. 3-3라운드에 저장된 골드의 100%를 획득합니다. 즉시 1골드를 획득합니다.",
+  "desc_en_opgg": "Store gold equal to the interest you earn. On 3-3, gain gold equal to 100% of the stored gold. Gain 1 gold now.",
   "aliases": []
  },
  {
@@ -1005,6 +1134,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/missing-t2.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "획득하는 이자만큼 골드를 저장합니다. 3-3라운드에 저장된 골드의 125%를 획득합니다. 즉시 3골드를 획득합니다.",
+  "desc_en_opgg": "Store gold equal to the interest you earn. On 3-3, gain gold equal to 125% of the stored gold. Gain 3 gold now.",
   "aliases": []
  },
  {
@@ -1019,6 +1150,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/caretaker_s-chosen-ii.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "5, 6, 7, 8레벨에 도달하면 조합 아이템 모루를 획득합니다.<br><br><rules>조합 아이템 모루는 4개의 선택지를 제시합니다.</rules>",
+  "desc_en_opgg": "Gain a component anvil when you reach level 5, 6, 7, and 8.<br><br><rules>Component anvils offer 4 choices.</rules>",
   "aliases": [
    "TFT9_Augment_BardPlaybook2"
   ]
@@ -1035,6 +1168,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/carveapath_i.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "B.F. 대검 1개를 획득합니다. 아군 챔피언이 65000의 물리 피해를 입히면 2개 더 획득합니다.",
+  "desc_en_opgg": "Gain a B.F. Sword. After your champions deal 65000 physical damage, gain 2 more.",
   "aliases": [
    "TFT_Augment_ComponentQuestSword"
   ]
@@ -1051,6 +1186,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/celestialblessing1.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "아군이 모든 피해 흡혈을 12% 얻습니다. 초과 회복량은 최대 200의 피해를 흡수하는 보호막으로 전환됩니다.",
+  "desc_en_opgg": "Your team gains 12% Omnivamp. Excess healing is converted to a shield up to 200 Health.",
   "aliases": []
  },
  {
@@ -1065,6 +1202,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/celestialblessing2.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "아군이 모든 피해 흡혈을 18% 얻습니다. 초과 회복량은 최대 400의 피해를 흡수하는 보호막으로 전환됩니다.",
+  "desc_en_opgg": "Your team gains 18% Omnivamp. Excess healing is converted to a shield up to 400 Health.",
   "aliases": []
  },
  {
@@ -1079,6 +1218,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/celestialblessing3.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "아군이 모든 피해 흡혈을 25% 얻습니다. 초과 회복량은 최대 1000의 피해를 흡수하는 보호막으로 전환됩니다.",
+  "desc_en_opgg": "Your team gains 25% Omnivamp. Excess healing is converted to a shield up to 1000 Health.",
   "aliases": []
  },
  {
@@ -1107,6 +1248,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/missing-t1.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "2단계 챔피언 3명을 획득합니다. 6라운드 후 3명 더 획득합니다.",
+  "desc_en_opgg": "Gain 3 2-cost champions. After 6 rounds, gain 3 more.",
   "aliases": []
  },
  {
@@ -1121,6 +1264,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/missing-t1.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "3단계 챔피언 3명을 획득합니다. 6라운드 후 3명 더 획득합니다.",
+  "desc_en_opgg": "Gain 3 3-cost champions. After 6 rounds, gain 3 more.",
   "aliases": []
  },
  {
@@ -1135,6 +1280,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/missing-t1.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "4단계 챔피언 3명을 획득합니다. 6라운드 후 3명 더 획득합니다.",
+  "desc_en_opgg": "Gain 3 4-cost champions. After 6 rounds, gain 3 more.",
   "aliases": []
  },
  {
@@ -1149,6 +1296,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/clearmind2.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "플레이어 대상 전투 종료 시 대기석에 챔피언이 없다면 3의 경험치를 획득합니다.",
+  "desc_en_opgg": "If there are no champions on your bench at the end of player combat, gain 3 XP.",
   "aliases": [
    "TFT6_Augment_ClearMind"
   ]
@@ -1165,6 +1314,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/clockworkaccelerator_ii.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "아군이 전투에서 3초마다 공격 속도를 10% 얻습니다.",
+  "desc_en_opgg": "Your team gains 10% Attack Speed every 3 seconds in combat.",
   "aliases": [
    "TFT_Augment_ClockworkAccelerator"
   ]
@@ -1181,6 +1332,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/dizzy-ii.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "즉시 1단계 챔피언 4명을 획득합니다. 플레이어 대상 전투 종료 시 대기석에 챔피언이 가득 찼다면 3의 경험치를 획득합니다.",
+  "desc_en_opgg": "Gain 4 1-cost champions now. If your bench is full at the end of player combat, gain 3 XP.",
   "aliases": [
    "TFT7_Augment_ClutteredMind"
   ]
@@ -1197,6 +1350,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/cognitiveoverload_ii.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "7골드, 1단계 2성 챔피언 1명, 2단계 챔피언 1명, 3단계 챔피언 2명을 획득하고 경험치 1, 상점 새로고침 1회를 얻습니다.",
+  "desc_en_opgg": "Gain 7 gold, 1 2-star 1-cost champion, 1 2-cost champion, 2 3-cost champions, 1 XP, and 1 Shop reroll.",
   "aliases": [
    "TFT_Augment_CognitiveOverload"
   ]
@@ -1213,6 +1368,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/cognitivetax_i.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "8골드를 획득하고 경험치를 1 얻습니다.",
+  "desc_en_opgg": "Gain 8 gold and 1 XP.",
   "aliases": [
    "TFT_Augment_CognitiveTax"
   ]
@@ -1229,6 +1386,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/cognitivetax_i.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "12골드를 획득하고 경험치를 3 얻습니다.",
+  "desc_en_opgg": "Gain 12 gold and 3 XP.",
   "aliases": [
    "TFT_Augment_CognitiveTaxPlus"
   ]
@@ -1245,6 +1404,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/comebackstory_iii.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "잃은 플레이어 체력당 아군이 체력을 4, 공격 속도를 0.3% 얻습니다.",
+  "desc_en_opgg": "Your team gains 4 Health and 0.3% Attack Speed per missing player Health.",
   "aliases": [
    "TFT_Augment_ComebackStory"
   ]
@@ -1261,6 +1422,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/trade3.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "즉시 무료 상점 새로고침 16회를 얻고 게임이 끝날 때까지 라운드마다 3회를 얻습니다.",
+  "desc_en_opgg": "Gain 16 free Shop rerolls now and 3 every round for the rest of the game.",
   "aliases": [
    "TFT6_Augment_TradeSector2"
   ]
@@ -1277,6 +1440,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/the-customer-is-always-right-i.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "조합 아이템을 획득할 때마다, 대신 조합 아이템 모루를 획득합니다. 무작위 조합 아이템 1개를 획득합니다.모루는 4개의 선택지를 제시합니다.",
+  "desc_en_opgg": "Whenever you would get a component, gain a component anvil instead. Gain a random component.The anvil offers 4 choices.",
   "aliases": [
    "TFT9_Augment_CustomerIsAlwaysRight"
   ]
@@ -1293,6 +1458,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/missing-t3.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "무작위 조합 아이템 1개 및 1골드를 획득합니다. 다음 플레이어 대상 전투에서 7번 승리하는 동안 각각 다른 무작위 조합 아이템을 획득합니다. 이후 5골드를 획득합니다.",
+  "desc_en_opgg": "Gain a random component and 1 gold. The next 7 times you win a player combat, gain a different random component. Afterwards, gain 5 gold.",
   "aliases": []
  },
  {
@@ -1307,6 +1474,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/cookingpot_ii.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "각 라운드 시작 시, 프라이팬 또는 뒤집개를 장착한 모든 아군이 가장 가까운 챔피언에게 영구적으로 체력을 60 부여합니다. 프라이팬 1개를 획득합니다.",
+  "desc_en_opgg": "At the start of each turn, all allies holding a Frying Pan or Spatula item grant the nearest champion 60 permanent Health. Gain a Frying Pan.",
   "aliases": [
    "TFT_Augment_CookingPot"
   ]
@@ -1323,6 +1492,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/coronation_iii.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "전략가의 왕관을 획득합니다. 전략가의 왕관, 망토, 방패가 장착 유닛에게 공격 속도를 20%, 공격력을 25%, 주문력을 30% 부여합니다.",
+  "desc_en_opgg": "Gain a Tactician's Crown. Tactician's Crown, Cape, and Shield grant the holder 20% Attack Speed, 25% Attack Damage, and 30% Ability Power.",
   "aliases": [
    "TFT_Augment_Coronation"
   ]
@@ -1339,6 +1510,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/corrosion_i.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "전방 가로 2열에 있는 적의 방어력 및 마법 저항력이 2초마다 4 감소합니다.",
+  "desc_en_opgg": "Enemies in the first two rows lose 4 Armor and Magic Resist every 2 seconds.",
   "aliases": [
    "TFT_Augment_Corrosion"
   ]
@@ -1355,6 +1528,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/craftedcrafting_i.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "완성 아이템을 만들 때마다 새로고침을 2회 얻습니다.",
+  "desc_en_opgg": "Whenever you craft a completed item, gain 2 rerolls.",
   "aliases": [
    "TFT_Augment_CraftedCrafting"
   ]
@@ -1371,6 +1546,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/crymeariver_ii.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "여신의 눈물 1개를 획득합니다. 아군이 마나 재생을 1 얻습니다. 전투 시작 12초 후에는 마나 재생을 4만큼 얻습니다.",
+  "desc_en_opgg": "Gain a Tear of the Goddess. Your team gains 1 Mana Regen. After 12 seconds in combat, increase this to 4.",
   "aliases": [
    "TFT_Augment_CryMeARiver"
   ]
@@ -1387,6 +1564,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/cursedcrown-iii.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "최대 팀 규모가 +2 증가하지만, 플레이어 대상 전투 패배 시 플레이어가 받는 피해량이 두 배 증가합니다.",
+  "desc_en_opgg": "Gain +2 max team size, but take double player damage when you lose a player combat.",
   "aliases": [
    "TFT7_Augment_CursedCrown"
   ]
@@ -1403,6 +1582,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/cybernetic2.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "아이템을 장착한 아군 챔피언이 체력을 100, 공격력을 15% 얻습니다. B.F. 대검 1개를 획득합니다.",
+  "desc_en_opgg": "Your champions holding an item gain 100 Health and 15% Attack Damage. Gain a B.F. Sword.",
   "aliases": [
    "TFT6_Augment_CyberneticImplants2"
   ]
@@ -1419,6 +1600,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/cybernetic-uplink-ii.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "아이템을 장착한 아군 챔피언이 체력을 100, 마나 재생을 2 얻습니다. 여신의 눈물 1개를 획득합니다.",
+  "desc_en_opgg": "Your champions holding an item gain 100 Health and 2 Mana Regen. Gain a Tear of the Goddess.",
   "aliases": [
    "TFT6_Augment_CyberneticUplink2"
   ]
@@ -1435,6 +1618,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/deadlierblades_ii.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "죽음의 검 1개를 획득합니다. 장착 유닛이 처치 관여를 달성할 때마다 죽음의 검이 영구히 공격력을 1% 얻습니다.",
+  "desc_en_opgg": "Gain a Deathblade. Deathblades permanently gain 1% Attack Damage whenever their holders score a takedown.",
   "aliases": [
    "TFT_Augment_TragicalBlade"
   ]
@@ -1451,6 +1636,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/deadliercaps_ii.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "라바돈의 죽음모자 1개를 획득합니다. 라바돈의 죽음모자가 마나 재생을 1 얻고 장착 유닛이 처치 관여를 달성할 때마다 주문력을 1% 얻습니다.",
+  "desc_en_opgg": "Gain a Rabadon's Deathcap. Rabadon's Deathcaps grant 1 Mana Regen and permanently gain 1% Ability Power whenever their holders score a takedown.",
   "aliases": [
    "TFT_Augment_DeadlierCaps"
   ]
@@ -1467,6 +1654,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/dummify_i.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "전장 및 대기석에 있는 모든 챔피언을 잃습니다. 잃은 챔피언 체력 총합의 60%를 지닌 훈련 봇을 획득합니다. 훈련 봇은 스테이지마다 체력을 1150 얻습니다. 무작위 2단계 2성 비탱커 챔피언 1명을 획득합니다.",
+  "desc_en_opgg": "Lose all champions on your board and bench. Gain a Training Dummy with 60% of their combined health. The dummy gains 1150 Health per stage. Gain a random non-tank 2-star 2 cost champion.",
   "aliases": [
    "TFT_Augment_Dummify"
   ]
@@ -1483,6 +1672,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/earlylearning_ii.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "아군이 공격력 및 주문력을 5% 얻습니다. 이 수치는 각 플레이어 대상 전투 후 1% 증가합니다. 1단계 챔피언은 두 배로 얻습니다.",
+  "desc_en_opgg": "Your team gains 5% Attack Damage & Ability Power. This increases by 1% after each player combat. 1-cost champions gain double.",
   "aliases": [
    "TFT_Augment_EarlyLearning"
   ]
@@ -1499,6 +1690,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/electrocharge-i.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "아군이 4번 공격당할 때마다 주변 적에게 30~90(현재 스테이지 비례)의 마법 피해를 입힙니다. (재사용 대기시간 1초)",
+  "desc_en_opgg": "Every 4 attacks an ally takes, they deal 30-90 (based on current Stage) magic damage to nearby enemies (1 second cooldown).",
   "aliases": [
    "TFT6_Augment_Electrocharge1"
   ]
@@ -1515,6 +1708,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/electrocharge-ii.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "아군이 4번 공격당할 때마다 주변 적에게 50~140(현재 스테이지 비례)의 마법 피해를 입힙니다. (재사용 대기시간 1초)",
+  "desc_en_opgg": "Every 4 attacks an ally takes, they deal 50-140 (based on current Stage) magic damage to nearby enemies (1 second cooldown).",
   "aliases": [
    "TFT6_Augment_Electrocharge2"
   ]
@@ -1531,6 +1726,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/epicrolldown_ii.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "8레벨에 도달하면 상점 새로고침을 20회 얻습니다.<br><br><rules>2023 룬테라 리포지드 챔피언십</rules>",
+  "desc_en_opgg": "When you reach Level 8, gain 20 Shop rerolls.<br><br><rules>Runeterra Reforged Championship, 2023</rules>",
   "aliases": [
    "TFT_Augment_EpicRolldown"
   ]
@@ -1547,6 +1744,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/epoch_ii.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "즉시 및 이후 매 스테이지 시작 시 경험치를 4 획득하고 무료 새로고침을 2회 얻습니다.",
+  "desc_en_opgg": "Now, and at the start of every stage, gain 4 XP and 2 free rerolls.",
   "aliases": [
    "TFT11_Augment_Epoch"
   ]
@@ -1563,6 +1762,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/epoch_ii.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "즉시 및 이후 매 스테이지 시작 시 경험치를 8 획득하고 무료 새로고침을 2회 얻습니다.",
+  "desc_en_opgg": "Now, and at the start of every stage, gain 8 XP and 2 free rerolls.",
   "aliases": [
    "TFT11_Augment_EpochPlus"
   ]
@@ -1579,6 +1780,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/exclusivecustomization_ii.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "행운의 아이템 상자, 자석 제거기, 7골드를 획득합니다.",
+  "desc_en_opgg": "Gain a Lucky Item Chest, a Magnetic Remover and 7 gold.",
   "aliases": [
    "TFT_Augment_ExclusiveCustomization"
   ]
@@ -1595,6 +1798,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/expedition_i.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "라운드가 시작될 때마다 대기석 가장 오른쪽에 있는 챔피언을 잃습니다. 이 방식으로 33골드 가치에 해당하는 챔피언을 잃으면 강력한 보상을 획득합니다. 즉시 3단계 챔피언 1명을 획득합니다.",
+  "desc_en_opgg": "At the start of every round, lose the champion in the rightmost bench slot. After losing 33 gold of champions in this way, gain a powerful reward. Gain a 3-cost champion now.",
   "aliases": [
    "TFT_Augment_Expedition"
   ]
@@ -1611,6 +1816,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/explosivegrowth_ii.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "즉시 및 다음 3번의 라운드 시작 시 경험치를 7 얻습니다.",
+  "desc_en_opgg": "Now and at the start of the next 3 rounds, gain 7 XP.",
   "aliases": [
    "TFT_Augment_ExplosiveGrowth"
   ]
@@ -1627,6 +1834,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/explosivegrowth_ii.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "즉시 및 다음 3번의 라운드 시작 시 경험치를 10 얻습니다.",
+  "desc_en_opgg": "Now and at the start of the next 3 rounds, gain 10 XP.",
   "aliases": [
    "TFT_Augment_ExplosiveGrowthPlus"
   ]
@@ -1643,6 +1852,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/extrabuckles_i.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "거인의 허리띠 1개를 획득합니다. 아군 챔피언이 75000의 피해를 입으면 2개 더 획득합니다.",
+  "desc_en_opgg": "Gain a Giant's Belt. After your champions take 75000 damage, get 2 more.",
   "aliases": []
  },
  {
@@ -1657,6 +1868,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/feelinglucky_i.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "12골드를 획득하고 동전을 던집니다. 앞면이 나오면 4골드를 추가로 획득합니다.",
+  "desc_en_opgg": "Gain 12 gold, then flip a coin. If heads, gain 4 more gold.",
   "aliases": [
    "TFT_Augment_FeelingLucky"
   ]
@@ -1673,6 +1886,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/findyourcenter_i.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "전방 가로 1열 중앙에서 전투를 시작하는 아군 챔피언이 피해 증폭을 15%, 최대 체력을 25% 얻습니다.",
+  "desc_en_opgg": "Your champion that starts combat in the center of the front row gains 15% Damage Amp and 25% max Health.",
   "aliases": [
    "TFT_Augment_FindYourCenter"
   ]
@@ -1689,6 +1904,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/flexible_ii.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "무작위 상징 1개를 획득합니다. 매 스테이지 시작 시 무작위 상징 1개를 획득합니다. 아군이 장착한 상징 하나당 30의 체력을 얻습니다.",
+  "desc_en_opgg": "Gain 1 random Emblem. At the start of every Stage, gain a random Emblem. Your team gains 30 Health for each Emblem they are holding.",
   "aliases": [
    "TFT_Augment_Flexible"
   ]
@@ -1705,6 +1922,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/griefofthegreatgoddess_i.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "여신의 눈물 1개를 획득합니다. 아군 챔피언이 마나를 6500 사용하면 2개 더 획득합니다.",
+  "desc_en_opgg": "Gain a Tear of the Goddess. After your champions spend 6500 Mana, gain 2 more.",
   "aliases": [
    "TFT_Augment_ComponentQuestTear"
   ]
@@ -1721,6 +1940,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/marksman_i.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "아군이 공격력을 10% 얻습니다. 5초마다 5% 더 얻습니다.",
+  "desc_en_opgg": "Your team gains 10% Attack Damage. Every 5 seconds, they gain 5% more.",
   "aliases": [
    "TFT_Augment_MarksMan"
   ]
@@ -1737,6 +1958,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/forgedinstrength_iii.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "무작위 유물 아이템을 1개 획득합니다. 체력이 35 아래로 떨어지면 추가로 무작위 유물 아이템 1개, 무작위 완성 아이템 1개, 무작위 조합 아이템 2개를 획득합니다.<br><br><rules>2023 리믹스 럼블 챔피언십</rules>",
+  "desc_en_opgg": "Gain 1 random Artifact. When you drop below 35 Health, gain 1 more random Artifact, 1 random completed item, and 2 random components.<br><br><rules>Remix Rumble Championship, 2023</rules>",
   "aliases": [
    "TFT_Augment_ForgedInStrength"
   ]
@@ -1753,6 +1976,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/frontlinefoundation_ii.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "1단계 2성 탱커 챔피언 및 해당 챔피언의 직업 특성과 동일한 상징을 획득합니다.",
+  "desc_en_opgg": "Gain a 2-star 1-cost Tank champion and an Emblem that matches their class.",
   "aliases": [
    "TFT_Augment_FrontlineFoundation"
   ]
@@ -1769,6 +1994,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/missing-t1.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "전략가 체력을 20 잃지만, 플레이어 대상 전투 5회 후 4단계 챔피언 3명과 8골드를 획득합니다.",
+  "desc_en_opgg": "Your Tactician loses 20 Health, but after 5 player combats, gain 3 4-cost champions and 8 gold.",
   "aliases": []
  },
  {
@@ -1783,6 +2010,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/windfall2.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "21골드를 획득합니다.",
+  "desc_en_opgg": "Gain 21 gold.",
   "aliases": []
  },
  {
@@ -1797,6 +2026,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/giantandmighty_iii.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "아군의 크기가 커져 체력을 200, 최대 체력을 10% 얻습니다.",
+  "desc_en_opgg": "Your team becomes large, gaining 200 Health and 10% max Health.",
   "aliases": [
    "TFT_Augment_GiantAndMighty"
   ]
@@ -1813,6 +2044,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/gildedsteel_ii.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "5단계 챔피언 2명을 획득합니다. 5단계 챔피언을 1명 이상 배치하면 아군 1~4단계 챔피언이 내구력을 8% 얻습니다.<br><br><rules>2025 K.O. 콜로세움 전략가의 왕관</rules>",
+  "desc_en_opgg": "Gain two 5-cost champions. If you field at least one 5-cost champion, your 1 to 4-cost champions gain 8% Durability.<br><br><rules>K.O. Coliseum Tactician's Crown, 2025</rules>",
   "aliases": [
    "TFT_Augment_GildedSteel"
   ]
@@ -1829,6 +2062,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/glasscannon_ii.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "후방 가로 1열에서 전투를 시작한 아군이 전투 시작 시 체력이 80%로 조정되지만 피해 증폭을 25% 얻습니다.",
+  "desc_en_opgg": "Allies that start combat in the back row begin combat at 80% Health but gain 25% Damage Amp.",
   "aliases": [
    "TFT_Augment_GlassCannonII"
   ]
@@ -1845,6 +2080,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/glasscannon_i.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "후방 가로 1열에서 전투를 시작한 아군이 전투 시작 시 체력이 80%로 조정되지만 피해 증폭을 16% 얻습니다.",
+  "desc_en_opgg": "Allies that start combat in the back row begin combat at 80% Health but gain 16% Damage Amp.",
   "aliases": [
    "TFT_Augment_GlassCannonI"
   ]
@@ -1861,6 +2098,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/going-long-iii.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "더 이상 이자를 획득하지 않으며, 즉시 10골드를 획득합니다. 플레이어 대상 전투가 끝날 때마다 경험치를 4 얻습니다.<br><br><rules>이자는 저축한 </rules>10<rules>골드당 추가로 획득하는 골드입니다.</rules>",
+  "desc_en_opgg": "You no longer gain interest. Gain 10 gold now. Gain 4 XP after every player combat.<br><br><rules>Interest is extra gold you gain per </rules>10<rules>g saved.</rules>",
   "aliases": [
    "TFT10_Augment_GoingLong"
   ]
@@ -1877,6 +2116,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/goldendestiny_ii.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "무작위 골드 증강을 얻고 3골드를 획득합니다.",
+  "desc_en_opgg": "Gain a random Gold Augment and 3 gold.",
   "aliases": [
    "TFT_Augment_GoldDestiny"
   ]
@@ -1893,6 +2134,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/goldendestiny_ii.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "무작위 골드 증강을 얻고 5골드를 획득합니다.",
+  "desc_en_opgg": "Gain a random Gold Augment and 5 gold.",
   "aliases": [
    "TFT_Augment_GoldDestinyPlus"
   ]
@@ -1909,6 +2152,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/the-golden-egg-iii.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "11턴 안에 부화해 막대한 전리품을 제공하는 황금 알을 획득합니다. 플레이어 대상 전투에서 승리하면 부화 타이머가 1턴 더 빨라집니다.",
+  "desc_en_opgg": "Gain a golden egg that hatches in 11 turns for a huge amount of loot. Winning player combat speeds up the hatch timer by an extra turn.",
   "aliases": [
    "TFT6_Augment_TheGoldenEgg"
   ]
@@ -1925,6 +2170,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/goldengamble_iii.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "2골드를 획득하고 동전을 던집니다. 앞면이 나오면 찬란한 행운의 아이템 상자를 획득합니다. 뒷면이 나오면 완성 아이템 모루 2개를 획득합니다.",
+  "desc_en_opgg": "Gain 2 gold and flip a coin. If heads, gain a Radiant Lucky Item Chest. If tails, gain 2 Completed Item anvils.",
   "aliases": [
    "TFT_Augment_GoldenGamble"
   ]
@@ -1941,6 +2188,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/goldengamble_iii.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "3골드를 획득하고 동전을 던집니다. 앞면이 나오면 찬란한 행운의 아이템 상자를 획득합니다. 뒷면이 나오면 완성 아이템 모루 2개를 획득합니다.",
+  "desc_en_opgg": "Gain 3 gold and flip a coin. If heads, gain a Radiant Lucky Item Chest. If tails, gain 2 Completed Item anvils.",
   "aliases": [
    "TFT_Augment_GoldenGamblePlus"
   ]
@@ -1957,6 +2206,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/goldengamble_iii.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "6골드를 획득하고 동전을 던집니다. 앞면이 나오면 찬란한 행운의 아이템 상자를 획득합니다. 뒷면이 나오면 완성 아이템 모루 2개를 획득합니다.",
+  "desc_en_opgg": "Gain 6 gold and flip a coin. If heads, gain a Radiant Lucky Item Chest. If tails, gain 2 Completed Item anvils.",
   "aliases": [
    "TFT_Augment_GoldenGamblePlusPlus"
   ]
@@ -1973,6 +2224,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/grouphug1_i.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "전투 시작: 챔피언이 다른 인접한 챔피언에게 방어력 및 마법 저항력을 6 부여합니다. 이 효과는 중첩됩니다.",
+  "desc_en_opgg": "Combat start: Champions grant other adjacent champions 6 Armor and Magic Resist. This effect stacks.",
   "aliases": [
    "TFT_Augment_GroupHug1"
   ]
@@ -1989,6 +2242,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/grouphug2_ii.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "전투 시작: 챔피언이 다른 인접한 챔피언에게 방어력 및 마법 저항력을 9 부여합니다. 이 효과는 중첩됩니다.",
+  "desc_en_opgg": "Combat start: Champions grant other adjacent champions 9 Armor and Magic Resist. This effect stacks.",
   "aliases": [
    "TFT_Augment_GroupHug2"
   ]
@@ -2005,6 +2260,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/hardbargain_ii.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "공동 선택 보상을 선택할 수 없습니다. 공동 선택 라운드마다 추가로 플레이어 체력을 6 얻고 8골드를 획득합니다.<br><rules>공동 선택 보상을 선택하지 않으면 선택되지 않은 챔피언과 해당 챔피언의 아이템을 획득합니다.</rules>",
+  "desc_en_opgg": "You cannot choose your Carousel rewards. Gain an additional 6 player health and 8 gold each carousel round.<br><rules>When you do not pick a Carousel Reward, you are given an unpicked champion and the item it carries.</rules>",
   "aliases": [
    "TFT_Augment_HardBargain"
   ]
@@ -2021,6 +2278,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/hardcommit_iii.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "무작위 상징 1개를 획득합니다. 즉시 및 각 스테이지 시작 시 이 무작위 상징의 특성을 보유한 1성 챔피언과 3골드를 획득합니다. 챔피언의 단계는 스테이지와 동일하며 최대 5입니다.",
+  "desc_en_opgg": "Gain a random emblem. Now and at the start of each stage, gain a 1-star champion of that trait with a cost equal to the Stage (max 5) and 3 gold.",
   "aliases": [
    "TFT_Augment_HardCommit"
   ]
@@ -2037,6 +2296,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/healing-orbs-i.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "적이 사망하면 주변 아군 1명이 체력을 250 회복합니다.",
+  "desc_en_opgg": "When an enemy dies, a nearby ally is healed for 250 Health.",
   "aliases": [
    "TFT9_Augment_HealingOrbsI"
   ]
@@ -2053,6 +2314,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/healing-orbs-ii.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "적이 사망하면 주변 아군 1명이 체력을 575 회복합니다.",
+  "desc_en_opgg": "When an enemy dies, a nearby ally is healed for 575 Health.",
   "aliases": [
    "TFT9_Augment_HealingOrbsII"
   ]
@@ -2069,6 +2332,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/healthygains_ii.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "굳건한 심장 1개를 획득합니다. 장착 유닛이 전투에서 10초 생존할 때마다 굳건한 심장이 영구히 최대 체력을 16 추가로 제공합니다.",
+  "desc_en_opgg": "Gain a Steadfast Heart. Every 10 seconds of combat its holder survives, Steadfast Heart gains additional 16 permanent max Health.",
   "aliases": [
    "TFT_Augment_WarmogsBuckle"
   ]
@@ -2085,6 +2350,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/richgetricher3.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "22골드를 획득합니다. 최대 이자가 10골드로 증가했습니다.",
+  "desc_en_opgg": "Gain 22 gold. Your max interest is increased to 10.",
   "aliases": [
    "TFT9_Augment_HedgeFund"
   ]
@@ -2101,6 +2368,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/heroic-grab-bag-ii.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "하급 챔피언 복제기 2개를 획득합니다. 4골드를 획득합니다.",
+  "desc_en_opgg": "Gain 2 Lesser Champion Duplicators. Gain 4 gold.",
   "aliases": [
    "TFT10_Augment_HeroicGrabBag"
   ]
@@ -2117,6 +2386,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/heroic-grab-bag-ii.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "하급 챔피언 복제기 2개를 획득합니다. 8골드를 획득합니다.",
+  "desc_en_opgg": "Gain 2 Lesser Champion Duplicators. Gain 8 gold.",
   "aliases": [
    "TFT_Augment_HeroicGrabBagPlus"
   ]
@@ -2133,6 +2404,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/heroic-grab-bag-ii.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "하급 챔피언 복제기 2개를 획득합니다. 14골드를 획득합니다.",
+  "desc_en_opgg": "Gain 2 Lesser Champion Duplicators. Gain 14 gold.",
   "aliases": [
    "TFT_Augment_HeroicGrabBagPlusPlus"
   ]
@@ -2149,6 +2422,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/holdtheline_iii.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "후방 가로 2열에 있는 챔피언이 전방에서 전투를 시작하는 챔피언 한 명당 주문력을 10%, 공격력을 9% 얻습니다.",
+  "desc_en_opgg": "Champions in your back 2 rows gain 10% Ability Power and 9% Attack Damage for each champion that starts combat in your front row.",
   "aliases": [
    "TFT_Augment_HoldTheLine"
   ]
@@ -2165,6 +2440,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/hyperroll2.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "이자가 없는 대신 플레이어 대상 전투 라운드를 시작할 때마다 3골드를 획득합니다. 즉시 3골드를 획득합니다.<br><br><rules>이자는 저축한</rules> 10<rules>골드당 추가로 획득하는 골드입니다.</rules>",
+  "desc_en_opgg": "You no longer gain interest but gain 3 gold at the start of every player combat round. Gain 3 gold now.<br><br><rules>Interest is extra gold you gain per</rules> 10<rules>g saved.</rules>",
   "aliases": [
    "TFT6_Augment_HyperRoll"
   ]
@@ -2181,6 +2458,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/infinityprotection_ii.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "즉시 3골드를 획득합니다. 스테이지 3-7에서 무한한 삼위일체 1개를 획득합니다. 무한한 삼위일체가 같은 가로 열에 있는 아군에게 체력의 12%에 해당하는 보호막을 부여합니다.<br><br><rules>2023 괴물 습격! 챔피언십</rules>",
+  "desc_en_opgg": "Gain 3 gold now. On Stage 3-7, gain an Infinity Force. Infinity Force gives allies in the same row a 12% Health shield.<br><br><rules>Monsters Attack Championship, 2023</rules>",
   "aliases": [
    "TFT_Augment_InfinityProtection"
   ]
@@ -2197,6 +2476,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/invested-iii.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "26골드를 획득합니다. 각 라운드 시작 시, 50골드를 모은 상태에서 초과 10골드마다 상점 새로고침을 1회 획득합니다. (최대 80골드)",
+  "desc_en_opgg": "Gain 26 gold. At the start of each round, gain 1 Shop reroll for every 10 gold above 50 (max 80 gold).",
   "aliases": [
    "TFT_Augment_InvestedPlus"
   ]
@@ -2213,6 +2494,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/invested-iii.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "45골드를 획득합니다. 각 라운드 시작 시, 50골드를 모은 상태에서 초과 10골드마다 상점 새로고침을 1회 획득합니다. (최대 80골드)",
+  "desc_en_opgg": "Gain 45 gold. At the start of each round, gain 1 Shop reroll for every 10 gold above 50 (max 80 gold).",
   "aliases": [
    "TFT_Augment_InvestedPlusPlus"
   ]
@@ -2229,6 +2512,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/investmentstrategy_iii.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "이자로 획득한 골드당 아군 챔피언이 영구적으로 최대 체력을 10 얻습니다. 최대 이자가 2 증가했습니다. 즉시 8골드를 획득합니다.",
+  "desc_en_opgg": "Your champions gain 10 permanent max health per interest you earn. Your max interest is increased by 2. Gain 8 gold now.",
   "aliases": [
    "TFT_Augment_InvestmentStrategy2"
   ]
@@ -2245,6 +2530,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/investmentstrategy_ii.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "이자로 획득한 골드당 아군 챔피언이 영구적으로 최대 체력을 8 얻습니다. 즉시 4골드를 획득합니다.",
+  "desc_en_opgg": "Your champions gain 8 permanent max health per interest you earn. Gain 4 gold now.",
   "aliases": [
    "TFT_Augment_InvestmentStrategy1"
   ]
@@ -2261,6 +2548,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/iron-assets-i.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "조합 아이템 모루 1개와 3골드를 획득합니다.",
+  "desc_en_opgg": "Gain a component anvil and 3 gold.",
   "aliases": [
    "TFT9_Augment_IronAssets"
   ]
@@ -2277,6 +2566,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/itemgrabbag1.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "무작위 완성 아이템 1개를 획득합니다.",
+  "desc_en_opgg": "Gain 1 random completed item.",
   "aliases": []
  },
  {
@@ -2291,6 +2582,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/missing-t2.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "우측 하단 모서리에 스포트라이트 칸을 획득합니다. 해당 칸에 있는 챔피언은 피해 증폭을 15%, 공격 속도를 15% 얻고 처치 관여 5회마다 1골드를 떨어뜨립니다.<br><br><rules>2026 신화와 전설 전략가의 왕관</rules>",
+  "desc_en_opgg": "Gain a spotlight in the bottom right corner. The champion in it gains 15% Damage Amp and 15% Attack Speed, and drops 1 gold every 5 takedowns.<br><br><rules>Lore & Legends Tactician's Crown, 2026</rules>",
   "aliases": []
  },
  {
@@ -2305,6 +2598,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/jeweled-lotus-ii.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "아군이 치명타 확률 10%, <TFTKeyword>정밀</TFTKeyword>을 얻습니다.<br><br><rules>정밀: 스킬 피해에 치명타가 적용될 수 있습니다. 추가 정밀 획득 시 치명타 피해량이 10% 증가합니다.</rules>",
+  "desc_en_opgg": "Your team gains 10% Critical Strike Chance and <TFTKeyword>Precision.</TFTKeyword><br><br><rules>Precision: Ability damage can critically strike. Additional Precision grants 10% Critical Strike Damage.</rules>",
   "aliases": [
    "TFT9_Augment_JeweledLotus"
   ]
@@ -2321,6 +2616,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/jeweled-lotus-iii.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "아군이 치명타 확률 25%, 치명타 피해량 10%, <TFTKeyword>정밀</TFTKeyword>을 얻습니다.<br><br><rules>정밀: 스킬 피해에 치명타가 적용될 수 있습니다. 추가 정밀 획득 시 치명타 피해량이 10% 증가합니다.</rules>",
+  "desc_en_opgg": "Your team gains 25% Critical Strike Chance, 10% Critical Strike Damage, and <TFTKeyword>Precision</TFTKeyword>.<br><br><rules>Precision: Ability damage can critically strike. Additional Precision grants 10% Critical Strike Damage.</rules>",
   "aliases": [
    "TFT9_Augment_GreaterJeweledLotus"
   ]
@@ -2337,6 +2634,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/kickstart_i.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "무작위 2단계 2성 챔피언 1명과 1골드를 획득합니다.",
+  "desc_en_opgg": "Gain a random 2-star 2-cost champion and 1 gold.",
   "aliases": [
    "TFT_Augment_KickStart"
   ]
@@ -2353,6 +2652,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/kingslayer_i.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "플레이어 대상 전투 승리 후 1골드를 획득합니다. 상대 플레이어의 체력이 더 높았다면, 대신 6골드를 획득합니다. 1골드를 획득합니다.",
+  "desc_en_opgg": "After winning player combat, gain 1 gold. If they had more health than you, gain 6 Gold instead. Gain 1 gold.",
   "aliases": []
  },
  {
@@ -2383,6 +2684,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/lategamescaling_ii.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "매 플레이어 대상 전투 라운드 시작 시 경험치를 2 얻습니다. 아군 5단계 챔피언이 체력을 12%, 공격 속도를 12% 얻습니다.<br><br><rules>2025 사이버 시티 전략가의 왕관</rules>",
+  "desc_en_opgg": "Gain 2 XP at the start of player combat rounds. Your 5-cost champions gain 12% Health and 12% Attack Speed.<br><br><rules>Cyber City Tactician's Crown, 2025</rules>",
   "aliases": [
    "TFT_Augment_LateGameScaling"
   ]
@@ -2399,6 +2702,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/late-game-specialist-i.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "9레벨에 도달하면 27골드를 획득합니다.",
+  "desc_en_opgg": "When you reach Level 9, gain 27 gold.",
   "aliases": [
    "TFT7_Augment_LategameSpecialist"
   ]
@@ -2415,6 +2720,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/long-time-crafting-i.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "플레이어 대상 전투 8회 후 유물 모루 1개를 획득합니다.",
+  "desc_en_opgg": "After 8  player combats, gain an Artifact anvil.",
   "aliases": [
    "TFT9_Augment_LongTimeCrafting"
   ]
@@ -2431,6 +2738,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/legionofthrees_ii.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "무작위 상징 1개를 획득합니다. 아군 3단계 챔피언 및 상징을 장착한 모든 아군이 체력을 150, 공격 속도를 12% 얻습니다.<br><br><rules>2021 심판 챔피언십</rules>",
+  "desc_en_opgg": "Gain a random Emblem. Your 3-cost champions and all allies equipped with an Emblem gain 150 Health and 12% Attack Speed.<br><br><rules>Reckoning Championship, 2021</rules>",
   "aliases": [
    "TFT_Augment_LegionOfThrees"
   ]
@@ -2447,6 +2756,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/levelup3.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "경험치를 구매하면 2의 추가 경험치를 얻습니다. 즉시 6 얻습니다.",
+  "desc_en_opgg": "When you buy XP, gain an additional 2. Gain 6 immediately.",
   "aliases": [
    "TFT6_Augment_MaxLevel10"
   ]
@@ -2463,6 +2774,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/living-forge-iii.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "지금 그리고 플레이어 대상 전투 10번마다 유물 모루를 획득합니다.",
+  "desc_en_opgg": "Gain an Artifact Anvil now and after every 10 player combats.",
   "aliases": [
    "TFT7_Augment_LivingForge"
   ]
@@ -2479,6 +2792,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/missing-t1.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "주사위와 동전에 행운이 깃듭니다.<br><br>주사위를 굴려 나온 숫자만큼 골드를 획득합니다. 이후 동전을 던져 앞면이 나오면 1골드를 획득합니다.",
+  "desc_en_opgg": "Your dice and coins are luckier.<br><br>Roll a die and gain gold equal to the number rolled. Then flip a coin and gain 1 gold if you flip heads.",
   "aliases": []
  },
  {
@@ -2493,6 +2808,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/lucky-gloves-iii.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "도적의 장갑이 항상 챔피언에게 최적의 아이템을 제공합니다. 연습용 장갑 2개와 4골드를 획득합니다.",
+  "desc_en_opgg": "Thief's Gloves will always give your champions ideal items. Gain 2 Sparring Gloves and 4 gold.",
   "aliases": [
    "TFT7_Augment_LuckyGloves"
   ]
@@ -2509,6 +2826,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/lucky-gloves-iii.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "도적의 장갑이 항상 챔피언에게 최적의 아이템을 제공합니다. 지금 연습용 장갑 2개를 획득하고 플레이어 대상 전투 4회 후 1개 더 획득합니다.",
+  "desc_en_opgg": "Thief's Gloves will always give your champions ideal items. Gain 2 Sparring Gloves now, then another after 4 player combats.",
   "aliases": [
    "TFT7_Augment_LuckyGlovesPlus"
   ]
@@ -2525,6 +2844,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/luxurysubscription_iii.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "5단계 챔피언, 1단계 2성 챔피언, 3골드가 포함된 꾸러미를 획득합니다.<br><br>다음 2번의 스테이지 시작 시 꾸러미를 다시 획득합니다.",
+  "desc_en_opgg": "Gain a package containing a 5-cost champion, a 2-star 1-cost champion, and 3 gold.<br><br>At the start of the next 2 stages, gain the package again.",
   "aliases": [
    "TFT_Augment_LuxurySubscription"
   ]
@@ -2541,6 +2862,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/a-magical-roll-ii.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "주사위 3개를 굴립니다. 결과 총합에 따라 보상을 획득합니다.",
+  "desc_en_opgg": "Roll 3 dice. Gain rewards based on their total.",
   "aliases": [
    "TFT_Augment_MagicRoll"
   ]
@@ -2557,6 +2880,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/makeshift1.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "아이템이 없는 챔피언이 방어력과 마법 저항력을 30 얻습니다.",
+  "desc_en_opgg": "Champions without items equipped gain 30 Armor and Magic Resist.",
   "aliases": [
    "TFT6_Augment_MakeshiftArmor1"
   ]
@@ -2573,6 +2898,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/makeshift2.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "아이템이 없는 챔피언이 방어력과 마법 저항력을 50 얻습니다.",
+  "desc_en_opgg": "Champions without items equipped gain 50 Armor and Magic Resist.",
   "aliases": [
    "TFT6_Augment_MakeshiftArmor2"
   ]
@@ -2589,6 +2916,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/mirroredmonetization_ii.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "4골드를 획득합니다. 다음 2라운드 동안 적 챔피언이 처치될 때 2골드를 떨어뜨립니다.",
+  "desc_en_opgg": "Gain 4 gold. For the next 2 rounds, enemy champions drop 2 gold when killed.",
   "aliases": [
    "TFT_Augment_MirroredMonetization"
   ]
@@ -2605,6 +2934,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/maxbuild_ii.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "무료 상점 새로고침을 10회 얻습니다. 9레벨에 도달하면 무료 상점 새로고침을 3회 얻고 챔피언 복제기 1개를 획득합니다.<br><br><rules>2020 갤럭시 챔피언십</rules>",
+  "desc_en_opgg": "Gain 10 free Shop rerolls. When you reach level 9, gain 3 free Shop rerolls and a Champion Duplicator.<br><br><rules>Galaxies Championship, 2020</rules>",
   "aliases": [
    "TFT_Augment_MaxBuild"
   ]
@@ -2621,6 +2952,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/minmax_iii.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "황금 아이템 제거기와 무작위 조합 아이템 4개를 획득합니다.",
+  "desc_en_opgg": "Gain a Golden Item Remover and 4 random components.",
   "aliases": [
    "TFT_Augment_MinMaxer"
   ]
@@ -2637,6 +2970,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/missed-connections-i.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "1단계 챔피언의 복사본을 1명씩 획득합니다.",
+  "desc_en_opgg": "Gain a copy of each 1-cost champion.",
   "aliases": [
    "TFT9_Augment_MissedConnections"
   ]
@@ -2653,6 +2988,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/moneyhungry2_ii.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "즉시 13골드를 획득하고, 이후 매 스테이지 시작 시 7골드를 획득합니다. 골드를 획득하면 전략가 크기가 커집니다.",
+  "desc_en_opgg": "Gain 13 gold now, then 7 gold at the start of every stage. Picking up gold makes your Tactician larger.",
   "aliases": []
  },
  {
@@ -2667,6 +3004,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/moneyhungry1_ii.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "즉시 7골드를 획득하고, 이후 매 스테이지 시작 시 7골드를 획득합니다. 골드를 획득하면 전략가 크기가 커집니다.",
+  "desc_en_opgg": "Gain 7 gold now, then 7 gold at the start of every stage. Picking up gold makes your Tactician larger.",
   "aliases": [
    "TFT_Augment_MoneyHungry"
   ]
@@ -2683,6 +3022,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/moneymonsoon_iii.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "즉시 및 게임이 끝날 때까지 라운드마다 7골드를 획득합니다.",
+  "desc_en_opgg": "Gain 7 gold now and every round for the rest of the game.",
   "aliases": [
    "TFT_Augment_MoneyMonsoon"
   ]
@@ -2699,6 +3040,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/missing-t3.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "유물 모루 1개를 획득합니다. 모루를 열면 조합 아이템 모루 1개를 획득합니다. 획득한 조합 아이템 모루를 열면 4골드를 획득합니다.",
+  "desc_en_opgg": "Gain an Artifact Anvil. After you open it, gain a Component Anvil. After you open that, gain 4 gold.",
   "aliases": []
  },
  {
@@ -2713,6 +3056,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/missing-t3.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "유물 모루 1개를 획득합니다. 모루를 열면 조합 아이템 모루 1개를 획득합니다. 획득한 조합 아이템 모루를 열면 8골드를 획득합니다.",
+  "desc_en_opgg": "Gain an Artifact Anvil. After you open it, gain a Component Anvil. After you open that, gain 8 gold.",
   "aliases": []
  },
  {
@@ -2727,6 +3072,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/missing-t3.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "전투에서 챔피언이 사망하면 별 레벨이 하나 낮으며 60%의 체력을 지닌 해당 챔피언의 복사본 1명을 생성합니다. 무료 새로고침을 3회 얻습니다.",
+  "desc_en_opgg": "After a champion dies in combat, spawn a copy of them one star level lower with 60% health. Gain 3 free rerolls.",
   "aliases": [
    "DA_NestingDollsPlusPlus"
   ]
@@ -2743,6 +3090,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/missing-t3.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "전투에서 챔피언이 사망하면 별 레벨이 하나 낮으며 60%의 체력을 지닌 해당 챔피언의 복사본 1명을 생성합니다. 무료 새로고침을 3회 얻습니다.",
+  "desc_en_opgg": "After a champion dies in combat, spawn a copy of them one star level lower with 60% health. Gain 3 free rerolls.",
   "aliases": [
    "DA_NestingDollsPlus"
   ]
@@ -2759,6 +3108,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/noscoutnopivot_ii.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "플레이어 대상 전투에 참여한 챔피언은 대기석에 놓거나 판매할 수 없습니다. 아군이 플레이어 대상 전투 후 체력을 1%, 공격력 및 주문력을 1% 얻습니다.",
+  "desc_en_opgg": "Champions that fight in player combat cannot be benched or sold. Your team gains 1% Health, and 1% Attack Damage and Ability Power after player combat.",
   "aliases": [
    "TFT_Augment_NoScoutNoPivot"
   ]
@@ -2775,6 +3126,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/onebufftwobuff_iii.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "붉은 덩굴정령, 푸른 파수꾼, 챔피언 복제기를 1개씩 획득합니다.",
+  "desc_en_opgg": "Gain a Red Buff, a Blue Buff, and a Champion Duplicator.",
   "aliases": [
    "TFT_Augment_OneBuffTwoBuff"
   ]
@@ -2791,6 +3144,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/pandoras-bench-ii.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "라운드가 시작될 때마다 대기석 가장 오른쪽 3명의 챔피언이 동일한 단계의 무작위 챔피언으로 변신합니다. 4골드를 획득합니다.",
+  "desc_en_opgg": "At the start of every round, champions on the 3 rightmost bench slots transform into random champions of the same cost. Gain 4 gold.",
   "aliases": [
    "TFT7_Augment_PandorasBench"
   ]
@@ -2807,6 +3162,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/pandora1.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "라운드 시작: 대기석의 아이템이 무작위로 변합니다. <br><br>무작위 조합 아이템 1개를 획득합니다.",
+  "desc_en_opgg": "Round start: items on your bench are randomized. <br><br>Gain 1 random component.",
   "aliases": []
  },
  {
@@ -2821,6 +3178,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/pandora2.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "라운드 시작: 대기석의 아이템이 무작위로 변합니다. <br><br>무작위 조합 아이템 2개를 획득합니다.",
+  "desc_en_opgg": "Round start: items on your bench are randomized. <br><br>Gain 2 random components.",
   "aliases": [
    "TFT9_Augment_PandorasItems2"
   ]
@@ -2837,6 +3196,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/pandora3.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "라운드 시작: 대기석의 아이템이 무작위로 변합니다. <br><br>찬란한 아이템 1개를 획득합니다.",
+  "desc_en_opgg": "Round start: items on your bench are randomized. <br><br>Gain 1 Radiant item.",
   "aliases": [
    "TFT9_Augment_PandorasRadiantBox"
   ]
@@ -2853,6 +3214,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/ascension1.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "전투 시작 12초 후 아군 유닛이 피해 증폭을 20% 얻습니다.",
+  "desc_en_opgg": "After 12 seconds of combat, your units gain 20% Damage Amp.",
   "aliases": [
    "TFT9_Augment_Commander_PartialAscension"
   ]
@@ -2869,6 +3232,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/patienceisavirtue_i.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "즉시 새로고침을 4회 얻습니다. 라운드마다, 지난 라운드에서 챔피언을 구매하지 않았다면 무료 새로고침을 1회 얻습니다.",
+  "desc_en_opgg": "Gain 4 rerolls now. Each round, gain 1 free reroll if you did not buy a champion last round.",
   "aliases": [
    "TFT_Augment_PatienceIsAVirtue"
   ]
@@ -2885,6 +3250,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/learning-from-experience-ii.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "플레이어 전투가 끝나고 승리 시 2의 경험치, 패배 시 3의 경험치를 획득합니다.",
+  "desc_en_opgg": "After player combat, gain 2 XP if you won or 3 XP if you lost.",
   "aliases": [
    "TFT9_Augment_LearningFromExperience2"
   ]
@@ -2901,6 +3268,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/pilfer_ii.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "라운드마다, 이전 전투에서 아군이 처음으로 처치한 챔피언의 1성 복사본 1명을 획득합니다. 이 방식을 통해 처음으로 21골드 가치의 챔피언을 획득하면 도적의 장갑을 획득합니다.",
+  "desc_en_opgg": "Each round, gain a 1-star copy of the first champion you killed last combat. The first time you gain 21 gold worth of champions in this way, gain a Thief's Gloves.",
   "aliases": [
    "TFT_Augment_Pilfer"
   ]
@@ -2917,6 +3286,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/plotarmor_ii.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "아군이 방어력 및 마법 저항력을 8 얻습니다. 체력이 50% 아래로 떨어지면 전투가 끝날 때까지 대신 40만큼 얻습니다.",
+  "desc_en_opgg": "Your team gains 8 Armor and Magic Resist. After falling below 50% Health, increase this to 40 for the rest of combat.",
   "aliases": [
    "TFT_Augment_PlotArmor"
   ]
@@ -2933,6 +3304,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/portableforge2.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "유물 4개 중 1개를 선택합니다. 유물은 고유한 효과를 지닌 강력한 아이템입니다.",
+  "desc_en_opgg": "Choose 1 of 4 Artifacts. Artifacts are more powerful items with a unique effect.",
   "aliases": [
    "TFT6_Augment_PortableForge"
   ]
@@ -2949,6 +3322,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/prismaticdestiny_iii.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "무작위 프리즘 증강을 얻고 4골드를 획득합니다.",
+  "desc_en_opgg": "Gain a random Prismatic Augment and 4 gold.",
   "aliases": [
    "TFT_Augment_PrismaticDestiny"
   ]
@@ -2965,6 +3340,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/prismaticdestiny_iii.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "무작위 프리즘 증강을 얻고 7골드를 획득합니다.",
+  "desc_en_opgg": "Gain a random Prismatic Augment and 7 gold.",
   "aliases": []
  },
  {
@@ -2979,6 +3356,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/goldenticket3.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "상점을 새로고침할 때마다 45% 확률로 무료 새로고침을 획득합니다.",
+  "desc_en_opgg": "Each time your shop is rerolled you have a 45% chance to gain a free reroll.",
   "aliases": [
    "TFT6_Augment_GachaAddict"
   ]
@@ -2995,6 +3374,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/promisedprotection_ii.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "수호자의 맹세를 1개 획득합니다. 수호자의 맹세를 장착한 유닛이 모든 요소로부터 얻는 마나가 20% 증가하고 최대 체력을 200 얻습니다.",
+  "desc_en_opgg": "Gain a Protector's Vow. Protector's Vow grants its holder 20% additional Mana from all sources and 200 max Health.",
   "aliases": []
  },
  {
@@ -3009,6 +3390,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/missing-t1.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "연승 및 연패 진행도를 두 배로 얻습니다. 2골드를 획득합니다.",
+  "desc_en_opgg": "You gain twice as much progress towards win and loss streaks. Gain 2 gold.",
   "aliases": []
  },
  {
@@ -3023,6 +3406,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/roll-the-dice-iii.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "찬란한 도적의 장갑 1개를 획득합니다. 이 아이템은 라운드마다 2개의 무작위 찬란한 아이템을 장착시킵니다.",
+  "desc_en_opgg": "Gain a Radiant Thief's Gloves item. This equips 2 random Radiant items every round.",
   "aliases": [
    "TFT9_Augment_RollTheDice"
   ]
@@ -3039,6 +3424,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/radiantrelic-iii.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "찬란한 아이템 5가지 중 1개 선택 자석 제거기 1개를 획득합니다.",
+  "desc_en_opgg": "Choose 1 of 5 Radiant Items. Gain a Magnetic Remover.",
   "aliases": [
    "TFT6_Augment_RadiantRelics"
   ]
@@ -3055,6 +3442,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/recombobulator-i.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "전장의 챔피언들이 1단계 더 높은 무작위 챔피언으로 영구히 바뀝니다. (최대 5단계) 자석 제거기 2개를 획득하고 무료 새로고침을 3회 얻습니다.",
+  "desc_en_opgg": "Champions on your board permanently transform into random champions 1 cost tier higher (max 5). Gain 2 Magnetic Removers and 3 free rerolls.",
   "aliases": [
    "TFT6_Augment_Recombobulator"
   ]
@@ -3071,6 +3460,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/replication-ii.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "조합 아이템 3개 중 1개를 선택합니다. 다음 2라운드 동안, 해당 조합 아이템의 복사본을 1개씩 획득합니다.",
+  "desc_en_opgg": "Choose 1 of 3 components. For the next 2 rounds, gain a copy of that component.",
   "aliases": [
    "TFT_Augment_Replication"
   ]
@@ -3087,6 +3478,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/retribution_iii.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "정의의 손길 2개를 획득합니다. 정의의 손길을 장착한 아군이 <TFTKeyword>정밀</TFTKeyword> 및 치명타 확률 25%를 얻습니다.<br><br><rules>정밀: 스킬 피해에 치명타가 적용될 수 있습니다. 추가 정밀 획득 시 치명타 피해량이 10% 증가합니다.</rules>",
+  "desc_en_opgg": "Gain 2 Hands of Justice. Allies equipped with Hand of Justice gain <TFTKeyword>Precision</TFTKeyword> and 25% Critical Strike Chance.<br><br><rules>Precision: Ability damage can critically strike. Additional Precision grants 10% Critical Strike Damage.</rules>",
   "aliases": [
    "TFT_Augment_Retribution"
   ]
@@ -3103,6 +3496,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/rolling-for-days-i.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "무료 상점 새로고침을 10회 얻습니다.",
+  "desc_en_opgg": "Gain 10 free Shop rerolls.",
   "aliases": []
  },
  {
@@ -3117,6 +3512,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/salvage2.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "지금 무작위 완성 아이템 1개를 획득하고 플레이어 대상 전투 8회 후에 조합 아이템 1개를 획득합니다. 챔피언을 판매하면 완성 아이템이 조합 아이템으로 분해됩니다. (전략가의 아이템 및 상징 제외)",
+  "desc_en_opgg": "Gain 1 random completed item now, and 1 component after 8 player combats. Selling champions breaks completed items into components (excluding Tactician's items and Emblems).",
   "aliases": [
    "TFT6_Augment_SalvageBin",
    "TFT6_Augment_SalvageBinHR"
@@ -3134,6 +3531,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/salvage2.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "지금 무작위 완성 아이템 1개를 획득하고 플레이어 대상 전투 4회 후에 조합 아이템 1개를 획득합니다. 챔피언을 판매하면 완성 아이템이 조합 아이템으로 분해됩니다. (전략가의 아이템 및 상징 제외)",
+  "desc_en_opgg": "Gain 1 random completed item now, and 1 component after 4 player combats. Selling champions breaks completed items into components (excluding Tactician's items and Emblems).",
   "aliases": [
    "TFT8_Augment_SalvageBinPlus"
   ]
@@ -3150,6 +3549,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/seraphimsstaff_ii.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "대천사의 지팡이 1개를 획득합니다. 장착 유닛의 주문력이 90% 이상일 경우 대천사의 지팡이가 마나 재생을 2 추가로 부여합니다.",
+  "desc_en_opgg": "Gain an Archangel's Staff. Archangel's Staff grants 2 additional Mana Regen if its holder has 90% or more Ability Power.",
   "aliases": [
    "TFT_Augment_SeraphimsStaff"
   ]
@@ -3166,6 +3567,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/shimmerscaleessence_iii.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "거물의 갑옷 1개를 획득합니다. 플레이어 대상 전투 8회 후 도박꾼의 칼날 1개를 획득합니다.",
+  "desc_en_opgg": "Gain a Mogul's Mail. After 8  player combats, gain a Gamblers Blade.",
   "aliases": [
    "TFT_Augment_ShimmerscaleEssence"
   ]
@@ -3182,6 +3585,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/silver-ticket-iii.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "레벨 업하면 레벨+1만큼 무료 상점 새로고침 기회를 얻습니다. 6골드를 획득합니다.",
+  "desc_en_opgg": "When you level up, gain a number of free shop refreshes equal to your level +1. Gain 6 gold.",
   "aliases": [
    "TFT9_Augment_HighEndSector",
    "TFT9_Augment_Legend_HighEndSector"
@@ -3199,6 +3604,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/silverdestiny_i.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "무작위 실버 증강 1개를 얻고 2골드를 획득합니다.",
+  "desc_en_opgg": "Gain a random Silver Augment and 2 gold.",
   "aliases": [
    "TFT_Augment_SilverDestiny"
   ]
@@ -3215,6 +3622,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/silverdestiny_i.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "무작위 실버 증강 1개를 얻고 4골드를 획득합니다.",
+  "desc_en_opgg": "Gain a random Silver Augment and 4 gold.",
   "aliases": [
    "TFT_Augment_SilverDestinyPlus"
   ]
@@ -3231,6 +3640,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/silverdestiny_i.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "무작위 실버 증강 1개를 얻고 7골드를 획득합니다.",
+  "desc_en_opgg": "Gain a random Silver Augment and 7 gold.",
   "aliases": [
    "TFT_Augment_SilverDestinyPlusPlus"
   ]
@@ -3247,6 +3658,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/silver-spoon-i.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "경험치를 10 얻습니다.",
+  "desc_en_opgg": "Gain 10 XP.",
   "aliases": [
    "TFT9_Augment_SilverSpoon"
   ]
@@ -3263,6 +3676,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/slammin_ii.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "3골드를 획득합니다. 플레이어 대상 전투를 마친 후 대기석에 아이템(소모품 제외)이 없을 때마다 2의 경험치를 획득합니다.",
+  "desc_en_opgg": "Gain 3 gold. After each player combat, if there are no items on your bench (other than consumables), gain 2 XP.",
   "aliases": [
    "TFT11_Augment_Slammin"
   ]
@@ -3279,6 +3694,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/slammin_ii.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "즉시 4골드를 획득하고 경험치를 10 얻습니다. 플레이어 대상 전투를 마친 후 대기석에 아이템(소모품 제외)이 없을 때마다 2의 경험치를 획득합니다.",
+  "desc_en_opgg": "Gain 4 gold and 10 XP now. After each player combat, if there are no items on your bench (other than consumables), gain 2 XP.",
   "aliases": [
    "TFT11_Augment_Slammin_Plus"
   ]
@@ -3295,6 +3712,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/slice_of_life_i.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "스테이지당 두 번 무작위 챔피언 1명을 획득합니다. 스테이지마다 무작위 챔피언의 단계가 증가합니다. 이 효과는 5단계 챔피언 1명을 획득한 후 종료됩니다.",
+  "desc_en_opgg": "Twice per stage, gain a random champion. Its cost increases by Stage. This effect ends after receiving 1 5-cost champion.",
   "aliases": [
    "TFT_Augment_SliceOfLife"
   ]
@@ -3311,6 +3730,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/slightlymagicroll_i.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "주사위를 굴립니다. 결과에 따라 보상을 획득합니다.",
+  "desc_en_opgg": "Roll a die. Gain rewards based on the number rolled.",
   "aliases": [
    "TFT_Augment_MagicRollMinus"
   ]
@@ -3327,6 +3748,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/smallgrabbag_i.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "무작위 조합 아이템 2개를 획득합니다.",
+  "desc_en_opgg": "Gain 2 random item components.",
   "aliases": [
    "TFT_Augment_SmallGrabBag"
   ]
@@ -3343,6 +3766,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/sololeveling_ii.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "다음 전투 5회 동안 1의 팀 규모로 고정되지만, 배치하는 챔피언의 능력치가 크게 증가합니다. 해당 챔피언이 적을 처치할 때마다 경험치를 1 얻습니다. 이후 조합 아이템 2개를 획득합니다.",
+  "desc_en_opgg": "For the next 5 combats, your team size is 1, but the champion you field has massively increased stats. Gain 1 XP for every kill they get. Afterwards, gain 2 item components.",
   "aliases": [
    "TFT_Augment_SoloLeveling"
   ]
@@ -3359,6 +3784,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/soloplate_ii.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "가고일 돌갑옷 1개를 획득합니다. 가고일 돌갑옷을 장착한 아군이 가로 열에 혼자 있는 상태로 전투를 시작할 경우 최대 체력을 17% 얻습니다.",
+  "desc_en_opgg": "Gain a Gargoyle Stoneplate. Allies holding Gargoyle Stoneplate gain 17% max Health if they start combat alone in their row.",
   "aliases": [
    "TFT_Augment_ItemGargoyleStoneplate"
   ]
@@ -3375,6 +3802,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/awakenedsoul_iii.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "전투 시작: 아군이 10초 동안 매초 공격력 및 주문력을 1.5% 얻습니다. 최대 중첩 시 12%의 추가 고정 피해를 입힙니다.",
+  "desc_en_opgg": "Combat start: Your team gains 1.5% Attack Damage and Ability Power per second for 10 seconds. At max stacks, deal 12% bonus true damage.",
   "aliases": [
    "TFT_Augment_AwakenedSoul"
   ]
@@ -3391,6 +3820,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/speedydoublekill_ii.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "구인수의 격노검을 획득합니다. 플레이어 2명이 탈락하면 40골드를 획득합니다.<br><br><rules>2021 운명 챔피언십</rules>",
+  "desc_en_opgg": "Gain a Guinsoo's Rageblade. When 2 players are eliminated, gain 40 gold.<br><br><rules>Fates Championship, 2021</rules>",
   "aliases": [
    "TFT_Augment_SpeedyDoubleKill"
   ]
@@ -3407,6 +3838,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/spiritofredemption_ii.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "정령의 형상 1개를 획득합니다. 5초마다 정령의 형상이 1칸 내 아군의 체력을 해당 아군 잃은 체력의 7.5%만큼 회복합니다.",
+  "desc_en_opgg": "Gain a Spirit Visage. Every 5 seconds, Spirit Visage heals allies within 1 hex for 7.5% of their missing Health.",
   "aliases": [
    "TFT_Augment_ItemSpiritVisage"
   ]
@@ -3423,6 +3856,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/spreadingroots_ii.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "무작위 상징 1개를 획득합니다. 전투 3회 후 1개 더 획득합니다.",
+  "desc_en_opgg": "Gain a random Emblems. After 3 combats, gain another.",
   "aliases": [
    "TFT_Augment_SpreadingRoots"
   ]
@@ -3439,6 +3874,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/spreadingroots_ii.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "무작위 상징 2개와 2골드를 획득합니다.",
+  "desc_en_opgg": "Gain 2 random Emblems and 2 gold.",
   "aliases": [
    "TFT_Augment_SpreadingRootsPlus"
   ]
@@ -3455,6 +3892,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/rodsmith_ii.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "쓸데없이 큰 지팡이로 제작되는 무작위 완성 아이템 2개를 획득합니다.",
+  "desc_en_opgg": "Gain  2 random completed items that build from Needlessly Large Rod.",
   "aliases": [
    "TFT_Augment_ForgeRod"
   ]
@@ -3471,6 +3910,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/standunited1.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "아군 유닛이 고유 특성이 아닌 전체적으로 활성화된 특성 하나당 1.5%의 공격력과 1.5%의 주문력을 획득합니다.",
+  "desc_en_opgg": "Your units gain 1.5% Attack Damage and 1.5% Ability Power for each non-unique Trait active across your team.",
   "aliases": [
    "TFT6_Augment_Diversify1"
   ]
@@ -3487,6 +3928,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/sweettreats_iii.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "유물 모루 1개를 획득합니다. 아군이 장착한 아이템 하나당 16의 체력을 얻습니다.",
+  "desc_en_opgg": "Gain an Artifact anvil. Your team gains 16 Health for each item equipped on champions.",
   "aliases": [
    "TFT_Augment_SweetTreats"
   ]
@@ -3503,6 +3946,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/bladeoverflow_iii.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "B.F. 대검 4개를 획득합니다. B.F. 대검이 공격 속도를 +4% 제공합니다.",
+  "desc_en_opgg": "Gain 4 BF Swords. Your BF Swords grant +4% Attack Speed.",
   "aliases": [
    "TFT_Augment_SwordOverflow"
   ]
@@ -3519,6 +3964,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/swordsmith_ii.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "B.F. 대검으로 제작되는 무작위 완성 아이템 2개를 획득합니다.",
+  "desc_en_opgg": "Gain 2 random completed items that build from B.F. Sword.",
   "aliases": [
    "TFT_Augment_ForgeSword"
   ]
@@ -3535,6 +3982,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/tacticianskitchen_iii.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "무작위 상징 1개를 획득합니다. 3라운드 후 전략가의 망토 1개를 획득합니다.",
+  "desc_en_opgg": "Gain a random Emblem. After 3 rounds, gain a Tactician's Cape.",
   "aliases": [
    "TFT_Augment_TacticiansKitchen"
   ]
@@ -3551,6 +4000,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/building-an-army-i.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "하급 챔피언 복제기 1개를 획득합니다. 플레이어 대상 전투 5회 후 1개 더 획득합니다.<br><br><rules>3단계 이하의 챔피언을 복제할 수 있습니다.</rules>",
+  "desc_en_opgg": "Gain a Lesser Champion Duplicator. Gain another after 5 player combats.<br><br><rules>This item allows you to copy a 3-cost or less champion.</rules>",
   "aliases": [
    "TFT9_Augment_ArmyBuilding"
   ]
@@ -3567,6 +4018,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/thegoldendragon_ii.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "거물의 갑옷 1개를 획득합니다. 거물의 갑옷을 장착한 챔피언이 +1개의 팀 슬롯을 차지하지만 체력을 600, 내구력을 15% 얻습니다.<br><br><rules>거물의 갑옷은 골드를 제공하고 전투 시 위력도 올려줍니다.</rules><br><rules>2022 용의 땅 챔피언십</rules>",
+  "desc_en_opgg": "Gain a Mogul's Mail. Champions holding Mogul's Mail take up +1 team slot but gain 600 Health and 15% Durability.<br><br><rules>Mogul's Mail gives gold as well as combat power.</rules><br><rules>Dragonlands Championship, 2022</rules>",
   "aliases": [
    "TFT_Augment_TheGoldenDragon"
   ]
@@ -3583,6 +4036,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/thetower_i.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "거대 훈련 봇을 획득합니다. 훈련 봇은 4초마다 가장 가까운 적 3명에게 전기 충격을 가해 최대 체력의 5%에 해당하는 고정 피해를 입힙니다.",
+  "desc_en_opgg": "Gain a giant Training Dummy. Every 4 seconds, it zaps the 3 nearest enemies dealing 5% max Health true damage.",
   "aliases": [
    "TFT_Augment_TheTower"
   ]
@@ -3599,6 +4054,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/thetraittree_iii.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "무작위 상징 3개와 2골드를 획득합니다.",
+  "desc_en_opgg": "Gain 3 random Emblems and 2 gold.",
   "aliases": [
    "TFT_Augment_TraitTree"
   ]
@@ -3615,6 +4072,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/thetraittree_iii.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "무작위 상징 3개, 재조합기 1개, 4골드를 획득합니다.",
+  "desc_en_opgg": "Gain 3 random Emblems, a Reforger, and 4 gold.",
   "aliases": [
    "TFT_Augment_TraitTreePlus"
   ]
@@ -3631,6 +4090,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/timeskip_ii.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "다음 3라운드 동안 상점이 비활성화됩니다. 이후 경험치를 32 얻습니다.",
+  "desc_en_opgg": "Disable your Shop for the next 3 rounds. Then gain 32 XP.",
   "aliases": [
    "TFT_Augment_TimeSkip"
   ]
@@ -3647,6 +4108,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/tons-of-stats-ii.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "아군이 체력을 44, 공격력을 4%, 주문력을 4%, 방어력을 4, 마법 저항력을 4, 공격 속도를 4%, 마나를 4 얻습니다.",
+  "desc_en_opgg": "Your team gains 44 Health, 4% Attack Damage, 4% Ability Power, 4 Armor, 4 Magic Resist, 4% Attack Speed, and 4 Mana.",
   "aliases": [
    "DA_TonsOfStatsII",
    "TFT9_Augment_TonsOfStats"
@@ -3664,6 +4127,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/tons-of-stats-ii.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "아군이 체력을 88, 공격력을 8%, 주문력을 8%, 방어력을 8, 마법 저항력을 8, 공격 속도를 8%, 마나를 8 얻습니다.",
+  "desc_en_opgg": "Your team gains 88 Health, 8% Attack Damage, 8% Ability Power, 8 Armor, 8 Magic Resist, 8% Attack Speed, and 8 Mana.",
   "aliases": [
    "DA_TonsOfStatsI",
    "TFT9_Augment_TonsOfStats"
@@ -3681,6 +4146,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/trade2.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "라운드마다 무료 상점 새로고침을 획득합니다. 2골드를 획득합니다.",
+  "desc_en_opgg": "Gain a free Shop reroll every round. Gain 2 gold.",
   "aliases": [
    "TFT6_Augment_TradeSector"
   ]
@@ -3697,6 +4164,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/trade2.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "라운드마다 무료 상점 새로고침을 획득합니다. 8골드를 획득합니다.",
+  "desc_en_opgg": "Gain a free Shop reroll every round. Gain 8 gold.",
   "aliases": []
  },
  {
@@ -3711,6 +4180,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/missing-t3.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "무작위 상징 1개를 획득합니다. 플레이어 대상 전투에서 고유 특성이 아닌 특성 2개를 배치하면 보상을 획득합니다. 이후 요구 특성 개수 및 보상이 증가합니다.",
+  "desc_en_opgg": "Gain a random emblem. After fielding 2 non-unique traits in a player combat, gain a reward. Then increase the number of traits needed and the size of the reward.",
   "aliases": []
  },
  {
@@ -3725,6 +4196,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/twinguardians_i.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "전방에 아군이 정확히 2명 있다면 해당 아군이 체력을 100 방어력을 35, 마법 저항력을 35 얻습니다.",
+  "desc_en_opgg": "If you have exactly 2 allies in your first row, grant them 100 Health, 35 Armor, and 35 Magic Resist.",
   "aliases": [
    "TFT_Augment_TwinGuardians"
   ]
@@ -3741,6 +4214,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/ultrarapidfire_ii.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "뒤집개 1개를 획득합니다. 뒤집개 또는 프라이팬 아이템을 장착한 챔피언이 공격 속도를 20%, 마나 재생을 3 얻습니다.",
+  "desc_en_opgg": "Gain a Spatula. Champions holding Spatula or Frying Pan items gain 20% Attack Speed and 3 Mana Regen.",
   "aliases": [
    "TFT16_Augment_UltraRapidFire"
   ]
@@ -3757,6 +4232,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/upwardmobility_iii.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "경험치 구매 비용이 1 감소합니다. 레벨 업할 때마다 체력을 2, 무료 새로고침을 1회 얻습니다.",
+  "desc_en_opgg": "Buying XP costs 1 less. Gain 2 Health and 1 free reroll whenever you level up.",
   "aliases": [
    "TFT_Augment_UpwardMobility"
   ]
@@ -3773,6 +4250,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/urfs-grab-bag-iii.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "뒤집개 1개, 무작위 조합 아이템 3개, 5골드를 획득합니다.",
+  "desc_en_opgg": "Gain 1 Spatula, 3 random components, and 5 gold.",
   "aliases": [
    "TFT7_Augment_UrfsGrabBag2"
   ]
@@ -3789,6 +4268,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/missing-t1.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "챔피언이 특성을 공유하는 아군 하나당 공격력을 1.5%, 주문력을 1.5%, 방어력을 1.5, 마법 저항력을 1.5 얻습니다.",
+  "desc_en_opgg": "Champions gain 1.5% Attack Damage, 1.5% Ability Power, 1.5 Armor, and 1.5 Magic Resist for each ally that shares a trait with them.",
   "aliases": []
  },
  {
@@ -3803,6 +4284,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/missing-t2.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "챔피언이 특성을 공유하는 아군 하나당 공격력을 2%, 주문력을 2%, 방어력을 2, 마법 저항력을 2 얻습니다.",
+  "desc_en_opgg": "Champions gain 2% Attack Damage, 2% Ability Power, 2 Armor, and 2 Magic Resist for each ally that shares a trait with them.",
   "aliases": []
  },
  {
@@ -3817,6 +4300,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/missing-t3.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "챔피언이 특성을 공유하는 아군 하나당 공격력을 3.5%, 주문력을 3.5%, 방어력을 3.5, 마법 저항력을 3.5 얻습니다.",
+  "desc_en_opgg": "Champions gain 3.5% Attack Damage, 3.5% Ability Power, 3.5 Armor, and 3.5 Magic Resist for each ally that shares a trait with them.",
   "aliases": []
  },
  {
@@ -3831,6 +4316,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/wandoverflow_iii.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "쓸데없이 큰 지팡이 4개를 획득합니다. 쓸데없이 큰 지팡이가 공격 속도를 +5% 제공합니다.",
+  "desc_en_opgg": "Gain 4 Needlessly Large Rods. Your Needlessly Large Rods grant +5% Attack Speed.",
   "aliases": [
    "TFT_Augment_WandOverflow"
   ]
@@ -3847,6 +4334,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/warpath_ii.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "2단계 2성 챔피언 1명을 획득합니다. 플레이어에게 80의 피해를 입힌 후 고단계 챔피언과 아이템이 들어 있는 상자 1개를 획득합니다.",
+  "desc_en_opgg": "Gain a 2-star 2-cost champion. After dealing 80 player damage, gain a chest of high cost champions and items.",
   "aliases": [
    "TFT_Augment_Warpath"
   ]
@@ -3863,6 +4352,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/westicktogether_iii.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "무작위 상징 1개와 완성 아이템 모루 1개를 획득합니다. 해당 상징과 특성을 공유하는 아군이 공격 속도를 30% 얻습니다. 0 0<br><br><rules>2025 아케인의 세계로 전략가의 왕관</rules>",
+  "desc_en_opgg": "Gain a random Emblem and a completed item anvil. Allies that share a trait with that Emblem gain 30% Attack Speed. 0 0<br><br><rules>Into The Arcane Tactician's Crown, 2025</rules>",
   "aliases": [
    "TFT_Augment_WeStickTogether"
   ]
@@ -3879,6 +4370,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/worththewait_ii.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "무작위 1단계 챔피언 1명을 획득합니다. 게임이 끝날 때까지 해당 유닛의 복사본을 각 라운드 시작 시 획득합니다.",
+  "desc_en_opgg": "Gain a random 1-cost champion. Gain another copy of them at the start of each round for the rest of the game.",
   "aliases": [
    "TFT_Augment_WorthTheWaitGold"
   ]
@@ -3895,6 +4388,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/worththewait_iii.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "무작위 2단계 챔피언 복사본 2명을 획득합니다. 게임이 끝날 때까지 해당 유닛의 복사본을 각 라운드 시작 시 획득합니다.",
+  "desc_en_opgg": "Gain 2 copies of a random 2-cost champion. Gain another copy of them at the start of each round for the rest of the game.",
   "aliases": [
    "TFT_Augment_WorthTheWaitPrismatic"
   ]
@@ -3911,6 +4406,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/wovenmagic_iii.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "무작위 조합 아이템 1개를 획득합니다. 아군 챔피언이 마나를 2200 사용할 때마다 추가로 조합 아이템 1개를 획득합니다. (최대: 0/3)",
+  "desc_en_opgg": "Gain a random item component. Every 2200 Mana spent by your champions, grants an additional component (max: 0/3).",
   "aliases": [
    "TFT_Augment_TheVidalion"
   ]
@@ -3927,6 +4424,8 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/young-and-wild-and-free-i.tex",
   "set_native": true,
   "opgg_listed": true,
+  "desc_ko_opgg": "공동 선택 라운드에서 언제나 자유롭게 움직일 수 있습니다. 5골드를 획득합니다.",
+  "desc_en_opgg": "You can always move freely on Carousel rounds. Gain 5 gold.",
   "aliases": [
    "TFT9_Augment_YoungAndWildAndFree"
   ]
@@ -4076,7 +4575,8 @@
   "set_native": false,
   "opgg_listed": false,
   "aliases": [
-   "DA_BuildABud"
+   "DA_BuildABud",
+   "DA_ForgeAFriend"
   ]
  },
  {
@@ -4347,7 +4847,9 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/calculatedloss2.tex",
   "set_native": false,
   "opgg_listed": false,
-  "aliases": []
+  "aliases": [
+   "DA_CalculatedLoss"
+  ]
  },
  {
   "apiName": "TFT6_Augment_ClearMind",
@@ -4879,7 +5381,9 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/double-trouble-ii.tex",
   "set_native": false,
   "opgg_listed": false,
-  "aliases": []
+  "aliases": [
+   "DA_DoubleTrouble"
+  ]
  },
  {
   "apiName": "TFT7_Augment_AFK",
@@ -6476,7 +6980,9 @@
   "icon": "assets/maps/tft/icons/augments/hexcore/constructacompanion_iii.tex",
   "set_native": false,
   "opgg_listed": false,
-  "aliases": []
+  "aliases": [
+   "DA_ConstructACompanion"
+  ]
  },
  {
   "apiName": "TFT_Augment_CookingPot",
@@ -9102,6 +9608,102 @@
   "opgg_listed": false,
   "aliases": [
    "DA_WorththeWaitII"
+  ]
+ },
+ {
+  "apiName": "DA_18_FloraFatalisAugmentPlus",
+  "name_ko": "흡수하는 꽃",
+  "name_en": "Consuming Flora",
+  "tier": 2,
+  "tier_name": "gold",
+  "desc_ko": "치명적인 꽃 상징을 획득합니다. 해당 상징을 장착한 챔피언이 치명적인 꽃 특성 효과를 두 배로 받습니다. 3골드를 획득합니다.",
+  "desc_en": "Gain a Flora Fatalis emblem. The champion holding the emblem gains double benefits from the Flora Fatalis trait. Gain 3 gold.",
+  "associated_traits": [],
+  "icon": "https://c-tft-api.op.gg/img/set/18/tft-augment/Missing-T2.png",
+  "set_native": true,
+  "opgg_listed": true,
+  "desc_ko_opgg": "치명적인 꽃 상징을 획득합니다. 해당 상징을 장착한 챔피언이 치명적인 꽃 특성 효과를 두 배로 받습니다. 3골드를 획득합니다.",
+  "desc_en_opgg": "Gain a Flora Fatalis emblem. The champion holding the emblem gains double benefits from the Flora Fatalis trait. Gain 3 gold.",
+  "source": "opgg_mcp",
+  "aliases": [
+   "DA_18_FloraFatalisAugment"
+  ]
+ },
+ {
+  "apiName": "DA_CalculatedLoss",
+  "name_ko": "계산된 패배",
+  "name_en": "Calculated Loss",
+  "tier": 2,
+  "tier_name": "gold",
+  "desc_ko": "전투에서 패배한 후 2골드와 무료 상점 새로고침 1회를 획득합니다.",
+  "desc_en": "After losing your combat, gain 2 gold and a free Shop reroll.",
+  "associated_traits": [],
+  "icon": "https://c-tft-api.op.gg/img/set/18/tft-augment/CalculatedLoss2.png",
+  "set_native": true,
+  "opgg_listed": true,
+  "desc_ko_opgg": "전투에서 패배한 후 2골드와 무료 상점 새로고침 1회를 획득합니다.",
+  "desc_en_opgg": "After losing your combat, gain 2 gold and a free Shop reroll.",
+  "source": "opgg_mcp",
+  "aliases": [
+   "TFT6_Augment_CalculatedLoss"
+  ]
+ },
+ {
+  "apiName": "DA_ConstructACompanion",
+  "name_ko": "동료 제작",
+  "name_en": "Construct a Companion",
+  "tier": 2,
+  "tier_name": "gold",
+  "desc_ko": "다음에 구매하는 1단계 챔피언이 3성으로 변합니다. 2골드를 획득합니다.",
+  "desc_en": "The next 1-cost champion you buy is 3-star. Gain 2 gold.",
+  "associated_traits": [],
+  "icon": "https://c-tft-api.op.gg/img/set/18/tft-augment/ConstructaCompanion_III.png",
+  "set_native": true,
+  "opgg_listed": true,
+  "desc_ko_opgg": "다음에 구매하는 1단계 챔피언이 3성으로 변합니다. 2골드를 획득합니다.",
+  "desc_en_opgg": "The next 1-cost champion you buy is 3-star. Gain 2 gold.",
+  "source": "opgg_mcp",
+  "aliases": [
+   "TFT_Augment_ConstructACompanion"
+  ]
+ },
+ {
+  "apiName": "DA_DoubleTrouble",
+  "name_ko": "문제가 두 배",
+  "name_en": "Double Trouble",
+  "tier": 2,
+  "tier_name": "gold",
+  "desc_ko": "전장에 똑같은 챔피언이 정확히 2명 있다면 각각 공격력 및 주문력을 25%, 방어력 및 마법 저항력을 25 얻습니다. 챔피언을 3성으로 업그레이드하면 동일한 2성 챔피언을 1명 획득합니다.",
+  "desc_en": "When you field exactly 2 copies of a champion, they both gain 25% Attack Damage and Ability Power and 25 Armor, and Magic Resist. When you 3-star, gain a 2-star copy.",
+  "associated_traits": [],
+  "icon": "https://c-tft-api.op.gg/img/set/18/tft-augment/Double-Trouble-II.png",
+  "set_native": true,
+  "opgg_listed": true,
+  "desc_ko_opgg": "전장에 똑같은 챔피언이 정확히 2명 있다면 각각 공격력 및 주문력을 25%, 방어력 및 마법 저항력을 25 얻습니다. 챔피언을 3성으로 업그레이드하면 동일한 2성 챔피언을 1명 획득합니다.",
+  "desc_en_opgg": "When you field exactly 2 copies of a champion, they both gain 25% Attack Damage and Ability Power and 25 Armor, and Magic Resist. When you 3-star, gain a 2-star copy.",
+  "source": "opgg_mcp",
+  "aliases": [
+   "TFT6_Augment_Twins2"
+  ]
+ },
+ {
+  "apiName": "DA_ForgeAFriend",
+  "name_ko": "친구 만들기",
+  "name_en": "Forge A Friend",
+  "tier": 1,
+  "tier_name": "silver",
+  "desc_ko": "다음에 구매하는 1단계 챔피언이 3성으로 변합니다. 5골드를 획득합니다.",
+  "desc_en": "The next 1-cost champion you buy is 3-star. Gain 5 gold.",
+  "associated_traits": [],
+  "icon": "https://tft-api.op.gg/api/v3/meta/augment-icons/DA_ForgeAFriend.png",
+  "set_native": true,
+  "opgg_listed": true,
+  "desc_ko_opgg": "다음에 구매하는 1단계 챔피언이 3성으로 변합니다. 5골드를 획득합니다.",
+  "desc_en_opgg": "The next 1-cost champion you buy is 3-star. Gain 5 gold.",
+  "source": "opgg_mcp",
+  "aliases": [
+   "DA_BuildABud",
+   "TFT11_Augment_Buildabud"
   ]
  }
 ]

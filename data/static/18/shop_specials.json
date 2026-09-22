@@ -8,7 +8,8 @@
   "unique": false,
   "desc_ko": "8초 후 모든 적을 1.5초 동안 기절시킵니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "After 8 seconds, stun all enemies for 1.5 seconds."
  },
  {
   "apiName": "DA_18_AfterShock_Upgrade",
@@ -19,7 +20,8 @@
   "unique": false,
   "desc_ko": "8초 및 ?초 후 모든 적을 ?초 동안 기절시킵니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "After 8 and ? seconds, stun all enemies for ? seconds."
  },
  {
   "apiName": "DA_18_AllFives",
@@ -30,7 +32,8 @@
   "unique": false,
   "desc_ko": "상점을 새로고침해 모두 5단계 챔피언으로 채웁니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Reroll your shop with all 5-cost champions."
  },
  {
   "apiName": "DA_18_AllFives_Upgrade",
@@ -41,7 +44,8 @@
   "unique": false,
   "desc_ko": "상점을 새로고침해 모두 5단계 챔피언으로 채웁니다. ?골드를 획득합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Reroll your shop with all 5-cost champions. Gain ? gold."
  },
  {
   "apiName": "DA_18_AllFours",
@@ -52,7 +56,8 @@
   "unique": false,
   "desc_ko": "상점을 새로고침해 모두 4단계 챔피언으로 채웁니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Reroll your shop with all 4-cost champions."
  },
  {
   "apiName": "DA_18_AllFours_Upgrade",
@@ -63,7 +68,8 @@
   "unique": false,
   "desc_ko": "상점을 새로고침해 모두 4단계 챔피언으로 채웁니다. ?골드를 획득합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Reroll your shop with all 4-cost champions. Gain ? gold."
  },
  {
   "apiName": "DA_18_AllOnes",
@@ -74,7 +80,8 @@
   "unique": false,
   "desc_ko": "상점을 새로고침해 모두 1단계 챔피언으로 채웁니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Reroll your shop with all 1-cost champions."
  },
  {
   "apiName": "DA_18_AllOnes_Upgrade",
@@ -85,7 +92,8 @@
   "unique": false,
   "desc_ko": "상점을 새로고침해 모두 1단계 챔피언으로 채웁니다. ?골드를 획득합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Reroll your shop with all 1-cost champions. Gain ? Gold."
  },
  {
   "apiName": "DA_18_AllThrees",
@@ -96,7 +104,8 @@
   "unique": false,
   "desc_ko": "상점을 새로고침해 모두 3단계 챔피언으로 채웁니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Reroll your shop with all 3-cost champions."
  },
  {
   "apiName": "DA_18_AllThrees_Upgrade",
@@ -107,7 +116,8 @@
   "unique": false,
   "desc_ko": "상점을 새로고침해 모두 3단계 챔피언으로 채웁니다. ?골드를 획득합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Reroll your shop with all 3-cost champions. Gain ? gold."
  },
  {
   "apiName": "DA_18_AllTwos",
@@ -118,7 +128,8 @@
   "unique": false,
   "desc_ko": "상점을 새로고침해 모두 2단계 챔피언으로 채웁니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Reroll your shop with all 2-cost champions."
  },
  {
   "apiName": "DA_18_AllTwos_Upgrade",
@@ -129,7 +140,8 @@
   "unique": false,
   "desc_ko": "상점을 새로고침해 모두 2단계 챔피언으로 채웁니다. ?골드를 획득합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Reroll your shop with all 2-cost champions. Gain ? gold."
  },
  {
   "apiName": "DA_18_BackrowStar",
@@ -140,7 +152,8 @@
   "unique": false,
   "desc_ko": "무작위 후방 챔피언이 7초 동안 공격 속도를 85% 얻습니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "A random back row champion gains 85% Attack Speed for 7 seconds."
  },
  {
   "apiName": "DA_18_BackrowStar_Upgrade",
@@ -151,7 +164,8 @@
   "unique": false,
   "desc_ko": "무작위 후방 챔피언이 ?초 동안 공격 속도를 ?% 얻습니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "A random back row champion gains ?% Attack Speed for ? seconds."
  },
  {
   "apiName": "DA_18_BarkArmor",
@@ -162,7 +176,8 @@
   "unique": false,
   "desc_ko": "아군 챔피언이 10초 동안 150의 보호막을 얻습니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Your champions gain 150 shield for 10 seconds."
  },
  {
   "apiName": "DA_18_BarkArmor_Upgrade",
@@ -173,7 +188,8 @@
   "unique": false,
   "desc_ko": "아군 챔피언이 ?초 동안 ?의 보호막을 얻습니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Your champions gain ? shield for ? seconds."
  },
  {
   "apiName": "DA_18_BloodMoney",
@@ -184,7 +200,8 @@
   "unique": false,
   "desc_ko": "챔피언을 처치할 때마다 ?골드를 획득합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Gain ? gold for every champion you kill."
  },
  {
   "apiName": "DA_18_BloodMoney_Upgrade",
@@ -195,7 +212,8 @@
   "unique": false,
   "desc_ko": "챔피언을 처치할 때마다 ?골드를 획득합니다. ?골드를 획득합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Gain ? gold for every champion you kill. Gain ? gold."
  },
  {
   "apiName": "DA_18_BronzeSpoon",
@@ -206,7 +224,8 @@
   "unique": false,
   "desc_ko": "경험치를 4 얻습니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Gain 4 XP."
  },
  {
   "apiName": "DA_18_BronzeSpoon_Upgrade",
@@ -217,7 +236,8 @@
   "unique": false,
   "desc_ko": "경험치를 ? 얻습니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Gain ? XP."
  },
  {
   "apiName": "DA_18_CircleofElders",
@@ -228,7 +248,8 @@
   "unique": false,
   "desc_ko": "5단계 챔피언을 각각 하나씩 획득합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Gain one of each 5-cost champion."
  },
  {
   "apiName": "DA_18_CircleofElders_Upgrade",
@@ -239,7 +260,8 @@
   "unique": false,
   "desc_ko": "5단계 챔피언을 각각 하나씩 획득합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Gain one of each 5-cost champion."
  },
  {
   "apiName": "DA_18_Counterspell",
@@ -250,7 +272,8 @@
   "unique": false,
   "desc_ko": "모든 적이 다음 스킬 사용 전까지 최대 마나가 15 증가합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Increase all enemies' Max Mana by 15 until their next cast."
  },
  {
   "apiName": "DA_18_Counterspell_Prismatic",
@@ -261,7 +284,8 @@
   "unique": false,
   "desc_ko": "모든 적이 다음 스킬 사용 전까지 최대 마나가 ? 증가합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Increase all enemies' Max Mana by ? until their next cast."
  },
  {
   "apiName": "DA_18_Counterspell_Upgrade",
@@ -272,7 +296,8 @@
   "unique": false,
   "desc_ko": "모든 적이 다음 스킬 사용 전까지 최대 마나가 ? 증가합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Increase all enemies' Max Mana by ? until their next cast."
  },
  {
   "apiName": "DA_18_EarlyFix",
@@ -283,7 +308,8 @@
   "unique": false,
   "desc_ko": "아이템 재조합기 1개를 획득합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Gain 1 Item Reforger."
  },
  {
   "apiName": "DA_18_EarlyFix_Upgrade",
@@ -294,7 +320,8 @@
   "unique": false,
   "desc_ko": "아이템 재조합기 ?개를 획득합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Gain ? Item Reforgers."
  },
  {
   "apiName": "DA_18_Experienced",
@@ -305,7 +332,8 @@
   "unique": false,
   "desc_ko": "경험치를 2 얻습니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Gain 2 XP."
  },
  {
   "apiName": "DA_18_Experienced_Upgrade",
@@ -316,7 +344,8 @@
   "unique": false,
   "desc_ko": "경험치를 ? 얻습니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Gain ? XP."
  },
  {
   "apiName": "DA_18_Fellowship",
@@ -327,7 +356,8 @@
   "unique": false,
   "desc_ko": "챔피언이 인접한 아군 하나당 최대 체력의 4%에 해당하는 보호막과 피해 증폭을 4% 얻습니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Champions gain 4% Max Health Shield and 4% Damage Amp per adjacent ally."
  },
  {
   "apiName": "DA_18_Fellowship_Upgrade",
@@ -338,7 +368,8 @@
   "unique": false,
   "desc_ko": "챔피언이 인접한 아군 하나당 최대 체력의 ?%에 해당하는 보호막과 피해 증폭을 ?% 얻습니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Champions gain ?% Max Health Shield and ?% Damage Amp per adjacent ally."
  },
  {
   "apiName": "DA_18_Fertilize",
@@ -349,7 +380,8 @@
   "unique": false,
   "desc_ko": "사망하는 적 하나당 경험치를 ? 얻습니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Gain ? XP for each enemy that dies."
  },
  {
   "apiName": "DA_18_Fertilize_Upgrade",
@@ -360,7 +392,8 @@
   "unique": false,
   "desc_ko": "사망하는 적 하나당 경험치를 ? 얻습니다. 경험치를 ? 얻습니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Gain ? XP for each enemy that dies. Gain ? XP."
  },
  {
   "apiName": "DA_18_FieldofMice",
@@ -371,7 +404,8 @@
   "unique": false,
   "desc_ko": "지난 라운드에 배치한 1단계 유닛 한 종류당 소형 챔피언 복제기 1개를 획득합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Gain a Tiny Champion Duplicator for each unique one-cost fielded last round."
  },
  {
   "apiName": "DA_18_FieldofMice_Upgrade",
@@ -382,7 +416,8 @@
   "unique": false,
   "desc_ko": "지난 라운드에 배치한 1단계 챔피언 한 종류당 소형 챔피언 복제기 1개 및 1골드를 획득합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Gain a Tiny Duplicator and a gold for each unique 1-cost champion you fielded last round."
  },
  {
   "apiName": "DA_18_ForestMage",
@@ -393,7 +428,8 @@
   "unique": false,
   "desc_ko": "상점을 수호령으로 채웁니다. 하나만 구매할 수 있습니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Fill your shop with Wisps. You can only buy one."
  },
  {
   "apiName": "DA_18_ForestMage_Upgrade",
@@ -404,7 +440,8 @@
   "unique": false,
   "desc_ko": "상점을 업그레이드된 수호령으로 채웁니다. 하나만 구매할 수 있습니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Fill your shop with upgraded Wisps. You can only buy one."
  },
  {
   "apiName": "DA_18_Freeroller",
@@ -415,7 +452,8 @@
   "unique": false,
   "desc_ko": "새로고침을 2회 얻습니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Gain 2 rerolls."
  },
  {
   "apiName": "DA_18_Freeroller_Upgrade",
@@ -426,7 +464,8 @@
   "unique": false,
   "desc_ko": "새로고침을 ?회 얻습니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Gain ? rerolls."
  },
  {
   "apiName": "DA_18_GiantGrowth",
@@ -437,7 +476,8 @@
   "unique": false,
   "desc_ko": "가장 체력이 높은 아군 유닛이 성장하여 체력을 ? 얻습니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Your highest Health unit grows, gaining ? Health."
  },
  {
   "apiName": "DA_18_GiantGrowth_Upgrade",
@@ -448,7 +488,8 @@
   "unique": false,
   "desc_ko": "가장 체력이 높은 아군 유닛 ?명이 성장하여 체력을 ? 얻습니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Your ? highest Health units grow, gaining ? Health."
  },
  {
   "apiName": "DA_18_HeatedRivalry",
@@ -459,7 +500,8 @@
   "unique": false,
   "desc_ko": "렝가 또는 카직스를 획득합니다. 해당 챔피언이 처치 관여를 ?회 얻습니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Gain a Rengar or a Kha'Zix. They gain ? takedowns."
  },
  {
   "apiName": "DA_18_HeatedRivalry_Upgrade",
@@ -470,7 +512,8 @@
   "unique": false,
   "desc_ko": "렝가 또는 카직스를 획득합니다. 해당 챔피언이 처치 관여를 ?회 얻습니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Gain a Rengar or a Kha'Zix. They gain ? takedowns."
  },
  {
   "apiName": "DA_18_HeroicSacrifice",
@@ -481,7 +524,8 @@
   "unique": false,
   "desc_ko": "가장 강한 아군 챔피언 3명이 영웅적인 힘을 얻지만, 다른 아군이 희생됩니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Your 3 strongest Champions gain HEROIC POWER, but other allies are sacrificed."
  },
  {
   "apiName": "DA_18_HeroicSacrifice_Upgrade",
@@ -492,7 +536,8 @@
   "unique": false,
   "desc_ko": "가장 강한 아군 챔피언 3명이 영웅적인 힘을 얻지만, 다른 아군이 희생됩니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Your 3 strongest Champions gain HEROIC POWER, but other allies are sacrificed."
  },
  {
   "apiName": "DA_18_Hummingbird",
@@ -503,7 +548,8 @@
   "unique": false,
   "desc_ko": "가장 공격 속도가 높은 아군이 작아지며 공격 속도를 20% 얻습니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Your highest Attack Speed unit shrinks, gaining 20% Attack Speed."
  },
  {
   "apiName": "DA_18_Hummingbird_Prismatic",
@@ -514,7 +560,8 @@
   "unique": false,
   "desc_ko": "가장 공격 속도가 높은 아군 ?명이 작아지며 공격 속도를 ?% 얻습니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Your ? highest Attack Speed units shrink, gaining ?% Attack Speed."
  },
  {
   "apiName": "DA_18_Hummingbird_Upgrade",
@@ -525,7 +572,8 @@
   "unique": false,
   "desc_ko": "가장 공격 속도가 높은 아군이 작아지며 공격 속도를 ?% 얻습니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Your highest Attack Speed unit shrinks, gaining ?% Attack Speed."
  },
  {
   "apiName": "DA_18_Infliction",
@@ -536,7 +584,8 @@
   "unique": false,
   "desc_ko": "적에게 8초 동안 둔화, 화상, 파쇄 및 파열을 적용합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Slow, Burn, Shred, and Sunder enemies for 8 seconds."
  },
  {
   "apiName": "DA_18_Infliction_Upgrade",
@@ -547,7 +596,8 @@
   "unique": false,
   "desc_ko": "적에게 ?초 동안 둔화, 화상, 파쇄 및 파열을 적용합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Slow, Burn, Shred, and Sunder enemies for ? seconds."
  },
  {
   "apiName": "DA_18_KillingFrenzy",
@@ -558,7 +608,8 @@
   "unique": false,
   "desc_ko": "전사가 체력이 12% 아래인 대상을 처형합니다. 처치 시 공격 속도를 ?% 얻습니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Fighters execute targets under 12% Health. They gain ?% Attack Speed on kill."
  },
  {
   "apiName": "DA_18_KillingFrenzy_Upgrade",
@@ -569,7 +620,8 @@
   "unique": false,
   "desc_ko": "전사가 체력이 15% 아래인 대상을 처형합니다. 처치 시 공격 속도를 ?% 얻습니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Fighters execute targets under 15% Health. They gain ?% Attack Speed on kill."
  },
  {
   "apiName": "DA_18_LifeDebt",
@@ -580,7 +632,8 @@
   "unique": false,
   "desc_ko": "잃은 플레이어 체력 ?마다 ?골드를 획득합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Gain ? gold for every ? missing Player Health."
  },
  {
   "apiName": "DA_18_LifeDebt_Upgrade",
@@ -591,7 +644,8 @@
   "unique": false,
   "desc_ko": "잃은 플레이어 체력 ?마다 ?골드를 획득합니다. 이후 체력을 ? 회복합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Gain ? gold for every ? missing Player Health. Then heal ? Health."
  },
  {
   "apiName": "DA_18_LightningStorm",
@@ -602,7 +656,8 @@
   "unique": false,
   "desc_ko": "1초마다 적 1명에게 최대 체력의 5%에 해당하는 고정 피해를 입힙니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Every 1 second deal 5% Max Health true damage to an enemy."
  },
  {
   "apiName": "DA_18_LightningStorm_Prismatic",
@@ -613,7 +668,8 @@
   "unique": false,
   "desc_ko": "?초마다 적 1명에게 최대 체력의 ?%에 해당하는 고정 피해를 입힙니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Every ? seconds deal ?% Max Health true damage to an enemy."
  },
  {
   "apiName": "DA_18_LightningStorm_Upgrade",
@@ -624,7 +680,8 @@
   "unique": false,
   "desc_ko": "?초마다 적 1명에게 최대 체력의 ?%에 해당하는 고정 피해를 입힙니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Every ? seconds deal ?% Max Health true damage to an enemy."
  },
  {
   "apiName": "DA_18_LightningStrike",
@@ -635,7 +692,8 @@
   "unique": false,
   "desc_ko": "모든 적에게 최대 체력의 10%만큼 고정 피해를 입힙니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Deal 10% Max Health true damage to all enemies."
  },
  {
   "apiName": "DA_18_LightningStrike_Upgrade",
@@ -646,7 +704,8 @@
   "unique": false,
   "desc_ko": "모든 적에게 최대 체력의 ?%만큼 고정 피해를 입힙니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Deal ?% Max Health true damage to all enemies."
  },
  {
   "apiName": "DA_18_LostTravelers",
@@ -657,7 +716,8 @@
   "unique": false,
   "desc_ko": "3골드 가치의 무작위 챔피언을 획득합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Gain 3 gold worth of random champions."
  },
  {
   "apiName": "DA_18_LostTravelers_Upgrade",
@@ -668,7 +728,8 @@
   "unique": false,
   "desc_ko": "4골드 가치의 무작위 챔피언을 획득합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Gain 4 gold worth of random champions."
  },
  {
   "apiName": "DA_18_MajorPolymorph",
@@ -679,7 +740,8 @@
   "unique": false,
   "desc_ko": "보유한 무작위 4단계 유닛 1명이 영구히 5단계로 변합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "A random 4-cost you own permanently transforms into a 5-cost."
  },
  {
   "apiName": "DA_18_MajorPolymorph_Upgrade",
@@ -690,7 +752,8 @@
   "unique": false,
   "desc_ko": "보유한 별 레벨이 가장 높은 4단계 유닛 1명이 영구히 5단계로 변합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "The highest star level 4-cost you own permanently transforms into a 5-cost."
  },
  {
   "apiName": "DA_18_MercenaryForce",
@@ -701,7 +764,8 @@
   "unique": false,
   "desc_ko": "보유한 ?골드마다 피해 증폭을 3% 얻습니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Gain 3% Damage Amp for every ? gold you have."
  },
  {
   "apiName": "DA_18_MercenaryForce_Upgrade",
@@ -712,7 +776,8 @@
   "unique": false,
   "desc_ko": "보유한 ?골드마다 피해 증폭을 ?% 얻습니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Gain ?% Damage Amp for every ? gold you have."
  },
  {
   "apiName": "DA_18_MinorPolymorph",
@@ -723,7 +788,8 @@
   "unique": false,
   "desc_ko": "보유한 무작위 1단계 유닛 1명이 영구히 2단계로 변합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "A random 1-cost you own permanently transforms into a 2-cost."
  },
  {
   "apiName": "DA_18_MinorPolymorph_Upgrade",
@@ -734,7 +800,8 @@
   "unique": false,
   "desc_ko": "보유한 별 레벨이 가장 높은 1단계 유닛 1명이 영구히 2단계로 변합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "The highest star level 1-cost you own permanently transforms into a 2-cost."
  },
  {
   "apiName": "DA_18_Mitosis",
@@ -745,7 +812,8 @@
   "unique": false,
   "desc_ko": "소형 챔피언 복제기 1개를 획득합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Gain a Tiny Champion Duplicator."
  },
  {
   "apiName": "DA_18_Mitosis_Upgrade",
@@ -756,7 +824,8 @@
   "unique": false,
   "desc_ko": "소형 챔피언 복제기 1개를 획득합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Gain a Tiny Champion Duplicator."
  },
  {
   "apiName": "DA_18_Moonrise",
@@ -767,7 +836,8 @@
   "unique": false,
   "desc_ko": "8초 후 달빛 효과가 ?% 증가합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "After 8 seconds, increase Lunar's effects by ?%."
  },
  {
   "apiName": "DA_18_MoonriseUpgrade",
@@ -778,7 +848,8 @@
   "unique": false,
   "desc_ko": "8초 후 달빛 효과가 ?% 증가합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "After 8 seconds, increase Lunar's effects by ?%."
  },
  {
   "apiName": "DA_18_Payday",
@@ -789,7 +860,8 @@
   "unique": false,
   "desc_ko": "전투에서 생존한 아군 챔피언 1명당 ?골드를 획득합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "For each ally champion that survives combat, gain ? Gold."
  },
  {
   "apiName": "DA_18_PaydayUpgrade",
@@ -800,7 +872,8 @@
   "unique": false,
   "desc_ko": "전투에서 생존한 아군 챔피언 1명당 ?골드를 획득합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "For each ally champion that survives combat, gain ? Gold."
  },
  {
   "apiName": "DA_18_PocketChange",
@@ -811,7 +884,8 @@
   "unique": false,
   "desc_ko": "아군 1성 챔피언이 사망 시 ?골드를 떨어뜨립니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Your one-star champions drop ? gold on death."
  },
  {
   "apiName": "DA_18_PocketChange_Upgrade",
@@ -822,7 +896,8 @@
   "unique": false,
   "desc_ko": "아군 1성 챔피언이 사망 시 ?골드를 떨어뜨립니다. ?골드를 획득합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Your one-star champions drop ? gold on death. Gain ? gold."
  },
  {
   "apiName": "DA_18_Polymorph",
@@ -833,7 +908,8 @@
   "unique": false,
   "desc_ko": "보유한 무작위 2단계 유닛 1명이 영구히 3단계로 변합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "A random 2-cost you own permanently transforms into a 3-cost."
  },
  {
   "apiName": "DA_18_Polymorph_Upgrade",
@@ -844,7 +920,8 @@
   "unique": false,
   "desc_ko": "보유한 별 레벨이 가장 높은 2단계 유닛 1명이 영구히 3단계로 변합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "The highest star level 2-cost you own permanently transforms into a 3-cost."
  },
  {
   "apiName": "DA_18_Preppers",
@@ -855,7 +932,8 @@
   "unique": false,
   "desc_ko": "중첩 아이템이 다음 전투에서 일부 중첩을 지닌 상태로 시작합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Your stacking items start next combat partially stacked."
  },
  {
   "apiName": "DA_18_Preppers_Upgrade",
@@ -866,7 +944,8 @@
   "unique": false,
   "desc_ko": "중첩 아이템이 다음 전투에서 추가 중첩을 지닌 상태로 시작합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Your stacking items start next combat extra stacked."
  },
  {
   "apiName": "DA_18_ProlificPower",
@@ -877,7 +956,8 @@
   "unique": false,
   "desc_ko": "아군 챔피언이 공격력 및 주문력을 4% 얻습니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Your champions gain 4% Attack Damage and Ability Power."
  },
  {
   "apiName": "DA_18_ProlificPower_Upgrade",
@@ -888,7 +968,8 @@
   "unique": false,
   "desc_ko": "아군 챔피언이 공격력 및 주문력을 ?% 얻습니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Your champions gain ?% Attack Damage and Ability Power."
  },
  {
   "apiName": "DA_18_Propagate",
@@ -899,7 +980,8 @@
   "unique": false,
   "desc_ko": "처음 사망하는 아군 챔피언의 복사본을 획득합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Gain a copy of the first allied champion to die."
  },
  {
   "apiName": "DA_18_Propagate_Upgrade",
@@ -910,7 +992,8 @@
   "unique": false,
   "desc_ko": "처음 사망하는 아군 챔피언의 복사본을 획득합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Gain a copy of the first allied champion to die."
  },
  {
   "apiName": "DA_18_Radiantize",
@@ -921,7 +1004,8 @@
   "unique": false,
   "desc_ko": "8초 후, 장착한 무작위 아이템 1개가 일시적으로 찬란한 아이템으로 변경됩니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "After 8 seconds, 1 random equipped item temporarily becomes Radiant."
  },
  {
   "apiName": "DA_18_Radiantize_Upgrade",
@@ -932,7 +1016,8 @@
   "unique": false,
   "desc_ko": "?초 후, 장착한 무작위 아이템 ?개가 일시적으로 찬란한 아이템으로 변경됩니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "After ? seconds, ? random equipped item temporarily becomes Radiant."
  },
  {
   "apiName": "DA_18_Resistant",
@@ -943,7 +1028,8 @@
   "unique": false,
   "desc_ko": "탱커는 피해를 받을 때 해당 피해량이 ? 감소합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Tanks reduce instances of incoming damage by ?."
  },
  {
   "apiName": "DA_18_Resistant_Upgrade",
@@ -954,7 +1040,8 @@
   "unique": false,
   "desc_ko": "탱커는 피해를 받을 때 해당 피해량이 ? 감소합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Tanks reduce instances of incoming damage by ?."
  },
  {
   "apiName": "DA_18_Starfall",
@@ -965,7 +1052,8 @@
   "unique": false,
   "desc_ko": "이번 라운드에 상점을 처음 ?번 새로고침하는 동안 가장 단계가 낮은 챔피언이 2성이 됩니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "The first ? times you reroll your shop this round, the lowest cost champion becomes 2-star."
  },
  {
   "apiName": "DA_18_Starfall_Upgrade",
@@ -976,7 +1064,8 @@
   "unique": false,
   "desc_ko": "이번 라운드에 상점을 처음 ?번 새로고침하는 동안 가장 단계가 낮은 챔피언이 2성이 됩니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "The first ? times you reroll your shop this round, the lowest cost champion becomes 2-star."
  },
  {
   "apiName": "DA_18_SunfireSorcery",
@@ -987,7 +1076,8 @@
   "unique": false,
   "desc_ko": "10초 동안 적에게 화상과 상처를 적용합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Burn and Wound enemies for 10 seconds."
  },
  {
   "apiName": "DA_18_SunfireSorcery_Upgrade",
@@ -998,7 +1088,8 @@
   "unique": false,
   "desc_ko": "?초 동안 적에게 화상과 상처를 적용합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Burn and Wound enemies for ? seconds."
  },
  {
   "apiName": "DA_18_Supercritical",
@@ -1009,7 +1100,8 @@
   "unique": false,
   "desc_ko": "아군 정밀 유닛이 치명타 피해량을 25% 얻습니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Allies with Precision gain 25% Critical Strike Damage."
  },
  {
   "apiName": "DA_18_SupercriticalUpgrade",
@@ -1020,7 +1112,8 @@
   "unique": false,
   "desc_ko": "아군 정밀 유닛이 치명타 피해량을 ?% 얻습니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Allies with Precision gain ?% Critical Strike Damage."
  },
  {
   "apiName": "DA_18_TatteredArmor",
@@ -1031,7 +1124,8 @@
   "unique": false,
   "desc_ko": "적에게 10초 동안 파쇄 및 파열을 ?% 적용합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "?% Shred and Sunder enemies for 10 seconds."
  },
  {
   "apiName": "DA_18_TatteredArmor_Prismatic",
@@ -1042,7 +1136,8 @@
   "unique": false,
   "desc_ko": "적에게 ?초 동안 파쇄 및 파열을 ?% 적용합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "?% Shred and Sunder enemies for ? seconds."
  },
  {
   "apiName": "DA_18_TatteredArmor_Upgrade",
@@ -1053,7 +1148,8 @@
   "unique": false,
   "desc_ko": "적에게 ?초 동안 파쇄 및 파열을 ?% 적용합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "?% Shred and Sunder enemies for ? seconds."
  },
  {
   "apiName": "DA_18_Tremors",
@@ -1064,7 +1160,8 @@
   "unique": false,
   "desc_ko": "?초마다 적을 1초 동안 기절시킵니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Every ? seconds, Stun enemies for 1 second."
  },
  {
   "apiName": "DA_18_Tremors_Prismatic",
@@ -1075,7 +1172,8 @@
   "unique": false,
   "desc_ko": "?초마다 적을 ?초 동안 기절시킵니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Every ? seconds, Stun enemies for ? seconds."
  },
  {
   "apiName": "DA_18_Tremors_Upgrade",
@@ -1086,7 +1184,8 @@
   "unique": false,
   "desc_ko": "?초마다 적을 ?초 동안 기절시킵니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Every ? seconds, Stun enemies for ? seconds."
  },
  {
   "apiName": "DA_18_UltraAscension",
@@ -1097,7 +1196,8 @@
   "unique": false,
   "desc_ko": "25초 후 아군이 피해 증폭을 300% 얻습니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "After 25 seconds, allies gain 300% Damage Amp."
  },
  {
   "apiName": "DA_18_UltraAscension_Prismatic",
@@ -1108,7 +1208,8 @@
   "unique": false,
   "desc_ko": "?초 후 아군이 피해 증폭을 300% 얻습니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "After ? seconds, allies gain 300% Damage Amp."
  },
  {
   "apiName": "DA_18_UltraAscension_Upgrade",
@@ -1119,7 +1220,8 @@
   "unique": false,
   "desc_ko": "?초 후 아군이 피해 증폭을 300% 얻습니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "After ? seconds, allies gain 300% Damage Amp."
  },
  {
   "apiName": "DA_18_VerdantVitality",
@@ -1130,7 +1232,8 @@
   "unique": false,
   "desc_ko": "아군 챔피언이 체력을 50 얻습니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Your champions gain 50 Health."
  },
  {
   "apiName": "DA_18_VerdantVitality_Upgrade",
@@ -1141,7 +1244,8 @@
   "unique": false,
   "desc_ko": "아군 챔피언이 체력을 ? 얻습니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Your champions gain ? Health."
  },
  {
   "apiName": "DA_18_YordleSpirit",
@@ -1152,7 +1256,8 @@
   "unique": false,
   "desc_ko": "아군이 4초 동안 99% 확률로 기본 공격을 회피합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Allies have a 99% chance to dodge attacks for 4 seconds."
  },
  {
   "apiName": "DA_18_YordleSpirit_Upgrade",
@@ -1163,7 +1268,8 @@
   "unique": false,
   "desc_ko": "아군이 ?초 동안 ?% 확률로 기본 공격을 회피합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Allies have a ?% chance to dodge attacks for ? seconds."
  },
  {
   "apiName": "DA_AbandonShip18",
@@ -1174,7 +1280,8 @@
   "unique": false,
   "desc_ko": "전장 및 대기석에 있는 챔피언을 판매하고 6골드와 새로고침 8회를 획득합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Sell your board and bench, gain 6 gold and 8 rerolls."
  },
  {
   "apiName": "DA_AbandonShip18_Upgrade",
@@ -1185,7 +1292,8 @@
   "unique": false,
   "desc_ko": "전장 및 대기석에 있는 챔피언을 판매하고 ?골드와 새로고침 ?회를 획득합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Sell your board and bench, gain ? gold and ? rerolls."
  },
  {
   "apiName": "DA_AnimateShop18",
@@ -1196,7 +1304,8 @@
   "unique": false,
   "desc_ko": "18초 동안 상점이 2초마다 무료로 새로고침됩니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "For 18 seconds, your shop rerolls for free every 2 seconds."
  },
  {
   "apiName": "DA_AnimateShop18_Upgrade",
@@ -1207,7 +1316,8 @@
   "unique": false,
   "desc_ko": "?초 동안 상점이 2초마다 무료로 새로고침됩니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "For ? seconds, your shop rerolls for free every 2 seconds."
  },
  {
   "apiName": "DA_Apprentice18",
@@ -1218,7 +1328,8 @@
   "unique": false,
   "desc_ko": "무작위 1단계 2성 챔피언 1명을 획득합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Gain a random 2-star 1-cost champion."
  },
  {
   "apiName": "DA_Apprentice18_Upgrade",
@@ -1229,7 +1340,8 @@
   "unique": false,
   "desc_ko": "무작위 1단계 2성 챔피언 1명을 획득합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Gain a random 2-star 1-cost champion."
  },
  {
   "apiName": "DA_Artifactinate18",
@@ -1240,7 +1352,8 @@
   "unique": false,
   "desc_ko": "완성 아이템으로 조합된 조합 아이템 1개를 포함해 조합 아이템 3개를 잃습니다. 유물 모루 1개를 획득합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Lose 3 components, including ones built into items. Gain an Artifact anvil."
  },
  {
   "apiName": "DA_Artifactinate18_Upgrade",
@@ -1251,7 +1364,8 @@
   "unique": false,
   "desc_ko": "완성 아이템으로 조합된 조합 아이템 1개를 포함해 조합 아이템 ?개를 잃습니다. 유물 모루 1개 및 재조합기 ?개를 획득합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Lose ? components, including ones built into items. Gain an Artifact anvil and ? Reforger."
  },
  {
   "apiName": "DA_Barrier18",
@@ -1262,7 +1376,8 @@
   "unique": false,
   "desc_ko": "아군이 1250의 보호막을 얻습니다. 보호막은 6초에 걸쳐 사라집니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Allies gain 1250 Shield, decaying over 6 seconds."
  },
  {
   "apiName": "DA_Barrier18_Prismatic",
@@ -1273,7 +1388,8 @@
   "unique": false,
   "desc_ko": "아군이 ?의 보호막을 얻습니다. 보호막은 ?초에 걸쳐 사라집니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Allies gain ? Shield, decaying over ? seconds."
  },
  {
   "apiName": "DA_Barrier18_Upgrade",
@@ -1284,7 +1400,8 @@
   "unique": false,
   "desc_ko": "아군이 1250의 보호막을 얻습니다. 보호막은 ?초에 걸쳐 사라집니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Allies gain 1250 Shield, decaying over ? seconds."
  },
  {
   "apiName": "DA_Barter18",
@@ -1295,7 +1412,8 @@
   "unique": false,
   "desc_ko": "이번 라운드에 다음으로 판매하는 챔피언이 ?% 골드로 판매됩니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "The next champion sold this round sells for ?% gold."
  },
  {
   "apiName": "DA_Barter18_Upgrade",
@@ -1306,7 +1424,8 @@
   "unique": false,
   "desc_ko": "이번 라운드에 다음으로 판매하는 챔피언이 ?% 골드로 판매됩니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "The next champion sold this round sells for ?% gold."
  },
  {
   "apiName": "DA_BearsVisit18",
@@ -1317,7 +1436,8 @@
   "unique": false,
   "desc_ko": "이번 전투에서 곰 원시 효과를 얻습니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Gain the Bear Primal buff for this combat."
  },
  {
   "apiName": "DA_BearsVisit18_Upgrade",
@@ -1328,7 +1448,8 @@
   "unique": false,
   "desc_ko": "이번 전투에서 호랑이 원시 효과를 얻습니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Gain the Tiger Primal buff for this combat."
  },
  {
   "apiName": "DA_BeggarsWisp18",
@@ -1339,7 +1460,8 @@
   "unique": false,
   "desc_ko": "이번 새로고침에서는 숲의 수호령을 찾지 못했습니다. 3골드를 획득합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "The wilds couldn't find a wisp for you this roll. Gain 3 gold."
  },
  {
   "apiName": "DA_BeggarsWisp18_Upgrade",
@@ -1350,7 +1472,8 @@
   "unique": false,
   "desc_ko": "이번 새로고침에서는 숲의 수호령을 찾지 못했습니다. ?골드를 획득합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "The wilds couldn't find a wisp for you this roll. Gain ? gold."
  },
  {
   "apiName": "DA_BigBoom18",
@@ -1361,7 +1484,8 @@
   "unique": false,
   "desc_ko": "처음으로 사망하는 아군이 폭발해 최대 체력의 ?%만큼 마법 피해를 입힙니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "The first ally to die explodes, dealing ?% Max Health magic damage."
  },
  {
   "apiName": "DA_BigBoom18_Upgrade",
@@ -1372,7 +1496,8 @@
   "unique": false,
   "desc_ko": "처음으로 사망하는 아군 ?명이 폭발해 최대 체력의 ?%만큼 마법 피해를 입힙니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "The first ? allies to die explode, dealing ?% Max Health magic damage."
  },
  {
   "apiName": "DA_BigGuns18",
@@ -1383,7 +1508,8 @@
   "unique": false,
   "desc_ko": "무작위 4단계 1성 유닛 2명을 획득합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Gain 2 random 1-star 4-cost champions."
  },
  {
   "apiName": "DA_BigGuns18_Upgrade",
@@ -1394,7 +1520,8 @@
   "unique": false,
   "desc_ko": "무작위 4단계 1성 유닛 2명을 획득합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Gain 2 random 1-star 4-cost champions."
  },
  {
   "apiName": "DA_BlastPotion18_Charm",
@@ -1405,7 +1532,8 @@
   "unique": false,
   "desc_ko": "장착 가능한 임시 폭발 물약 1개를 획득합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Gain a temporary equippable Blast Potion."
  },
  {
   "apiName": "DA_BlastPotion18_Upgrade_Charm",
@@ -1416,7 +1544,8 @@
   "unique": false,
   "desc_ko": "장착 가능한 임시 찬란한 폭발 물약 1개를 획득합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Gain a temporary equippable Radiant Blast Potion."
  },
  {
   "apiName": "DA_Blaze18",
@@ -1427,7 +1556,8 @@
   "unique": false,
   "desc_ko": "전장에 불길이 퍼져나가 적에게 고정 피해를 입힙니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Fire spreads across the board, dealing true damage to enemies."
  },
  {
   "apiName": "DA_Blaze18_Prismatic",
@@ -1438,7 +1568,8 @@
   "unique": false,
   "desc_ko": "전장 전체에 맹렬한 불길을 퍼뜨립니다!",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Spread a raging fire across the board!"
  },
  {
   "apiName": "DA_Blaze18_Upgrade",
@@ -1449,7 +1580,8 @@
   "unique": false,
   "desc_ko": "전장에 불길이 퍼져 적에게 점점 더 큰 고정 피해를 입힙니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Fire spreads across the board, dealing more true damage to enemies."
  },
  {
   "apiName": "DA_BloodAndIron18",
@@ -1460,7 +1592,8 @@
   "unique": false,
   "desc_ko": "챔피언 사망 ?회 이후 조합 아이템 모루 1개를 획득합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "After ? champion deaths, gain a component anvil."
  },
  {
   "apiName": "DA_BloodAndIron18_Upgrade",
@@ -1471,7 +1604,8 @@
   "unique": false,
   "desc_ko": "챔피언 사망 ?회 이후 조합 아이템 모루 1개를 획득합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "After ? champion deaths, gain a component anvil."
  },
  {
   "apiName": "DA_BoosterShot18",
@@ -1482,7 +1616,8 @@
   "unique": false,
   "desc_ko": "전투 중 1성 챔피언 최대 ?명의 별 레벨이 임시로 오릅니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Up to ? 1-star champions temporarily star up during combat."
  },
  {
   "apiName": "DA_BoosterShot18_Upgrade",
@@ -1493,7 +1628,8 @@
   "unique": false,
   "desc_ko": "전투 중 1성 챔피언 최대 ?명의 별 레벨이 임시로 오릅니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Up to ? 1-star champions temporarily star up during combat."
  },
  {
   "apiName": "DA_BorderVillage18",
@@ -1504,7 +1640,8 @@
   "unique": false,
   "desc_ko": "상점을 새로고침해 모두 2단계 2성 챔피언으로 채웁니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Reroll your shop with all 2-star 2-cost champions."
  },
  {
   "apiName": "DA_BorderVillage18_Upgrade",
@@ -1515,7 +1652,8 @@
   "unique": false,
   "desc_ko": "상점을 새로고침해 모두 2단계 2성 챔피언으로 채웁니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Reroll your shop with all 2-star 2-cost champions."
  },
  {
   "apiName": "DA_BorrowedGear18",
@@ -1526,7 +1664,8 @@
   "unique": false,
   "desc_ko": "챔피언이 임시 추천 아이템 1개를 획득합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "At the start of combat, a champion gains a temporary recommended item."
  },
  {
   "apiName": "DA_BorrowedGear18_Upgrade",
@@ -1537,7 +1676,8 @@
   "unique": false,
   "desc_ko": "챔피언이 임시 추천 아이템 1개를 획득하고 체력을 ? 얻습니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "At the start of combat, a champion gains a temporary recommended item and ? Health."
  },
  {
   "apiName": "DA_Bulwark18",
@@ -1548,7 +1688,8 @@
   "unique": false,
   "desc_ko": "아군 탱커의 체력이 50% 아래로 떨어지면 최대 체력의 20%에 해당하는 보호막을 얻습니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Your Tanks gain a 20% Max Health shield upon falling below 50% Health."
  },
  {
   "apiName": "DA_Bulwark18_Upgrade",
@@ -1559,7 +1700,8 @@
   "unique": false,
   "desc_ko": "아군 탱커의 체력이 50% 아래로 떨어지면 최대 체력의 ?%에 해당하는 보호막을 얻습니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Your Tanks gain a ?% Max Health shield upon falling below 50% Health."
  },
  {
   "apiName": "DA_BunchOBelts18",
@@ -1570,7 +1712,8 @@
   "unique": false,
   "desc_ko": "아군이 제거할 수 없는 임시 거인의 허리띠 ?개를 얻습니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Your allies gain ? temporary, non-removable Giant's Belts."
  },
  {
   "apiName": "DA_BunchOBeltsUpgrade18",
@@ -1581,7 +1724,8 @@
   "unique": false,
   "desc_ko": "아군이 제거할 수 없는 임시 거인의 허리띠 ?개를 얻습니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Your allies gain ? temporary, non-removable Giant's Belts."
  },
  {
   "apiName": "DA_CloneCompanion18",
@@ -1592,7 +1736,8 @@
   "unique": false,
   "desc_ko": "피해량이 가장 높은 아군 챔피언의 분신을 생성합니다. 분신은 20%의 피해를 입힙니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Clone your highest damage champion. The clone deals 20% damage."
  },
  {
   "apiName": "DA_CloneCompanion18_Prismatic",
@@ -1603,7 +1748,8 @@
   "unique": false,
   "desc_ko": "피해량이 가장 높은 아군 챔피언의 분신을 생성합니다. 분신은 ?%의 피해를 입힙니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Clone your highest damage champion. The clone deals ?% damage."
  },
  {
   "apiName": "DA_CloneCompanionUpgrade18",
@@ -1614,7 +1760,8 @@
   "unique": false,
   "desc_ko": "피해량이 가장 높은 아군 챔피언의 분신을 생성합니다. 분신은 ?%의 피해를 입힙니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Clone your highest damage champion. The clone deals ?% damage."
  },
  {
   "apiName": "DA_CoinFlip18",
@@ -1625,7 +1772,8 @@
   "unique": false,
   "desc_ko": "동전을 던져 앞면이 나오면 ?골드를 획득합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Flip a coin, gain ? gold if it's heads."
  },
  {
   "apiName": "DA_CoinFlip18_Upgrade",
@@ -1636,7 +1784,8 @@
   "unique": false,
   "desc_ko": "동전 ?개를 던져 앞면이 나오면 ?골드를 획득합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Flip ? coins, gain ? gold if it's heads."
  },
  {
   "apiName": "DA_Combust18",
@@ -1647,7 +1796,8 @@
   "unique": false,
   "desc_ko": "아군 챔피언이 사망 시 폭발하여 최대 체력의 ?%만큼 마법 피해를 입힙니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Your champions explode on death, dealing ?% Max Health magic damage."
  },
  {
   "apiName": "DA_Combust18_Prismatic",
@@ -1658,7 +1808,8 @@
   "unique": false,
   "desc_ko": "아군 챔피언이 사망 시 폭발하여 최대 체력의 ?%만큼 마법 피해를 입힙니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Your champions explode on death, dealing ?% Max Health magic damage."
  },
  {
   "apiName": "DA_Combust18_Upgrade",
@@ -1669,7 +1820,8 @@
   "unique": false,
   "desc_ko": "아군 챔피언이 사망 시 폭발하여 최대 체력의 ?%만큼 마법 피해를 입힙니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Your champions explode on death, dealing ?% Max Health magic damage."
  },
  {
   "apiName": "DA_CrystalBall18",
@@ -1680,7 +1832,8 @@
   "unique": false,
   "desc_ko": "다음 상대를 공개합니다. 아군이 공격 속도를 12% 얻습니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Reveal your next opponent. Your team gains 12% Attack Speed."
  },
  {
   "apiName": "DA_CrystalBall18_Upgrade",
@@ -1691,7 +1844,8 @@
   "unique": false,
   "desc_ko": "다음 상대를 공개합니다. 아군이 공격 속도를 ?% 얻습니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Reveal your next opponent. Your team gains ?% Attack Speed."
  },
  {
   "apiName": "DA_CurioCart18",
@@ -1702,7 +1856,8 @@
   "unique": false,
   "desc_ko": "아이템 상점을 엽니다. 아이템 비용은 0~?골드입니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Open an item store. Items cost 0 to ? gold."
  },
  {
   "apiName": "DA_CurioCart18_Upgrade",
@@ -1713,7 +1868,8 @@
   "unique": false,
   "desc_ko": "아이템 상점을 엽니다. 아이템 비용은 0~?골드입니다. ?골드를 획득합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Open an item store. Items cost 0 to ? gold. Gain ? Gold."
  },
  {
   "apiName": "DA_Cutpurse18",
@@ -1724,7 +1880,8 @@
   "unique": false,
   "desc_ko": "5초마다 아군 챔피언이 ?% 확률로 ?골드를 떨어뜨립니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Every 5 seconds, your champions have a ?% chance to drop ? Gold."
  },
  {
   "apiName": "DA_Cutpurse18_Upgrade",
@@ -1735,7 +1892,8 @@
   "unique": false,
   "desc_ko": "?초마다 아군 챔피언이 ?% 확률로 ?골드를 떨어뜨립니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Every ? seconds, your champions have a ?% chance to drop ? Gold."
  },
  {
   "apiName": "DA_DieRoll18",
@@ -1746,7 +1904,8 @@
   "unique": false,
   "desc_ko": "육면체 주사위 1개를 굴립니다. 주사위의 값에 따라 골드를 획득합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Roll a six-sided die. Gain gold equal to the result."
  },
  {
   "apiName": "DA_DieRoll18_Upgrade",
@@ -1757,7 +1916,8 @@
   "unique": false,
   "desc_ko": "육면체 주사위 2개를 굴립니다. 주사위의 값에 따라 골드를 획득합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Roll two six-sided dice. Gain gold equal to the result."
  },
  {
   "apiName": "DA_Diversified18",
@@ -1768,7 +1928,8 @@
   "unique": false,
   "desc_ko": "활성화된 고유 특성이 아닌 특성 하나당 아군이 체력을 ? 얻습니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Your team gains ? Health for each active non-unique trait."
  },
  {
   "apiName": "DA_DiversifiedUpgrade18",
@@ -1779,7 +1940,8 @@
   "unique": false,
   "desc_ko": "활성화된 고유 특성이 아닌 특성 하나당 아군이 체력을 ? 얻습니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Your team gains ? Health for each active non-unique trait."
  },
  {
   "apiName": "DA_DoodadBag18",
@@ -1790,7 +1952,8 @@
   "unique": false,
   "desc_ko": "방어력 및 마법 저항력 또는 체력을 영구히 부여하는 소모품 ?개를 획득합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Gain ? consumables that give permanent Armor and Magic Resist or Health."
  },
  {
   "apiName": "DA_DoodadBag18_Upgrade",
@@ -1801,7 +1964,8 @@
   "unique": false,
   "desc_ko": "방어력 및 마법 저항력 또는 체력을 영구히 부여하는 소모품 ?개를 획득합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Gain ? consumables that give permanent Armor and Magic Resist or Health."
  },
  {
   "apiName": "DA_DoodadJar18",
@@ -1812,7 +1976,8 @@
   "unique": false,
   "desc_ko": "방어력 및 마법 저항력 또는 체력을 영구히 부여하는 소모품 ?개를 획득합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Gain ? consumable that gives permanent Armor and Magic Resist or Health."
  },
  {
   "apiName": "DA_DoodadJar18_Upgrade",
@@ -1823,7 +1988,8 @@
   "unique": false,
   "desc_ko": "방어력 및 마법 저항력 또는 체력을 영구히 부여하는 소모품 ?개를 획득합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Gain ? consumables that give permanent Armor and Magic Resist or Health."
  },
  {
   "apiName": "DA_DoodadSack18",
@@ -1834,7 +2000,8 @@
   "unique": false,
   "desc_ko": "방어력 및 마법 저항력 또는 체력을 영구히 부여하는 소모품 ?개를 획득합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Gain ? consumables that give permanent Armor and Magic Resist or Health."
  },
  {
   "apiName": "DA_DoodadSack18_Upgrade",
@@ -1845,7 +2012,8 @@
   "unique": false,
   "desc_ko": "방어력 및 마법 저항력 또는 체력을 영구히 부여하는 소모품 ?개를 획득합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Gain ? consumables that give permanent Armor and Magic Resist or Health."
  },
  {
   "apiName": "DA_Downpour18",
@@ -1856,7 +2024,8 @@
   "unique": false,
   "desc_ko": "아군이 마나 재생을 2 얻습니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Your team gains 2 Mana Regen."
  },
  {
   "apiName": "DA_Downpour18_Prismatic",
@@ -1867,7 +2036,8 @@
   "unique": false,
   "desc_ko": "아군이 마나 재생을 ? 얻습니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Your team gains ? Mana Regen."
  },
  {
   "apiName": "DA_Downpour18_Upgrade",
@@ -1878,7 +2048,8 @@
   "unique": false,
   "desc_ko": "아군이 마나 재생을 ? 얻습니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Your team gains ? Mana Regen."
  },
  {
   "apiName": "DA_EssenceTheft18",
@@ -1889,7 +2060,8 @@
   "unique": false,
   "desc_ko": "이번 전투에서 악의 여단 정기를 50% 추가 획득합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Gain 50% bonus Coven Essence this combat."
  },
  {
   "apiName": "DA_EssenceTheft18_Upgrade",
@@ -1900,7 +2072,8 @@
   "unique": false,
   "desc_ko": "이번 전투에서 악의 여단 정기를 ?% 추가 획득합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Gain ?% bonus Coven Essence this combat."
  },
  {
   "apiName": "DA_FlashFire18",
@@ -1911,7 +2084,8 @@
   "unique": false,
   "desc_ko": "상점을 새로고침합니다. 지옥불이 상점 슬롯 ?개에 불을 붙여 업그레이드합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Reroll your shop. Inferno lights ? shop slots on fire, upgrading them."
  },
  {
   "apiName": "DA_FlashFire18_Upgrade",
@@ -1922,7 +2096,8 @@
   "unique": false,
   "desc_ko": "상점을 새로고침합니다. 지옥불이 상점 슬롯 ?개에 불을 붙여 업그레이드합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Reroll your shop. Inferno lights ? shop slots on fire, upgrading them."
  },
  {
   "apiName": "DA_FlipFrenzy18",
@@ -1933,7 +2108,8 @@
   "unique": false,
   "desc_ko": "동전을 던져 앞면이 나오면 ?골드를 획득합니다. 뒷면이 나올 때까지 계속 던집니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Flip a coin, gain ? gold if it's heads. Continue until you flip tails."
  },
  {
   "apiName": "DA_FlipFrenzy18_Upgrade",
@@ -1944,7 +2120,8 @@
   "unique": false,
   "desc_ko": "동전을 던져 앞면이 나오면 ?골드를 획득합니다. 뒷면이 나올 때까지 계속 던집니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Flip a coin, gain ? gold if it's heads. Continue until you flip tails."
  },
  {
   "apiName": "DA_Flow18",
@@ -1955,7 +2132,8 @@
   "unique": false,
   "desc_ko": "아군 챔피언이 10초 동안 저지 불가 상태가 되고 공격 속도를 15% 얻습니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Your champions are Unstoppable and gain 15% Attack Speed for 10 seconds."
  },
  {
   "apiName": "DA_Flow18_Upgrade",
@@ -1966,7 +2144,8 @@
   "unique": false,
   "desc_ko": "아군 챔피언이 ?초 동안 저지 불가 상태가 되고 공격 속도를 15% 얻습니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Your champions are Unstoppable and gain 15% Attack Speed for ? seconds."
  },
  {
   "apiName": "DA_ForestGuide18",
@@ -1977,7 +2156,8 @@
   "unique": false,
   "desc_ko": "무작위 4단계 챔피언 1명을 획득합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Gain a random 4-cost champion."
  },
  {
   "apiName": "DA_ForestGuide18_Upgrade",
@@ -1988,7 +2168,8 @@
   "unique": false,
   "desc_ko": "무작위 4단계 챔피언 1명을 획득합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Gain a random 4-cost champion."
  },
  {
   "apiName": "DA_ForestTwins18",
@@ -1999,7 +2180,8 @@
   "unique": false,
   "desc_ko": "보유하지 않은 2단계 챔피언 복사본 2명을 획득합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Gain 2 copies of a 2-cost champion you don't have."
  },
  {
   "apiName": "DA_ForestTwinsUpgrade18",
@@ -2010,7 +2192,8 @@
   "unique": false,
   "desc_ko": "보유하지 않은 2단계 챔피언 복사본 3명을 획득합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Gain 3 copies of a 2-cost champion you don't have."
  },
  {
   "apiName": "DA_FoundFriend18",
@@ -2021,7 +2204,8 @@
   "unique": false,
   "desc_ko": "일시적으로 거인의 허리띠 1개를 장착한 훈련 봇을 획득합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Gain a temporary Training Dummy with a Giant's Belt."
  },
  {
   "apiName": "DA_FoundFriend18_Upgrade",
@@ -2032,7 +2216,8 @@
   "unique": false,
   "desc_ko": "태양불꽃 망토를 장착한 훈련 봇을 획득합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Gain a Training Dummy with a Sunfire Cape."
  },
  {
   "apiName": "DA_GiantsAura18",
@@ -2043,7 +2228,8 @@
   "unique": false,
   "desc_ko": "체력이 가장 높은 아군이 일정 범위에 매초 최대 체력의 2%만큼 피해를 입힙니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Your highest Health ally deals 2% max Health damage per second in an area."
  },
  {
   "apiName": "DA_GiantsAura18_Prismatic",
@@ -2054,7 +2240,8 @@
   "unique": false,
   "desc_ko": "가장 체력이 높은 아군이 완전한 괴물로 변합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Your highest Health ally becomes an absolute menace."
  },
  {
   "apiName": "DA_GiantsAura18_Upgrade",
@@ -2065,7 +2252,8 @@
   "unique": false,
   "desc_ko": "체력이 가장 높은 아군이 일정 범위에 매초 최대 체력의 ?%만큼 피해를 입힙니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Your highest Health ally deals ?% max Health damage per second in an area."
  },
  {
   "apiName": "DA_GoldenGoose18",
@@ -2076,7 +2264,8 @@
   "unique": false,
   "desc_ko": "가장 높은 피해량을 입힌 챔피언이 ?의 피해를 입힐 때마다 ?골드를 획득합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Gain ? gold for every ? damage your highest damage champion deals."
  },
  {
   "apiName": "DA_GoldenGooseUpgrade18",
@@ -2087,7 +2276,8 @@
   "unique": false,
   "desc_ko": "가장 높은 피해량을 입힌 챔피언이 ?의 피해를 입힐 때마다 ?골드를 획득합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Gain ? gold for every ? damage your highest damage champion deals."
  },
  {
   "apiName": "DA_Grandmaster18",
@@ -2098,7 +2288,8 @@
   "unique": false,
   "desc_ko": "무작위 5단계 2성 챔피언 1명을 획득합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Gain a random 2-star 5-cost champion."
  },
  {
   "apiName": "DA_Grandmaster18_Upgrade",
@@ -2109,7 +2300,8 @@
   "unique": false,
   "desc_ko": "무작위 5단계 2성 챔피언 1명을 획득합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Gain a random 2-star 5-cost champion."
  },
  {
   "apiName": "DA_GreaterChaos18",
@@ -2120,7 +2312,8 @@
   "unique": false,
   "desc_ko": "무작위 수호령 ?마리를 사용합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Cast ? random Wisps."
  },
  {
   "apiName": "DA_GreaterChaos18_Upgrade",
@@ -2131,7 +2324,8 @@
   "unique": false,
   "desc_ko": "?골드 이상 가치의 무작위 수호령 ?마리를 사용합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Cast ? random Wisps worth ? or more gold."
  },
  {
   "apiName": "DA_GrowUp18",
@@ -2142,7 +2336,8 @@
   "unique": false,
   "desc_ko": "경험치를 10 얻습니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Gain 10 XP."
  },
  {
   "apiName": "DA_GrowUp18_Upgrade",
@@ -2153,7 +2348,8 @@
   "unique": false,
   "desc_ko": "경험치를 ? 얻습니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Gain ? XP."
  },
  {
   "apiName": "DA_HandOfBaron18",
@@ -2164,7 +2360,8 @@
   "unique": false,
   "desc_ko": "아군이 내셔 남작 효과를 얻어 능력치가 상승합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Your team gains Baron Buff, increasing their stats."
  },
  {
   "apiName": "DA_HandOfBaron18_Upgrade",
@@ -2175,7 +2372,8 @@
   "unique": false,
   "desc_ko": "아군이 내셔 남작 효과를 얻어 능력치가 크게 상승합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Your team gains Baron Buff, greatly increasing their stats."
  },
  {
   "apiName": "DA_HealthPotion18_Charm",
@@ -2186,7 +2384,8 @@
   "unique": false,
   "desc_ko": "장착 가능한 임시 체력 물약 1개를 획득합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Gain a tempoary equippable Health Potion."
  },
  {
   "apiName": "DA_HealthPotion18_Upgrade_Charm",
@@ -2197,7 +2396,8 @@
   "unique": false,
   "desc_ko": "장착 가능한 임시 찬란한 체력 물약 1개를 획득합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Gain a temporary equippable Radiant Health Potion."
  },
  {
   "apiName": "DA_HeroOfProphecy18",
@@ -2208,7 +2408,8 @@
   "unique": false,
   "desc_ko": "5단계 챔피언 1명을 획득합니다. 라운드마다 다시 획득합니다. 이 효과는 영구히 지속됩니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Gain a 5-cost champion. Gain them again each round FOREVER."
  },
  {
   "apiName": "DA_HeroOfProphecy18_Upgrade",
@@ -2219,7 +2420,8 @@
   "unique": false,
   "desc_ko": "5단계 챔피언 1명을 획득합니다. 라운드마다 다시 획득합니다. 이 효과는 영구히 지속됩니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Gain a 5-cost champion. Gain them again each round FOREVER."
  },
  {
   "apiName": "DA_HerosEntrance18",
@@ -2230,7 +2432,8 @@
   "unique": false,
   "desc_ko": "?초 후, 대기석 가장 왼쪽에 있는 챔피언이 전투에 참여하며 추천 아이템 ?개를 장착합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "After ? seconds, the leftmost benched champion joins combat and gains ? recommended items."
  },
  {
   "apiName": "DA_HerosEntranceUpgrade18",
@@ -2241,7 +2444,8 @@
   "unique": false,
   "desc_ko": "?초 후, 대기석 가장 왼쪽에 있는 챔피언이 전투에 참여하며 추천 아이템 ?개를 장착합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "After ? seconds, the leftmost benched champion joins combat and gains ? recommended items."
  },
  {
   "apiName": "DA_Hireling18",
@@ -2252,7 +2456,8 @@
   "unique": false,
   "desc_ko": "추천 아이템 ?개를 장착한 5단계 1성 챔피언이 일시적으로 팀에 합류합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "A temporary 1-star 5-cost with ? recommended items joins your team."
  },
  {
   "apiName": "DA_Hireling18_Prismatic",
@@ -2263,7 +2468,8 @@
   "unique": false,
   "desc_ko": "추천 아이템 ?개를 장착한 5단계 ?성 챔피언 ?명이 일시적으로 팀에 합류합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "? temporary ?-star 5-costs with ? recommended items each join your team."
  },
  {
   "apiName": "DA_Hireling18_Upgrade",
@@ -2274,7 +2480,8 @@
   "unique": false,
   "desc_ko": "추천 아이템 ?개를 장착한 5단계 1성 챔피언이 일시적으로 팀에 합류합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "A temporary 1-star 5-cost with ? recommended items joins your team."
  },
  {
   "apiName": "DA_HomingFireflies18",
@@ -2285,7 +2492,8 @@
   "unique": false,
   "desc_ko": "마법사가 마나를 ? 사용할 때마다 반딧불이 1마리를 소환합니다. 반딧불이는 각각 ?의 마법 피해를 입힙니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Your Casters spawn a firefly per ? Mana spent. Each deals ? magic damage."
  },
  {
   "apiName": "DA_HomingFireflies18_Upgrade",
@@ -2296,7 +2504,8 @@
   "unique": false,
   "desc_ko": "마법사가 마나를 ? 사용할 때마다 반딧불이 1마리를 소환합니다. 반딧불이는 각각 ?의 마법 피해를 입힙니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Your Casters spawn a firefly per ? Mana spent. Each deals ? magic damage."
  },
  {
   "apiName": "DA_Hugify18",
@@ -2307,7 +2516,8 @@
   "unique": false,
   "desc_ko": "가장 체력이 높은 아군 유닛이 성장하여 체력을 350 얻습니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Your highest Health unit grows, gaining 350 Health."
  },
  {
   "apiName": "DA_Hugify18_Prismatic",
@@ -2318,7 +2528,8 @@
   "unique": false,
   "desc_ko": "가장 체력이 높은 아군 유닛 ?명이 성장하여 체력을 ? 얻습니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Your ? highest Health units grow, gaining ? Health."
  },
  {
   "apiName": "DA_Hugify18_Upgrade",
@@ -2329,7 +2540,8 @@
   "unique": false,
   "desc_ko": "가장 체력이 높은 아군 유닛이 성장하여 체력을 ? 얻습니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Your highest Health unit grows, gaining ? Health."
  },
  {
   "apiName": "DA_IdleCraftsman18",
@@ -2340,7 +2552,8 @@
   "unique": false,
   "desc_ko": "대기석에 있는 조합 아이템 1개가 상위 완성 아이템으로 변합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "A component on your bench turns into a completed item it builds."
  },
  {
   "apiName": "DA_IdleCraftsman18_Upgrade",
@@ -2351,7 +2564,8 @@
   "unique": false,
   "desc_ko": "대기석에 있는 조합 아이템 1개가 상위 완성 아이템으로 변합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "A component on your bench turns into a completed item it builds."
  },
  {
   "apiName": "DA_ImprovedReach18",
@@ -2362,7 +2576,8 @@
   "unique": false,
   "desc_ko": "아군 전사 사거리가 1 증가합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Your Fighters gain 1 range."
  },
  {
   "apiName": "DA_ImprovedReach18_Upgrade",
@@ -2373,7 +2588,8 @@
   "unique": false,
   "desc_ko": "아군 전사 사거리가 ? 증가합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Your Fighters gain ? range."
  },
  {
   "apiName": "DA_IronCore18",
@@ -2384,7 +2600,8 @@
   "unique": false,
   "desc_ko": "아군 전방 중앙 챔피언이 전방 유닛 하나당 최대 체력을 ?% 얻습니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Your front center champion gains ?% Max Health per front-row unit."
  },
  {
   "apiName": "DA_IronCore18_Upgrade",
@@ -2395,7 +2612,8 @@
   "unique": false,
   "desc_ko": "아군 전방 중앙 챔피언이 전방 유닛 하나당 최대 체력을 ?% 얻습니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Your front center champion gains ?% Max Health per front-row unit."
  },
  {
   "apiName": "DA_Ironwood18",
@@ -2406,7 +2624,8 @@
   "unique": false,
   "desc_ko": "체력이 가장 높은 아군 챔피언을 공격하는 적이 입히는 피해량이 14% 감소합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Enemies attacking your highest health champion deal 14% less damage."
  },
  {
   "apiName": "DA_Ironwood18_Upgrade",
@@ -2417,7 +2636,8 @@
   "unique": false,
   "desc_ko": "체력이 가장 높은 아군 챔피언을 공격하는 적이 입히는 피해량이 ?% 감소합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Enemies attacking your highest health champion deal ?% less damage."
  },
  {
   "apiName": "DA_Journeyman18",
@@ -2428,7 +2648,8 @@
   "unique": false,
   "desc_ko": "무작위 2단계 2성 챔피언 1명을 획득합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Gain a random 2-star 2-cost champion."
  },
  {
   "apiName": "DA_Journeyman18_Upgrade",
@@ -2439,7 +2660,8 @@
   "unique": false,
   "desc_ko": "무작위 2단계 2성 챔피언 1명을 획득합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Gain a random 2-star 2-cost champion."
  },
  {
   "apiName": "DA_Jungling18",
@@ -2450,7 +2672,8 @@
   "unique": false,
   "desc_ko": "상점이 협곡야수로 뒤덮입니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Overrun the shop with Riftbeasts."
  },
  {
   "apiName": "DA_Jungling18_Upgrade",
@@ -2461,7 +2684,8 @@
   "unique": false,
   "desc_ko": "상점이 협곡야수로 뒤덮입니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Overrun the shop with Riftbeasts."
  },
  {
   "apiName": "DA_KillersRegret18",
@@ -2472,7 +2696,8 @@
   "unique": false,
   "desc_ko": "이번 라운드에서 처음으로 사망하는 아군 챔피언 3명이 처치자를 1.5초 동안 기절시킵니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Your first 3 champions to die stun their killer for 1.5 seconds."
  },
  {
   "apiName": "DA_KillersRegretUpgrade18",
@@ -2483,7 +2708,8 @@
   "unique": false,
   "desc_ko": "이번 라운드에서 처음으로 사망하는 아군 챔피언 ?명이 처치자를 ?초 동안 기절시킵니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Your first ? champions to die stun their killer for ? second."
  },
  {
   "apiName": "DA_KnickKnackBag18",
@@ -2494,7 +2720,8 @@
   "unique": false,
   "desc_ko": "공격력 또는 공격 속도를 영구히 부여하는 소모품 ?개를 획득합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Gain ? consumables that give permanent Attack Damage or Attack Speed."
  },
  {
   "apiName": "DA_KnickKnackBag18_Upgrade",
@@ -2505,7 +2732,8 @@
   "unique": false,
   "desc_ko": "공격력 또는 공격 속도를 영구히 부여하는 소모품 ?개를 획득합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Gain ? consumables that give permanent Attack Damage or Attack Speed."
  },
  {
   "apiName": "DA_KnickKnackJar18",
@@ -2516,7 +2744,8 @@
   "unique": false,
   "desc_ko": "공격력 또는 공격 속도를 영구히 부여하는 소모품 ?개를 획득합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Gain ? consumable that gives permanent Attack Damage or Attack Speed."
  },
  {
   "apiName": "DA_KnickKnackJar18_Upgrade",
@@ -2527,7 +2756,8 @@
   "unique": false,
   "desc_ko": "공격력 또는 공격 속도를 영구히 부여하는 소모품 ?개를 획득합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Gain ? consumables that give permanent Attack Damage or Attack Speed."
  },
  {
   "apiName": "DA_KnickKnackSack18",
@@ -2538,7 +2768,8 @@
   "unique": false,
   "desc_ko": "공격력 또는 공격 속도를 영구히 부여하는 소모품 ?개를 획득합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Gain ? consumables that give permanent Attack Damage or Attack Speed."
  },
  {
   "apiName": "DA_KnickKnackSack18_Upgrade",
@@ -2549,7 +2780,8 @@
   "unique": false,
   "desc_ko": "공격력 또는 공격 속도를 영구히 부여하는 소모품 ?개를 획득합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Gain ? consumables that give permanent Attack Damage or Attack Speed."
  },
  {
   "apiName": "DA_LateBloomer18",
@@ -2560,7 +2792,8 @@
   "unique": false,
   "desc_ko": "1단계 3성 챔피언이 일시적으로 아군에 합류합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "A temporary 3-star 1-cost joins your team."
  },
  {
   "apiName": "DA_LateBloomer18_Prismatic",
@@ -2571,7 +2804,8 @@
   "unique": false,
   "desc_ko": "1단계 ?성 챔피언 ?명으로 구성된 팀이 일시적으로 아군에 합류합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "A squad of ? temporary ?-star 1-costs joins your team."
  },
  {
   "apiName": "DA_LateBloomer18_Upgrade",
@@ -2582,7 +2816,8 @@
   "unique": false,
   "desc_ko": "추천 아이템 ?개를 장착한 1단계 3성 챔피언이 일시적으로 팀에 합류합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "A temporary 3-star 1-cost with ?recommend item joins your team."
  },
  {
   "apiName": "DA_LesserChaos18",
@@ -2593,7 +2828,8 @@
   "unique": false,
   "desc_ko": "무작위 수호령 1마리를 사용합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Cast a random Wisp."
  },
  {
   "apiName": "DA_LesserChaos18_Upgrade",
@@ -2604,7 +2840,8 @@
   "unique": false,
   "desc_ko": "?골드 이상 가치의 무작위 수호령 1마리를 사용합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Cast a random Wisp worth ? or more gold."
  },
  {
   "apiName": "DA_LivingSoil18",
@@ -2615,7 +2852,8 @@
   "unique": false,
   "desc_ko": "?초마다 뿌리가 적 1명을 1초 동안 기절시킵니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Every ? seconds, roots stun an enemy for 1 second."
  },
  {
   "apiName": "DA_LivingSoil18_Upgrade",
@@ -2626,7 +2864,8 @@
   "unique": false,
   "desc_ko": "?초마다 뿌리가 적 ?명을 1초 동안 기절시킵니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Every ? seconds, roots stun ? enemies for 1 second."
  },
  {
   "apiName": "DA_Lucky718",
@@ -2637,7 +2876,8 @@
   "unique": false,
   "desc_ko": "상점 새로고침을 7회 얻습니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Gain 7 shop rerolls."
  },
  {
   "apiName": "DA_Lucky718_Prismatic",
@@ -2648,7 +2888,8 @@
   "unique": false,
   "desc_ko": "상점 새로고침을 ?회 얻습니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Gain ? shop rerolls."
  },
  {
   "apiName": "DA_Lucky718_Upgrade",
@@ -2659,7 +2900,8 @@
   "unique": false,
   "desc_ko": "상점 새로고침을 ?회 얻습니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Gain ? shop rerolls."
  },
  {
   "apiName": "DA_ManaPotion18_Charm",
@@ -2670,7 +2912,8 @@
   "unique": false,
   "desc_ko": "장착 가능한 임시 마나 물약 1개를 획득합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Gain a temporary equippable Mana Potion."
  },
  {
   "apiName": "DA_ManaPotion18_Upgrade_Charm",
@@ -2681,7 +2924,8 @@
   "unique": false,
   "desc_ko": "장착 가능한 임시 찬란한 마나 물약 1개를 획득합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Gain a temporary equippable Radiant Mana Potion."
  },
  {
   "apiName": "DA_ManaRichSoil18",
@@ -2692,7 +2936,8 @@
   "unique": false,
   "desc_ko": "아군 마법사의 최대 마나가 ?% 감소합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Your Casters have ?% reduced Max Mana."
  },
  {
   "apiName": "DA_ManaRichSoil18_Upgrade",
@@ -2703,7 +2948,8 @@
   "unique": false,
   "desc_ko": "아군 마법사의 최대 마나가 ?% 감소합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Your Casters have ?% reduced Max Mana."
  },
  {
   "apiName": "DA_MarksmensGale18",
@@ -2714,7 +2960,8 @@
   "unique": false,
   "desc_ko": "아군 원거리 딜러가 기본 공격 시 중첩되는 공격 속도를 3% 얻습니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Your Marksmen's attacks grant 3% stacking Attack Speed."
  },
  {
   "apiName": "DA_MarksmensGale18_Upgrade",
@@ -2725,7 +2972,8 @@
   "unique": false,
   "desc_ko": "아군 원거리 딜러가 기본 공격 시 중첩되는 공격 속도를 ?% 얻습니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Your Marksmen's attacks grant ?% stacking Attack Speed."
  },
  {
   "apiName": "DA_MarksmensMarks18",
@@ -2736,7 +2984,8 @@
   "unique": false,
   "desc_ko": "아군 원거리 딜러가 30% 확률로 이중 공격합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Your Marksmen have a 30% chance to double attack."
  },
  {
   "apiName": "DA_MarksmensMarks18_Upgrade",
@@ -2747,7 +2996,8 @@
   "unique": false,
   "desc_ko": "아군 원거리 딜러가 ?% 확률로 이중 공격합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Your Marksmen have a ?% chance to double attack."
  },
  {
   "apiName": "DA_MiddlePath18",
@@ -2758,7 +3008,8 @@
   "unique": false,
   "desc_ko": "상점을 새로고침해 모두 3단계 2성 챔피언으로 채웁니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Reroll your shop with all 2-star 3-cost champions."
  },
  {
   "apiName": "DA_MiddlePath18_Upgrade",
@@ -2769,7 +3020,8 @@
   "unique": false,
   "desc_ko": "상점을 새로고침해 모두 3단계 2성 챔피언으로 채웁니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Reroll your shop with all 2-star 3-cost champions."
  },
  {
   "apiName": "DA_MoonlightRitual18",
@@ -2780,7 +3032,8 @@
   "unique": false,
   "desc_ko": "전투 중 별 레벨이 가장 낮은 아군 1단계 또는 2단계 챔피언의 별 레벨이 오릅니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Your lowest star 1-cost or 2-cost champion stars up in combat."
  },
  {
   "apiName": "DA_MoonlightRitualUpgrade18",
@@ -2791,7 +3044,8 @@
   "unique": false,
   "desc_ko": "전투 중 별 레벨이 가장 낮은 아군 1단계 또는 2단계 챔피언 2명의 별 레벨이 오릅니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Your two lowest star 1-cost or 2-cost champions star up in combat."
  },
  {
   "apiName": "DA_NaturesAlly18",
@@ -2802,7 +3056,8 @@
   "unique": false,
   "desc_ko": "아군이 ?회 사망할 때마다 무작위 협곡야수 1마리를 소환합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Every ? ally deaths, summon a random Riftbeast."
  },
  {
   "apiName": "DA_NaturesAlly18_Upgrade",
@@ -2813,7 +3068,8 @@
   "unique": false,
   "desc_ko": "아군이 ?회 사망할 때마다 무작위 협곡야수 1마리를 소환합니다. 협곡야수가 일정 확률로 2성이 됩니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Every ? ally deaths, summon a random Riftbeast that's sometimes 2-star."
  },
  {
   "apiName": "DA_NaturesWrath18",
@@ -2824,7 +3080,8 @@
   "unique": false,
   "desc_ko": "?초 후 아이템이 없는 모든 유닛을 처치합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Kill EVERYONE without an item after ? seconds."
  },
  {
   "apiName": "DA_NaturesWrath18_Upgrade",
@@ -2835,7 +3092,8 @@
   "unique": false,
   "desc_ko": "?초 후 아이템이 없는 모든 유닛을 처치합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Kill EVERYONE without an item after ? seconds."
  },
  {
   "apiName": "DA_Peddler18",
@@ -2846,7 +3104,8 @@
   "unique": false,
   "desc_ko": "무작위 아이템 상점을 엽니다. 무작위 아이템 비용은 0~?골드입니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Open a random item store. Random items cost 0 to ? gold."
  },
  {
   "apiName": "DA_Peddler18_Upgrade",
@@ -2857,7 +3116,8 @@
   "unique": false,
   "desc_ko": "무작위 아이템 상점을 엽니다. 무작위 아이템 비용은 0~?골드입니다. ?골드를 획득합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Open a random item store. Random items cost 0 to ? gold. Gain ? Gold."
  },
  {
   "apiName": "DA_PetrifiedDummy18",
@@ -2868,7 +3128,8 @@
   "unique": false,
   "desc_ko": "처음으로 사망하는 아군 챔피언이 방어 능력치를 유지한 채 체력이 ?인 훈련 봇으로 변합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Your first champion to die turns into a ? Health dummy with their defenses."
  },
  {
   "apiName": "DA_PetrifiedDummy18_Upgrade",
@@ -2879,7 +3140,8 @@
   "unique": false,
   "desc_ko": "처음으로 사망하는 아군 챔피언이 방어 능력치를 유지한 채 체력이 ?인 훈련 봇으로 변합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Your first champion to die turns into a ? Health dummy with their defenses."
  },
  {
   "apiName": "DA_PetrifyShields18",
@@ -2890,7 +3152,8 @@
   "unique": false,
   "desc_ko": "10초 동안 적을 ?% 둔화시키고 보호막을 20% 감소시킵니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "?% Slow enemies and reduce their shields by 20% for 10 seconds."
  },
  {
   "apiName": "DA_PetrifyShields18_Upgrade",
@@ -2901,7 +3164,8 @@
   "unique": false,
   "desc_ko": "10초 동안 적을 ?% 둔화시키고 보호막을 ?% 감소시킵니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "?% Slow enemies and reduce their shields by ?% for 10 seconds."
  },
  {
   "apiName": "DA_PhantomArmor18",
@@ -2912,7 +3176,8 @@
   "unique": false,
   "desc_ko": "임시 워모그의 갑옷 1개를 획득합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Gain a temporary Warmog's Armor."
  },
  {
   "apiName": "DA_PhantomArmor18_Prismatic",
@@ -2923,7 +3188,8 @@
   "unique": false,
   "desc_ko": "임시 찬란한 워모그의 갑옷 6개와 제거기 5개를 획득합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Gain 6 temporary Radiant Warmog's Armors and 5 Removers."
  },
  {
   "apiName": "DA_PhantomArmor18_Upgrade",
@@ -2934,7 +3200,8 @@
   "unique": false,
   "desc_ko": "임시 불굴 1개를 획득합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Gain a temporary The Indomitable."
  },
  {
   "apiName": "DA_PhantomEmblem18",
@@ -2945,7 +3212,8 @@
   "unique": false,
   "desc_ko": "가장 많이 활성화된 아군 특성의 임시 상징을 획득합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Gain a temporary emblem of your most active trait."
  },
  {
   "apiName": "DA_PhantomEmblemUpgrade18",
@@ -2956,7 +3224,8 @@
   "unique": false,
   "desc_ko": "가장 많이 활성화된 아군 특성의 임시 상징을 획득합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Gain a temporary emblem of your most active trait."
  },
  {
   "apiName": "DA_PhantomGloves18",
@@ -2967,7 +3236,8 @@
   "unique": false,
   "desc_ko": "임시 도적의 장갑 1개를 획득합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Gain a temporary Thief's Gloves."
  },
  {
   "apiName": "DA_PhantomGloves18_Upgrade",
@@ -2978,7 +3248,8 @@
   "unique": false,
   "desc_ko": "임시 방한 장갑 1개를 획득합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Gain a temporary Mittens."
  },
  {
   "apiName": "DA_PhantomSplash18",
@@ -2989,7 +3260,8 @@
   "unique": false,
   "desc_ko": "전투 시작: 비활성화된 특성 최대 ?개가 가장 낮은 등급으로 활성화됩니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Combat start: Up to ? inactive traits activate at the lowest level."
  },
  {
   "apiName": "DA_PhantomSplashUpgrade18",
@@ -3000,7 +3272,8 @@
   "unique": false,
   "desc_ko": "전투 시작: 비활성화된 특성 최대 ?개가 가장 낮은 등급으로 활성화됩니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Combat Start: Up to ? inactive traits activate at the lowest level."
  },
  {
   "apiName": "DA_PhantomVest18",
@@ -3011,7 +3284,8 @@
   "unique": false,
   "desc_ko": "임시 덤불 조끼 1개를 획득합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Gain a temporary Bramble Vest."
  },
  {
   "apiName": "DA_PhantomVest18_Upgrade",
@@ -3022,7 +3296,8 @@
   "unique": false,
   "desc_ko": "임시 새벽의 방패 1개를 획득합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Gain a temporary Aegis of Dawn."
  },
  {
   "apiName": "DA_PlatedShields18",
@@ -3033,7 +3308,8 @@
   "unique": false,
   "desc_ko": "보호막 효과가 15% 증가합니다. 아군이 10초 동안 150의 보호막을 얻습니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Shields are 15% stronger. Allies gain 150 shield for 10 seconds."
  },
  {
   "apiName": "DA_PlatedShields18_Upgrade",
@@ -3044,7 +3320,8 @@
   "unique": false,
   "desc_ko": "보호막 효과가 ?% 증가합니다. 아군이 10초 동안 ?의 보호막을 얻습니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Shields are ?% stronger. Allies gain ? shield for 10 seconds."
  },
  {
   "apiName": "DA_Potioncraft18",
@@ -3055,7 +3332,8 @@
   "unique": false,
   "desc_ko": "장착 가능한 임시 물약 3개를 획득합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Gain three temporary equippable Potions."
  },
  {
   "apiName": "DA_Potioncraft18_Upgrade",
@@ -3066,7 +3344,8 @@
   "unique": false,
   "desc_ko": "장착 가능한 임시 찬란한 물약 3개를 획득합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Gain three temporary equippable Radiant Potions."
  },
  {
   "apiName": "DA_PottedLifebloom18",
@@ -3077,7 +3356,8 @@
   "unique": false,
   "desc_ko": "임시 생명꽃 1개를 획득합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Gain a temporary Lifeblossom."
  },
  {
   "apiName": "DA_PottedLifebloom18_Upgrade",
@@ -3088,7 +3368,8 @@
   "unique": false,
   "desc_ko": "임시 생명꽃 1개를 획득합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Gain a temporary Lifeblossom."
  },
  {
   "apiName": "DA_PottedStonebark18",
@@ -3099,7 +3380,8 @@
   "unique": false,
   "desc_ko": "임시 돌껍질 나무 1개를 획득합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Gain a temporary Stonebark Tree."
  },
  {
   "apiName": "DA_PottedStonebark18_Upgrade",
@@ -3110,7 +3392,8 @@
   "unique": false,
   "desc_ko": "임시 돌껍질 나무 1개를 획득합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Gain a temporary Stonebark Tree."
  },
  {
   "apiName": "DA_Quicken18",
@@ -3121,7 +3404,8 @@
   "unique": false,
   "desc_ko": "스킬 사용 시 아군 챔피언이 4초 동안 공격 속도를 ?% 얻습니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "On cast, your champions gain ?% Attack Speed for 4 seconds."
  },
  {
   "apiName": "DA_QuickenUpgrade18",
@@ -3132,7 +3416,8 @@
   "unique": false,
   "desc_ko": "스킬 사용 시 아군 챔피언이 ?초 동안 공격 속도를 ?% 얻습니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "On cast, your champions gain ?% Attack Speed for ? seconds."
  },
  {
   "apiName": "DA_Rain18",
@@ -3143,7 +3428,8 @@
   "unique": false,
   "desc_ko": "아군이 마나 재생을 1 얻습니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Your team gains 1 Mana Regen."
  },
  {
   "apiName": "DA_Rain18_Upgrade",
@@ -3154,7 +3440,8 @@
   "unique": false,
   "desc_ko": "아군이 마나 재생을 ? 얻습니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Your team gains ? Mana Regen."
  },
  {
   "apiName": "DA_RefreshingLight18",
@@ -3165,7 +3452,8 @@
   "unique": false,
   "desc_ko": "서로 다른 햇빛 챔피언 별 레벨당 무료 새로고침을 얻습니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Gain a free reroll per star level of each unique Solar champion."
  },
  {
   "apiName": "DA_RefreshingLight18_Upgrade",
@@ -3176,7 +3464,8 @@
   "unique": false,
   "desc_ko": "서로 다른 햇빛 챔피언 별 레벨당 무료 새로고침을 얻습니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Gain a free reroll per star level of each unique Solar champion."
  },
  {
   "apiName": "DA_Regeneration18",
@@ -3187,7 +3476,8 @@
   "unique": false,
   "desc_ko": "아군이 매초 최대 체력의 1%만큼 체력을 회복합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Your team heals 1% max Health per second."
  },
  {
   "apiName": "DA_Regeneration18_Upgrade",
@@ -3198,7 +3488,8 @@
   "unique": false,
   "desc_ko": "아군이 매초 최대 체력의 ?%만큼 체력을 회복합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Your team heals ?% max Health per second."
  },
  {
   "apiName": "DA_Revenge18",
@@ -3209,7 +3500,8 @@
   "unique": false,
   "desc_ko": "아군이 사망할 때마다 아군 챔피언이 피해 증폭을 4% 얻습니다. (중첩 가능)",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Whenever an ally dies, your champions gain 4% stacking Damage Amp."
  },
  {
   "apiName": "DA_RevengeUpgrade18",
@@ -3220,7 +3512,8 @@
   "unique": false,
   "desc_ko": "아군이 사망할 때마다 아군 챔피언이 피해 증폭을 ?% 얻습니다. (중첩 가능)",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Whenever an ally dies, your champions gain ?% stacking Damage Amp."
  },
  {
   "apiName": "DA_RideTheWave18",
@@ -3231,7 +3524,8 @@
   "unique": false,
   "desc_ko": "이번 라운드의 다음 2회의 새로고침에 지난 전투에 배치했던 챔피언이 ?명 이상 포함됩니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "The next 2 rerolls this round will have ?+ champions fielded last combat."
  },
  {
   "apiName": "DA_RideTheWaveUpgrade18",
@@ -3242,7 +3536,8 @@
   "unique": false,
   "desc_ko": "이번 라운드의 다음 ?회의 새로고침에 지난 전투에 배치했던 챔피언이 ?명 이상 포함됩니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "The next ? rerolls this round will have ?+ champions fielded last combat."
  },
  {
   "apiName": "DA_RollingBones18",
@@ -3253,7 +3548,8 @@
   "unique": false,
   "desc_ko": "적을 처치할 때마다 ?% 확률로 무료 새로고침을 1회 얻습니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "You have a ?% chance to get a free reroll with each kill."
  },
  {
   "apiName": "DA_RollingBones18_Upgrade",
@@ -3264,7 +3560,8 @@
   "unique": false,
   "desc_ko": "적을 처치할 때마다 ?% 확률로 무료 새로고침을 1회 얻고 승리 시 ?회 더 얻습니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "?% chance to get a reroll with each kill, and ? more if you win."
  },
  {
   "apiName": "DA_RolyPolys18",
@@ -3275,7 +3572,8 @@
   "unique": false,
   "desc_ko": "?초 후 생존한 아군 챔피언 1명당 새로고침을 1회 얻습니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "For each ally champion alive after ? seconds, gain a reroll."
  },
  {
   "apiName": "DA_RolyPolysUpgrade18",
@@ -3286,7 +3584,8 @@
   "unique": false,
   "desc_ko": "?초 후 생존한 아군 챔피언 1명당 새로고침을 1회 얻습니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "For each ally champion alive after ? seconds, gain a reroll."
  },
  {
   "apiName": "DA_Salvager18",
@@ -3297,7 +3596,8 @@
   "unique": false,
   "desc_ko": "대기석에 있는 유닛이 장착한 모든 아이템이 해제 및 분해됩니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Any units you bench have items removed and broken apart."
  },
  {
   "apiName": "DA_SalvagerUpgrade18",
@@ -3308,7 +3608,8 @@
   "unique": false,
   "desc_ko": "대기석에 있는 유닛이 장착한 모든 아이템이 해제 및 분해됩니다. ?골드를 획득합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Any units you bench have items removed and broken apart. Gain ? Gold."
  },
  {
   "apiName": "DA_Scrappy18",
@@ -3319,7 +3620,8 @@
   "unique": false,
   "desc_ko": "전투 시작: 아이템을 장착하지 않은 챔피언 2명이 임시 추천 아이템 1개를 획득합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Combat start: 2 champions without items gain a temporary recommended item."
  },
  {
   "apiName": "DA_Scrappy18_Upgrade",
@@ -3330,7 +3632,8 @@
   "unique": false,
   "desc_ko": "전투 시작: 아이템을 장착하지 않은 챔피언 ?명이 임시 추천 아이템 1개를 획득합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Combat Start: ? champions without items gain a temporary recommended item."
  },
  {
   "apiName": "DA_SearchParty18",
@@ -3341,7 +3644,8 @@
   "unique": false,
   "desc_ko": "이번 라운드에서 상점마다 4단계 유닛이 1명 등장합니다. 구매하기 전까지 유지됩니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Each of your shops has a 4-cost in it this round until you buy one."
  },
  {
   "apiName": "DA_SearchParty18_Upgrade",
@@ -3352,7 +3656,8 @@
   "unique": false,
   "desc_ko": "이번 라운드에서 상점마다 4단계 유닛이 1명 등장합니다. 구매하기 전까지 유지됩니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Each of your shops has a 4-cost in it this round until you buy one."
  },
  {
   "apiName": "DA_SlowStudy18",
@@ -3363,7 +3668,8 @@
   "unique": false,
   "desc_ko": "?초 후 생존한 아군 챔피언 1명당 경험치를 ? 얻습니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "For each ally champion alive after ? seconds, gain ? XP."
  },
  {
   "apiName": "DA_SlowStudyUpgrade18",
@@ -3374,7 +3680,8 @@
   "unique": false,
   "desc_ko": "?초 후 생존한 아군 챔피언 1명당 경험치를 ? 얻습니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "For each ally champion alive after ? seconds, gain ? XP."
  },
  {
   "apiName": "DA_Smurfing18",
@@ -3385,7 +3692,8 @@
   "unique": false,
   "desc_ko": "무작위 5단계 챔피언 1명을 획득합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Gain a random 5 cost champion."
  },
  {
   "apiName": "DA_Smurfing18_Upgrade",
@@ -3396,7 +3704,8 @@
   "unique": false,
   "desc_ko": "무작위 5단계 챔피언 1명을 획득합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Gain a random 5-cost champion."
  },
  {
   "apiName": "DA_Snacktime18",
@@ -3407,7 +3716,8 @@
   "unique": false,
   "desc_ko": "커다란 털뭉치 친구가 최대 체력 16% 아래인 적에게 피해를 입히면 잡아먹습니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "The BFF eats enemies he damages under 16% Max Health."
  },
  {
   "apiName": "DA_Snacktime18_Upgrade",
@@ -3418,7 +3728,8 @@
   "unique": false,
   "desc_ko": "커다란 털뭉치 친구가 최대 체력 ?% 아래인 적에게 피해를 입히면 잡아먹습니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "The BFF eats enemies he damages under ?% Max Health."
  },
  {
   "apiName": "DA_SolarGift18",
@@ -3429,7 +3740,8 @@
   "unique": false,
   "desc_ko": "레오나, 세주아니, 케일을 획득합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Gain a Leona, Sejuani, and Kayle"
  },
  {
   "apiName": "DA_SolarGift18_Upgrade",
@@ -3440,7 +3752,8 @@
   "unique": false,
   "desc_ko": "레오나, 세주아니, 케일을 획득합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Gain a Leona, Sejuani, and Kayle"
  },
  {
   "apiName": "DA_SolitudesCloak18",
@@ -3451,7 +3764,8 @@
   "unique": false,
   "desc_ko": "인접한 아군이 없는 챔피언이 최대 체력을 ?%, 피해 증폭을 10% 얻습니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Champions with no adjacent allies gain ?% Max Health and 10% Damage Amp."
  },
  {
   "apiName": "DA_SolitudesCloakUpgrade18",
@@ -3462,7 +3776,8 @@
   "unique": false,
   "desc_ko": "인접한 아군이 없는 챔피언이 최대 체력을 ?%, 피해 증폭을 ?% 얻습니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Champions with no adjacent allies gain ?% Max Health and ?% Damage Amp."
  },
  {
   "apiName": "DA_StandAlone18",
@@ -3473,7 +3788,8 @@
   "unique": false,
   "desc_ko": "가로 열에 혼자 있는 챔피언이 체력을 15%, 피해 증폭을 15% 얻습니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Champions alone in their row gain 15% Health and 15% Damage Amp."
  },
  {
   "apiName": "DA_StandAlone18_Prismatic",
@@ -3484,7 +3800,8 @@
   "unique": false,
   "desc_ko": "가로 열에 혼자 있는 챔피언이 체력을 ?%, 피해 증폭을 ?% 얻습니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Champions alone in their row gain ?% Health and ?% Damage Amp."
  },
  {
   "apiName": "DA_StandAlone18_Upgrade",
@@ -3495,7 +3812,8 @@
   "unique": false,
   "desc_ko": "가로 열에 혼자 있는 챔피언이 체력을 ?%, 피해 증폭을 ?% 얻습니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Champions alone in their row gain ?% Health and ?% Damage Amp."
  },
  {
   "apiName": "DA_StartingTown18",
@@ -3506,7 +3824,8 @@
   "unique": false,
   "desc_ko": "상점을 새로고침해 모두 1단계 2성 챔피언으로 채웁니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Reroll your shop with all 2-star 1-cost champions."
  },
  {
   "apiName": "DA_StartingTown18_Upgrade",
@@ -3517,7 +3836,8 @@
   "unique": false,
   "desc_ko": "상점을 새로고침해 모두 1단계 2성 챔피언으로 채웁니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Reroll your shop with all 2-star 1-cost champions."
  },
  {
   "apiName": "DA_Stealthy18",
@@ -3528,7 +3848,8 @@
   "unique": false,
   "desc_ko": "가장 강한 아군 전사 또는 암살자 2명이 6초 동안 대상으로 지정할 수 없는 상태가 됩니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Your 2 strongest Fighters or Assassins are untargetable for 6 seconds."
  },
  {
   "apiName": "DA_Stealthy18_Upgrade",
@@ -3539,7 +3860,8 @@
   "unique": false,
   "desc_ko": "후방에 있는 무작위 챔피언 ?명이 ?초 동안 대상으로 지정할 수 없는 상태가 됩니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "? random champions on the back row are untargetable for ? seconds."
  },
  {
   "apiName": "DA_Terraforming18",
@@ -3550,7 +3872,8 @@
   "unique": false,
   "desc_ko": "전투 시작 시 씨앗 ?개를 획득합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Gain ? seeds at start of combat."
  },
  {
   "apiName": "DA_Terraforming18_Upgrade",
@@ -3561,7 +3884,8 @@
   "unique": false,
   "desc_ko": "전투 시작 시 씨앗 ?개를 획득합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Gain ? seeds at start of combat."
  },
  {
   "apiName": "DA_ThingamajigBag18",
@@ -3572,7 +3896,8 @@
   "unique": false,
   "desc_ko": "주문력 또는 마나 재생을 영구히 부여하는 소모품 ?개를 획득합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Gain ? consumables that give permanent Ability Power or Mana Regen."
  },
  {
   "apiName": "DA_ThingamajigBag18_Upgrade",
@@ -3583,7 +3908,8 @@
   "unique": false,
   "desc_ko": "주문력 또는 마나 재생을 영구히 부여하는 소모품 ?개를 획득합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Gain ? consumables that give permanent Ability Power or Mana Regen."
  },
  {
   "apiName": "DA_ThingamajigJar18",
@@ -3594,7 +3920,8 @@
   "unique": false,
   "desc_ko": "주문력 또는 마나 재생을 영구히 부여하는 소모품 ?개를 획득합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Gain ? consumable that gives permanent Ability Power or Mana Regen."
  },
  {
   "apiName": "DA_ThingamajigJar18_Upgrade",
@@ -3605,7 +3932,8 @@
   "unique": false,
   "desc_ko": "주문력 또는 마나 재생을 영구히 부여하는 소모품 ?개를 획득합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Gain ? consumables that give permanent Ability Power or Mana Regen."
  },
  {
   "apiName": "DA_ThingamajigSack18",
@@ -3616,7 +3944,8 @@
   "unique": false,
   "desc_ko": "주문력 또는 마나 재생을 영구히 부여하는 소모품 ?개를 획득합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Gain ? consumables that give permanent Ability Power or Mana Regen."
  },
  {
   "apiName": "DA_ThingamajigSack18_Upgrade",
@@ -3627,7 +3956,8 @@
   "unique": false,
   "desc_ko": "주문력 또는 마나 재생을 영구히 부여하는 소모품 ?개를 획득합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Gain ? consumables that give permanent Ability Power or Mana Regen."
  },
  {
   "apiName": "DA_ThreeMe18",
@@ -3638,7 +3968,8 @@
   "unique": false,
   "desc_ko": "무작위 3단계 2성 챔피언 1명을 획득합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Gain a random 2-star 3-cost champion."
  },
  {
   "apiName": "DA_ThreeMe18_Upgrade",
@@ -3649,7 +3980,8 @@
   "unique": false,
   "desc_ko": "무작위 3단계 2성 챔피언 1명을 획득합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Gain a random 2-star 3-cost champion."
  },
  {
   "apiName": "DA_TigersVisit18_Wisp",
@@ -3660,7 +3992,8 @@
   "unique": false,
   "desc_ko": "이번 전투에서 호랑이 원시 효과를 얻습니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Gain the Tiger Primal buff for this combat."
  },
  {
   "apiName": "DA_TigersVisit18_Wisp_Upgrade",
@@ -3671,7 +4004,8 @@
   "unique": false,
   "desc_ko": "이번 전투에서 호랑이 원시 효과를 얻습니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Gain the Tiger Primal buff for this combat."
  },
  {
   "apiName": "DA_TrainingYard18",
@@ -3682,7 +4016,8 @@
   "unique": false,
   "desc_ko": "각각 무작위 탱커 아이템 1개를 장착한 훈련 봇 2개를 획득합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Gain 2 Training Dummies each with a random tank item."
  },
  {
   "apiName": "DA_TrainingYard18_Upgrade",
@@ -3693,7 +4028,8 @@
   "unique": false,
   "desc_ko": "각각 무작위 탱커 아이템 1개를 장착한 훈련 봇 ?개를 획득합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Gain ? Training Dummies each with a random tank item."
  },
  {
   "apiName": "DA_TreetopArchers",
@@ -3704,7 +4040,8 @@
   "unique": false,
   "desc_ko": "궁수들이 나무 위에서 화살을 발사해 ?초마다 ?의 물리 피해를 입힙니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Archers fire from the trees, dealing ? physical damage every ? seconds."
  },
  {
   "apiName": "DA_TreetopArchers_Prismatic",
@@ -3715,7 +4052,8 @@
   "unique": false,
   "desc_ko": "믿을 수 없이 많은 수의 궁수가 나무 위에서 화살을 쏩니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "An implausible number of archers fire from the trees."
  },
  {
   "apiName": "DA_TreetopArchers_Upgrade",
@@ -3726,7 +4064,8 @@
   "unique": false,
   "desc_ko": "궁수들이 나무 위에서 화살을 발사해 ?초마다 ?의 물리 피해를 입힙니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Archers fire from the trees, dealing ? physical damage every ? seconds."
  },
  {
   "apiName": "DA_TrophyHunter18",
@@ -3737,7 +4076,8 @@
   "unique": false,
   "desc_ko": "다음 플레이어 대상 전투에서 아군 경쟁자 처치 관여가 두 배로 계산됩니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Next player combat, your Rivals' takedowns count twice."
  },
  {
   "apiName": "DA_TrophyHunter18_Upgrade",
@@ -3748,7 +4088,8 @@
   "unique": false,
   "desc_ko": "다음 플레이어 대상 전투에서 아군 경쟁자 처치 관여가 두 배로 계산됩니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Next player combat, your Rivals' takedowns count twice."
  },
  {
   "apiName": "DA_TurtlesVisit18",
@@ -3759,7 +4100,8 @@
   "unique": false,
   "desc_ko": "이번 전투에서 거북이 원시 효과를 얻습니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Gain the Turtle Primal buff for this combat."
  },
  {
   "apiName": "DA_TurtlesVisit18_Upgrade",
@@ -3770,7 +4112,8 @@
   "unique": false,
   "desc_ko": "이번 전투에서 거북이 원시 효과를 얻습니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Gain the Turtle Primal buff for this combat."
  },
  {
   "apiName": "DA_WrappedInThorns18",
@@ -3781,7 +4124,8 @@
   "unique": false,
   "desc_ko": "아군 탱커가 ?초마다 받은 피해량의 ?%를 인접한 적에게 반사합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Your Tanks reflect ?% of damage taken to adjacent enemies every ? seconds."
  },
  {
   "apiName": "DA_WrappedInThorns18_Upgrade",
@@ -3792,6 +4136,7 @@
   "unique": false,
   "desc_ko": "아군 탱커가 ?초마다 받은 피해량의 ?%를 인접한 적에게 반사합니다.",
   "icon": "assets/ux/tft/hud/zaps/wands/set18_mechanicicon.tex",
-  "set_native": true
+  "set_native": true,
+  "desc_en": "Your Tanks reflect ?% of damage taken to adjacent enemies every ? seconds."
  }
 ]

@@ -18,17 +18,23 @@ icon_match_min = 0.8     # 템플릿 매칭 점수 미만이면 None
 state_min_confidence = 0.6   # 이보다 낮은 필드는 Jev state에서 제외
 
 [advisor]
-jev_enabled = true
-timeout_s = 2.0          # 추천 1회 목표 지연
-max_candidate_comps = 8  # 코드 1차 필터 후 Jev에 보낼 덱 후보 수
-cache_size = 64          # state 해시 캐시
+jev_enabled = true            # false → fallback_reason = jev_disabled
+timeout_s = 2.0               # 추천 1회 전체 예산(초)
+max_candidate_comps = 8       # 코드 1차 필터 후 Jev에 보낼 덱 후보 수 (1~20)
+cache_size = 64               # state 해시 LRU 캐시 (0 = 끔)
+jev_model = "jev-latest"      # "jev-latest" 또는 고정 버전 "jev-1.13.0". 캐시 키·state_hash에 포함
+jev_timeout_s = 1.2           # Jev 시도 1회 타임아웃 (jev_timeout_s <= jev_retry_budget_s < timeout_s)
+jev_retry_budget_s = 1.5      # RetryPolicy 총 예산
+jev_max_retries = 1           # 0~3
+circuit_fail_threshold = 3    # 연속 실패 이 횟수면 서킷 오픈
+circuit_cooldown_s = 60       # 서킷 오픈 유지 시간
 
 [stats]
 primary = "metatft"
 fallbacks = ["tactics_tools", "opgg_mcp"]
 db_path = "data/stats/stats.sqlite"
 days = 3
-rank_filter = "CHALLENGER,DIAMOND,GRANDMASTER,MASTER"
+rank_filter = "CHALLENGER,DIAMOND,GRANDMASTER,MASTER"   # 순서 무관(집합 비교), 로드 시 정렬
 request_interval_s = 1.2
 user_agent = "tft-advisor-research/0.1 (personal use)"
 

@@ -23,7 +23,7 @@ from tft_advisor.fixtures import load_expected  # noqa: E402
 from tft_advisor.static_data import load_static  # noqa: E402
 
 st = load_static(18)
-RAW = ROOT / "data/raw/metatft/2026-09-21"
+RAW = max((ROOT / "data/raw/metatft").glob("????-??-??"))  # 최신 날짜 캐시
 comps = json.loads((RAW / "comps_data.json").read_text(encoding="utf-8"))["results"]["data"]["cluster_details"]
 det = json.loads((RAW / "comp_details_424001.json").read_text(encoding="utf-8"))["results"]
 N = 8

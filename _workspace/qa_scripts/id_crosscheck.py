@@ -18,7 +18,7 @@ from tft_advisor.contracts import _ID_PATTERN  # noqa: E402
 from tft_advisor.fixtures import load_expected  # noqa: E402
 from tft_advisor.static_data import load_static  # noqa: E402
 
-RAW = ROOT / "data" / "raw" / "metatft" / "2026-09-21"
+RAW = max((ROOT / "data" / "raw" / "metatft").glob("????-??-??"))  # 최신 날짜 캐시
 st = load_static(18)
 idre = re.compile(_ID_PATTERN)
 out: dict = {}
@@ -63,26 +63,29 @@ for c in comps.values():
     for n in c["name"]:
         name_types.add(n["type"])
 
-det = j("comp_details_424001.json")["results"]
 det_units, det_items, det_traits = set(), set(), set()
-for boards in det["early_options"].values():
-    for b in boards:
-        det_units |= set(b["unit_list"].split("&"))
-for boards in det["options"].values():
-    for b in boards:
-        det_units |= set(b["units_list"].split("&"))
-        det_traits |= {trait_base(t) for t in b["traits_list"].split("&") if t}
-for it in det["itemNames"]:
-    det_items.add(it["itemNames"])
-    for u in it.get("units", []):
-        det_units.add(u["units"])
-for u in det["unit_stats"]:
-    det_units.add(u["unit"])
-for t in det["traits"]:
-    det_traits.add(t["trait"])
-for b in det["builds"]:
-    det_units.add(b["unit"])
-    det_items |= set(b["buildName"])
+DET_FILES = sorted(RAW.glob("comp_details_*.json"))  # 2026-09-22: 57개 전부
+out["comp_details_files"] = len(DET_FILES)
+for _f in DET_FILES:
+    det = json.loads(_f.read_text(encoding="utf-8"))["results"]
+    for boards in det["early_options"].values():
+        for b in boards:
+            det_units |= set(b["unit_list"].split("&"))
+    for boards in det["options"].values():
+        for b in boards:
+            det_units |= set(b["units_list"].split("&"))
+            det_traits |= {trait_base(t) for t in b.get("traits_list", "").split("&") if t}
+    for it in det["itemNames"]:
+        det_items.add(it["itemNames"])
+        for u in it.get("units", []):
+            det_units.add(u["units"])
+    for u in det["unit_stats"]:
+        det_units.add(u["unit"])
+    for t in det["traits"]:
+        det_traits.add(trait_base(t["trait"]))
+    for b in det["builds"]:
+        det_units.add(b["unit"])
+        det_items |= set(b["buildName"])
 
 opt_units = set()
 
@@ -99,7 +102,8 @@ def walk(o):
             walk(v)
 
 
-walk(j("comp_options.json"))
+if (RAW / "comp_options.json").is_file():  # 09-22 캐시에는 없음
+    walk(j("comp_options.json"))
 
 aug_tiers = j("augments_tiers.json")["content"]["content"]["tierList"]
 aug_tier_ids = {x["id"] for t in aug_tiers for x in t["content"]}
@@ -160,6 +164,30 @@ out["unmapped_augments"] = {
     "declared_not_observed": sorted(declared_aug - aug_missing),
     "observed_not_declared": sorted(aug_missing - declared_aug),
 }
+
+# ---- 3b. 변환 산출물 data/stats/metatft_*.json ID 전수
+conv_path = max((ROOT / "data/stats").glob("metatft_*.json"))
+conv = json.loads(conv_path.read_text(encoding="utf-8"))
+cu, ci, ct, ca = set(), set(), set(), set()
+for c in conv["comps"]:
+    for u in c["final_board"]:
+        cu.add(u["id"]); ci |= set(u["items"])
+    if c.get("carry"): cu.add(c["carry"])
+    ci |= set(c["carry_bis_items"]) | set(c["item_conditional"]) | set(c["item_usage"])
+    ct |= {t["id"] for t in c["key_traits"]}
+    for boards in c["buildup"].values():
+        for b in boards: cu |= set(b["units"])
+for a in conv["augment_tiers"]:
+    ca.add(a["augment_id"])
+for r in conv["unit_item_stats"]:
+    cu.add(r["unit_id"]); ci |= set(r["item_ids"])
+for r in conv["unit_stats"]:
+    cu.add(r["unit_id"])
+out["converted_file"] = conv_path.name
+check("converted_units", cu, ["champions"])
+check("converted_items", ci, ["items"])
+check("converted_traits", ct, ["traits"])
+check("converted_augments", ca, ["augments"])
 
 # ---- 4. fixtures: 이름 -> ID 전수
 all_meta_units = set(units_json) | comp_units | det_units | opt_units

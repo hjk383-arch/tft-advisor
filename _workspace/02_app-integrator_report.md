@@ -96,3 +96,61 @@ CLI 스모크: `python -m tft_advisor --screenshot "tests/fixtures/screens/라�
 - UI 백엔드(tkinter vs PySide6) 결정 보류. click-through 구현 난이도 때문에 Phase 3 착수 시 결정 필요.
 - vision/advisor 무거운 의존성은 설치하지 않음(지시대로). 해당 에이전트가 `pip install -e ".[vision]"`/`".[advisor]"`.
 - 세션 영속(보유 증강, 구매 추적) 저장 위치·형식은 app 루프 구현 시 정한다(`_state/session.json` 제안을 따를 예정).
+
+---
+
+# 2026-09-22 revision: §10a 설정 키 + CONTRACT_VERSION 0.2.0
+
+기준: `02_jev-strategist_design.md`(2026-09-22 개정) §10a, §10, §8.1, §5.4 / `02_qa-validator_report.md` §4 app-integrator 1~6.
+
+## R1. 변경 파일
+| 파일 | 변경 |
+|---|---|
+| `src/tft_advisor/config.py` | §10a 키 전부 반영(아래 R2). 공통 헬퍼 `_Cfg._require_sum_one` / `_require_non_increasing`(허용 오차 1e-6), `Unit = float [0,1]`, `_stage_lookup()`(for_stage·commit_for_stage 공유). `StatsCfg.rank_filter`는 로드 시 정규화 |
+| `config/weights.toml`, `config/settings.toml` | §10a 기본값 기록, 새 섹션 `[prefilter]`, `[item_fit]`, `[item]`, `[augment.commit_by_stage]`, advisor 신규 6키 |
+| `src/tft_advisor/contracts.py` | 0.2.0(아래 R3) |
+| `_workspace/qa_scripts/config_proposal_check.py` | `PROPOSED_*`를 §10a 표 전체(기존+신규 73키)로 교체. 거부 키 수 + config 파일 값과 §10a 기본값의 차이 수를 출력 |
+| `tests/test_boundaries.py` | `test_config_accepts_design_keys`, `test_unit_item_stats_has_comp_scope`의 strict xfail을 제거했다. 앞 테스트는 §10a 스크립트 결과(거부 0, 기본값 차이 0)와 새 섹션·advisor 키를 확인하고, 뒤 테스트는 comp_id 기본값 None과 JSON 왕복을 확인한다. Eclipse xfail은 stats-researcher 몫이라 건드리지 않았다 |
+| `tests/test_contracts.py` | `"jev timeout"`을 `FallbackReason.TIMEOUT`으로 고쳤다. 왕복 테스트에 신규 필드를 추가했다. 새 테스트 7개(파라미터 25건 포함): FallbackReason 닫힌 집합과 일관성, 0.2.0 필드 제약, rank_filter, `adjust(prior=)`, stage 조회, validator 거부 케이스, 경계 허용 케이스 |
+
+## R2. 설정 키 (§10a, 신규 53 = weights 47 + settings 6)
+- `[comp]` +5: stat_avg_best / stat_avg_worst([1,8]), show_ratio_undecided, undecided_min_p, tie_eps([0,0.2]). 기존 wi/wa/wb/hysteresis_bonus에 [0,1] 범위를 추가했다
+- `[prefilter]` 15 (`PrefilterWeights`), `[item_fit]` 7 (`ItemFitWeights`), `[item]` 6 (`ItemWeights`): 새 섹션
+- `[shop]` +10: jev_share_now/path, two/three_star_bonus, hp_danger_shift([0,0.5]), mu_core/final/next_buildup/cur_buildup, special_fallback_score
+- `[augment]` +4: w_comp, unlisted_score, tie_eps, `commit_by_stage: dict[int≥1, [0,1]]`(비어 있으면 거부, TOML 키 "2"는 int로 변환). editorial_tier_score 값은 [0,1]이고 누락 등급은 기본값으로 채운다
+- `[advisor]` +6: `jev_model`(패턴 `^jev-(latest|\d+\.\d+\.\d+)$`, 기본 `"jev-latest"`), jev_timeout_s, jev_retry_budget_s, jev_max_retries([0,3]), circuit_fail_threshold(≥1), circuit_cooldown_s(≥0). max_candidate_comps 상한은 20
+- **model_validator**
+  - 합=1: comp(wi+wa+wb), prefilter(w_item+w_aug+w_unit+w_stat), item(w_bis+w_jev+w_stat), augment(w_jev+w_editorial), shop.stage_weights(ws+wp)
+  - 비증가 사다리: prefilter unit_w_core ≥ unit_w_final ≥ unit_w_buildup, item_fit carry_bis ≥ core_unit ≥ usage, item_fit emblem_key_trait ≥ emblem_other, shop mu_core ≥ mu_final ≥ mu_next_buildup ≥ mu_cur_buildup
+  - 순서: stat_avg_best < stat_avg_worst, show_ratio_undecided ≤ show_ratio, jev_timeout_s ≤ jev_retry_budget_s < timeout_s
+- `AugmentWeights.commit_for_stage(s)`는 `ShopWeights.for_stage(s)`와 같은 `_stage_lookup`을 쓴다. s 이하 키 중 최댓값의 값을 쓰고, 그런 키가 없거나 s=None이면 최소 키의 값을 쓴다(1→0.3, 5+→0.9)
+- `ShrinkageWeights.adjust(x, games, prior=None)`: (g·x + k·p)/(g + k)이고 p는 prior 또는 prior_avg_place다. g+k=0이면 x를 돌려준다. prior 범위는 검증하지 않는다(`prior=0.0` 용도). prior=None이면 기존 동작과 같다
+
+## R3. 계약 0.2.0 (§10 결정 1~7)
+| # | 반영 |
+|---|---|
+| 1 GameState.item_offer | 설계 결정대로 **미반영(보류)** |
+| 2 | `Recommendation.component_priority: list[ItemId]`(max_length=10) |
+| 3 | `TargetComp.levelling: str \| None` |
+| 4 | `CompStats.item_usage: dict[ItemId, float ≥ 0]`(상한 없음, 1.38 허용) |
+| 5 | `CompUnit.role: Literal["carry","tank","support"] \| None` |
+| 6 | `UnitItemStats.comp_id: str \| None`(None = 전체 통계) |
+| 7 | `FallbackReason(StrEnum)` 9종, `Recommendation.fallback_reason: FallbackReason \| None`, validator로 `jev_used == (fallback_reason is None)` 확인. **주의: 이제 jev_used=False이면 사유가 필수다** |
+- rank_filter: `contracts.rank_filter_set()`(frozenset, 대문자, 공백 제거), `normalize_rank_filter()`(정렬 후 콤마 결합), `same_rank_filter()`를 추가했다. `Provenance.rank_filter`와 `settings.stats.rank_filter`는 검증 시 정규형으로 저장된다.
+
+## R4. 다른 에이전트 영향
+- **stats-researcher**: `stats/metatft_convert.py`에 `normalize_rank_filter`/`same_rank_filter`를 따로 두고 있다. 의미는 같지만 규칙을 한 곳에 두려면 `tft_advisor.contracts`의 함수를 import하도록 권한다(계약이 어차피 저장 시 정규화한다). `UnitItemStats.comp_id`, `CompStats.item_usage`, `CompUnit.role`을 채울 수 있다.
+- **jev-strategist(advisor 구현)**: 폴백 시 반드시 `FallbackReason`을 넣어야 한다(없으면 ValidationError). 조회에는 `weights.augment.commit_for_stage(n)`, `shrinkage.adjust(..., prior=)`, `settings.advisor.jev_model`을 쓴다.
+- **app(오버레이)**: `TargetComp.levelling`, `Recommendation.component_priority`를 표시할 수 있다. 오버레이 배치는 미결정이다.
+
+## R5. 검증 (실제 출력)
+```
+$ .venv/bin/python _workspace/qa_scripts/config_proposal_check.py
+§10a keys checked: 73
+rejected keys: 0
+config files differ from §10a defaults: 0
+
+$ .venv/bin/python -m pytest -q -rxs
+56 passed, 7 skipped in 0.58s
+```
+skip 7건은 모두 `MetaTFT 원본 캐시 없음`이다(이 macOS 체크아웃에는 `data/raw/metatft/2026-09-21`이 없다). 원본 캐시 기반 변환 테스트는 이 환경에서 다시 확인하지 못했다.
