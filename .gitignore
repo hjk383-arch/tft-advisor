@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+
+# Secrets
+.env
+*.key
+
+# Large / regenerable data
+data/raw/
+data/static/raw_cdragon/
+data/stats/*.sqlite
+
+# Local Claude Code settings
+.claude/settings.local.json
+
+# Logs
+logs/
+*.log
