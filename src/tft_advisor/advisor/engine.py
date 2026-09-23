@@ -392,7 +392,8 @@ def create_advisor(mode: Literal["mock", "live", "off", "auto"] = "auto", **kw: 
         kw["settings"] = settings
         mode = settings.advisor.jev_backend
     if mode == "live" and not LiveJevBackend.key_present():
-        log.warning("jev_backend=live 이지만 TYPESAFE_API_KEY가 없다 → Jev 호출은 인증 실패 폴백이 된다")
+        log.warning("jev_backend=live 이지만 TypeSafe API 키가 없다(환경변수·키체인·폴백 파일 모두)"
+                    " → Jev 호출은 인증 실패 폴백이 된다")
     return Advisor(backend=mode, **kw)
 
 

@@ -24,9 +24,14 @@ vision = [
     "onnxruntime>=1.23; sys_platform != 'darwin' or platform_machine != 'x86_64'",
     "openvino>=2025.1; sys_platform == 'darwin' and platform_machine == 'x86_64'",
 ]
-# TypeSafe Jev. API 키는 환경변수 TYPESAFE_API_KEY 에서만 읽는다.
+# TypeSafe Jev. API 키는 환경변수 TYPESAFE_API_KEY 우선, 없으면 OS 키체인(keyring). 저장소에는 절대 두지 않는다.
 advisor = [
     "typesafe_sdk>=0.7.1,<0.8",   # 0.7.1에서 검증(AsyncTypeSafeClient, RetryPolicy(timeout=)). 0.x라 마이너 상한
+    "keyring>=25.6",              # macOS Keychain / Windows Credential Manager / (리눅스) SecretService 래퍼
+]
+# 키 저장만 따로 깔고 싶을 때(오버레이만 쓰는 설치 등). advisor extra에 이미 포함돼 있다.
+keyring = [
+    "keyring>=25.6",
 ]
 # 통계 수집기(실시간 루프 밖 배치).
 stats = [

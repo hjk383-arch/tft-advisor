@@ -7,6 +7,10 @@
 UI 스레드에서는 인식도 Jev 호출도 하지 않는다.
 
 종료: Ctrl+C(콘솔) 또는 트레이 메뉴 "종료". 둘 다 루프를 멈추고 세션을 저장한다.
+
+Jev 백엔드: 시작값은 **CLI(--jev/--no-jev) > `[advisor] jev_backend`**. 오버레이 모드에서는 트레이 메뉴
+"Jev 실시간 판단 (과금)" 체크로 실행 중에 live ↔ mock을 바꾼다(`jev_toggle.JevSwitcher`). CLI로 못박은
+실행에서는 그 토글이 잠긴다.
 """
 from __future__ import annotations
 
@@ -82,7 +86,7 @@ def warm_up(advisor) -> None:
 
 def run_live(*, settings: Settings | None = None, jev: str = "auto", overlay: bool = True,
              debug_dir: Path | None = None, source: object | None = None,
-             max_frames: int | None = None) -> int:
+             max_frames: int | None = None, config_dir: Path | None = None) -> int:
     settings = settings or load_settings()
     ui = choose_ui(settings, overlay)
     loop, advisor = build(settings, jev, debug_dir, source)
@@ -95,7 +99,9 @@ def run_live(*, settings: Settings | None = None, jev: str = "auto", overlay: bo
 
     if ui == "console":
         return _run_console(loop, settings, backend, patch, max_frames)
-    return _run_overlay(loop, settings, backend, patch, max_frames)
+    # CLI가 백엔드를 못박은 실행(--jev/--no-jev)이면 트레이 토글을 잠근다: CLI > 토글 > 설정 파일
+    return _run_overlay(loop, settings, backend, patch, max_frames, config_dir,
+                        jev_cli=jev if jev in ("mock", "live", "off") else None)
 
 
 # ---------------------------------------------------------------------------
@@ -141,14 +147,17 @@ def _run_console(loop: LiveLoop, settings: Settings, backend: str, patch: str | 
 
 
 def _run_overlay(loop: LiveLoop, settings: Settings, backend: str, patch: str | None,
-                 max_frames: int | None) -> int:
-    from ..static_data import PROJECT_ROOT
+                 max_frames: int | None, config_dir: Path | None = None,
+                 jev_cli: str | None = None) -> int:
+    from .jev_toggle import JevSwitcher
     from .overlay import make_overlay
+    from .setup import resolve_state_dir
 
-    state_dir = Path(settings.app.state_dir)
-    if not state_dir.is_absolute():
-        state_dir = PROJECT_ROOT / state_dir
-    app, window = make_overlay(settings, state_dir=state_dir)
+    # 트레이 메뉴 "설정"이 같은 설정 파일을 고치도록 config_dir도 넘긴다
+    switcher = JevSwitcher(loop=loop, settings=settings, backend=backend, config_dir=config_dir,
+                           locked_by_cli=jev_cli)
+    app, window = make_overlay(settings, state_dir=resolve_state_dir(settings), config_dir=config_dir,
+                               jev=switcher)
     window.status = StatusInfo(patch=patch, backend=backend)
     loop.on_update = window.on_loop_update
     window.show_overlay()

@@ -7,6 +7,8 @@
 Qt 시그널로 UI 스레드에 넘긴다(**UI 스레드에서 인식·Jev 호출을 하지 않는다**).
 
 조작(트레이 아이콘 메뉴 / 창이 잠금 해제 상태일 때 단축키)
+- Jev 실시간 판단     트레이 메뉴 체크(과금). 켜면 live, 끄면 mock으로 **재시작 없이** 바꾸고 설정에 저장한다
+                      (`app/jev_toggle.py`. 교체는 작업 스레드에서 하고, 새 백엔드는 다음 추천부터 쓰인다)
 - 표시/숨기기         Ctrl+Shift+O
 - 이동 잠금/해제       Ctrl+Shift+L  (해제하면 드래그로 옮길 수 있다. 잠금 = 클릭 통과)
 - 위치 저장           Ctrl+S         → `_state/overlay.json`(다음 실행에 복원)
@@ -48,14 +50,17 @@ class OverlayWindow(QWidget):
     """추천 표시 창. 테스트는 이 클래스를 offscreen 플랫폼으로 만들고 `set_data()`를 부른다."""
 
     loop_update = Signal(object)
+    jev_switched = Signal(object)     # jev_toggle.SwitchResult (작업 스레드 → UI 스레드)
 
     def __init__(self, settings: Settings | None = None, *, names: NameBook | None = None,
-                 state_dir: Path | None = None, parent: QWidget | None = None) -> None:
+                 state_dir: Path | None = None, config_dir: Path | None = None,
+                 jev: object | None = None, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self.settings = settings or load_settings()
         self.cfg = self.settings.overlay
         self.names = names or NameBook()
         self.state_dir = state_dir
+        self.config_dir = config_dir   # 트레이 메뉴 "설정"이 쓸 설정 디렉터리(None = config/)
         self.scale = self.cfg.scale
         self._opacity = self.settings.overlay_opacity()
         self._locked = self.cfg.locked and self.settings.overlay_click_through()
@@ -66,6 +71,12 @@ class OverlayWindow(QWidget):
         self.kept: KeptInfo | None = None   # 직전 추천 표시 중이면(전투 등) 그 정보
         self.status = StatusInfo(backend=self.settings.advisor.jev_backend)
         self.tray: QSystemTrayIcon | None = None
+        self.jev = jev                 # jev_toggle.JevSwitcher (없으면 메뉴에 토글을 넣지 않는다)
+        if jev is not None:
+            self.status.backend = getattr(jev, "backend", self.status.backend)
+        self._jev_actions: list[QAction] = []    # 메뉴마다 만들어지는 체크 항목(상태를 같이 맞춘다)
+        self.jev_thread = None                   # 마지막 전환 작업 스레드(종료·테스트에서 기다린다)
+        self._lock_note: str | None = None       # 상태줄 `extra`의 기본값(잠금 상태)
 
         self.setWindowTitle("TFT Advisor")
         self.setWindowFlags(Qt.WindowType.FramelessWindowHint | Qt.WindowType.Tool)
@@ -90,6 +101,7 @@ class OverlayWindow(QWidget):
         self.setWindowOpacity(self._opacity)
 
         self.loop_update.connect(self._on_update_main, Qt.ConnectionType.QueuedConnection)
+        self.jev_switched.connect(self._on_jev_switched, Qt.ConnectionType.QueuedConnection)
         self._age_timer = QTimer(self)
         self._age_timer.setInterval(5000)          # 상태줄의 "N초 전"을 갱신한다
         self._age_timer.timeout.connect(self._render_status)
@@ -243,10 +255,120 @@ class OverlayWindow(QWidget):
         note = "잠금(클릭 통과)" if self._locked else "이동 가능"
         if locked and not effect:
             note = f"클릭 통과 실패 — {click_through_note()}"
+        self._lock_note = note
         self.status.extra = note
         if self.isVisible():
             self.show()          # 창 플래그를 바꾸면 다시 show()해야 한다
         self._render_status()
+
+    def open_setup(self):
+        """트레이 메뉴 "설정" — 실행 전 설정 대화상자를 연다(해상도 자동 감지·테스트 캡처).
+
+        저장한 값은 **다시 시작해야** 적용된다(실시간 루프의 인식기·캡처 소스는 시작할 때 만들어진다).
+        캡처에 오버레이가 찍히지 않도록 대화상자가 열려 있는 동안에는 창을 숨긴다.
+        """
+        try:
+            from .setup_dialog import SetupDialog
+        except ImportError:   # pragma: no cover — PySide6가 있어야 이 창이 뜬다
+            return None
+        visible = self.isVisible()
+        self.hide()
+        dialog = SetupDialog(self.settings, config_dir=self.config_dir, state_dir=self.state_dir)
+        try:
+            dialog.show()
+            dialog.start()
+            dialog.exec()
+        finally:
+            dialog.grabber.close()
+            if visible:
+                self.show()
+        if dialog.outcome.action != "cancelled":
+            self._set_extra("설정 저장됨 — 화면 설정은 다시 시작해야 적용된다")
+            if self.tray is not None:
+                self.tray.showMessage("TFT Advisor", "설정을 저장했다. 화면 설정은 앱을 다시 시작하면 적용된다.")
+            self._apply_saved_jev(dialog.outcome)
+        return dialog.outcome
+
+    def _apply_saved_jev(self, outcome) -> None:
+        """설정 화면에서 바꾼 Jev 백엔드는 **재시작 없이** 적용한다(파일은 대화상자가 이미 썼다)."""
+        switcher = self.jev
+        choice = getattr(outcome, "choice", None)
+        backend = getattr(choice, "jev_backend", None)
+        if switcher is None or backend is None or backend == switcher.backend:
+            return
+        if not switcher.can_toggle:
+            self._set_extra(f"Jev는 {switcher.lock_note()}")
+            return
+        self._set_extra(f"Jev 전환 중… ({backend})")
+        # 파일은 대화상자가 이미 썼다 → persist=False
+        self.jev_thread = switcher.set_backend(backend, persist=False, on_done=self.jev_switched.emit)
+
+    # ------------------------------------------------------------------ Jev 실시간 판단 토글
+    def set_jev_live(self, checked: bool) -> None:
+        """트레이 체크 → live / 해제 → mock. 실제 교체는 작업 스레드에서 한다(UI를 멈추지 않는다).
+
+        표시 중인 추천은 그대로 두고 **다음 추천부터** 새 백엔드가 쓰인다(지금 Jev를 부르지 않는다).
+        """
+        switcher = self.jev
+        if switcher is None:
+            return
+        target = "live" if checked else "mock"
+        if target == switcher.backend:
+            return
+        blocked = switcher.blocked_reason(target)
+        if blocked is not None:
+            self._set_extra(f"Jev 전환 불가 — {blocked}")
+            self._sync_jev_actions()
+            return
+        self._set_extra(f"Jev 전환 중… ({target})")
+        self.jev_thread = switcher.set_backend(target, on_done=self.jev_switched.emit)
+
+    def _on_jev_switched(self, result) -> None:
+        """작업 스레드의 전환 결과를 UI 스레드에서 반영한다(상태줄 백엔드 표시 + 트레이 알림)."""
+        self.status.backend = result.backend
+        self._set_extra(None if result.ok else f"Jev 전환 실패 — {result.message}")
+        self._sync_jev_actions()
+        if self.tray is not None:
+            self.tray.showMessage("TFT Advisor", result.message)
+
+    def _sync_jev_actions(self) -> None:
+        """열려 있는 메뉴들의 체크 상태를 지금 백엔드에 맞춘다(트레이 메뉴는 한 번만 만들어진다)."""
+        live = self.status.backend == "live"
+        alive = []
+        for action in self._jev_actions:
+            try:
+                action.blockSignals(True)
+                action.setChecked(live)
+                action.blockSignals(False)
+            except RuntimeError:   # 메뉴가 이미 지워졌다
+                continue
+            alive.append(action)
+        self._jev_actions = alive
+
+    def _set_extra(self, text: str | None) -> None:
+        self.status.extra = text or self._lock_note
+        self._render_status()
+
+    def _add_jev_action(self, menu: QMenu) -> None:
+        sw = self.jev
+        if sw is None:
+            return
+        from .jev_toggle import MENU_TEXT
+
+        text = MENU_TEXT
+        reason = sw.blocked_reason("live")
+        if reason is not None and not sw.can_toggle:
+            text = f"{MENU_TEXT} — CLI --jev {sw.locked_by_cli} 로 고정"
+        elif reason is not None:
+            text = f"{MENU_TEXT} — TypeSafe API 키 없음 (설정에서 입력)"
+        action = menu.addAction(text)
+        action.setCheckable(True)
+        action.setChecked(self.status.backend == "live")
+        if reason is not None:
+            action.setEnabled(False)
+            action.setToolTip(reason)
+        action.toggled.connect(self.set_jev_live)
+        self._jev_actions.append(action)
 
     def toggle_locked(self) -> None:
         self.apply_lock(not self._locked)
@@ -312,6 +434,8 @@ class OverlayWindow(QWidget):
         _add(m, "이동 잠금 해제\tCtrl+Shift+L" if self._locked else "이동 잠금\tCtrl+Shift+L", self.toggle_locked)
         _add(m, "위치 저장\tCtrl+S", self.save_position)
         m.addSeparator()
+        self._add_jev_action(m)
+        _add(m, "설정(화면 자동 감지)…", self.open_setup)
         _add(m, "불투명도 +", lambda: self.adjust_opacity(0.05))
         _add(m, "불투명도 −", lambda: self.adjust_opacity(-0.05))
         m.addSeparator()
@@ -368,11 +492,12 @@ def _make_tray(window: OverlayWindow) -> QSystemTrayIcon | None:
 
 
 def make_overlay(settings: Settings | None = None, *, state_dir: Path | None = None,
-                 names: NameBook | None = None) -> tuple[QApplication, OverlayWindow]:
-    """QApplication + 오버레이 창을 만든다(이미 있으면 재사용)."""
+                 names: NameBook | None = None, config_dir: Path | None = None,
+                 jev: object | None = None) -> tuple[QApplication, OverlayWindow]:
+    """QApplication + 오버레이 창을 만든다(이미 있으면 재사용). `jev`: 실행 중 백엔드 전환기."""
     app = QApplication.instance() or QApplication([])
     app.setQuitOnLastWindowClosed(False)   # 창을 숨겨도 앱이 끝나지 않는다
-    window = OverlayWindow(settings, names=names, state_dir=state_dir)
+    window = OverlayWindow(settings, names=names, state_dir=state_dir, config_dir=config_dir, jev=jev)
     return app, window
 
 

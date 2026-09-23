@@ -1,4 +1,5 @@
-"""추천 엔진 (소유: jev-strategist). 통계 + TypeSafe Jev 합성. API 키는 환경변수 TYPESAFE_API_KEY.
+"""추천 엔진 (소유: jev-strategist). 통계 + TypeSafe Jev 합성.
+API 키: 환경변수 TYPESAFE_API_KEY → OS 키체인 → ~/.config/tft-advisor/ (tft_advisor.credentials).
 
 입력: contracts.GameState + 통계(AdvisorStats) / 출력: contracts.Recommendation
 

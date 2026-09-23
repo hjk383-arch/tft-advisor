@@ -66,6 +66,8 @@ class LoopUpdate:
 class AdviceRunner(Protocol):
     def submit(self, state: GameState) -> None: ...
 
+    def set_advisor(self, advisor: Any) -> None: ...
+
     def close(self) -> None: ...
 
 
@@ -84,6 +86,11 @@ class InlineAdviceRunner:
             return
         self.on_result(state, rec)
 
+    def set_advisor(self, advisor: Any) -> None:
+        old, self.advisor = self.advisor, advisor
+        if old is not advisor:
+            _close_advisor(old)
+
     def close(self) -> None:
         pass
 
@@ -100,6 +107,8 @@ class ThreadAdviceRunner:
         self.on_result = on_result
         self._lock = threading.Lock()
         self._pending: GameState | None = None
+        self._next_advisor: Any = None      # 교체 요청(실제 교체는 추천 스레드 안에서)
+        self.advisor_swapped = threading.Event()   # 교체가 끝날 때마다 set (테스트·전환기 대기용)
         self._wake = threading.Event()
         self._stop = threading.Event()
         self._thread = threading.Thread(target=self._run, name=name, daemon=True)
@@ -110,10 +119,35 @@ class ThreadAdviceRunner:
             self._pending = state
         self._wake.set()
 
+    def set_advisor(self, advisor: Any) -> None:
+        """실행 중 advisor 교체(트레이 "Jev 실시간 판단" 토글).
+
+        교체는 **추천 스레드 안에서** 일어난다: 계산 중인 호출을 끊지 않고, 옛 advisor의 전용
+        이벤트 루프(`Advisor.close()`)도 그 루프를 만든 스레드에서 닫는다. 교체만으로는 Jev를
+        부르지 않는다 — 새 백엔드는 다음 `submit()`부터 쓰인다.
+        """
+        with self._lock:
+            self._next_advisor = advisor
+        self.advisor_swapped.clear()
+        self._wake.set()
+
+    def _swap_if_requested(self) -> None:
+        with self._lock:
+            new, self._next_advisor = self._next_advisor, None
+        if new is None:
+            return
+        if new is not self.advisor:
+            old, self.advisor = self.advisor, new
+            _close_advisor(old)
+            log.info("Jev 백엔드 교체: %s → %s", getattr(old, "backend_name", "?"),
+                     getattr(new, "backend_name", "?"))
+        self.advisor_swapped.set()
+
     def _run(self) -> None:
         while not self._stop.is_set():
             self._wake.wait(0.2)
             self._wake.clear()
+            self._swap_if_requested()
             with self._lock:
                 state, self._pending = self._pending, None
             if state is None:
@@ -129,10 +163,16 @@ class ThreadAdviceRunner:
         self._stop.set()
         self._wake.set()
         self._thread.join(timeout=3.0)
-        try:
-            self.advisor.close()
-        except Exception:
-            log.debug("advisor.close 실패", exc_info=True)
+        _close_advisor(self.advisor)
+
+
+def _close_advisor(advisor: Any) -> None:
+    if advisor is None:
+        return
+    try:
+        advisor.close()
+    except Exception:
+        log.debug("advisor.close 실패", exc_info=True)
 
 
 # ---------------------------------------------------------------------------
@@ -357,6 +397,18 @@ class LiveLoop:
             if wait > 0:
                 self.sleep(wait)
 
+    def set_advisor(self, advisor: Any) -> None:
+        """실행 중 advisor를 갈아 끼운다(트레이 Jev 토글 → `app/jev_toggle.py`).
+
+        표시 중인 추천은 그대로 두고 **다음 추천부터** 새 백엔드를 쓴다. 교체 자체는 Jev를 부르지 않는다.
+        """
+        self.advisor = advisor
+        setter = getattr(self.runner, "set_advisor", None)
+        if setter is None:   # 외부에서 넣은 러너
+            self.runner.advisor = advisor
+        else:
+            setter(advisor)
+
     def close(self) -> None:
         self.runner.close()
         try:
@@ -368,6 +420,9 @@ class LiveLoop:
 
 class _NullRunner:
     def submit(self, state: GameState) -> None:
+        pass
+
+    def set_advisor(self, advisor: Any) -> None:
         pass
 
     def close(self) -> None:

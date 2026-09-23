@@ -2,7 +2,8 @@
 예외 → `FallbackReason` 매핑.
 
 - `LiveJevBackend`: `typesafe_sdk.AsyncTypeSafeClient` 래퍼. SDK는 이 클래스 안에서만 import한다.
-  API 키는 SDK가 환경변수 `TYPESAFE_API_KEY`에서 직접 읽는다(코드는 존재 여부만 확인, 값은 읽지·남기지 않는다).
+  API 키는 `credentials.resolve_api_key()`가 정한다 — 환경변수 `TYPESAFE_API_KEY` → OS 키체인 → 폴백 파일.
+  값은 SDK에 넘기기만 하고 로그·예외·`to_debug()` 어디에도 남기지 않는다.
 - `MockJevBackend`: 네트워크 없음, 결정적. 질문마다 코드가 붙인 힌트(QMeta)로 답을 만든다. 실패 주입·답 덮어쓰기 가능.
 - `JevGateway`: 엔진이 쓰는 유일한 진입점. `ask()`는 절대 예외를 올리지 않고 (답 | None, FallbackReason | None)을 준다.
 """
@@ -10,12 +11,12 @@ from __future__ import annotations
 
 import asyncio
 import logging
-import os
 import time
 from collections import OrderedDict
 from dataclasses import dataclass, field
 from typing import Any, Protocol
 
+from .. import credentials
 from ..config import AdvisorCfg
 from ..contracts import FallbackReason
 from .questions import QMeta
@@ -140,7 +141,11 @@ class LiveJevBackend:
 
     @staticmethod
     def key_present() -> bool:
-        return bool(os.environ.get("TYPESAFE_API_KEY", "").strip())
+        """키가 **어디에든** 있는가 — 환경변수 → OS 키체인 → 폴백 파일(`credentials`가 정한 순서).
+
+        설정 화면 체크박스·트레이 토글·`create_advisor()`가 모두 이 한 곳을 본다.
+        """
+        return credentials.key_present()
 
     def _make_client(self) -> Any:
         from typesafe_sdk import AsyncTypeSafeClient, RetryPolicy
@@ -153,13 +158,15 @@ class LiveJevBackend:
             respect_retry_after=True,
             timeout=self.cfg.jev_retry_budget_s,
         )
-        # api_key를 넘기지 않는다 → SDK가 TYPESAFE_API_KEY를 직접 읽는다
-        return AsyncTypeSafeClient(model=self.cfg.jev_model, retry=policy, timeout=self.cfg.jev_timeout_s)
+        # 키는 credentials가 정한 순서(환경변수 → 키체인 → 폴백 파일)로 읽어 SDK에 넘긴다.
+        # 환경변수만 있을 때 넘기는 값도 같으므로 동작은 예전과 같다.
+        return AsyncTypeSafeClient(api_key=credentials.resolve_api_key(), model=self.cfg.jev_model,
+                                   retry=policy, timeout=self.cfg.jev_timeout_s)
 
     async def ask(self, state: dict[str, Any], questions: dict[str, dict[str, Any]], meta: dict[str, QMeta],
                   model: str) -> JevAnswers:
         if not self.key_present():
-            raise JevCallError(FallbackReason.AUTH, "TYPESAFE_API_KEY not set")
+            raise JevCallError(FallbackReason.AUTH, "TypeSafe API key not set (env/keychain/file)")
         if self._client is None:
             self._client = self._make_client()
         t0 = time.perf_counter()

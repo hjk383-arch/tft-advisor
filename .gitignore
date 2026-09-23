@@ -47,3 +47,9 @@ tests/fixtures/screens/raw/
 
 # macOS
 .DS_Store
+
+# 설정 화면(--setup)이 저장 전에 남기는 백업
+config/*.bak
+
+# 자격 증명은 저장소 밖(OS 키체인 / ~/.config/tft-advisor/)에만 둔다. 실수로 들어와도 커밋되지 않게.
+credentials.toml
