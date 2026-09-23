@@ -30,6 +30,7 @@ from PySide6.QtWidgets import QApplication, QLabel, QMenu, QSystemTrayIcon, QVBo
 
 from ..config import Settings, load_settings
 from ..contracts import GameState, Recommendation
+from ..unit_status import units_note
 from .names import NameBook
 from .platform_window import apply_always_on_top, apply_click_through, click_through_note
 from .report import (
@@ -165,7 +166,7 @@ class OverlayWindow(QWidget):
         if state is not None:
             parts.append(f"<span style='color:{DIM}'>{_line(state_line(state))}</span>")
         if rec is None:
-            parts.append("<i>추천 대기 중…</i>" if state is None else "<i>이 화면에서는 새 추천이 없다</i>")
+            parts.append("<i>추천 대기 중…</i>" if state is None else "<i>이 화면에서는 새 추천이 없습니다</i>")
             return "<br>".join(parts)
 
         kept = self.kept
@@ -175,8 +176,9 @@ class OverlayWindow(QWidget):
         shown = rec.target_comps[:self.settings.ui.max_target_comps]
         if not shown:
             parts.append("<i>후보 없음 — 인식 정보 부족</i>")
+        note = units_note(state, self.settings.vision.state_min_confidence) if state is not None else None
         for i, comp in enumerate(shown, start=1):   # advisor 순서 그대로. 점수로 재정렬하지 않는다
-            lines = comp_lines(comp, i, self.names, compact=True)
+            lines = comp_lines(comp, i, self.names, compact=True, units_note=note)
             parts.append(f"<b>{_line(lines[0])}</b>")
             parts += [f"<span style='color:{DIM}'>{_line(ln)}</span>" for ln in lines[1:]]
         if rec.shop:
@@ -283,9 +285,9 @@ class OverlayWindow(QWidget):
             if visible:
                 self.show()
         if dialog.outcome.action != "cancelled":
-            self._set_extra("설정 저장됨 — 화면 설정은 다시 시작해야 적용된다")
+            self._set_extra("설정 저장됨 — 화면 설정은 다시 시작해야 적용됩니다")
             if self.tray is not None:
-                self.tray.showMessage("TFT Advisor", "설정을 저장했다. 화면 설정은 앱을 다시 시작하면 적용된다.")
+                self.tray.showMessage("TFT Advisor", "설정을 저장했습니다. 화면 설정은 앱을 다시 시작하면 적용됩니다.")
             self._apply_saved_jev(dialog.outcome)
         return dialog.outcome
 
@@ -482,7 +484,7 @@ def _icon() -> QIcon:
 
 def _make_tray(window: OverlayWindow) -> QSystemTrayIcon | None:
     if not QSystemTrayIcon.isSystemTrayAvailable():
-        log.info("시스템 트레이를 쓸 수 없다 — 잠금 해제 후 창 우클릭 메뉴를 쓸 것")
+        log.info("시스템 트레이를 쓸 수 없습니다 — 잠금 해제 후 창 우클릭 메뉴를 쓰세요")
         return None
     tray = QSystemTrayIcon(_icon(), window)
     tray.setToolTip("TFT Advisor")

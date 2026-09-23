@@ -41,6 +41,7 @@ def roi_groups(profile: Profile) -> dict[str, tuple[Rect, ...]]:
         "players": (P.player_list,),
         "traits": (P.traits_panel,),
         "owned": (P.augments_owned,),
+        "board": (P.board_area, P.bench_area),
     }
 
 

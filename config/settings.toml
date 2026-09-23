@@ -19,6 +19,13 @@ reset_confirm_frames = 3         # 아니면 게임 종료/로딩이 이 횟수 
 reset_confirm_s = 3.0            # 처음 본 뒤 이 초가 지나 다시 보일 때 새 판
 reset_recheck_s = 1.0            # 확인 대기 중에는 화면 변화가 없어도 이 주기(초)로 다시 판별
 session_archive_keep = 10        # 새 판 때 이전 세션을 _state/sessions/ 에 보관할 개수(0 = 보관 안 함)
+# 보유 유닛 장부: 화면의 3D 모델로는 챔피언을 알 수 없어 상점 구매·판매를 추적해서 보유 유닛을 센다
+ledger_enabled = true            # false면 board/bench를 채우지 않는다(옛 동작: "보드 미인식")
+ledger_settle_s = 2.0            # 상점 변화와 골드 변화가 한 프레임 어긋나도 기다려 주는 시간(초)
+ledger_confidence = 0.85         # 설명되지 않은 거래가 없을 때 보유 유닛 신뢰도
+ledger_confidence_uncertain = 0.5  # 설명되지 않은 거래가 쌓였을 때 신뢰도(0.6 미만 = advisor가 '모름'으로 처리)
+ledger_uncertain_after = 3       # 설명되지 않은 거래가 이만큼 쌓이면 위 값까지 내려간다
+ledger_track_sales = true        # 골드가 늘어난 양으로 유닛 판매를 추론할지
 
 [capture]
 # 캡처할 모니터. "auto"(기본) = TFT 화면이 있는 모니터를 자동으로 찾는다(스테이지 글자 OCR, 30초마다 재확인).

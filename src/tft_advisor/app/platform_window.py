@@ -79,8 +79,8 @@ def apply_click_through(window, enabled: bool = True) -> WindowEffect:
             return win
         return WindowEffect(True, "qt", "WS_EX_TRANSPARENT 직접 설정 실패 — Qt 플래그만 적용")
     if is_macos():
-        return WindowEffect(True, "qt", "macOS: Qt가 NSWindow.ignoresMouseEvents로 번역한다")
-    return WindowEffect(True, "qt", "이 플랫폼에서는 Qt 플래그만 확인했다")
+        return WindowEffect(True, "qt", "macOS: Qt가 NSWindow.ignoresMouseEvents로 번역합니다")
+    return WindowEffect(True, "qt", "이 플랫폼에서는 Qt 플래그만 확인했습니다")
 
 
 def _windows_ex_style(window, enabled: bool) -> WindowEffect | None:
@@ -103,7 +103,7 @@ def _windows_ex_style(window, enabled: bool) -> WindowEffect | None:
 def click_through_note() -> str:
     """UI에 보여 줄 플랫폼 안내 한 줄."""
     if is_windows():
-        return "Windows: 클릭 통과 지원. 전용 전체화면 대신 테두리 없는 창모드를 쓸 것"
+        return "Windows: 클릭 통과 지원. 전용 전체화면 대신 테두리 없는 창모드를 쓰세요"
     if is_macos():
         return "macOS: 클릭 통과는 Qt 경로. 화면 기록 권한 + 테두리 없는 창모드 필요"
-    return "이 플랫폼의 클릭 통과는 검증되지 않았다 — 잠금 해제(일반 창)로 쓸 것"
+    return "이 플랫폼의 클릭 통과는 검증되지 않았습니다 — 잠금 해제(일반 창)로 쓰세요"

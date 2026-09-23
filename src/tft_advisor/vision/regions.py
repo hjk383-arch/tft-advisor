@@ -124,6 +124,53 @@ ITEM_SLOT_Y0 = 0.2417
 ITEM_SLOT_PITCH = 0.0500
 ITEM_SLOT_H = 0.0417
 
+# ---------------------------------------------------------------------------
+# 보드 육각칸 · 벤치 칸 (1080p 원본 실측, 2026-09-23 — `_workspace/16_board_vision.md`)
+# ---------------------------------------------------------------------------
+# 준비 단계 카메라는 고정이라 내 보드 28칸(4줄 x 7칸)과 벤치 9칸은 화면 좌표가 늘 같다.
+# 실측은 "하나 선택"(모루) 캡처에서 보라색으로 빛나는 육각칸 9개를 재서 원근 격자에 맞춘 값이다
+# (칸 중심 오차 <= 10px). 줄 번호 0 = 내 쪽 맨 앞(전선, 화면에서 가장 위), 3 = 벤치에 가장 가까운 줄.
+BOARD_ROWS, BOARD_COLS = 4, 7
+_BOARD_ROW_Y = (446.0, 516.0, 592.0, 671.0)        # 줄 중심 y (1080p px)
+_BOARD_ROW_PITCH = (118.0, 121.4, 125.0, 128.0)    # 같은 줄 옆 칸 간격 (원근으로 앞줄이 넓다)
+_BOARD_ROW_CX = (909.0, 906.0, 903.0, 900.0)       # 줄 기준점 x (칸 3 / 홀수 줄은 칸 2.5)
+_BOARD_TILT = -0.02                                 # 오른쪽으로 갈수록 줄이 올라가는 기울기 (py/px)
+_BOARD_HEX_HH = 34.0                                # 칸 세로 반높이
+BENCH_SLOTS = 9
+_BENCH_CX0, _BENCH_PITCH = 416.0, 121.0             # 벤치 칸 중심 x (실측: 416 ~ 1384)
+_BENCH_BAR_Y = 705.0                                # 벤치 유닛 체력바가 그려지는 평균 y
+_BENCH_HW, _BENCH_HH = 60.0, 38.0
+
+BAR_RISE = 102.0 / 1080
+"""체력바가 유닛이 선 칸 중심보다 위에 그려지는 높이(프레임 높이 비). 1080p 실측 평균 102px, 표준편차 약 16px
+(챔피언 모델 키에 따라 69~133px). 그래서 **칸(열)은 확실하지만 줄(행)은 추정**이다(16 보고서 §4)."""
+
+REF_W, REF_H = 1920.0, 1080.0
+"""16:9 기준 프로파일을 잰 화면 크기. 아래 픽셀 실측값을 비율 좌표로 바꿀 때만 쓴다."""
+
+
+def _px_rect(cx: float, cy: float, hw: float, hh: float) -> Rect:
+    return Rect(max(0.0, (cx - hw) / REF_W), max(0.0, (cy - hh) / REF_H),
+                min(1.0, (cx + hw) / REF_W), min(1.0, (cy + hh) / REF_H))
+
+
+def board_hex_px(row: int, col: int) -> tuple[float, float]:
+    """(줄, 칸) → 1080p 화면에서 그 육각칸 중심 (x, y) px."""
+    pitch = _BOARD_ROW_PITCH[row]
+    cx = _BOARD_ROW_CX[row] + pitch * (col - 3 + (0.5 if row % 2 else 0.0))
+    return cx, _BOARD_ROW_Y[row] + _BOARD_TILT * (cx - _BOARD_ROW_CX[row])
+
+
+def _board_hex(row: int, col: int) -> Rect:
+    cx, cy = board_hex_px(row, col)
+    return _px_rect(cx, cy, _BOARD_ROW_PITCH[row] / 2, _BOARD_HEX_HH)
+
+
+def _bench_cell(i: int) -> Rect:
+    """벤치 칸 i의 **체력바 기준 상자**(유닛이 선 자리가 아니라 바가 그려지는 높이)."""
+    return _px_rect(_BENCH_CX0 + _BENCH_PITCH * i, _BENCH_BAR_Y, _BENCH_HW, _BENCH_HH)
+
+
 HUD_DY_1080P = 0.003
 """하단 HUD를 방송 크롭 측정값에서 내린 양. 1080p 원본에서 글자 중심이 ROI 중심보다 2~3px 아래였다
 (레벨 +0.002, XP +0.0013, 확률 +0.002, 골드 +0.003, 상점 이름 +0.0027)."""
@@ -160,6 +207,11 @@ class Profile:
     exit_button: Rect        # 게임 종료 "나가기" 버튼
     augments_owned: Rect     # 보드 왼쪽 위 보유 증강 아이콘 줄의 **탐색 영역**(줄은 가운데 정렬로 1~N칸 늘어난다)
     combat_area: Rect        # 적 유닛 빨간 체력바 탐색 영역(보드 위쪽 절반 + 여유)
+    # --- 보드/벤치 유닛 (1080p 원본 실측, 2026-09-23) ---
+    board_area: Rect                 # 내 보드 위 **아군 초록 체력바** 탐색 영역
+    bench_area: Rect                 # 벤치 9칸 위 아군 체력바 탐색 영역
+    board_hexes: tuple[Rect, ...]    # 28칸(줄 0~3 x 칸 0~6, row-major). 줄 0 = 내 쪽 맨 앞
+    bench_cells: tuple[Rect, ...]    # 9칸(왼쪽부터). 체력바 기준 상자다
 
     def all_rois(self) -> dict[str, Rect]:
         """디버그 오버레이용 평탄화."""
@@ -169,7 +221,8 @@ class Profile:
                 out[k] = v
             elif isinstance(v, tuple):
                 for i, r in enumerate(v):
-                    out[f"{k}[{i}]"] = r
+                    if isinstance(r, Rect):
+                        out[f"{k}[{i}]"] = r
         return out
 
 
@@ -228,6 +281,11 @@ _SET18_16X9_BASE = Profile(
     exit_button=Rect(0.420, 0.910, 0.580, 0.965),     # "나가기" y 0.93~0.95
     augments_owned=Rect(0.200, 0.190, 0.340, 0.265),  # 줄(칸 38px 정사각, 가운데 x≈0.266) y 0.211~0.245
     combat_area=Rect(0.200, 0.030, 0.800, 0.620),
+    # 탐색 영역은 칸 격자 + 체력바 높이 오차(약 ±40px)를 모두 덮게 잡았다.
+    board_area=Rect(0.210, 0.230, 0.780, 0.592),
+    bench_area=Rect(0.170, 0.592, 0.790, 0.700),
+    board_hexes=tuple(_board_hex(r, c) for r in range(BOARD_ROWS) for c in range(BOARD_COLS)),
+    bench_cells=tuple(_bench_cell(i) for i in range(BENCH_SLOTS)),
 )
 """하단 HUD 세로 좌표가 방송 크롭 측정값 그대로인 기준. `SET18_16X9` = 이것 + 하단 HUD `HUD_DY_1080P`(아래)."""
 
@@ -260,6 +318,9 @@ ANCHORS: dict[str, Anchor] = {
     "board_count": Anchor.CENTER, "prep_banner": Anchor.CENTER, "select_title": Anchor.CENTER,
     "game_over_title": Anchor.CENTER, "exit_button": Anchor.CENTER, "augments_owned": Anchor.CENTER,
     "combat_area": Anchor.CENTER,
+    # 보드 육각칸·벤치 칸도 3D 보드와 함께 화면 높이에 맞춰 가운데 그려진다 → CENTER.
+    "board_area": Anchor.CENTER, "bench_area": Anchor.CENTER,
+    "board_hexes": Anchor.CENTER, "bench_cells": Anchor.CENTER,
 }
 
 # 화면 아래쪽에 붙는 HUD 막대. 방송 크롭은 게임 화면보다 아래로 조금 길어 세로 좌표가 위로 치우쳐 있었다.
@@ -312,6 +373,8 @@ def _clamp01(v: float) -> float:
 
 
 def _map_x(x: float, anchor: Anchor, k: float) -> float:
+    if k == 1.0:
+        return x            # 같은 비율이면 항등(부동소수 왕복 오차를 만들지 않는다)
     if anchor is Anchor.CENTER:
         return _clamp01(0.5 + (x - 0.5) * k)
     if anchor is Anchor.LEFT:
@@ -327,7 +390,7 @@ def derive_profile(ref: Profile, name: str, aspect: float, *, ref_aspect: float 
     `dy`는 `dy_fields`(기본: 모든 필드)의 세로 좌표를 내린다. `overrides`는 실측값으로 덮어쓴다.
     """
     if aspect <= 0 or ref_aspect <= 0:
-        raise ValueError(f"화면 비율은 양수여야 한다: aspect={aspect}, ref_aspect={ref_aspect}")
+        raise ValueError(f"화면 비율은 양수여야 합니다: aspect={aspect}, ref_aspect={ref_aspect}")
     k = ref_aspect / aspect
     shift = set(ANCHORS) if dy_fields is None else set(dy_fields)
     kw: dict[str, Rect | tuple[Rect, ...]] = {}
@@ -422,8 +485,8 @@ def profile_for_aspect(ratio: float) -> Profile:
     if name is not None and name in MEASURED_PROFILES:
         return MEASURED_PROFILES[name]
     label = name or f"{ratio:.4f}"
-    log.warning("화면 비율 %s 는 실측 프로파일이 없다 → 16:9에서 유도한다(미검증). "
-                "[vision] aspect/profile 로 고정하거나 캡처를 제공하면 정확해진다", label)
+    log.warning("화면 비율 %s 는 실측 프로파일이 없습니다 → 16:9에서 유도합니다(미검증). "
+                "[vision] aspect/profile 로 고정하거나 캡처를 제공하면 정확해집니다", label)
     return derive_profile(SET18_16X9, f"set18_{label.replace(':', 'x')}", ratio)
 
 

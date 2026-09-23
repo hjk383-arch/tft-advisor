@@ -116,7 +116,8 @@ class View:
     components: list[str] = field(default_factory=list)     # 벤치 재료
     others_owned: list[str] = field(default_factory=list)   # 벤치 유물·찬란한
     others_misc: list[str] = field(default_factory=list)    # 그 밖의 others(전략가·소모품 등)
-    equipped: list[str] = field(default_factory=list)       # 장착분(보드 또는 추적)
+    equipped: list[str] = field(default_factory=list)       # 장착분(vision 판독 · 보드 유닛 · 추적)
+    equipped_seen: bool = False                             # 장착분을 vision이 직접 읽었다(추적 추정이 아니다)
     augments: list[AugmentRef] = field(default_factory=list)
     augment_offer: list[AugmentRef] = field(default_factory=list)
     min_conf: float = 0.6
@@ -126,7 +127,10 @@ class View:
         return self.board + self.bench
 
     def owned_pool(self, stats: AdvisorStats) -> list[str]:
-        """보유 완성템 multiset P(§5.4-1): 벤치 completed + emblems + 유물/찬란한 + 장착분."""
+        """보유 완성템 multiset P(§5.4-1): 벤치 completed + emblems + 유물/찬란한 + 장착분.
+
+        장착분은 **한 번만** 들어간다(`build_view`가 vision 판독 / 보드 유닛 / 추적 중 하나만 고른다).
+        """
         if not self.items_known:
             return []
         return self.completed + self.emblems + self.others_owned + self.equipped
@@ -175,7 +179,13 @@ def build_view(state: GameState, stats: AdvisorStats, min_conf: float, equipped_
         for r in _reliable_refs(it.others, min_conf):
             cat = r.category or stats.item_category(r.id)
             (v.others_owned if cat in OWNED_OTHER_CATEGORIES else v.others_misc).append(r.id)
-        if v.units_known:
+        # 장착 아이템: vision이 직접 읽은 값(ItemState.equipped) > 보드 유닛 > 세션 추적 추정
+        # vision 판독은 **챔피언 정체를 몰라도 정확하다**(아이콘은 2D 스프라이트, 16_board_vision §3).
+        # 정체 미상 칸은 `v.units`에서 신뢰도로 걸러지므로, 유닛에서 모으면 그 아이템까지 사라진다.
+        seen = [r.id for r in _reliable_refs(it.equipped, min_conf)]
+        if seen:
+            v.equipped, v.equipped_seen = seen, True
+        elif v.units_known:
             v.equipped = [i for u in v.units for i in u.items]
         elif equipped_tracked:
             v.equipped = list(equipped_tracked.elements())

@@ -288,10 +288,12 @@ def test_recognizer_reads_augments_owned_only_when_unambiguous(static, tmp_path)
 def test_read_modes_cover_groups_and_match_app_table():
     from tft_advisor.app.session import GROUP_READ_MODES
     from tft_advisor.vision.change import roi_groups
-    from tft_advisor.vision.recognizer import GROUPS, READ_MODES
+    from tft_advisor.vision.recognizer import GROUPS, READ_MODES, VISION_ONLY_GROUPS
 
     assert set(GROUPS) | {"stage"} == set(READ_MODES)
-    assert GROUP_READ_MODES == READ_MODES          # 모드 분기를 바꾸면 app 표도 같이 바꿔야 한다
+    # 모드 분기를 바꾸면 app 표도 같이 바꿔야 한다. 단 GameState 필드를 만들지 않는 묶음(VISION_ONLY_GROUPS)은
+    # app의 **필드 병합** 표에 들어가지 않는다(app은 Recognizer.last_board_read로 받는다, vision 16).
+    assert GROUP_READ_MODES == {k: v for k, v in READ_MODES.items() if k not in VISION_ONLY_GROUPS}
     assert set(GROUPS) | {"stage"} == set(roi_groups(SET18_16X9))
 
 

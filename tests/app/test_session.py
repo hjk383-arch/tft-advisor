@@ -20,10 +20,15 @@ def test_field_group_covers_every_group_rule():
 
 def test_group_read_modes_equal_vision_read_modes():
     """vision 07: `Recognizer.recognize`의 모드 분기는 `vision.recognizer.READ_MODES` 하나만 본다 → app 표와 같아야 한다.
-    (전투 중에도 HUD·상점·아이템을 읽고, 캐러셀·특수 선택 화면에서도 아이템을 읽는다. 보유 증강 줄 "owned"는 준비 화면만.)"""
-    from tft_advisor.vision.recognizer import READ_MODES
+    (전투 중에도 HUD·상점·아이템을 읽고, 캐러셀·특수 선택 화면에서도 아이템을 읽는다. 보유 증강 줄 "owned"는 준비 화면만.)
 
-    assert GROUP_READ_MODES == READ_MODES
+    vision 16: `VISION_ONLY_GROUPS`("board")는 `GameState` 필드를 만들지 않는다 — 결과가 `Recognizer.last_board_read`로
+    나가고 app은 `unit_merge`에서 장부와 합친다. 필드 병합 표인 `GROUP_READ_MODES`에는 없는 것이 맞다.
+    """
+    from tft_advisor.vision.recognizer import READ_MODES, VISION_ONLY_GROUPS
+
+    assert GROUP_READ_MODES == {k: v for k, v in READ_MODES.items() if k not in VISION_ONLY_GROUPS}
+    assert set(READ_MODES) - set(GROUP_READ_MODES) == set(VISION_ONLY_GROUPS)
     assert ScreenMode.COMBAT in GROUP_READ_MODES["shop"] and GROUP_READ_MODES["owned"] == {ScreenMode.PLANNING}
 
 

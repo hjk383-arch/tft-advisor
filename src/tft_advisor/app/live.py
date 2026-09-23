@@ -15,6 +15,7 @@ Jev 백엔드: 시작값은 **CLI(--jev/--no-jev) > `[advisor] jev_backend`**. �
 from __future__ import annotations
 
 import logging
+import sys
 import threading
 from pathlib import Path
 
@@ -24,6 +25,7 @@ from .loop import LiveLoop, LoopUpdate
 from .names import NameBook
 from .report import StatusInfo, format_report, status_line
 from .session import SessionTracker, session_path
+from .units_cmd import PROMPT, apply_command
 
 log = logging.getLogger(__name__)
 
@@ -41,10 +43,10 @@ def choose_ui(settings: Settings, want_overlay: bool) -> str:
     if not want_overlay or not settings.overlay.enabled or settings.ui.backend == "console":
         return "console"
     if settings.ui.backend == "tkinter":
-        log.warning("[ui] backend = tkinter 는 구현하지 않았다(Phase 4에서 PySide6로 확정) → 콘솔 모드")
+        log.warning("[ui] backend = tkinter 는 구현하지 않았습니다(Phase 4에서 PySide6로 확정) → 콘솔 모드")
         return "console"
     if not overlay_available():
-        log.warning('PySide6가 없다 → 콘솔 모드. 설치: uv pip install --python .venv/bin/python -e ".[ui]"')
+        log.warning('PySide6가 없습니다 → 콘솔 모드. 설치: uv pip install --python .venv/bin/python -e ".[ui]"')
         return "console"
     return "pyside6"
 
@@ -55,11 +57,14 @@ def build(settings: Settings, jev: str, debug_dir: Path | None = None,
     from ..advisor import create_advisor
     from ..vision.recognizer import Recognizer
 
+    from .ledger import LedgerCfg
+
     recognizer = Recognizer(cfg=settings.vision)
     advisor = create_advisor(jev, settings=settings)
-    tracker = SessionTracker(session_path(settings.app.state_dir), archive_keep=settings.app.session_archive_keep)
+    tracker = SessionTracker(session_path(settings.app.state_dir), archive_keep=settings.app.session_archive_keep,
+                             ledger_cfg=LedgerCfg.from_settings(settings))
     if tracker.load():
-        log.info("이전 세션을 이어 받았다: %s", tracker.summary())
+        log.info("이전 세션을 이어받았습니다: %s", tracker.summary())
     if source is None:
         from ..vision.capture import MssSource
 
@@ -107,6 +112,37 @@ def run_live(*, settings: Settings | None = None, jev: str = "auto", overlay: bo
 # ---------------------------------------------------------------------------
 
 
+def start_unit_console(tracker, stop: threading.Event, stream: object | None = None) -> threading.Thread | None:
+    """표준 입력에서 보유 유닛 수동 교정 명령을 읽는 데몬 스레드(`app.units_cmd`).
+
+    대화형 터미널이 아니면(파이프·서비스 실행·테스트) 켜지 않는다. 입력을 기다리는 동안 게임 루프는
+    영향을 받지 않는다 — 장부 변경은 `SessionTracker`의 잠금으로 직렬화된다.
+    """
+    src = stream if stream is not None else sys.stdin
+    try:
+        if src is None or not src.isatty():
+            return None
+    except Exception:
+        return None
+
+    def pump() -> None:
+        print(f"[{PROMPT}]")
+        while not stop.is_set():
+            try:
+                line = src.readline()
+            except Exception:
+                return
+            if not line:
+                return
+            answer = apply_command(tracker, line)
+            if answer:
+                print(answer)
+
+    thread = threading.Thread(target=pump, name="tft-units", daemon=True)
+    thread.start()
+    return thread
+
+
 def _run_console(loop: LiveLoop, settings: Settings, backend: str, patch: str | None,
                  max_frames: int | None) -> int:
     names = NameBook()
@@ -118,7 +154,7 @@ def _run_console(loop: LiveLoop, settings: Settings, backend: str, patch: str | 
             print(f"[오류] {u.message}")
             return
         if u.kind == "reset":
-            print("[새 판] 세션을 초기화했다" + (f" (이전 세션 {u.message})" if u.message else ""))
+            print("[새 판] 세션을 초기화했습니다" + (f" (이전 세션 {u.message})" if u.message else ""))
             last_key = None
             return
         if u.recommendation is None:
@@ -136,6 +172,7 @@ def _run_console(loop: LiveLoop, settings: Settings, backend: str, patch: str | 
 
     loop.on_update = on_update
     stop = threading.Event()
+    start_unit_console(loop.tracker, stop)
     try:
         loop.run(stop, max_frames=max_frames)
     except KeyboardInterrupt:
@@ -167,6 +204,7 @@ def _run_overlay(loop: LiveLoop, settings: Settings, backend: str, patch: str | 
     thread = threading.Thread(target=loop.run, args=(stop,), kwargs={"max_frames": max_frames},
                               name="tft-capture", daemon=True)
     thread.start()
+    start_unit_console(loop.tracker, stop)   # 터미널에서 보유 유닛을 고칠 수 있다(오버레이 패널 전까지)
 
     def shutdown() -> None:
         stop.set()
@@ -181,4 +219,4 @@ def _run_overlay(loop: LiveLoop, settings: Settings, backend: str, patch: str | 
         return 0
 
 
-__all__ = ["run_live", "build", "choose_ui", "overlay_available"]
+__all__ = ["run_live", "build", "choose_ui", "overlay_available", "start_unit_console"]

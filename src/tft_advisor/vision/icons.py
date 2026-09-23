@@ -49,10 +49,15 @@ class IconMatcher:
     """
 
     def __init__(self, templates: dict[str, np.ndarray] | Iterable[tuple[str, np.ndarray]],
-                 group: Callable[[str], str] | None = None) -> None:
+                 group: Callable[[str], str] | None = None,
+                 size: int = TEMPLATE_SIZE, search: int = SEARCH_SIZE) -> None:
         pairs = list(templates.items()) if isinstance(templates, dict) else list(templates)
         self.pairs: list[tuple[str, np.ndarray]] = pairs
         self.group = group or (lambda api: api)
+        self.size = size
+        self.search = search
+        """`size`/`search`: 템플릿 정규화 크기와 크롭 확대 크기. 아이템 **벤치** 칸(1080p 45px)은 기본값 32/38이고,
+        유닛 **장착** 아이콘(1080p 25px)은 28/34가 실측에서 가장 높았다(16 보고서 §3)."""
 
     @property
     def ids(self) -> set[str]:
@@ -60,7 +65,8 @@ class IconMatcher:
 
     @classmethod
     def from_dirs(cls, dirs: Iterable[str | Path], valid: Callable[[str], bool] | None = None,
-                  group: Callable[[str], str] | None = None) -> IconMatcher:
+                  group: Callable[[str], str] | None = None,
+                  size: int = TEMPLATE_SIZE, search: int = SEARCH_SIZE) -> IconMatcher:
         """여러 디렉터리의 `{ID}.png`를 ID별로 합쳐 로드. `valid(stem)`이 False면 건너뛰고 경고."""
         import cv2
 
@@ -76,8 +82,15 @@ class IconMatcher:
                     log.warning("아이템 템플릿 무시(정적 데이터 ID 아님): %s", p)
                     continue
                 img = load_image(p)
-                pairs.append((p.stem, cv2.resize(img, (TEMPLATE_SIZE, TEMPLATE_SIZE), interpolation=cv2.INTER_AREA)))
-        return cls(pairs, group)
+                pairs.append((p.stem, cv2.resize(img, (size, size), interpolation=cv2.INTER_AREA)))
+        return cls(pairs, group, size=size, search=search)
+
+    def rescaled(self, size: int, search: int) -> IconMatcher:
+        """같은 템플릿을 다른 크기로 다시 정규화한 매처(장착 아이콘용). 디스크를 다시 읽지 않는다."""
+        import cv2
+
+        pairs = [(a, cv2.resize(t, (size, size), interpolation=cv2.INTER_AREA)) for a, t in self.pairs]
+        return IconMatcher(pairs, self.group, size=size, search=search)
 
     @classmethod
     def from_dir(cls, template_dir: str | Path, allowed: set[str] | None = None,
@@ -87,21 +100,60 @@ class IconMatcher:
     def __len__(self) -> int:
         return len(self.pairs)
 
+    # -- 빠른 경로 --------------------------------------------------------
+    # `cv2.matchTemplate(..., TM_CCOEFF_NORMED)`를 템플릿마다 부르면 222장에 약 43ms다(파이썬 호출 비용).
+    # 같은 값을 행렬곱 하나로 구한다: 템플릿을 **채널별 평균을 뺀 뒤 전체 L2로 정규화한 벡터**로 미리 쌓아 두고,
+    # 크롭에서 가능한 이동 위치(±(search-size)/2)마다 같은 정규화를 한 패치를 만들어 내적한다.
+    # 결과는 OpenCV와 같은 정의다(오차 1e-5 이하, `tests/test_vision_board.py`가 고정).
+
+    def _bank(self) -> tuple[np.ndarray, list[str]] | None:
+        bank = getattr(self, "_bank_cache", None)
+        if bank is None:
+            if not self.pairs:
+                return None
+            mats = []
+            for _, tpl in self.pairs:
+                v = tpl.astype(np.float32)
+                v -= v.reshape(-1, v.shape[-1]).mean(axis=0) if v.ndim == 3 else v.mean()
+                flat = v.ravel()
+                n = float(np.linalg.norm(flat))
+                mats.append(flat / n if n > 1e-6 else flat)
+            bank = (np.asarray(mats, np.float32), [a for a, _ in self.pairs])
+            self._bank_cache = bank
+        return bank
+
     def match(self, crop: np.ndarray) -> IconMatch | None:
         if not self.pairs or crop.size == 0:
             return None
         import cv2
 
-        src = cv2.resize(crop, (SEARCH_SIZE, SEARCH_SIZE), interpolation=cv2.INTER_AREA)
+        bank = self._bank()
+        if bank is None:
+            return None
+        mat, names = bank
+        src = cv2.resize(crop, (self.search, self.search), interpolation=cv2.INTER_AREA).astype(np.float32)
+        k = self.size
+        span = self.search - k + 1
+        patches = np.empty((span * span, mat.shape[1]), np.float32)
+        i = 0
+        for dy in range(span):
+            for dx in range(span):
+                w = src[dy:dy + k, dx:dx + k]
+                w = w - w.reshape(-1, w.shape[-1]).mean(axis=0) if w.ndim == 3 else w - w.mean()
+                flat = w.ravel()
+                n = float(np.linalg.norm(flat))
+                patches[i] = flat / n if n > 1e-6 else flat
+                i += 1
+        scores = (patches @ mat.T).max(axis=0)
         best: dict[str, float] = {}
-        for api, tpl in self.pairs:
-            sc = float(cv2.matchTemplate(src, tpl, cv2.TM_CCOEFF_NORMED).max())
-            if sc > best.get(api, -2.0):
-                best[api] = sc
-        scores = sorted(((sc, api) for api, sc in best.items()), reverse=True)
-        top, api = scores[0]
+        for api, sc in zip(names, scores):
+            v = float(sc)
+            if v > best.get(api, -2.0):
+                best[api] = v
+        ranked = sorted(((sc, api) for api, sc in best.items()), reverse=True)
+        top, api = ranked[0]
         g = self.group(api)
-        second = next((sc for sc, a in scores[1:] if self.group(a) != g), -1.0)
+        second = next((sc for sc, a in ranked[1:] if self.group(a) != g), -1.0)
         return IconMatch(api_name=api, score=top, margin=top - second)
 
 

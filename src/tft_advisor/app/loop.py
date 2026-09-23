@@ -3,7 +3,7 @@
     캡처(capture_fps)
       → ChangeDetector.update  : 바뀌었고 change_stable_frames 연속 같은 ROI 묶음만
       → Recognizer.recognize(groups=…)  : 그 묶음만 읽는다(전체 인식은 0.4~0.9s, 부분은 0.2s 안팎)
-      → SessionTracker.observe : 직전 상태에 병합 + 보유 증강·구매 추적
+      → SessionTracker.observe : 직전 상태에 병합 + 보유 증강·보유 유닛(구매 추적) 갱신
       → AdviceRunner.submit    : 별도 스레드에서 advisor.advise (UI 스레드·캡처 스레드를 막지 않는다)
       → on_update 콜백         : 오버레이/콘솔이 그린다
 
@@ -254,7 +254,8 @@ class LiveLoop:
         self.tracker.data.recognitions += 1
         if self.debug_dir is not None:
             self._dump_debug(image, state)
-        return self._handle(state, groups, owned_row=getattr(self.recognizer, "last_owned_row", None))
+        return self._handle(state, groups, owned_row=getattr(self.recognizer, "last_owned_row", None),
+                            board_read=getattr(self.recognizer, "last_board_read", None))
 
     def _content(self, image) -> tuple[int, int, int, int] | None:
         fn = getattr(self.recognizer, "content_for", None)
@@ -306,7 +307,8 @@ class LiveLoop:
         note = f"보관: {self.tracker.last_archive.name}" if self.tracker.last_archive else None
         return self._emit(LoopUpdate(kind="reset", state=state, recognized=tuple(sorted(groups)), message=note))
 
-    def _handle(self, state: GameState, groups: Collection[str], owned_row: Any = None) -> LoopUpdate:
+    def _handle(self, state: GameState, groups: Collection[str], owned_row: Any = None,
+                board_read: Any = None) -> LoopUpdate:
         mode = state.screen_mode
         now = self.clock()
         reason = None
@@ -322,7 +324,7 @@ class LiveLoop:
         else:
             self._pending_reset = None
 
-        merged = self.tracker.observe(state, groups, owned_row=owned_row)
+        merged = self.tracker.observe(state, groups, owned_row=owned_row, board_read=board_read)
         self.last_state = merged
         if mode in KEEP_MODES:
             # 직전 추천을 그대로 둔다(advisor 계약, 목표 덱 고정). 표시용 사본에서 산·바뀐 상점 칸만 뺀다.
@@ -392,7 +394,7 @@ class LiveLoop:
                 if self.source_exhausted:   # 파일 소스(리플레이)가 끝났다
                     return
             except Exception:
-                log.exception("루프 오류 — 계속 진행한다")
+                log.exception("루프 오류 — 계속 진행합니다")
             wait = interval - (self.clock() - started)
             if wait > 0:
                 self.sleep(wait)

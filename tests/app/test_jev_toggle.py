@@ -279,7 +279,7 @@ def test_switch_survives_a_save_failure(with_key):
 
     sw = JevSwitcher(loop=FakeLoop(), settings=load_settings(), builder=made([]), saver=boom)
     result = sw.switch("live")
-    assert result.ok and result.saved is False and "저장하지 못했다" in result.message
+    assert result.ok and result.saved is False and "저장하지 못했습니다" in result.message
     assert sw.backend == "live"       # 이번 실행에는 적용된다
 
 
@@ -289,7 +289,7 @@ def test_build_failure_keeps_the_old_backend(with_key):
 
     sw = JevSwitcher(loop=FakeLoop(), settings=load_settings(), builder=boom)
     result = sw.switch("live")
-    assert result.ok is False and "만들지 못했다" in result.message and sw.backend == "mock"
+    assert result.ok is False and "만들지 못했습니다" in result.message and sw.backend == "mock"
 
 
 def test_set_backend_runs_in_a_worker_thread(with_key):

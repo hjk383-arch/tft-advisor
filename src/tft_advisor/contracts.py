@@ -37,6 +37,12 @@ AugmentId = CanonicalId
 TraitId = CanonicalId
 """특성 ID는 단계 접미사 없는 apiName(`DA_18_Elderwood`). MetaTFT `_3`, tactics.tools `__2` 접미사는 stats에서 제거."""
 
+UNKNOWN_UNIT_ID = "UNKNOWN"
+"""정체를 모르는 유닛의 자리표시 ID. vision이 보드에서 '유닛이 있다'는 것만 읽고(자리·성급·아이템)
+그 챔피언이 누구인지는 모를 때 `UnitOnBoard.id`에 넣는다. **실제 챔피언 ID를 지어내지 않기 위한 값**이며
+정적 데이터에 없다. 이런 유닛은 신뢰도를 낮게 주어(`app.unit_merge.UNKNOWN_CONFIDENCE`) advisor의
+보유 유닛 계산에서 빠진다(§4.3b 신뢰도 필터)."""
+
 Stage = Annotated[str, StringConstraints(pattern=r"^\d+-\d+$")]
 """스테이지-라운드 문자열 (예: "3-2")."""
 
@@ -152,31 +158,47 @@ ItemCategory = Literal[
 
 
 class ItemRef(ContractModel):
-    """아이템 하나(아이템 벤치 칸 또는 유닛 장착). category는 items.json 기준."""
+    """아이템 하나(아이템 벤치 칸 또는 유닛 장착). category는 items.json 기준.
+
+    `holder`는 **장착 아이템**(`ItemState.equipped`)에서만 쓴다 — 어느 챔피언이 끼고 있는지 아는 경우의 ID다.
+    자리는 보이지만 정체를 모르면(구매 장부가 비었을 때) None이다. 아이템 자체는 화면에서 직접 읽은 값이므로
+    holder를 몰라도 confidence는 내리지 않는다.
+    """
 
     id: ItemId
     name_ko: str | None = None
     category: ItemCategory | None = None
+    holder: ChampionId | None = None
     confidence: Confidence = 1.0
 
 
 class ItemState(ContractModel):
-    """보유 아이템(아이템 벤치, 유닛 미장착분). 장착 아이템은 UnitOnBoard.items.
+    """보유 아이템. 앞의 네 묶음은 **아이템 벤치**(미장착), `equipped`는 **유닛에 끼워진 것**이다.
 
     - components: 재료(프라이팬 포함)
     - completed: 일반 완성 아이템
     - emblems: 상징
     - others: 전략가/유물/찬란한/소모품 등 나머지
+    - equipped: 보드·벤치 유닛이 장착한 아이템(vision이 체력바 아래 아이콘에서 직접 읽는다).
+      `UnitOnBoard.items`와 같은 것을 **소유자와 무관한 다중집합**으로도 담는다 — 챔피언 정체를 몰라도
+      "이 아이템을 갖고 있다"는 사실은 확실하기 때문이다(`ItemRef.holder`가 None이면 소유자 미상).
+
+    `all_ids()`는 **벤치만** 돌려준다(옛 뜻 그대로). 장착분까지 포함한 보유 전체는 `owned_ids()`다.
     """
 
     components: list[ItemRef] = Field(default_factory=list)
     completed: list[ItemRef] = Field(default_factory=list)
     emblems: list[ItemRef] = Field(default_factory=list)
     others: list[ItemRef] = Field(default_factory=list)
+    equipped: list[ItemRef] = Field(default_factory=list)
 
     def all_ids(self) -> list[str]:
-        """모든 보유 아이템 ID(중복 포함)."""
+        """아이템 벤치의 모든 아이템 ID(중복 포함). 장착분은 빠진다."""
         return [i.id for group in (self.components, self.completed, self.emblems, self.others) for i in group]
+
+    def owned_ids(self) -> list[str]:
+        """벤치 + 장착분 전체 ID(중복 포함)."""
+        return self.all_ids() + [i.id for i in self.equipped]
 
 
 class AugmentRef(ContractModel):

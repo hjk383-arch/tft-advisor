@@ -24,12 +24,12 @@ class _Cfg(BaseModel):
     def _require_sum_one(self, section: str, *names: str) -> None:
         total = sum(getattr(self, n) for n in names)
         if abs(total - 1.0) > _SUM_TOL:
-            raise ValueError(f"{section}: {' + '.join(names)} 는 1이어야 한다(현재 {total:g})")
+            raise ValueError(f"{section}: {' + '.join(names)} 는 1이어야 합니다(현재 {total:g})")
 
     def _require_non_increasing(self, section: str, *names: str) -> None:
         vals = [getattr(self, n) for n in names]
         if any(a < b for a, b in zip(vals, vals[1:])):
-            raise ValueError(f"{section}: {' >= '.join(names)} 이어야 한다(현재 {vals})")
+            raise ValueError(f"{section}: {' >= '.join(names)} 이어야 합니다(현재 {vals})")
 
 
 _SUM_TOL = 1e-6
@@ -51,6 +51,13 @@ class AppCfg(_Cfg):
     reset_confirm_s: float = Field(3.0, ge=0)           # 첫 관측 뒤 이 시간(초)이 지나 다시 관측되면 새 판
     reset_recheck_s: float = Field(1.0, gt=0)           # 확인 대기 중 화면 변화가 없어도 이 주기로 다시 판별한다
     session_archive_keep: int = Field(10, ge=0, le=500)  # 새 판 때 이전 session.json을 _state/sessions/에 보관할 개수
+    # 보유 유닛 장부(app/ledger.py). 상점 구매·판매 추적으로 board/bench의 '정체'를 채운다.
+    ledger_enabled: bool = True
+    ledger_settle_s: float = Field(2.0, gt=0)      # 상점 변화와 골드 변화가 따로 도착할 때 기다리는 시간(초)
+    ledger_confidence: Unit = 0.85                 # 애매한 거래가 없을 때 board/bench 필드 신뢰도
+    ledger_confidence_uncertain: Unit = 0.5        # 애매한 거래가 uncertain_after건 쌓였을 때의 신뢰도
+    ledger_uncertain_after: int = Field(3, ge=1, le=50)   # 이만큼 쌓이면 신뢰도가 uncertain 값까지 내려간다
+    ledger_track_sales: bool = True                # 골드가 늘어난 양으로 판매를 추론할지
 
 
 class CaptureCfg(_Cfg):
@@ -117,11 +124,11 @@ class VisionCfg(_Cfg):
         if self.content_box is not None:
             x1, y1, x2, y2 = self.content_box
             if not (x1 < x2 and y1 < y2):
-                raise ValueError(f"vision: content_box는 (x1, y1, x2, y2), x1 < x2 · y1 < y2 여야 한다(현재 {self.content_box})")
+                raise ValueError(f"vision: content_box는 (x1, y1, x2, y2), x1 < x2 · y1 < y2 여야 합니다(현재 {self.content_box})")
         if not self.name_fuzzy_min_margin <= self.name_fuzzy_relaxed_margin:
             raise ValueError(
                 f"vision: name_fuzzy_min_margin({self.name_fuzzy_min_margin}) <= "
-                f"name_fuzzy_relaxed_margin({self.name_fuzzy_relaxed_margin}) 이어야 한다"
+                f"name_fuzzy_relaxed_margin({self.name_fuzzy_relaxed_margin}) 이어야 합니다"
             )
         res = self.resolution_size()
         if res is not None and self.aspect != "auto":
@@ -130,7 +137,7 @@ class VisionCfg(_Cfg):
             if abs(ratio - want) / want > _ASPECT_TOL:
                 raise ValueError(
                     f"vision: resolution({self.resolution}, 비율 {ratio:.4f})과 aspect({self.aspect}, "
-                    f"{want:.4f})가 어긋난다. 둘 중 하나를 \"auto\"로 두거나 맞춰라"
+                    f"{want:.4f})가 어긋납니다. 둘 중 하나를 \"auto\"로 두거나 맞춰 주세요"
                 )
         return self
 
@@ -189,7 +196,7 @@ class AdvisorCfg(_Cfg):
     def _budget_order(self) -> AdvisorCfg:
         if not (self.jev_timeout_s <= self.jev_retry_budget_s < self.timeout_s):
             raise ValueError(
-                "advisor: jev_timeout_s <= jev_retry_budget_s < timeout_s 이어야 한다"
+                "advisor: jev_timeout_s <= jev_retry_budget_s < timeout_s 이어야 합니다"
                 f"(현재 {self.jev_timeout_s} / {self.jev_retry_budget_s} / {self.timeout_s})"
             )
         return self
@@ -302,10 +309,10 @@ class CompWeights(_Cfg):
     def _constraints(self) -> CompWeights:
         self._require_sum_one("comp", "wi", "wa", "wb")
         if not self.stat_avg_best < self.stat_avg_worst:
-            raise ValueError(f"comp: stat_avg_best({self.stat_avg_best}) < stat_avg_worst({self.stat_avg_worst}) 이어야 한다")
+            raise ValueError(f"comp: stat_avg_best({self.stat_avg_best}) < stat_avg_worst({self.stat_avg_worst}) 이어야 합니다")
         if not self.show_ratio_undecided <= self.show_ratio:
             raise ValueError(
-                f"comp: show_ratio_undecided({self.show_ratio_undecided}) <= show_ratio({self.show_ratio}) 이어야 한다"
+                f"comp: show_ratio_undecided({self.show_ratio_undecided}) <= show_ratio({self.show_ratio}) 이어야 합니다"
             )
         return self
 

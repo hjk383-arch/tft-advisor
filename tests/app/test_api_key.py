@@ -58,25 +58,25 @@ class FakeCreds:
     def save_api_key(self, key: str) -> credentials.SaveResult:
         key = (key or "").strip()
         if not key:
-            return credentials.SaveResult(False, message="키가 비어 있다 — 입력한 뒤 다시 [저장]을 누르라.")
+            return credentials.SaveResult(False, message="키가 비어 있습니다 — 입력한 뒤 다시 [저장]을 눌러 주세요.")
         if self.save_fails:
             return credentials.SaveResult(False, message=self.save_fails)
         self.saved.append(key)
         self.stored = key
         hint = credentials.mask(key)
         label = "macOS 키체인" if self.store == "keyring" else "폴백 파일"
-        return credentials.SaveResult(True, self.store, f"{label}에 저장했다 — {hint}", hint,
+        return credentials.SaveResult(True, self.store, f"{label}에 저장했습니다 — {hint}", hint,
                                       shadowed_by_env=bool(self.env))
 
     def delete_api_key(self) -> credentials.DeleteResult:
         self.deletes += 1
         had, self.stored = self.stored, None
         return credentials.DeleteResult(("keyring",) if had else (),
-                                        "macOS 키체인에서 키를 지웠다." if had else "지울 키가 없었다.")
+                                        "macOS 키체인에서 키를 지웠습니다." if had else "지울 키가 없었습니다.")
 
     def verify_key(self, key: str | None = None, *, caller=None) -> credentials.VerifyResult:
         self.verified.append(key)
-        return self.verify_result or credentials.VerifyResult(True, "성공 — 키가 유효하다 (30ms).", "ok", 30.0)
+        return self.verify_result or credentials.VerifyResult(True, "성공 — 키가 유효합니다 (30ms).", "ok", 30.0)
 
 
 def flat(w: int, h: int, value: int = 90) -> np.ndarray:
@@ -168,7 +168,7 @@ def test_delete_button_is_enabled_when_a_key_is_stored(make_dialog):
 
 def test_status_says_there_is_no_key(make_dialog):
     d = make_dialog(FakeCreds())
-    assert "없다" in d.key_status.text()
+    assert "없습니다" in d.key_status.text()
 
 
 def test_status_shows_only_a_masked_hint_of_a_stored_key(make_dialog):
@@ -248,13 +248,13 @@ def test_deleting_clears_the_stored_key(make_dialog):
     d = make_dialog(creds)
     result = d.delete_key()
     assert result.ok and creds.deletes == 1 and creds.stored is None
-    assert "없다" in d.key_status.text()
+    assert "없습니다" in d.key_status.text()
     assert d.key_delete_btn.isEnabled() is False
 
 
 def test_deleting_with_nothing_stored_says_so(make_dialog):
     d = make_dialog(FakeCreds())
-    assert d.delete_key().ok is False and "없었다" in d.key_result.text()
+    assert d.delete_key().ok is False and "없었습니다" in d.key_result.text()
 
 
 # ---------------------------------------------------------------------------

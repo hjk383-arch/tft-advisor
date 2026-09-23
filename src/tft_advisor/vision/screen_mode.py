@@ -7,6 +7,9 @@
 - prep_banner: 라운드 시작 순간의 "준비" 배너. 한 방향 신호(있으면 준비).
 - enemy_bars: 보드 위쪽의 **빨간 체력바** 개수(적 유닛). 전투 쌍 4개 모두 3~10개, 준비 화면 0개. 단 PvE 라운드는
   준비 단계에도 크립이 빨간 체력바를 달고 서 있다(방송 fixture 1-4) → 워터마크를 먼저 보고, PvE에서는 체력바를 쓰지 않는다.
+- bench_bars: 벤치 9칸 위 **아군 초록 체력바** 개수(`vision.board.find_ally_bars`). **전투가 시작되면 벤치 유닛의
+  체력바가 사라진다**(1080p 준비/전투 쌍 4개 + 16:10 전투 1장 모두 0개, 준비 7장은 4~9개). 워터마크가 유닛에 가려
+  읽히지 않을 때 준비를 확정하는 **한 방향 신호**다(있으면 준비, 없으면 모름).
 - augment_title / augment_names_matched: 가운데 "하나 선택" 제목 + 증강 이름 3칸 퍼지 매칭 수.
 - select_title: **하단 패널** "하나 선택"(모루 아이템 선택, 악의 여단 전리품 선택 등). 증강 선택과 위치가 다르다.
 - game_over: "최종 순위" 제목 또는 "나가기" 버튼.
@@ -14,6 +17,8 @@
 
 알려진 한계
 - 전투가 끝나 적이 모두 죽은 순간(빨간 체력바 0, 워터마크 없음)은 PLANNING(신뢰도 0.7 = "준비 또는 전투")으로 낸다.
+- PvE 라운드(1-x, x-7)의 **전투**는 여전히 PLANNING으로 낸다(크립이 준비 단계에도 서 있어 빨간 체력바를 못 쓴다).
+  벤치 체력바가 없다는 것만으로 전투라고 하지는 않는다 — 벤치가 빈 준비 화면(1-1 등)을 전투로 오판하면 추천이 멈춘다.
 - 특성 전용 선택(악의 여단 등)은 계약에 따로 값이 없어 ITEM_SELECT로 낸다(가장 가까운 값, 보고서 제안 참고).
 """
 from __future__ import annotations
@@ -29,6 +34,9 @@ PLANNING_CONFIRMED = 0.9     # 워터마크/배너로 준비 확정
 PLANNING_AMBIGUOUS = 0.7     # HUD만 보인다(준비 또는 전투) — 예전 값 그대로
 PLANNING_PIXEL_ONLY = 0.55   # HUD를 픽셀로만 확인
 COMBAT_PVP = 0.8
+COMBAT_SPECTATE = 0.7
+"""하단 상점 HUD가 없는데 스테이지가 보이고 적 체력바가 여럿인 화면(원정 전투 = 상대 아레나에서 보는 전투).
+16:10 캡처 3-7로 확인했다. 예전에는 UNKNOWN이었다."""
 # PvE 라운드(1-x, x-7)는 준비 단계에도 크립이 빨간 체력바를 달고 서 있고 워터마크를 가린다(방송 fixture 1-4: "1/3"이
 # 크립에 가려 읽히지 않음). 그래서 PvE에서는 체력바만으로 전투라고 하지 않는다(애매 → PLANNING 0.7, 안전한 쪽).
 MIN_ENEMY_BARS = 2           # 상대 이름표 막대가 우연히 빨강일 수 있어 1개로는 전투로 보지 않는다
@@ -45,6 +53,7 @@ class ModeSignals:
     board_count: bool = False
     prep_banner: bool = False
     enemy_bars: int = 0
+    bench_bars: int = 0
     select_title: bool = False
     game_over_title: bool = False
     exit_button: bool = False
@@ -117,7 +126,7 @@ def classify(sig: ModeSignals) -> tuple[ScreenMode, float]:
     if sig.select_title and not sig.shop_hud:
         return ScreenMode.ITEM_SELECT, 0.8
     if sig.shop_hud:
-        if sig.board_count or sig.prep_banner:
+        if sig.board_count or sig.prep_banner or sig.bench_bars >= 1:
             return ScreenMode.PLANNING, PLANNING_CONFIRMED
         # 스테이지를 못 읽었으면 PvE인지 알 수 없다 → 전투라고 하지 않는다(QA08: 1-4 크립 준비 화면에서 스테이지가 가려지면
         # combat 0.8로 확신 오답. 준비를 전투로 보면 추천이 멈추고, 전투를 준비로 보는 쪽은 해가 없다)
@@ -130,4 +139,7 @@ def classify(sig: ModeSignals) -> tuple[ScreenMode, float]:
         stage_n, round_n = (int(x) for x in sig.stage.split("-"))
         if round_n == 4 or (stage_n == 1 and round_n == 1):
             return ScreenMode.CAROUSEL, 0.65
+        # 상점 HUD가 없는데 스테이지가 보이고 적 체력바가 여럿 = 원정 전투(상대 아레나). 캐러셀에는 체력바가 없다.
+        if sig.enemy_bars >= MIN_ENEMY_BARS:
+            return ScreenMode.COMBAT, COMBAT_SPECTATE
     return ScreenMode.UNKNOWN, 0.0

@@ -24,6 +24,7 @@ from ..contracts import (
 from ..static_data import PROJECT_ROOT, StaticData, load_static, preference_key
 from . import parse
 from .augment_learn import AugmentLearner, OwnedRow, augment_visual_keys, load_alt_manifest
+from .board import BoardRead, BoardReader, find_ally_bars
 from .icons import AugmentIconMatcher, IconMatcher, find_icon_row, slot_is_empty
 from .item_ids import ItemCatalog
 from .matching import NameMatcher
@@ -39,10 +40,13 @@ log = logging.getLogger(__name__)
 T = TypeVar("T")
 # 부분 인식 묶음(QA04-V7). stage와 화면 상태 신호는 항상 읽는다(한 줄 인식만, 싸다).
 # app 루프는 `change.ChangeDetector`가 알려 준 묶음만 넘기고, 결과를 직전 GameState에 합친다(FIELD_GROUP 참고).
-GROUPS: tuple[str, ...] = ("hud", "shop", "items", "augment", "players", "traits", "owned")
+GROUPS: tuple[str, ...] = ("hud", "shop", "items", "augment", "players", "traits", "owned", "board")
 # 기본값에서 "traits"(특성 패널)는 뺀다: 검출+인식이 프레임 시간의 약 35%인데, active_traits는 신뢰도가 TRAITS_FACTOR로
 # 임계 미만이라 advisor가 쓰지 않는다. 필요하면 groups=GROUPS 로 켠다(평가·디버그, app이 몇 초에 한 번).
 DEFAULT_GROUPS: tuple[str, ...] = tuple(g for g in GROUPS if g != "traits")
+VISION_ONLY_GROUPS: frozenset[str] = frozenset({"board"})
+"""`GameState` 필드를 만들지 **않는** 묶음. 결과는 `Recognizer.last_board_read`로 나가고 app이
+`app.unit_merge`에서 상점 구매 장부와 합쳐 `board`/`bench`를 만든다 → app의 `GROUP_READ_MODES`(필드 병합 표)에는 없다."""
 FIELD_GROUP: dict[str, str] = {
     "stage": "stage", "screen_mode": "stage",
     "level": "hud", "xp": "hud", "gold": "hud", "shop_odds": "hud", "streak": "hud",
@@ -67,6 +71,9 @@ READ_MODES: dict[str, frozenset[ScreenMode]] = {
     "augment": frozenset({ScreenMode.AUGMENT_SELECT}),
     # 보유 증강 줄은 보드에 붙어 있다: 준비 단계(내 보드, 카메라 고정)에서만 읽는다. 원정 전투에서는 상대 줄도 보인다.
     "owned": frozenset({ScreenMode.PLANNING}),
+    # 보드·벤치 유닛(자리·성급·장착 아이템). 카메라가 고정이고 유닛이 칸 위에 서 있는 화면에서만 읽는다:
+    # 준비 단계 + 모루/전리품 선택(보드가 그대로 보인다). 전투 중에는 유닛이 칸을 떠나 자리가 뜻이 없다.
+    "board": frozenset({ScreenMode.PLANNING, ScreenMode.ITEM_SELECT}),
 }
 AUGMENT_MATCH_MIN = 0.80      # 보유 증강 글리프 매칭 최소 점수(실측 정답 0.89~0.96, 오답 1위 <= 0.66)
 AUGMENT_MATCH_MARGIN = 0.05   # 1위와 2위(다른 아이콘) 차 하한(초월 0.951 vs 불완전한 초월 0.878 = 0.073)
@@ -157,6 +164,10 @@ class Recognizer:
         self.augment_learner = AugmentLearner(
             self.static, self.augment_icons, self._augment_keys,
             save_dir=augment_template_dirs(self.static.set_number)[1] if augment_template_dir is None else None)
+        self.board_reader = BoardReader.from_recognizer(self.item_matcher, self.items)
+        """보드·벤치 판독기. 아이템 벤치용 매처를 장착 아이콘 크기로 다시 정규화해 쓴다(디스크 재로딩 없음)."""
+        self.last_board_read: BoardRead | None = None
+        """직전 `recognize()`의 보드 판독(`board` 묶음을 읽었을 때만). app은 `app.unit_merge.board_obs_from`으로 받는다."""
         self.last_owned_row: OwnedRow | None = None
         """직전 `recognize()`가 읽은 보유 증강 줄(칸 그림 + 칸별 ID). 읽지 않았으면 None. app 학습 경로가 쓴다."""
         self._screen_cache: dict[tuple, tuple[int, int, int, int]] = {}
@@ -267,6 +278,7 @@ class Recognizer:
         """
         g = set(DEFAULT_GROUPS if groups is None else groups)
         self.last_owned_row = None
+        self.last_board_read = None
         unknown_groups = g - set(GROUPS)
         if unknown_groups:
             raise ValueError(f"알 수 없는 묶음: {sorted(unknown_groups)} (가능: {GROUPS})")
@@ -295,13 +307,19 @@ class Recognizer:
         offers = (self._read_augment_offer(image, m, P)
                   if ((augment_title or not hud) and not select_title and "augment" in g) else [])
         board_count = prep_banner = False
-        enemy_bars = 0
+        enemy_bars = bench_bars = 0
         game_over_title = exit_button = False
         if hud:
             board_count = self._board_count(image, m, P, bc_line)
             prep_banner = _has(banner_line, ("준비",))
             if not (board_count or prep_banner):
-                enemy_bars = count_enemy_bars(m.crop(image, P.combat_area), m.box[3])
+                # 벤치 아군 체력바는 전투가 시작되면 사라진다 → 워터마크가 가려졌을 때 준비를 확정한다(vision 16 §5).
+                bench_bars = len(find_ally_bars(image, m, P.bench_area))
+                if bench_bars == 0:
+                    enemy_bars = count_enemy_bars(m.crop(image, P.combat_area), m.box[3])
+        elif stage is not None and not augment_title and not select_title:
+            # 상점 HUD가 없는 인게임 화면: 원정 전투(상대 아레나)인지 캐러셀인지 적 체력바로 가른다.
+            enemy_bars = count_enemy_bars(m.crop(image, P.combat_area), m.box[3])
         elif stage is None and not select_title:
             # 게임 종료: 스테이지 막대도 HUD도 없다. 제목은 두 줄("최종 순위" / "1위")이라 한 줄 인식이 아래 줄만 읽는다 → 검출.
             exit_button = _has(exit_line, ("나가기",))
@@ -311,7 +329,8 @@ class Recognizer:
             shop_hud=hud, shop_hud_by_ocr=hud_by_ocr, augment_title=augment_title,
             augment_names_matched=sum(1 for a in offers if a is not None), stage=stage,
             dark=frame_is_dark(image), board_count=board_count, prep_banner=prep_banner, enemy_bars=enemy_bars,
-            select_title=select_title, game_over_title=game_over_title, exit_button=exit_button,
+            bench_bars=bench_bars, select_title=select_title, game_over_title=game_over_title,
+            exit_button=exit_button,
         )
         mode, mode_conf = classify(sig)
         if mode != ScreenMode.UNKNOWN:
@@ -337,6 +356,8 @@ class Recognizer:
             self._read_traits(image, m, P, out)
         if reads("owned"):
             self._read_augments_owned(image, m, P, stage, out)
+        if reads("board"):
+            self.last_board_read = self.board_reader.read(image, m, P)
 
         values = dict(out.values)
         return GameState(

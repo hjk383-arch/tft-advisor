@@ -41,20 +41,20 @@ GAME_FOUND_SCORE = 0.5
 ASPECT_CHOICES = ("auto", "16:9", "16:10", "4:3", "21:9", "32:9")
 JEV_CHOICES = ("mock", "live", "off")
 JEV_KEY_ENV = "TYPESAFE_API_KEY"
-JEV_NO_KEY_NOTE = ("TypeSafe API 키가 없어 live(실시간 판단)를 켤 수 없다 — "
-                   "위 [TypeSafe API 키] 칸에 자기 키를 넣고 [저장]을 누르라"
-                   f" (또는 환경변수 {JEV_KEY_ENV} 를 설정한다).")
-JEV_MOCK_NOTE = ("끄면 mock으로 돈다 — 네트워크·과금 없음, Jev 판단은 가짜 고정값이다"
-                 "(추천 자체는 통계·규칙으로 계속 나온다).")
+JEV_NO_KEY_NOTE = ("TypeSafe API 키가 없어 live(실시간 판단)를 켤 수 없습니다 — "
+                   "위 [TypeSafe API 키] 칸에 본인 키를 넣고 [저장]을 누르세요"
+                   f" (또는 환경변수 {JEV_KEY_ENV} 를 설정하세요).")
+JEV_MOCK_NOTE = ("끄면 mock으로 동작합니다 — 네트워크·과금 없음, Jev 판단은 가짜 고정값입니다"
+                 "(추천 자체는 통계·규칙으로 계속 나옵니다).")
 JEV_LABELS_SHORT = {"mock": "mock(가짜 판단, 무료)", "live": "live(실시간 판단, 과금)", "off": "off(통계 전용)"}
 
-KEY_GROUP_TITLE = "TypeSafe API 키 — 자기 키를 넣으면 이 컴퓨터의 OS 키체인에 저장된다"
+KEY_GROUP_TITLE = "TypeSafe API 키 — 본인 키를 넣으면 이 컴퓨터의 OS 키체인에 저장됩니다"
 KEY_FRIEND_NOTE = (
-    "Jev 실시간 판단을 쓰려면 <b>자기 TypeSafe API 키</b>가 필요하다(남의 키를 받아 쓰지 않는다). "
-    "typesafe.ai 에서 키를 만들어 아래에 붙여 넣고 [저장]을 누르면, 키는 <b>이 컴퓨터의 OS 키체인</b>에만 들어간다 — "
-    "프로그램 폴더·설정 파일·로그에는 저장되지 않고, 저장한 뒤로는 다시 보이지 않는다(가린 힌트만 보인다).")
-KEY_ENV_NOTE = (f"환경변수 {JEV_KEY_ENV} 가 설정돼 있어 <b>그 키가 먼저 쓰인다</b>. "
-                "여기서 저장한 키는 환경변수를 지워야 쓰인다.")
+    "Jev 실시간 판단을 쓰려면 <b>본인 TypeSafe API 키</b>가 필요합니다(남의 키를 받아 쓰지 않습니다). "
+    "typesafe.ai 에서 키를 만들어 아래에 붙여 넣고 [저장]을 누르면, 키는 <b>이 컴퓨터의 OS 키체인</b>에만 들어갑니다 — "
+    "프로그램 폴더·설정 파일·로그에는 저장되지 않고, 저장한 뒤로는 다시 보이지 않습니다(가린 힌트만 보입니다).")
+KEY_ENV_NOTE = (f"환경변수 {JEV_KEY_ENV} 가 설정돼 있어 <b>그 키가 먼저 쓰입니다</b>. "
+                "여기서 저장한 키는 환경변수를 지워야 쓰입니다.")
 
 
 def jev_key_present() -> bool:
@@ -78,8 +78,8 @@ def key_status_line() -> str:
     info = credentials.key_info()
     if info.present:
         return info.describe()
-    return ("없다 — `python -m tft_advisor --setup`의 설정 화면에서 넣거나, "
-            f"환경변수 {JEV_KEY_ENV} 를 설정하라. live(실시간 판단)는 키가 있어야 켜진다.")
+    return ("없습니다 — `python -m tft_advisor --setup`의 설정 화면에서 넣거나, "
+            f"환경변수 {JEV_KEY_ENV} 를 설정하세요. live(실시간 판단)는 키가 있어야 켜집니다.")
 
 
 def jev_checks(backend: str) -> tuple[bool, bool]:
@@ -94,14 +94,14 @@ def jev_backend_from_checks(live: bool, off: bool) -> str:
     return "live" if live else "mock"
 
 PERMISSION_HELP_MAC = (
-    "화면이 검게 잡힌다. macOS 화면 기록 권한이 필요하다:\n"
-    "  시스템 설정 → 개인정보 보호 및 보안 → 화면 기록 → 이 앱(터미널 / Python)을 켠다\n"
-    "  → 앱(터미널)을 완전히 종료했다가 다시 실행한 뒤 다시 감지한다.\n"
-    "게임이 전용 전체화면(exclusive fullscreen)이면 테두리 없는 창 모드로 바꾼다."
+    "화면이 검게 잡힙니다. macOS 화면 기록 권한이 필요합니다:\n"
+    "  시스템 설정 → 개인정보 보호 및 보안 → 화면 기록 → 이 앱(터미널 / Python)을 켜세요\n"
+    "  → 앱(터미널)을 완전히 종료했다가 다시 실행한 뒤 다시 감지하세요.\n"
+    "게임이 전용 전체화면(exclusive fullscreen)이면 테두리 없는 창 모드로 바꾸세요."
 )
 PERMISSION_HELP_OTHER = (
-    "화면이 검게 잡힌다. 게임이 전용 전체화면(exclusive fullscreen)이면 캡처가 검게 나온다 →\n"
-    "  게임 설정에서 테두리 없는 창 모드로 바꾸고 다시 감지한다."
+    "화면이 검게 잡힙니다. 게임이 전용 전체화면(exclusive fullscreen)이면 캡처가 검게 나옵니다 →\n"
+    "  게임 설정에서 테두리 없는 창 모드로 바꾸고 다시 감지하세요."
 )
 
 
@@ -342,24 +342,24 @@ class SetupDetection:
         """한국어 요약(대화상자·콘솔 공용)."""
         mon = self.monitor
         if mon is None:
-            return ["모니터를 찾지 못했다."]
+            return ["모니터를 찾지 못했습니다."]
         gw, gh = self.game_size
         out = [f"모니터: {mon.label()}"]
         out.append(f"캡처 크기: {self.frame_size[0]}x{self.frame_size[1]}")
         if self.content_px is not None:
             left, top, w, h = self.content_px
-            out.append(f"게임 화면 영역: ({left}, {top})에서 {w}x{h} — 바깥쪽(검은 띠/바탕화면)은 잘라낸다")
+            out.append(f"게임 화면 영역: ({left}, {top})에서 {w}x{h} — 바깥쪽(검은 띠/바탕화면)은 잘라냅니다")
         else:
             out.append("게임 화면 영역: 프레임 전체(레터박스·창 테두리 없음)")
         out.append(f"게임 해상도: {gw}x{gh}  ·  비율: {self.aspect or f'{self.ratio:.3f} (지원 목록에 없음)'}")
         kind = "실측 프로파일" if self.measured else "유도 프로파일(미검증)"
         out.append(f"ROI 프로파일: {self.profile_name}  ({kind})")
         if self.game_found:
-            out.append("게임 화면 확인: 찾았다(스테이지 글자를 읽었다)")
+            out.append("게임 화면 확인: 찾았습니다(스테이지 글자를 읽었습니다)")
         elif self.scorer_kind == "ocr":
-            out.append("게임 화면 확인: 못 찾았다 — 게임이 실행 중인지 확인")
+            out.append("게임 화면 확인: 못 찾았습니다 — 게임이 실행 중인지 확인하세요")
         else:
-            out.append("게임 화면 확인: 아직 안 함(빠른 예비 감지) — 다시 감지하면 스테이지 글자로 확인한다")
+            out.append("게임 화면 확인: 아직 안 함(빠른 예비 감지) — 다시 감지하면 스테이지 글자로 확인합니다")
         return out
 
 
@@ -399,7 +399,7 @@ def detect(monitors: Sequence[MonitorInfo], grab: Callable[[MonitorInfo], Any], 
         det.probes.append(probe)
 
     if not det.probes:
-        det.warnings.append("모니터를 찾지 못했다. 화면 캡처(mss)가 동작하는지 확인하라.")
+        det.warnings.append("모니터를 찾지 못했습니다. 화면 캡처(mss)가 동작하는지 확인하세요.")
         return det
 
     prefer_idx = next((i for i, p in enumerate(det.probes)
@@ -415,9 +415,9 @@ def detect(monitors: Sequence[MonitorInfo], grab: Callable[[MonitorInfo], Any], 
     det.game_found = det.scorer_kind == "ocr" and probe.score >= GAME_FOUND_SCORE
     det.permission_issue = all(p.black or p.frame is None for p in det.probes)
     if det.permission_issue:
-        det.warnings.append("모든 모니터가 검게 잡혔다 — 화면 캡처 권한 또는 전용 전체화면 문제다.")
+        det.warnings.append("모든 모니터가 검게 잡혔습니다 — 화면 캡처 권한 또는 전용 전체화면 문제입니다.")
     elif probe.black:
-        det.warnings.append(f"{probe.info.number}번 모니터가 검게 잡혔다.")
+        det.warnings.append(f"{probe.info.number}번 모니터가 검게 잡혔습니다.")
 
     size = probe.frame_size or probe.info.size
     det.frame_size = size
@@ -428,7 +428,7 @@ def detect(monitors: Sequence[MonitorInfo], grab: Callable[[MonitorInfo], Any], 
             det.content_px = box
             det.content_box = (round(left / size[0], 6), round(top / size[1], 6),
                                round((left + w) / size[0], 6), round((top + h) / size[1], 6))
-            det.notes.append(f"레터박스/창 테두리를 잘라냈다: {size[0]}x{size[1]} → {w}x{h}")
+            det.notes.append(f"레터박스/창 테두리를 잘라냈습니다: {size[0]}x{size[1]} → {w}x{h}")
     det.game_size = (det.content_px[2], det.content_px[3]) if det.content_px else size
 
     gw, gh = det.game_size
@@ -438,28 +438,28 @@ def detect(monitors: Sequence[MonitorInfo], grab: Callable[[MonitorInfo], Any], 
         try:
             det.profile_name = profile_for_frame(gw, gh).name
         except ValueError as e:   # 너무 치우친 비율은 16:9에서 유도할 수 없다(ROI가 화면 밖으로 나간다)
-            log.warning("비율 %dx%d 에 쓸 ROI 프로파일을 만들지 못했다: %s", gw, gh, e)
+            log.warning("비율 %dx%d 에 쓸 ROI 프로파일을 만들지 못했습니다: %s", gw, gh, e)
             det.profile_name = "set18_16x9"
             det.measured = False
             det.warnings.append(
-                f"{gw}x{gh} 비율에는 쓸 수 있는 ROI 배치가 없다 — 16:9 배치로 대신한다(인식이 크게 어긋난다). "
-                "게임을 16:9 또는 16:10 해상도로 띄우거나, 캡처 영역을 게임 화면에만 맞춰라.")
+                f"{gw}x{gh} 비율에는 쓸 수 있는 ROI 배치가 없습니다 — 16:9 배치로 대신합니다(인식이 크게 어긋납니다). "
+                "게임을 16:9 또는 16:10 해상도로 띄우거나, 캡처 영역을 게임 화면에만 맞춰 주세요.")
     if det.aspect is None:
         det.warnings.append(
-            f"비율 {det.ratio:.3f}은 지원 목록(16:9 · 16:10 · 4:3 · 21:9 · 32:9)에 없다 — "
-            "캡처 영역이 잘못 잡혔을 수 있다. 테스트 캡처로 확인하라.")
+            f"비율 {det.ratio:.3f}은 지원 목록(16:9 · 16:10 · 4:3 · 21:9 · 32:9)에 없습니다 — "
+            "캡처 영역이 잘못 잡혔을 수 있습니다. 테스트 캡처로 확인해 주세요.")
     elif not det.measured:
         det.warnings.append(
-            f"{det.aspect}는 실제 캡처로 측정하지 않은 비율이다(16:9에서 유도) — "
-            "인식 위치가 조금 어긋날 수 있다. 테스트 캡처로 확인하라.")
+            f"{det.aspect}는 실제 캡처로 측정하지 않은 비율입니다(16:9에서 유도) — "
+            "인식 위치가 조금 어긋날 수 있습니다. 테스트 캡처로 확인해 주세요.")
     if not det.game_found and not det.permission_issue and det.scorer_kind == "ocr":
-        det.warnings.append("TFT 화면(스테이지 글자)을 찾지 못했다. 게임을 테두리 없는 창 모드로 띄운 뒤 "
-                            "다시 감지하거나, 테스트 캡처로 확인하라.")
+        det.warnings.append("TFT 화면(스테이지 글자)을 찾지 못했습니다. 게임을 테두리 없는 창 모드로 띄운 뒤 "
+                            "다시 감지하거나, 테스트 캡처로 확인해 주세요.")
     if probe.info.scale and abs(probe.info.scale - 1.0) > 0.01:
-        det.notes.append(f"고DPI 화면(배율 {probe.info.scale:g}x) — 캡처는 실제 픽셀({size[0]}x{size[1]})로 한다")
+        det.notes.append(f"고DPI 화면(배율 {probe.info.scale:g}x) — 캡처는 실제 픽셀({size[0]}x{size[1]})로 합니다")
     if probe.frame_size is not None and probe.frame_size != probe.info.size:
         det.notes.append(f"모니터 크기({probe.info.width}x{probe.info.height})와 캡처 크기"
-                         f"({size[0]}x{size[1]})가 다르다 — 화면 배율 때문일 수 있다")
+                         f"({size[0]}x{size[1]})가 다릅니다 — 화면 배율 때문일 수 있습니다")
     return det
 
 
@@ -473,10 +473,10 @@ def detect_with_recognizer(settings: Settings, *, out: Callable[[str], None] | N
         from ..vision.recognizer import Recognizer
 
         if out is not None:
-            out("화면 인식기를 준비하는 중… (처음에는 몇 초 걸린다)")
+            out("화면 인식기를 준비하는 중… (처음에는 몇 초 걸립니다)")
         scorer = Recognizer(cfg=settings.vision).screen_score
     except Exception:   # noqa: BLE001 — 인식기가 없어도 화면 크기는 찾을 수 있다
-        log.warning("인식기를 만들지 못했다 → 픽셀 채점으로 감지한다", exc_info=True)
+        log.warning("인식기를 만들지 못했습니다 → 픽셀 채점으로 감지합니다", exc_info=True)
     return detect_live(settings, scorer=scorer)
 
 
@@ -489,7 +489,7 @@ def safe_detect(detect_fn: Callable[[], SetupDetection]) -> SetupDetection:
         return detect_fn()
     except Exception as e:   # noqa: BLE001 — 감지 실패가 설정 화면을 죽이지 않는다
         log.warning("자동 감지 실패", exc_info=True)
-        det = SetupDetection(warnings=[f"화면 캡처에 실패했다: {type(e).__name__}: {e}"])
+        det = SetupDetection(warnings=[f"화면 캡처에 실패했습니다: {type(e).__name__}: {e}"])
         det.permission_issue = True
         return det
 
@@ -819,10 +819,10 @@ def run_test_capture(image, recognizer, *, draw: bool = True) -> TestCapture:
 
     out = TestCapture()
     if image is None:
-        out.message = "캡처하지 못했다."
+        out.message = "캡처하지 못했습니다."
         return out
     if is_black_frame(image):
-        out.message = "화면이 검게 잡혔다.\n" + permission_help()
+        out.message = "화면이 검게 잡혔습니다.\n" + permission_help()
         return out
     t0 = time.perf_counter()
     try:
@@ -837,10 +837,10 @@ def run_test_capture(image, recognizer, *, draw: bool = True) -> TestCapture:
     out.ok = True
     read = sum(1 for name, _ in FIELD_LABELS if getattr(state, name, None) is not None)
     if state.stage is None and state.level is None and state.gold is None:
-        out.message = ("게임 HUD를 읽지 못했다 — TFT 게임 중(준비 단계) 화면이 아니거나, "
-                       "모니터/게임 화면 영역이 잘못 잡혔다.")
+        out.message = ("게임 HUD를 읽지 못했습니다 — TFT 게임 중(준비 단계) 화면이 아니거나, "
+                       "모니터/게임 화면 영역이 잘못 잡혔습니다.")
     else:
-        out.message = f"{read}/{len(FIELD_LABELS)}개 필드를 읽었다 · 인식 {out.elapsed_ms:.0f}ms"
+        out.message = f"{read}/{len(FIELD_LABELS)}개 필드를 읽었습니다 · 인식 {out.elapsed_ms:.0f}ms"
     if draw:
         try:
             from ..vision.regions import FrameMapper, draw_rois
@@ -889,7 +889,7 @@ def commit(choice: SetupChoice, *, settings: Settings, config_dir: Path | None =
 
 
 _CONSOLE_MENU = """
-무엇을 할까?
+무엇을 할까요?
   [1] 이대로 저장하고 시작        [2] 모니터 다시 고르기
   [3] 화면 비율 직접 지정         [4] 다시 감지
   [5] 저장만 하고 끝내기          [6] 테스트 캡처(인식 결과 보기)
@@ -902,14 +902,14 @@ def console_test_capture(choice: SetupChoice, settings: Settings, det: SetupDete
     """콘솔 [테스트 캡처] — 마지막 감지 때 찍어 둔 화면을 **지금 고른 설정으로** 인식해 표로 보여 준다."""
     probe = det.probes[det.chosen] if det.probes else None
     if probe is None or probe.frame is None:
-        out("  찍어 둔 화면이 없다 — 먼저 [4] 다시 감지.")
+        out("  찍어 둔 화면이 없습니다 — 먼저 [4] 다시 감지하세요.")
         return TestCapture()
     try:
         applied = choice.apply(settings)
     except Exception as e:   # noqa: BLE001 — 값이 서로 어긋나면 알려만 준다
-        out(f"  설정 값이 서로 어긋난다: {e}")
+        out(f"  설정 값이 서로 어긋납니다: {e}")
         return TestCapture()
-    out("  인식하는 중… (처음에는 몇 초 걸린다)")
+    out("  인식하는 중… (처음에는 몇 초 걸립니다)")
     try:
         from ..vision.recognizer import Recognizer
 
@@ -956,7 +956,7 @@ def run_console_setup(settings: Settings, *, config_dir: Path | None = None,
         try:
             answer = input_fn(_CONSOLE_MENU).strip()
         except (EOFError, KeyboardInterrupt):
-            out("\n취소했다(저장하지 않음).")
+            out("\n취소했습니다(저장하지 않음).")
             return SetupOutcome(action="cancelled", settings=settings)
         if answer in ("1", ""):
             return commit(choice, settings=settings, config_dir=config_dir, det=det, action="start",
@@ -965,14 +965,14 @@ def run_console_setup(settings: Settings, *, config_dir: Path | None = None,
             return commit(choice, settings=settings, config_dir=config_dir, det=det, action="saved",
                           state_dir=state_dir)
         if answer == "0":
-            out("취소했다(저장하지 않음).")
+            out("취소했습니다(저장하지 않음).")
             return SetupOutcome(action="cancelled", settings=settings)
         if answer == "2":
             for i, probe in enumerate(det.probes, start=1):
                 mark = " ←지금" if i - 1 == det.chosen else ""
                 state = "검은 화면" if probe.black else f"점수 {probe.score:.2f}"
                 out(f"  [{i}] {probe.info.label()} · {state}{mark}")
-            out("  [0] 자동(실행할 때마다 TFT 화면을 찾는다)")
+            out("  [0] 자동(실행할 때마다 TFT 화면을 찾습니다)")
             pick = input_fn("모니터 번호> ").strip()
             if pick == "0":
                 choice.monitor = "auto"
@@ -980,7 +980,7 @@ def run_console_setup(settings: Settings, *, config_dir: Path | None = None,
                 det.chosen = int(pick) - 1
                 choice = choice_from_detection(det, settings)
             else:
-                out("  잘못된 입력 — 그대로 둔다.")
+                out("  잘못된 입력 — 그대로 둡니다.")
             show()
             continue
         if answer == "3":
@@ -991,7 +991,7 @@ def run_console_setup(settings: Settings, *, config_dir: Path | None = None,
                 if pick != "auto":
                     choice.resolution = "auto"   # 비율을 못박으면 해상도 검증 충돌을 피한다
             else:
-                out("  잘못된 입력 — 그대로 둔다.")
+                out("  잘못된 입력 — 그대로 둡니다.")
             show()
             continue
         if answer == "4":
@@ -1002,7 +1002,7 @@ def run_console_setup(settings: Settings, *, config_dir: Path | None = None,
         if answer == "6":
             console_test_capture(choice, settings, det, out)
             continue
-        out("  1 / 2 / 3 / 4 / 5 / 6 / 0 중에서 고르라.")
+        out("  1 / 2 / 3 / 4 / 5 / 6 / 0 중에서 골라 주세요.")
 
 
 def needs_setup(settings: Settings, *, state_dir: Path | None = None) -> bool:
@@ -1017,7 +1017,7 @@ def run_setup(settings: Settings, *, config_dir: Path | None = None, gui: bool =
         try:
             from .setup_dialog import run_setup_dialog
         except ImportError:
-            log.warning("PySide6가 없다 → 콘솔 설정으로 내려간다")
+            log.warning("PySide6가 없습니다 → 콘솔 설정으로 내려갑니다")
         else:
             return run_setup_dialog(settings, config_dir=config_dir, state_dir=state_dir)
     return run_console_setup(settings, config_dir=config_dir, state_dir=state_dir, **kwargs)

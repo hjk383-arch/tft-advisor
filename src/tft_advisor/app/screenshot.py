@@ -6,6 +6,11 @@
     python -m tft_advisor --screenshot tests/fixtures/screens/raw    # 폴더의 이미지를 순서대로
 
 폴더 입력은 **추천기 하나를 이어서** 쓴다(히스테리시스·직전 추천 유지 규칙이 실제 스트림처럼 동작한다).
+
+보드 판독(`Recognizer.last_board_read`: 자리·성급·장착 아이템)은 `app.unit_merge.apply_board_read`로
+`GameState.board`/`bench`/`items.equipped`에 넣는다. 한 장짜리 입력에는 **구매 장부가 없으므로**
+챔피언 정체는 알 수 없고 모든 칸이 `UNKNOWN_UNIT_ID`(신뢰도 0)다 — 자리·성급·아이템만 남는다.
+실시간(`--live`)에서는 같은 병합을 `SessionTracker`가 장부와 함께 수행한다(`app.session._apply_units`).
 """
 from __future__ import annotations
 
@@ -40,7 +45,7 @@ def run_screenshot(path: Path, *, settings: Settings | None = None, jev: str = "
     settings = settings or load_settings()
     images = list(paths) if paths is not None else collect_images(path)
     if not images:
-        out(f"이미지를 찾지 못했다: {path}")
+        out(f"이미지를 찾지 못했습니다: {path}")
         return 2
 
     own_advisor = advisor is None
@@ -76,7 +81,7 @@ def _one(image_path: Path, recognizer, advisor, names: NameBook, settings: Setti
     try:
         image = load_image(image_path)
     except (OSError, ValueError) as e:
-        out(f"[{image_path.name}] 이미지를 읽지 못했다: {e}")
+        out(f"[{image_path.name}] 이미지를 읽지 못했습니다: {e}")
         return
     h, w = image.shape[:2]
     t0 = time.perf_counter()
@@ -87,6 +92,7 @@ def _one(image_path: Path, recognizer, advisor, names: NameBook, settings: Setti
         out(f"[{image_path.name}] 인식 실패: {e}")
         return
     t_recog = (time.perf_counter() - t0) * 1000
+    state = _with_board(state, recognizer)
     t0 = time.perf_counter()
     rec: Recommendation | None = advisor.advise(state)
     t_advise = (time.perf_counter() - t0) * 1000
@@ -100,6 +106,23 @@ def _one(image_path: Path, recognizer, advisor, names: NameBook, settings: Setti
                       title=title, max_comps=settings.ui.max_target_comps, kept=kept))
     if debug_dir is not None:
         _dump(debug_dir, image_path, image, state, recognizer)
+
+
+def _with_board(state: GameState, recognizer) -> GameState:
+    """vision 보드 판독 → `GameState.board`/`bench`/`items.equipped`(정체는 미상, `unit_merge`와 같은 규칙).
+
+    실시간 경로와 같은 `merge_units`를 쓴다(장부만 비어 있다). 실패해도 한 장 처리가 죽지 않는다.
+    """
+    read = getattr(recognizer, "last_board_read", None)
+    if read is None:
+        return state
+    try:
+        from .unit_merge import apply_board_read
+
+        return apply_board_read(state, read)
+    except Exception:
+        log.warning("보드 판독 병합 실패", exc_info=True)
+        return state
 
 
 def _dump(debug_dir: Path, image_path: Path, image, state: GameState, recognizer) -> None:

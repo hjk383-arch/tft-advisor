@@ -544,15 +544,16 @@ def test_single_line_fields_use_fast_line_recognition_first(static):
 
 
 def test_recognize_groups_limits_fields(static):
-    from tft_advisor.vision.recognizer import FIELD_GROUP, GROUPS, Recognizer
+    from tft_advisor.vision.recognizer import FIELD_GROUP, GROUPS, VISION_ONLY_GROUPS, Recognizer
 
     img, ocr = _synthetic_planning_frame({k: v for k, v in PLANNING_TEXTS.items() if v})
     rec = Recognizer(static=static, ocr=ocr, item_template_dir=Path("/nonexistent"))
     s = rec.recognize(img, groups={"hud"})
     assert s.stage == "3-2" and s.gold == 62 and s.shop is None
     assert s.screen_mode == ScreenMode.PLANNING
-    # "owned"(보유 증강 줄)만 FIELD_GROUP 밖이다: augments_owned는 app에서 "있을 때만 덮어쓰기" 병합(_CARRY_FIELDS)
-    assert set(FIELD_GROUP.values()) - {"stage"} == set(GROUPS) - {"owned"}
+    # FIELD_GROUP 밖의 묶음은 둘뿐이다: "owned"(augments_owned는 app에서 "있을 때만 덮어쓰기" 병합, _CARRY_FIELDS)와
+    # "board"(GameState 필드가 아니라 Recognizer.last_board_read로 나간다, VISION_ONLY_GROUPS).
+    assert set(FIELD_GROUP.values()) - {"stage"} == set(GROUPS) - {"owned"} - VISION_ONLY_GROUPS
     with pytest.raises(ValueError):
         rec.recognize(img, groups={"nope"})
 

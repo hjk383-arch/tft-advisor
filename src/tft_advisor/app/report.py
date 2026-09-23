@@ -14,6 +14,7 @@ from datetime import UTC, datetime
 from ..contracts import (
     FallbackReason, GameState, ItemReadiness, Recommendation, ScreenMode, ShopSlotKind, TargetComp,
 )
+from ..unit_status import UnitsKnowledge, units_knowledge, units_note
 from .names import NameBook
 
 SCREEN_LABELS: dict[ScreenMode, str] = {
@@ -43,6 +44,11 @@ FALLBACK_LABELS: dict[FallbackReason, str] = {
     FallbackReason.BAD_REQUEST: "Jev 요청 오류",
 }
 ITEM_STATUS_LABELS = {"owned": "보유", "craftable": "조합가능", "missing": "부족"}
+UNKNOWN_UNITS_TEXT = "보드 미인식(구매 추적 대기 · 수동 입력 가능)"
+"""보드를 아예 읽지 못했을 때의 문구. 상태별 문구는 `tft_advisor.unit_status.units_note`가 만든다.
+
+**보드를 읽었지만 챔피언 이름만 모르는 경우**(`UnitsKnowledge.SEEN`)는 이 문구가 아니다 —
+자리·성급·장착 아이템은 이미 추천에 쓰이고 있으므로 "미인식"이라고 하면 사실과 다르다."""
 CORE_FIELDS = ("stage", "level", "gold", "hp", "shop", "items", "board")
 """추천 품질에 직접 영향을 주는 필드 — 못 읽었으면 사용자에게 알린다."""
 
@@ -88,7 +94,11 @@ def low_confidence_fields(state: GameState, threshold: float) -> list[str]:
 
 
 def recognition_warnings(state: GameState, threshold: float) -> list[str]:
-    """오버레이 상태줄·콘솔에 띄울 인식 경고."""
+    """오버레이 상태줄·콘솔에 띄울 인식 경고.
+
+    보드를 읽었지만 챔피언 이름만 모르는 상태(`UnitsKnowledge.SEEN`)는 **실패가 아니다.**
+    보드/벤치 신뢰도 0.00을 "낮은 신뢰도"로 늘어놓는 대신 무엇을 알고 무엇을 모르는지 한 줄로 적는다.
+    """
     warns: list[str] = []
     if state.screen_mode == ScreenMode.UNKNOWN:
         warns.append("화면 판별 실패")
@@ -96,6 +106,10 @@ def recognition_warnings(state: GameState, threshold: float) -> list[str]:
     if miss:
         warns.append("미인식: " + ", ".join(miss))
     low = low_confidence_fields(state, threshold)
+    if units_knowledge(state, threshold) is UnitsKnowledge.SEEN:
+        seen = len(state.board or []) + len(state.bench or [])
+        low = [x for x in low if not x.startswith(("보드 ", "벤치 "))]
+        warns.append(f"보드 {seen}기·장착 아이템 인식 · 챔피언 이름 미상(구매 추적 대기)")
     if low:
         warns.append("낮은 신뢰도: " + ", ".join(low))
     return warns
@@ -128,19 +142,25 @@ def item_readiness_text(ready: list[ItemReadiness], names: NameBook) -> str:
     return " / ".join(f"{names.name(r.item_id)}({ITEM_STATUS_LABELS.get(r.status, r.status)})" for r in ready)
 
 
-def comp_lines(comp: TargetComp, rank: int, names: NameBook, *, compact: bool = False) -> list[str]:
-    """목표 덱 1개 → 표시 줄들. rank는 advisor 순서(1부터)."""
+def comp_lines(comp: TargetComp, rank: int, names: NameBook, *, compact: bool = False,
+               units_note: str | None = None) -> list[str]:
+    """목표 덱 1개 → 표시 줄들. rank는 advisor 순서(1부터).
+
+    `units_note`: 보유 유닛을 어디까지 아는지(`tft_advisor.unit_status.units_note`). 보유/부족 줄 뒤에 붙는다.
+    보유 유닛을 하나도 모르면 이 문구만 보여 준다(기본값: "보드 미인식").
+    """
     head = f"{rank}. {comp.name}  적합도 {comp.score:.2f}"
     if comp.carry:
         head += f"  캐리 {names.name(comp.carry)}"
     if comp.levelling:
         head += f"  운영 {comp.levelling}"
     out = [head]
+    tail = f" ({units_note})" if units_note else ""
     if comp.owned_units or comp.missing_units:
-        out.append(f"   보유 {len(comp.owned_units)}: {names.joined(comp.owned_units, limit=6) or '-'}")
+        out.append(f"   보유 {len(comp.owned_units)}: {names.joined(comp.owned_units, limit=6) or '-'}{tail}")
         out.append(f"   부족 {len(comp.missing_units)}: {names.joined(comp.missing_units, limit=6) or '-'}")
     else:
-        out.append("   보유/부족: 보드 미인식")
+        out.append(f"   보유/부족: {units_note or UNKNOWN_UNITS_TEXT}")
     if comp.items_ready:
         out.append(f"   아이템: {item_readiness_text(comp.items_ready, names)}")
     if not compact:
@@ -216,7 +236,7 @@ class KeptInfo:
         return f"직전 추천({KEPT_LABELS.get(self.mode, screen_label(self.mode))})"
 
     def note(self) -> str:
-        bits = [f"{self.label}: 준비 단계 추천을 유지한다(목표 덱 고정)"]
+        bits = [f"{self.label}: 준비 단계 추천을 유지합니다(목표 덱 고정)"]
         if self.bought:
             bits.append(f"산 칸 {self.bought}개 제외")
         if self.changed:
@@ -307,9 +327,9 @@ def format_report(state: GameState, rec: Recommendation | None, *, names: NameBo
 
     if rec is None:
         if state.screen_mode in (ScreenMode.COMBAT, ScreenMode.ITEM_SELECT, ScreenMode.UNKNOWN):
-            lines.append(f"[추천] {screen_label(state.screen_mode)} 화면 — 직전 추천을 유지한다(이 화면 단독으로는 추천 없음).")
+            lines.append(f"[추천] {screen_label(state.screen_mode)} 화면 — 직전 추천을 유지합니다(이 화면 단독으로는 추천 없음).")
         elif state.screen_mode in (ScreenMode.LOADING, ScreenMode.GAME_OVER):
-            lines.append(f"[추천] {screen_label(state.screen_mode)} 화면 — 세션을 초기화한다.")
+            lines.append(f"[추천] {screen_label(state.screen_mode)} 화면 — 세션을 초기화합니다.")
         else:
             lines.append("[추천] 없음")
     else:
@@ -318,8 +338,9 @@ def format_report(state: GameState, rec: Recommendation | None, *, names: NameBo
         lines.append(f"[목표 덱] advisor 순서 (점수로 재정렬하지 않음) — {jev_label(rec)}")
         if not rec.target_comps:
             lines.append("  (후보 없음 — 인식 정보 부족)")
+        note = units_note(state, threshold)
         for i, comp in enumerate(rec.target_comps[:max_comps], start=1):
-            lines += ["  " + ln for ln in comp_lines(comp, i, nb)]
+            lines += ["  " + ln for ln in comp_lines(comp, i, nb, units_note=note)]
         if rec.shop:
             head = f"[상점 — {kept.label}]" if kept is not None else "[상점]"
             lines += ["", head] + ["  " + ln for ln in shop_lines(rec, nb)]

@@ -56,7 +56,7 @@ def load_alt_manifest(alt_dir: str | Path | None) -> dict[str, dict]:
     try:
         return dict(json.loads(p.read_text(encoding="utf-8")).get("entries") or {})
     except (OSError, ValueError) as e:
-        log.warning("대체 아이콘 목록을 읽지 못했다(%s): %s", p, e)
+        log.warning("대체 아이콘 목록을 읽지 못했습니다(%s): %s", p, e)
         return {}
 
 
@@ -190,6 +190,6 @@ class AugmentLearner:
         try:
             self.save_dir.mkdir(parents=True, exist_ok=True)
         except OSError as e:
-            log.warning("증강 템플릿 폴더를 만들지 못했다(%s): %s", self.save_dir, e)
+            log.warning("증강 템플릿 폴더를 만들지 못했습니다(%s): %s", self.save_dir, e)
             return None
         return dest if save_image(dest, tpl) else None

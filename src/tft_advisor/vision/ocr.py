@@ -128,7 +128,7 @@ class RapidOcrEngine:
     def create(cls, lang: str = "korean") -> RapidOcrEngine | None:
         backend = cls.available_backend()
         if backend is None:
-            log.warning("OCR 백엔드 없음(rapidocr + onnxruntime/openvino). 문자 인식을 끈다.")
+            log.warning("OCR 백엔드 없음(rapidocr + onnxruntime/openvino). 문자 인식을 끕니다.")
             return None
         return cls(backend, lang)
 
@@ -227,7 +227,7 @@ def create_ocr(lang: str = "korean", backend: str = "auto") -> OcrEngine:
         import rapidocr  # noqa: F401
         __import__(backend)
     except ImportError:
-        log.warning("ocr_backend=%s 를 쓸 수 없다(rapidocr 또는 %s 미설치). 문자 인식을 끈다.", backend, backend)
+        log.warning("ocr_backend=%s 를 쓸 수 없습니다(rapidocr 또는 %s 미설치). 문자 인식을 끕니다.", backend, backend)
         return NullOcr()
     return RapidOcrEngine(backend, lang)
 

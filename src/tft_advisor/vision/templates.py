@@ -270,17 +270,17 @@ def harvest_items(image, labels: list[str | None], static, profile, out_dir: Pat
     saved: list[str] = []
     errors: list[str] = []
     if len(labels) > len(profile.item_slots):
-        errors.append(f"item_bench가 {len(labels)}칸이다(최대 {len(profile.item_slots)}). 넘는 칸은 무시한다")
+        errors.append(f"item_bench가 {len(labels)}칸입니다(최대 {len(profile.item_slots)}). 넘는 칸은 무시합니다")
     for j, (r, label) in enumerate(zip(profile.item_slots, labels)):
         if not label:
             continue
         api = cat.resolve(label)
         if api is None:
-            errors.append(f"{j}번 칸 {label!r}: 정적 데이터에서 아이템을 찾지 못했다(게임 표시 이름 그대로인지 확인)")
+            errors.append(f"{j}번 칸 {label!r}: 정적 데이터에서 아이템을 찾지 못했습니다(게임 표시 이름 그대로인지 확인해 주세요)")
             continue
         crop = m.crop(image, r)
         if slot_is_empty(crop):
-            errors.append(f"{j}번 칸 {label!r}: 화면의 칸이 비어 있다(라벨 순서 확인)")
+            errors.append(f"{j}번 칸 {label!r}: 화면의 칸이 비어 있습니다(라벨 순서를 확인해 주세요)")
             continue
         out_dir.mkdir(parents=True, exist_ok=True)
         big = cv2.resize(crop, (SEARCH_SIZE, SEARCH_SIZE), interpolation=cv2.INTER_AREA)
@@ -308,7 +308,7 @@ def harvest_augments(image, labels: list[str], static, profile, out_dir: Path,
     crop = m.crop(image, profile.augments_owned)
     cells = find_icon_row(crop, m.box[3])
     if len(cells) != len(labels):
-        return [], [f"화면의 증강 칸 {len(cells)}개와 라벨 {len(labels)}개가 다르다(준비 화면인지, 라벨 순서 확인)"]
+        return [], [f"화면의 증강 칸 {len(cells)}개와 라벨 {len(labels)}개가 다릅니다(준비 화면인지, 라벨 순서를 확인해 주세요)"]
     names = {}
     for rec in static.tables["augments"]:
         names.setdefault(rec.get("name_ko"), rec["apiName"])
@@ -318,7 +318,7 @@ def harvest_augments(image, labels: list[str], static, profile, out_dir: Path,
     for j, ((x1, y1, x2, y2), label) in enumerate(zip(cells, labels)):
         api = names.get(label) or names.get((label or "").strip())
         if api is None:
-            errors.append(f"{j}번 칸 {label!r}: 정적 데이터에서 증강을 찾지 못했다(게임 표시 이름 그대로인지 확인)")
+            errors.append(f"{j}번 칸 {label!r}: 정적 데이터에서 증강을 찾지 못했습니다(게임 표시 이름 그대로인지 확인해 주세요)")
             continue
         out_dir.mkdir(parents=True, exist_ok=True)
         if save_image(out_dir / f"{api}.png", augment_cell_template(crop[y1:y2, x1:x2])):
@@ -336,14 +336,14 @@ def _main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(prog="tft_advisor.vision.templates")
     ap.add_argument("--set", type=int, default=18)
     ap.add_argument("--profile", default="auto",
-                    help="ROI 프로파일. auto(기본)면 스크린샷 크기에서 비율을 재서 고른다")
+                    help="ROI 프로파일. auto(기본)면 스크린샷 크기에서 비율을 재서 고릅니다")
     sub = ap.add_subparsers(dest="cmd", required=True)
     f = sub.add_parser("fetch-items")
     f.add_argument("--categories", default=",".join(DEFAULT_ITEM_CATEGORIES))
     f.add_argument("--overwrite", action="store_true")
     fa = sub.add_parser("fetch-augments")
     fa.add_argument("--overwrite", action="store_true")
-    fa.add_argument("--no-alt", action="store_true", help="대체 출처(tactics.tools) 아이콘을 받지 않는다")
+    fa.add_argument("--no-alt", action="store_true", help="대체 출처(tactics.tools) 아이콘을 받지 않습니다")
     fa.add_argument("--delay", type=float, default=FETCH_DELAY_S, help="요청 사이 간격(초)")
     for name in ("harvest-items", "harvest-digits", "harvest-augments"):
         h = sub.add_parser(name)
@@ -381,7 +381,7 @@ def _main(argv: list[str] | None = None) -> int:
         out = template_dir(args.set, "items_screen")
         bench = label.get("item_bench") or label.get("note_item_bench") or []
         if not isinstance(bench, list):
-            print("item_bench가 목록이 아니다", file=sys.stderr)
+            print("item_bench가 목록이 아닙니다", file=sys.stderr)
             return 2
         saved, errors = harvest_items(img, bench, load_static(args.set), profile, out, content=box)
         print(f"{out}: 저장 {len(saved)} {saved}")
@@ -392,7 +392,7 @@ def _main(argv: list[str] | None = None) -> int:
         out = template_dir(args.set, "augments_screen")
         owned = label.get("augments_owned")
         if not isinstance(owned, list) or not owned:
-            print("augments_owned(왼쪽부터 증강 이름 목록)가 라벨에 없다", file=sys.stderr)
+            print("augments_owned(왼쪽부터 증강 이름 목록)가 라벨에 없습니다", file=sys.stderr)
             return 2
         saved, errors = harvest_augments(img, owned, load_static(args.set), profile, out, content=box)
         print(f"{out}: 저장 {len(saved)} {saved}")

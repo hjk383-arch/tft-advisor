@@ -74,8 +74,8 @@ class JevSwitcher:
         return jev_key_present()
 
     def lock_note(self) -> str:
-        return (f"CLI --jev {self.locked_by_cli} 로 고정된 실행이다 — 이번 실행에는 바꿀 수 없다"
-                " (플래그 없이 실행하거나 설정 화면에서 바꾸라).")
+        return (f"CLI --jev {self.locked_by_cli} 로 고정된 실행입니다 — 이번 실행에는 바꿀 수 없습니다"
+                " (플래그 없이 실행하거나 설정 화면에서 바꾸세요).")
 
     def blocked_reason(self, target: str = "live") -> str | None:
         """토글을 막아야 하면 이유, 아니면 None."""
@@ -110,7 +110,7 @@ class JevSwitcher:
         if blocked is not None:
             return SwitchResult(False, self.backend, blocked)
         if name == self.backend:
-            return SwitchResult(True, self.backend, f"이미 {label(name)}이다")
+            return SwitchResult(True, self.backend, f"이미 {label(name)}입니다")
         with self._lock:
             self.busy = True
             try:
@@ -119,14 +119,14 @@ class JevSwitcher:
                 except Exception as e:   # noqa: BLE001 — 전환 실패로 앱이 죽지 않는다
                     log.warning("Jev 백엔드 %s 생성 실패", name, exc_info=True)
                     return SwitchResult(False, self.backend,
-                                        f"Jev 백엔드를 만들지 못했다: {type(e).__name__}: {e}")
+                                        f"Jev 백엔드를 만들지 못했습니다: {type(e).__name__}: {e}")
                 if self.loop is not None:
                     try:
                         self.loop.set_advisor(advisor)
                     except Exception as e:   # noqa: BLE001
                         log.warning("advisor 교체 실패", exc_info=True)
                         return SwitchResult(False, self.backend,
-                                            f"advisor를 바꾸지 못했다: {type(e).__name__}: {e}")
+                                            f"advisor를 바꾸지 못했습니다: {type(e).__name__}: {e}")
                 self.backend = name
                 self.switches += 1
                 self._remember(name)
@@ -137,10 +137,10 @@ class JevSwitcher:
                         saved = True
                     except Exception as e:   # noqa: BLE001 — 저장이 실패해도 이번 실행에는 적용된다
                         log.warning("jev_backend 저장 실패", exc_info=True)
-                        note = f" (설정 파일에 저장하지 못했다: {e} — 이번 실행에만 적용된다)"
+                        note = f" (설정 파일에 저장하지 못했습니다: {e} — 이번 실행에만 적용됩니다)"
             finally:
                 self.busy = False
-        return SwitchResult(True, name, f"Jev 백엔드를 {label(name)}(으)로 바꿨다 — 다음 추천부터 적용된다{note}",
+        return SwitchResult(True, name, f"Jev 백엔드를 {label(name)}(으)로 바꿨습니다 — 다음 추천부터 적용됩니다{note}",
                             saved)
 
     def set_backend(self, name: str, *, persist: bool = True,

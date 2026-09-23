@@ -63,7 +63,7 @@ def test_missing_path_returns_2(settings, recognizer, advisor, tmp_path):
     lines: list[str] = []
     assert run_screenshot(tmp_path / "없는파일.png", settings=settings, recognizer=recognizer,
                           advisor=advisor, out=lines.append) == 2
-    assert "찾지 못했다" in lines[0]
+    assert "찾지 못했습니다" in lines[0]
 
 
 def test_collect_images_from_folder_and_file():
@@ -81,4 +81,4 @@ def test_unreadable_file_does_not_stop_the_batch(recognizer, advisor, settings, 
     broken = tmp_path / "broken.png"
     broken.write_bytes(b"not an image")
     text = "\n".join(run([broken, TRACKED[0]], recognizer, advisor, settings))
-    assert "읽지 못했다" in text and TRACKED[0].name in text
+    assert "읽지 못했습니다" in text and TRACKED[0].name in text

@@ -99,7 +99,7 @@ def _read_fallback() -> str | None:
     except FileNotFoundError:
         return None
     except Exception:   # noqa: BLE001 — 깨진 파일 때문에 앱이 죽지 않는다
-        log.warning("자격 증명 파일을 읽지 못했다: %s", path)
+        log.warning("자격 증명 파일을 읽지 못했습니다: %s", path)
         return None
     value = data.get("typesafe", {}).get("api_key")
     return value.strip() if isinstance(value, str) and value.strip() else None
@@ -116,7 +116,7 @@ def _write_fallback(key: str) -> Path:
     try:
         path.parent.chmod(DIR_MODE)
     except OSError:   # pragma: no cover — 권한을 못 바꾸는 파일시스템
-        log.debug("디렉터리 권한을 %o로 바꾸지 못했다: %s", DIR_MODE, path.parent)
+        log.debug("디렉터리 권한을 %o로 바꾸지 못했습니다: %s", DIR_MODE, path.parent)
     text = (
         "# TFT Advisor — TypeSafe API 키. 이 파일은 저장소 밖(홈 디렉터리)에 있고 권한은 0600이다.\n"
         "# OS 키체인을 쓸 수 없을 때만 쓰인다. 사람이 직접 고칠 필요는 없다(설정 화면에서 저장·삭제).\n"
@@ -135,7 +135,7 @@ def _write_fallback(key: str) -> Path:
     try:
         path.chmod(FILE_MODE)
     except OSError:   # pragma: no cover
-        log.debug("파일 권한을 %o로 바꾸지 못했다: %s", FILE_MODE, path)
+        log.debug("파일 권한을 %o로 바꾸지 못했습니다: %s", FILE_MODE, path)
     return path
 
 
@@ -146,7 +146,7 @@ def _delete_fallback() -> bool:
     try:
         path.unlink()
     except OSError:
-        log.warning("자격 증명 파일을 지우지 못했다: %s", path)
+        log.warning("자격 증명 파일을 지우지 못했습니다: %s", path)
         return False
     return True
 
@@ -190,7 +190,7 @@ def _keyring() -> Any | None:
     try:
         backend = kr.get_keyring()
     except Exception:   # noqa: BLE001
-        log.debug("keyring 백엔드를 얻지 못했다", exc_info=True)
+        log.debug("keyring 백엔드를 얻지 못했습니다", exc_info=True)
         return None
     name = type(backend).__name__
     if "fail" in name.lower() or "null" in name.lower():
@@ -218,7 +218,7 @@ def _keyring_get() -> str | None:
     try:
         value = kr.get_password(SERVICE, ACCOUNT)
     except Exception:   # noqa: BLE001 — 키체인이 잠겼거나 사용자가 거부했다
-        log.warning("키체인에서 키를 읽지 못했다(%s)", keyring_label())
+        log.warning("키체인에서 키를 읽지 못했습니다(%s)", keyring_label())
         return None
     return value.strip() if isinstance(value, str) and value.strip() else None
 
@@ -248,12 +248,12 @@ class KeyInfo:
 
     def describe(self) -> str:
         if not self.present:
-            return "저장된 TypeSafe API 키가 없다."
+            return "저장된 TypeSafe API 키가 없습니다."
         if self.source == "env":
-            return f"{self.store} 의 키를 쓰고 있다 — {self.hint} (환경변수가 가장 먼저 쓰인다)"
+            return f"{self.store} 의 키를 쓰고 있습니다 — {self.hint} (환경변수가 가장 먼저 쓰입니다)"
         if self.source == "file":
-            return f"{self.store}에 저장돼 있다 — {self.hint} ({self.path})"
-        return f"{self.store}에 저장돼 있다 — {self.hint}"
+            return f"{self.store}에 저장돼 있습니다 — {self.hint} ({self.path})"
+        return f"{self.store}에 저장돼 있습니다 — {self.hint}"
 
 
 def _env_key() -> str | None:
@@ -332,9 +332,9 @@ def save_api_key(key: str) -> SaveResult:
     """키체인에 저장한다(안 되면 폴백 파일). 키 값은 로그에 남기지 않는다."""
     value = (key or "").strip()
     if not value:
-        return SaveResult(False, message="키가 비어 있다 — 입력한 뒤 다시 [저장]을 누르라.")
+        return SaveResult(False, message="키가 비어 있습니다 — 입력한 뒤 다시 [저장]을 눌러 주세요.")
     if any(ch.isspace() for ch in value):
-        return SaveResult(False, message="키에 공백이 들어 있다 — 복사할 때 줄바꿈·공백이 섞이지 않았는지 보라.")
+        return SaveResult(False, message="키에 공백이 들어 있습니다 — 복사할 때 줄바꿈·공백이 섞이지 않았는지 확인해 주세요.")
     hint = mask(value)
     shadowed = _env_key() is not None
     kr = _keyring()
@@ -342,19 +342,19 @@ def save_api_key(key: str) -> SaveResult:
         try:
             kr.set_password(SERVICE, ACCOUNT, value)
         except Exception as e:   # noqa: BLE001 — 키체인 거부 → 폴백 파일
-            log.warning("키체인에 저장하지 못했다(%s): %s", keyring_label(), type(e).__name__)
+            log.warning("키체인에 저장하지 못했습니다(%s): %s", keyring_label(), type(e).__name__)
         else:
             refresh()
             _remember(value, "keyring")
-            return SaveResult(True, "keyring", f"{keyring_label()}에 저장했다 — {hint}", hint,
+            return SaveResult(True, "keyring", f"{keyring_label()}에 저장했습니다 — {hint}", hint,
                               shadowed_by_env=shadowed)
     try:
         path = _write_fallback(value)
     except OSError as e:
-        return SaveResult(False, message=f"저장하지 못했다: {type(e).__name__}: {e}")
+        return SaveResult(False, message=f"저장하지 못했습니다: {type(e).__name__}: {e}")
     refresh()
     _remember(value, "file")
-    return SaveResult(True, "file", f"{keyring_label()}을 쓸 수 없어 파일에 저장했다(권한 0600) — {hint}\n{path}",
+    return SaveResult(True, "file", f"{keyring_label()}을 쓸 수 없어 파일에 저장했습니다(권한 0600) — {hint}\n{path}",
                       hint, path, shadowed_by_env=shadowed)
 
 
@@ -376,19 +376,19 @@ def delete_api_key() -> DeleteResult:
         try:
             kr.delete_password(SERVICE, ACCOUNT)
         except Exception:   # noqa: BLE001 — 항목이 없으면 keyring이 예외를 던진다
-            log.debug("키체인에 지울 항목이 없다", exc_info=True)
+            log.debug("키체인에 지울 항목이 없습니다", exc_info=True)
         else:
             removed.append("keyring")
     if _delete_fallback():
         removed.append("file")
     refresh()
     if not removed:
-        msg = "지울 키가 없었다."
+        msg = "지울 키가 없었습니다."
     else:
         names = {"keyring": keyring_label(), "file": "폴백 파일"}
-        msg = ", ".join(names[r] for r in removed) + "에서 키를 지웠다."
+        msg = ", ".join(names[r] for r in removed) + "에서 키를 지웠습니다."
     if _env_key() is not None:
-        msg += f" 환경변수 {ENV_VAR} 는 그대로다 — 앱은 그 값을 계속 쓴다(셸에서 지우라)."
+        msg += f" 환경변수 {ENV_VAR} 는 그대로입니다 — 앱은 그 값을 계속 씁니다(셸에서 지워 주세요)."
     return DeleteResult(tuple(removed), msg)
 
 
@@ -435,11 +435,11 @@ def _live_ping(key: str, *, model: str = "jev-latest", timeout_s: float = 15.0) 
 
 
 _REASON_MESSAGES = {
-    "auth": "키가 거부됐다 — 키가 잘못됐거나 만료됐다. TypeSafe 대시보드에서 다시 복사해 보라.",
-    "quota": "요청 한도(쿼터·rate limit)에 걸렸다 — 키는 유효하다. 잠시 뒤 다시 시도하라.",
-    "network": "네트워크에 연결하지 못했다 — 인터넷·방화벽·프록시를 확인하라.",
-    "timeout": "응답이 제때 오지 않았다 — 네트워크가 느리거나 서버가 붐빈다. 다시 시도하라.",
-    "server": "TypeSafe 서버 쪽 오류다 — 키 문제가 아니다. 잠시 뒤 다시 시도하라.",
+    "auth": "키가 거부됐습니다 — 키가 잘못됐거나 만료됐습니다. TypeSafe 대시보드에서 다시 복사해 보세요.",
+    "quota": "요청 한도(쿼터·rate limit)에 걸렸습니다 — 키는 유효합니다. 잠시 뒤 다시 시도해 주세요.",
+    "network": "네트워크에 연결하지 못했습니다 — 인터넷·방화벽·프록시를 확인해 주세요.",
+    "timeout": "응답이 제때 오지 않았습니다 — 네트워크가 느리거나 서버가 붐빕니다. 다시 시도해 주세요.",
+    "server": "TypeSafe 서버 쪽 오류입니다 — 키 문제가 아닙니다. 잠시 뒤 다시 시도해 주세요.",
 }
 
 
@@ -468,24 +468,24 @@ def verify_key(key: str | None = None, *, caller: Any = None, model: str = "jev-
     """
     value = (key or "").strip() or resolve_api_key()
     if not value:
-        return VerifyResult(False, "테스트할 키가 없다 — 키를 입력하거나 저장한 뒤 누르라.", "empty")
+        return VerifyResult(False, "테스트할 키가 없습니다 — 키를 입력하거나 저장한 뒤 눌러 주세요.", "empty")
     fn = caller or (lambda k: _live_ping(k, model=model, timeout_s=timeout_s))
     t0 = time.perf_counter()
     try:
         fn(value)
     except ImportError:
-        return VerifyResult(False, "typesafe_sdk 가 설치돼 있지 않다 — `pip install -e \".[advisor]\"`.", "sdk")
+        return VerifyResult(False, "typesafe_sdk 가 설치돼 있지 않습니다 — `pip install -e \".[advisor]\"`.", "sdk")
     except BaseException as exc:   # noqa: BLE001 — 실패 이유를 화면에 옮기는 것이 이 함수의 일이다
         if isinstance(exc, (KeyboardInterrupt, SystemExit)):
             raise
         reason = _classify(exc)
         detail = _REASON_MESSAGES.get(reason)
         if detail is None:
-            detail = f"호출이 실패했다: {type(exc).__name__}"
+            detail = f"호출이 실패했습니다: {type(exc).__name__}"
         log.warning("연결 테스트 실패: %s (%s)", reason, type(exc).__name__)   # 키 값은 남기지 않는다
         return VerifyResult(False, f"실패 — {detail}", reason)
     ms = (time.perf_counter() - t0) * 1000
-    return VerifyResult(True, f"성공 — TypeSafe에 연결했고 키가 유효하다 ({ms:.0f}ms).", "ok", ms)
+    return VerifyResult(True, f"성공 — TypeSafe에 연결했고 키가 유효합니다 ({ms:.0f}ms).", "ok", ms)
 
 
 __all__ = [

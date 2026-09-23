@@ -6,6 +6,8 @@
 - 정답 파일에 있는 필드만 비교(`ExpectedScreen.fields`). `note_level` 등 추정 라벨 필드는 "(추정)"으로 표시한다.
 - 인식이 None이면 "none"(미인식, 틀림과 구분). 값이 있는데 다르면 "wrong".
 - shop은 칸 단위(kind+id)로도 센다.
+- board_slots / bench_slots(보드·벤치 유닛 라벨)는 **자리 단위**로 센다: 자리(occupancy) · 성급 · 장착 아이템을 따로.
+  vision은 챔피언 정체를 읽지 않으므로 정체는 비교하지 않는다(`vision.board` 머리 주석 참고).
 - 여러 모니터를 이어 붙인 캡처(Windows Win+PrtSc, 예: 4480x1440)는 인식기가 게임 모니터를 자동으로 고른다
   (`Recognizer.content_for` → `regions.screen_candidates` + 스테이지 OCR). 크롭 사본을 만들 필요가 없다.
 """
@@ -49,6 +51,36 @@ class ScreenResult:
     name: str
     fields: dict[str, dict] = field(default_factory=dict)   # field → {expected, got, status, conf}
     shop_slots: list[dict] = field(default_factory=list)
+    board: dict | None = None
+    """보드·벤치 라벨이 있을 때만: {occupancy: {ok, expected, got}, star: {ok, total}, items: {ok, total}, …}"""
+
+
+def _slot_key(slot: dict, on_bench: bool) -> object:
+    return slot["slot"] if on_bench else slot["hex"]
+
+
+def compare_board(expected: list[dict], got: list, on_bench: bool) -> dict:
+    """라벨 자리 목록 vs 판독 자리 목록 → {occupancy, star, items}. 자리를 모르는 라벨(None)은 개수만 센다."""
+    exp_by = {_slot_key(e, on_bench): e for e in expected if _slot_key(e, on_bench) is not None}
+    got_by = {(u.bench_slot if on_bench else u.hex): u for u in got
+              if (u.bench_slot if on_bench else u.hex) is not None}
+    same = set(exp_by) & set(got_by)
+    star_total = star_ok = item_total = item_ok = 0
+    for k in sorted(same, key=str):
+        e, g = exp_by[k], got_by[k]
+        if e.get("star") is not None:
+            star_total += 1
+            star_ok += int(e["star"] == g.star)
+        if e.get("items") is not None:
+            item_total += 1
+            item_ok += int(sorted(e["items"]) == sorted(g.items))
+    return {
+        "expected": len(expected), "got": len(got),
+        "placed_ok": len(same), "missing": sorted(map(str, set(exp_by) - set(got_by))),
+        "extra": sorted(map(str, set(got_by) - set(exp_by))),
+        "star": {"ok": star_ok, "total": star_total},
+        "items": {"ok": item_ok, "total": item_total},
+    }
 
 
 def compare(expected: GameState, fields: frozenset[str], got: GameState, estimated: set[str]) -> dict[str, dict]:
@@ -81,6 +113,13 @@ def evaluate_dir(screens_dir: Path = SCREENS_DIR, recognizer: Recognizer | None 
                     "got": None if g is None else (g.kind.value, g.id),
                     "ok": g is not None and (g.kind, g.id) == (es.kind, es.id),
                 })
+        read = rec.last_board_read
+        if read is not None and ("board_slots" in exp.extras or "bench_slots" in exp.extras):
+            r.board = {
+                "board": compare_board(exp.extras.get("board_slots") or [], list(read.board), False),
+                "bench": compare_board(exp.extras.get("bench_slots") or [], list(read.bench), True),
+                "unresolved_items": read.unresolved_items,
+            }
         results.append(r)
     return results
 
@@ -95,6 +134,19 @@ def summarize(results: list[ScreenResult]) -> dict[str, dict[str, int]]:
             a = agg.setdefault(f, {"ok": 0, "wrong": 0, "none": 0, "total": 0})
             a[d["status"]] += 1
             a["total"] += 1
+    boards = [r.board for r in results if r.board]
+    if boards:
+        for side in ("board", "bench"):
+            agg[f"{side}_slot"] = {
+                "ok": sum(b[side]["placed_ok"] for b in boards),
+                "wrong": sum(len(b[side]["extra"]) for b in boards),
+                "none": sum(len(b[side]["missing"]) for b in boards),
+                "total": sum(b[side]["expected"] for b in boards)}
+            for what in ("star", "items"):
+                agg[f"{side}_{what}"] = {
+                    "ok": sum(b[side][what]["ok"] for b in boards), "wrong": 0,
+                    "none": sum(b[side][what]["total"] - b[side][what]["ok"] for b in boards),
+                    "total": sum(b[side][what]["total"] for b in boards)}
     slots = [s for r in results for s in r.shop_slots]
     if slots:
         agg["shop_slot"] = {"ok": sum(s["ok"] for s in slots),
@@ -118,6 +170,13 @@ def main(argv: list[str] | None = None) -> int:
             mark = {"ok": "OK  ", "wrong": "FAIL", "none": "NONE"}[d["status"]]
             est = " (추정 라벨)" if d["estimated_label"] else ""
             print(f"  {mark} {f:14} exp={d['expected']!s:40.40} got={d['got']!s:40.40} conf={d['conf']}{est}")
+        if r.board:
+            for side in ("board", "bench"):
+                b = r.board[side]
+                print(f"  ---- {side:9} 자리 {b['placed_ok']}/{b['expected']} (판독 {b['got']}) "
+                      f"성급 {b['star']['ok']}/{b['star']['total']} 아이템 {b['items']['ok']}/{b['items']['total']}"
+                      + (f" 놓침={b['missing']}" if b["missing"] else "")
+                      + (f" 잘못={b['extra']}" if b["extra"] else ""))
     agg = summarize(results)
     print("\n필드별 (ok/total, wrong, none):")
     for f, a in agg.items():

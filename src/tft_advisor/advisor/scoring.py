@@ -20,6 +20,7 @@ from ..contracts import (
     ShopSlotKind,
     TargetComp,
 )
+from ..unit_status import units_reason
 from .candidates import Candidate, augment_comp_fit, augment_proxy, late_blind, late_cfg, stat_norm, tempo_active, tier_score
 from .features import (
     View,
@@ -280,8 +281,9 @@ class Scorer:
         # 3. 상태 플래그 (후반 무자원 안내는 오버레이가 근거 앞 3개만 보여 주므로 보드 플래그보다 앞에 둔다)
         if self.blind_late and not self.undecided:
             reasons.append("보유 아이템·증강 신호 없음: 레벨 템포·메타로 추정")
-        if not v.units_known:
-            reasons.append("보드 미인식: 보유/부족 유닛은 수동 입력 시 표시")
+        units_note = units_reason(v.state, v.min_conf)   # 보드 미인식 / 부분 확인 / 구매 추적 기준
+        if units_note is not None:
+            reasons.append(units_note)
         if not v.items_known:
             reasons.append("아이템 미인식")
         if self.undecided:

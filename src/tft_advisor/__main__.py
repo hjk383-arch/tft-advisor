@@ -30,13 +30,13 @@ def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(prog="tft_advisor", description="TFT 실시간 추천 (개인용, 화면 픽셀만 사용)")
     mode = p.add_mutually_exclusive_group()
     mode.add_argument("--screenshot", type=Path, metavar="PATH",
-                      help="스크린샷 파일 1장 또는 폴더를 인식·추천(디버깅/QA/베타 테스트)")
+                      help="스크린샷 파일 1장 또는 폴더를 인식·추천합니다(디버깅/QA/베타 테스트)")
     mode.add_argument("--live", action="store_true", help="실시간 화면 캡처 + 오버레이 (인자를 주지 않으면 기본)")
     p.add_argument("--config", type=Path, default=None, metavar="DIR", help="설정 디렉터리(기본: config/)")
     p.add_argument("--jev", choices=("mock", "live", "off"), default=None,
-                   help="Jev 백엔드를 이번 실행에 못박는다(트레이 토글이 잠긴다). 기본은 설정 "
-                        "[advisor] jev_backend(= mock). 우선순위: CLI > 트레이 토글 > 설정 파일. live는 과금된다")
-    p.add_argument("--no-jev", action="store_true", help="--jev off 와 같다(통계 전용 추천)")
+                   help="Jev 백엔드를 이번 실행에 고정합니다(트레이 토글이 잠깁니다). 기본은 설정 "
+                        "[advisor] jev_backend(= mock). 우선순위: CLI > 트레이 토글 > 설정 파일. live는 과금됩니다")
+    p.add_argument("--no-jev", action="store_true", help="--jev off 와 같습니다(통계 전용 추천)")
     p.add_argument("--profile", default=None, metavar="NAME",
                    help="ROI 프로파일 고정: set18_16x9 | set18_16x10 | 1920x1080 …  (설정 [vision] profile 덮어씀)")
     p.add_argument("--aspect", default=None, choices=("auto", "4:3", "16:10", "16:9", "21:9", "32:9"),
@@ -46,10 +46,10 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--no-overlay", action="store_true", help="오버레이 없이 콘솔에만 출력")
     setup = p.add_mutually_exclusive_group()
     setup.add_argument("--setup", action="store_true",
-                       help="설정 화면을 연다(화면 해상도·모니터 자동 감지 → settings.toml 저장). 첫 실행에는 자동으로 열린다")
-    setup.add_argument("--no-setup", action="store_true", help="첫 실행이어도 설정 화면을 열지 않는다")
+                       help="설정 화면을 엽니다(화면 해상도·모니터 자동 감지 → settings.toml 저장). 첫 실행에는 자동으로 열립니다")
+    setup.add_argument("--no-setup", action="store_true", help="첫 실행이어도 설정 화면을 열지 않습니다")
     p.add_argument("--debug", action="store_true",
-                   help="로그 DEBUG + 인식 결과(JSON)와 ROI 렌더를 {log_dir}/debug 에 저장")
+                   help="로그 DEBUG + 인식 결과(JSON)와 ROI 렌더를 {log_dir}/debug 에 저장합니다")
     p.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
     return p
 
@@ -107,9 +107,9 @@ def run_setup_step(settings: Settings, args: argparse.Namespace) -> tuple[Settin
     gui = not args.no_overlay and overlay_available()
     outcome = run_setup(settings, config_dir=args.config, gui=gui)
     if outcome.action == "cancelled":
-        print("설정을 취소했다(저장하지 않음).", file=sys.stderr)
+        print("설정을 취소했습니다(저장하지 않음).", file=sys.stderr)
         return settings, 0
-    print(f"설정을 저장했다: {outcome.path}")
+    print(f"설정을 저장했습니다: {outcome.path}")
     fresh = apply_overrides(outcome.settings or settings, args)
     return fresh, (0 if outcome.action == "saved" else None)
 

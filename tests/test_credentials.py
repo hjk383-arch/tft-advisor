@@ -82,7 +82,7 @@ def test_no_key_anywhere(no_keyring):
     assert C.key_present() is False
     info = C.key_info()
     assert info.source == "none" and info.present is False
-    assert "없다" in info.describe()
+    assert "없습니다" in info.describe()
 
 
 def test_env_var_wins_over_keyring_and_file(monkeypatch, fake_keyring):
@@ -158,7 +158,7 @@ def test_delete_removes_the_keyring_entry(fake_keyring):
 
 def test_delete_with_nothing_stored_is_harmless(fake_keyring):
     result = C.delete_api_key()
-    assert result.ok is False and "없었다" in result.message
+    assert result.ok is False and "없었습니다" in result.message
 
 
 def test_delete_does_not_touch_the_environment_variable(monkeypatch, fake_keyring):

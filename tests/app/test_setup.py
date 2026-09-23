@@ -153,7 +153,7 @@ def test_an_extreme_ratio_falls_back_to_16x9_instead_of_crashing():
     """1:1 처럼 16:9에서 ROI를 유도할 수 없는 비율 — 감지가 예외로 죽지 않고 경고하고 넘어간다."""
     det = core.detect(core.monitors_from_mss(mss_list((1000, 1000), virtual=False)), lambda i: flat(1000, 1000))
     assert det.profile_name == "set18_16x9" and det.measured is False
-    assert any("쓸 수 있는 ROI 배치가 없다" in w for w in det.warnings)
+    assert any("쓸 수 있는 ROI 배치가 없습니다" in w for w in det.warnings)
 
 
 def test_detect_picks_highest_scoring_monitor():
@@ -170,7 +170,7 @@ def test_pixel_scoring_never_claims_the_game_was_found():
     mons = core.monitors_from_mss(mss_list((1920, 1080), virtual=False))
     det = core.detect(mons, lambda i: flat(1920, 1080), scorer=None)
     assert det.scorer_kind == "pixel" and det.game_found is False
-    assert not any("찾지 못했다" in w for w in det.warnings)
+    assert not any("찾지 못했습니다" in w for w in det.warnings)
 
 
 def test_ocr_scoring_warns_when_the_game_is_not_on_screen():
@@ -208,7 +208,7 @@ def test_capture_error_on_one_monitor_does_not_stop_detection():
 def test_no_monitors_warns():
     det = core.detect([], lambda i: flat(8, 8))
     assert det.monitor is None and det.warnings
-    assert det.summary_lines() == ["모니터를 찾지 못했다."]
+    assert det.summary_lines() == ["모니터를 찾지 못했습니다."]
 
 
 # ---------------------------------------------------------------------------
@@ -225,7 +225,7 @@ def test_letterbox_is_trimmed_and_changes_the_aspect():
     assert det.game_size == (1920, 1080) and det.aspect == "16:9"
     x1, y1, x2, y2 = det.content_box
     assert (x1, x2) == (0.0, 1.0) and y1 == pytest.approx(0.05) and y2 == pytest.approx(0.95)
-    assert any("잘라냈다" in n for n in det.notes)
+    assert any("잘라냈습니다" in n for n in det.notes)
 
 
 def test_content_box_auto_off_keeps_the_whole_frame():
@@ -296,14 +296,14 @@ def test_test_capture_reads_fields_and_draws_rois():
     rows = dict((label, value) for label, value, _ in out.rows)
     assert rows["화면"] == "준비" and rows["스테이지"] == "2-3" and rows["골드"] == "10"
     assert [label for label, _, _ in out.rows] == [label for _, label in core.FIELD_LABELS]
-    assert "읽었다" in out.message
+    assert "읽었습니다" in out.message
 
 
 def test_test_capture_says_so_when_the_hud_is_unreadable():
     from tft_advisor.contracts import GameState
 
     out = core.run_test_capture(flat(1920, 1080), FakeRecognizer([GameState()]))
-    assert out.ok and "읽지 못했다" in out.message
+    assert out.ok and "읽지 못했습니다" in out.message
 
 
 def test_test_capture_survives_a_recognizer_crash():
@@ -533,7 +533,7 @@ def test_console_setup_can_override_the_aspect(config_dir, tmp_path):
 
 def test_console_setup_rejects_a_bad_answer_and_asks_again(config_dir, tmp_path):
     outcome, text = run_console(config_dir, ["9", "1"], tmp_path)
-    assert outcome.action == "start" and "중에서 고르라" in text
+    assert outcome.action == "start" and "중에서 골라 주세요" in text
 
 
 def test_console_setup_can_redetect(config_dir, tmp_path):
@@ -561,7 +561,7 @@ def test_console_setup_survives_a_capture_failure(config_dir, tmp_path, monkeypa
                                      input_fn=lambda p: "0", out=lines.append, detect_fn=boom)
     text = "\n".join(lines)
     assert outcome.action == "cancelled"
-    assert "화면 캡처에 실패했다" in text and "화면 기록" in text
+    assert "화면 캡처에 실패했습니다" in text and "화면 기록" in text
 
 
 def test_safe_detect_never_raises():
@@ -701,7 +701,7 @@ def test_dialog_refuses_to_save_a_contradictory_combination(dialog, config_dir):
     dialog.res_combo.setEditText("1920x1080")            # 4:3 과 어긋난다
     outcome = dialog.save_and_close("start")
     assert outcome.action == "cancelled"
-    assert "저장하지 못했다" in dialog.warn_label.text()
+    assert "저장하지 못했습니다" in dialog.warn_label.text()
     assert (config_dir / "settings.toml").read_text(encoding="utf-8") == before
 
 

@@ -156,10 +156,12 @@ class Advisor:
         s = self.session
         min_conf = self.settings.vision.state_min_confidence
         view = build_view(state, self.stats, min_conf, None)
-        # §4.3(c) equipped_tracked: 연속된 두 요청 모두 items 신뢰 가능할 때만 추적
+        # §4.3(c) equipped_tracked: 연속된 두 요청 모두 items 신뢰 가능할 때만 추적.
+        # vision이 장착분을 직접 읽었으면(`equipped_seen`) 추정할 필요가 없다 — 추적값으로 덮지 않는다.
+        known = view.units_known or view.equipped_seen
         if view.items_known:
             cur = view.bench_owned_counter()
-            if s.prev_bench_items is not None and not view.units_known:
+            if s.prev_bench_items is not None and not known:
                 gone = s.prev_bench_items - cur
                 back = cur - s.prev_bench_items
                 s.equipped_tracked.update(gone)
@@ -168,7 +170,7 @@ class Advisor:
                         s.equipped_tracked[iid] -= min(n, s.equipped_tracked[iid])
                 s.equipped_tracked = +s.equipped_tracked
             s.prev_bench_items = cur
-            if not view.units_known:
+            if not known:
                 view.equipped = list(s.equipped_tracked.elements())
         else:
             s.prev_bench_items = None
@@ -392,8 +394,8 @@ def create_advisor(mode: Literal["mock", "live", "off", "auto"] = "auto", **kw: 
         kw["settings"] = settings
         mode = settings.advisor.jev_backend
     if mode == "live" and not LiveJevBackend.key_present():
-        log.warning("jev_backend=live 이지만 TypeSafe API 키가 없다(환경변수·키체인·폴백 파일 모두)"
-                    " → Jev 호출은 인증 실패 폴백이 된다")
+        log.warning("jev_backend=live 이지만 TypeSafe API 키가 없습니다(환경변수·키체인·폴백 파일 모두)"
+                    " → Jev 호출은 인증 실패 폴백이 됩니다")
     return Advisor(backend=mode, **kw)
 
 

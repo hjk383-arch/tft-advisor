@@ -44,12 +44,12 @@ PROFILE_LABELS = {"auto": "자동(비율로 고름, 권장)", "set18_16x9": "set
                   "set18_16x10": "set18_16x10 (16:10 실측)"}
 JEV_LIVE_LABEL = "Jev 실시간 판단 사용 (TypeSafe API 과금, 요청당 약 $0.0005)"
 JEV_OFF_LABEL = "고급: 추천에서 Jev를 빼기 — 통계·규칙만 사용(off)"
-JEV_LIVE_NOTE = ("live — 화면(상점·증강)이 바뀔 때마다 TypeSafe Jev에 묻는다. 키가 없거나 실패하면 "
-                 "통계 추천으로 물러난다.")
-JEV_OFF_NOTE = "off — Jev를 아예 부르지 않는다(fallback_reason = jev_disabled). 통계·규칙 추천만 나온다."
-KEY_PLACEHOLDER = "여기에 자기 TypeSafe API 키를 붙여 넣는다"
-KEY_TEST_TOOLTIP = ("TypeSafe에 가장 작은 요청을 **한 번** 보내 키가 되는지 확인한다"
-                    " (요청 1회 분량만 과금된다).")
+JEV_LIVE_NOTE = ("live — 화면(상점·증강)이 바뀔 때마다 TypeSafe Jev에 묻습니다. 키가 없거나 실패하면 "
+                 "통계 추천으로 물러납니다.")
+JEV_OFF_NOTE = "off — Jev를 아예 부르지 않습니다(fallback_reason = jev_disabled). 통계·규칙 추천만 나옵니다."
+KEY_PLACEHOLDER = "여기에 본인 TypeSafe API 키를 붙여 넣으세요"
+KEY_TEST_TOOLTIP = ("TypeSafe에 가장 작은 요청을 **한 번** 보내 키가 되는지 확인합니다"
+                    " (요청 1회 분량만 과금됩니다).")
 KEY_TESTING = "연결 테스트 중… (TypeSafe에 요청 1회)"
 
 
@@ -126,7 +126,7 @@ class SetupDialog(QDialog):
         # --- 감지 결과 ---
         box = QGroupBox("감지 결과")
         lay = QVBoxLayout(box)
-        self.summary = QLabel("아직 감지하지 않았다.")
+        self.summary = QLabel("아직 감지하지 않았습니다.")
         self.summary.setTextFormat(Qt.TextFormat.RichText)
         self.summary.setWordWrap(True)
         lay.addWidget(self.summary)
@@ -139,7 +139,7 @@ class SetupDialog(QDialog):
         self.perm_label = QLabel(core.permission_help())
         self.perm_label.setWordWrap(True)
         perm_lay.addWidget(self.perm_label)
-        retry = QPushButton("권한을 켰다 — 다시 시도")
+        retry = QPushButton("권한을 켰습니다 — 다시 시도")
         retry.clicked.connect(self.auto_detect)
         perm_lay.addWidget(retry)
         self.perm_box.setVisible(False)
@@ -172,12 +172,12 @@ class SetupDialog(QDialog):
         grid.addWidget(QLabel("ROI 프로파일"), row, 0)
         grid.addWidget(self.profile_combo, row, 1, 1, 3)
         row += 1
-        self.box_auto = QCheckBox("게임 화면 영역을 자동으로 찾는다(레터박스·창 테두리 잘라내기)")
+        self.box_auto = QCheckBox("게임 화면 영역을 자동으로 찾습니다(레터박스·창 테두리 잘라내기)")
         self.box_auto.setChecked(True)
         self.box_auto.toggled.connect(self._sync_box_enabled)
         grid.addWidget(self.box_auto, row, 0, 1, 4)
         row += 1
-        self.box_manual = QCheckBox("게임 화면 영역을 직접 지정한다 (프레임 대비 비율 0~1)")
+        self.box_manual = QCheckBox("게임 화면 영역을 직접 지정합니다 (프레임 대비 비율 0~1)")
         self.box_manual.toggled.connect(self._sync_box_enabled)
         grid.addWidget(self.box_manual, row, 0, 1, 4)
         row += 1
@@ -218,7 +218,7 @@ class SetupDialog(QDialog):
         line.addWidget(self.key_edit, 1)
         self.key_show = QPushButton("표시")
         self.key_show.setCheckable(True)
-        self.key_show.setToolTip("지금 입력한 글자를 눈으로 확인한다(저장한 키는 다시 보여 주지 않는다).")
+        self.key_show.setToolTip("지금 입력한 글자를 눈으로 확인합니다(저장한 키는 다시 보여 주지 않습니다).")
         self.key_show.toggled.connect(self._toggle_key_echo)
         line.addWidget(self.key_show)
         lay.addLayout(line)
@@ -228,11 +228,11 @@ class SetupDialog(QDialog):
         self.key_test_btn.clicked.connect(self.test_key)
         line.addWidget(self.key_test_btn)
         self.key_save_btn = QPushButton("저장")
-        self.key_save_btn.setToolTip("키를 이 컴퓨터의 OS 키체인에 넣는다. 저장 뒤 입력칸은 비워진다.")
+        self.key_save_btn.setToolTip("키를 이 컴퓨터의 OS 키체인에 넣습니다. 저장 뒤 입력칸은 비워집니다.")
         self.key_save_btn.clicked.connect(self.save_key)
         line.addWidget(self.key_save_btn)
         self.key_delete_btn = QPushButton("삭제")
-        self.key_delete_btn.setToolTip("이 컴퓨터에 저장된 키를 지운다(환경변수는 건드리지 않는다).")
+        self.key_delete_btn.setToolTip("이 컴퓨터에 저장된 키를 지웁니다(환경변수는 건드리지 않습니다).")
         self.key_delete_btn.clicked.connect(self.delete_key)
         line.addWidget(self.key_delete_btn)
         line.addStretch(1)
@@ -280,7 +280,7 @@ class SetupDialog(QDialog):
         self.test_btn.setMinimumHeight(34)
         self.test_btn.clicked.connect(self.test_capture)
         line.addWidget(self.test_btn)
-        self.test_status = QLabel("게임이 준비 단계일 때 누르면 가장 정확하다.")
+        self.test_status = QLabel("게임이 준비 단계일 때 누르면 가장 정확합니다.")
         self.test_status.setWordWrap(True)
         line.addWidget(self.test_status, 1)
         lay.addLayout(line)
@@ -387,7 +387,7 @@ class SetupDialog(QDialog):
             self.key_show.setChecked(False)
             message, color = result.message, OK
             if result.shadowed_by_env:
-                message += f"  다만 지금은 환경변수 {core.JEV_KEY_ENV} 가 먼저 쓰인다."
+                message += f"  다만 지금은 환경변수 {core.JEV_KEY_ENV} 가 먼저 쓰입니다."
                 color = WARN
         else:
             message, color = result.message, BAD
@@ -430,7 +430,7 @@ class SetupDialog(QDialog):
                 try:
                     scorer = self._get_recognizer(self.settings).screen_score
                 except Exception:   # noqa: BLE001 — 인식기를 못 만들면 픽셀 채점으로 내려간다
-                    log.warning("인식기를 만들지 못했다 → 픽셀 채점으로 감지한다", exc_info=True)
+                    log.warning("인식기를 만들지 못했습니다 → 픽셀 채점으로 감지합니다", exc_info=True)
             det = core.safe_detect(lambda: core.detect_live(self.settings, scorer=scorer,
                                                             grabber=self.grabber))
         finally:
@@ -441,7 +441,7 @@ class SetupDialog(QDialog):
 
     def _fill_from_detection(self, det: core.SetupDetection) -> None:
         self.monitor_combo.clear()
-        self.monitor_combo.addItem("자동(실행할 때마다 TFT 화면을 찾는다)", "auto")
+        self.monitor_combo.addItem("자동(실행할 때마다 TFT 화면을 찾습니다)", "auto")
         confirmed = det.scorer_kind == "ocr"
         for i, probe in enumerate(det.probes):
             if probe.black:
@@ -474,11 +474,11 @@ class SetupDialog(QDialog):
         self.perm_box.setVisible(det.permission_issue)
         found = det.game_found and not det.permission_issue
         if found:
-            color, text = OK, "TFT 화면을 찾았다."
+            color, text = OK, "TFT 화면을 찾았습니다."
         elif det.scorer_kind == "ocr":
-            color, text = WARN, "TFT 화면을 확인하지 못했다 — 값은 추정이다."
+            color, text = WARN, "TFT 화면을 확인하지 못했습니다 — 값은 추정입니다."
         else:
-            color, text = ACCENT, "화면 정보를 읽었다. [자동 감지]를 누르면 TFT 화면인지 확인한다."
+            color, text = ACCENT, "화면 정보를 읽었습니다. [자동 감지]를 누르면 TFT 화면인지 확인합니다."
         self.status.setText(f"<span style='color:{color}'>{text}</span>")
 
     def _fill_detected_box(self) -> None:
@@ -527,7 +527,7 @@ class SetupDialog(QDialog):
 
     def test_capture(self) -> core.TestCapture:
         """[테스트 캡처] — 지금 선택값으로 한 장 찍어 인식하고, ROI를 그린 미리보기와 결과표를 보여 준다."""
-        self._busy("캡처하고 인식하는 중… (처음에는 몇 초 걸린다)")
+        self._busy("캡처하고 인식하는 중… (처음에는 몇 초 걸립니다)")
         result = core.TestCapture()
         try:
             settings = self.preview_settings()
@@ -550,11 +550,11 @@ class SetupDialog(QDialog):
             det = self.detection
             info = det.monitor if det is not None and det.monitor is not None else (monitors[0] if monitors else None)
         if info is None:
-            raise RuntimeError("모니터를 찾지 못했다")
+            raise RuntimeError("모니터를 찾지 못했습니다")
         return self.grabber.grab(info)
 
     def _show_test(self, result: core.TestCapture) -> None:
-        color = OK if result.ok and "읽지 못했다" not in result.message else WARN
+        color = OK if result.ok and "읽지 못했습니다" not in result.message else WARN
         self.test_status.setText(f"<span style='color:{color if result.ok else BAD}'>"
                                  f"{_esc(result.message)}</span>")
         self.table.setRowCount(len(result.rows))
@@ -579,7 +579,7 @@ class SetupDialog(QDialog):
                                        det=self.detection, action=action, state_dir=self.state_dir)
         except Exception as e:   # noqa: BLE001
             log.warning("설정 저장 실패", exc_info=True)
-            self.warn_label.setText(f"<span style='color:{BAD}'>⚠ 저장하지 못했다: {_esc(str(e))}</span>")
+            self.warn_label.setText(f"<span style='color:{BAD}'>⚠ 저장하지 못했습니다: {_esc(str(e))}</span>")
             self.warn_label.setVisible(True)
             return self.outcome
         self.accept()
