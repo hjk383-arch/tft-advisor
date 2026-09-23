@@ -33,6 +33,11 @@ _state/
 #  items_screen/ : 사용자 캡처에서 잘라낸 실화면 아이콘(`harvest-items`로 재생성, 역시 Riot 아트워크)
 data/templates/*/items/
 data/templates/*/items_screen/
+#  augments/        : CommunityDragon 증강 글리프(`fetch-augments`), augments_screen/: 캡처에서 잘라낸 보유 증강 칸(`harvest-augments`)
+data/templates/*/augments/
+data/templates/*/augments_screen/
+#  augments_alt/    : CDragon에 없는 세트 증강의 대체 출처 아이콘(tactics.tools 경유 Riot 아트, `fetch-augments`) + sources.json
+data/templates/*/augments_alt/
 
 # Debug renders of screen crops (Riot art, regenerable)
 _workspace/*.png

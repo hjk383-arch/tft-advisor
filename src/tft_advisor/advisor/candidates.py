@@ -8,8 +8,46 @@ from dataclasses import dataclass
 
 from ..config import Weights
 from ..contracts import CompStats
-from .features import View, board_at, comp_level, craftable_items, item_fit, key_trait_ids
+from .features import (
+    View,
+    board_at,
+    comp_level,
+    craftable_items,
+    is_late,
+    item_fit,
+    key_trait_ids,
+    resource_availability,
+    tempo_fit,
+)
 from .stats_source import AdvisorStats
+
+# 09 J1 후반 처리 값은 config/weights.toml `[comp] undecided_until_stage/w_tempo/tempo_span`, `[prefilter] w_tempo`
+# (키 정의·기본값: config.py CompWeights/PrefilterWeights). 기본값 4 / 0.30 / 2.0 / 0.25.
+
+
+@dataclass(frozen=True)
+class LateCfg:
+    undecided_until_stage: int
+    w_tempo: float
+    tempo_span: float
+    pf_tempo: float
+
+
+def late_cfg(w: Weights) -> LateCfg:
+    return LateCfg(w.comp.undecided_until_stage, w.comp.w_tempo, w.comp.tempo_span, w.prefilter.w_tempo)
+
+
+def tempo_active(view: View, owned: list[str], w: Weights) -> bool:
+    """레벨 템포 항을 쓰는가: 후반(스테이지 ≥ undecided_until_stage)이고 보유 유닛 신호가 없다(보드 미인식).
+
+    보드를 알면 보드 적합(C3/U)이 이미 플랜을 반영하므로 템포를 겹쳐 넣지 않는다.
+    """
+    return is_late(view, late_cfg(w).undecided_until_stage) and not resource_availability(view, owned)["board"]
+
+
+def late_blind(view: View, owned: list[str], w: Weights) -> bool:
+    """후반인데 아이템·증강·보유 유닛 신호가 하나도 없다 → UI에 '레벨 템포·메타로 추정' 안내."""
+    return is_late(view, late_cfg(w).undecided_until_stage) and not any(resource_availability(view, owned).values())
 
 
 @dataclass
@@ -22,6 +60,8 @@ class Candidate:
     S: float     # stat_norm
     adj: float   # 수축된 평균 등수(표시용)
     L: int | None   # 이 덱 기준 현재 레벨
+    T: float | None = None       # 레벨 템포 적합(09 J1, 0~1). 레벨/스테이지 모르면 None
+    T_exp: int | None = None     # 이 덱이 현재 스테이지에 보통 도달하는 레벨
 
     @property
     def comp_id(self) -> str:
@@ -128,7 +168,9 @@ def score_candidate(comp: CompStats, view: View, stats: AdvisorStats, w: Weights
     adj = stat_adj(comp, owned, w)
     S = stat_norm(adj, w)
     p = pf.w_item * I + pf.w_aug * A + pf.w_unit * U + pf.w_stat * S
-    return Candidate(comp=comp, p=p, I=I, A=A, U=U, S=S, adj=adj, L=L)
+    tf = tempo_fit(view, comp, late_cfg(w).tempo_span)
+    T, T_exp = (tf if tf is not None else (None, None))
+    return Candidate(comp=comp, p=p, I=I, A=A, U=U, S=S, adj=adj, L=L, T=T, T_exp=T_exp)
 
 
 def prefilter(view: View, stats: AdvisorStats, w: Weights, n: int,
@@ -139,6 +181,11 @@ def prefilter(view: View, stats: AdvisorStats, w: Weights, n: int,
     craftable = list(craftable_items(view.components, stats)) if view.items_known else []
     aug_ids = [a.id for a in view.augments]
     scored = [score_candidate(c, view, stats, w, owned, craftable, aug_ids) for c in pool]
+    if tempo_active(view, owned, w):   # 09 J1: 보드 미인식 후반에는 템포가 맞는 덱이 후보 N 안에 들어오게 한다
+        wt = late_cfg(w).pf_tempo
+        for c in scored:
+            if c.T is not None:
+                c.p += wt * c.T
     by_id = {c.comp_id: c for c in scored}
 
     chosen: list[str] = []

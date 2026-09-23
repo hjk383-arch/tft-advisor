@@ -1,0 +1,38 @@
+{
+ "description": "09 J1: 실제 캡처 '5-5 전투 전'(레벨 9, 9연승, 보드 미인식, 벤치 아이템은 소모품뿐, 보유 증강 미인식)의 인식 결과. 후반인데 자원 신호가 없어도 '초반: 방향 미정'이 아니라 레벨 템포(이 스테이지에 레벨 9인 덱)로 목표 덱을 좁히고 '레벨 템포·메타로 추정'을 표시한다",
+ "state": {
+  "screen_mode": "planning",
+  "stage": "5-5",
+  "level": 9,
+  "xp": [11, 68],
+  "gold": 28,
+  "streak": 9,
+  "hp": 28,
+  "shop_odds": [10, 17, 25, 33, 15],
+  "shop": [
+   {"kind": "champion", "id": "DA_18_GnarSmall"},
+   {"kind": "champion", "id": "DA_CrimsonRaptor18"},
+   {"kind": "champion", "id": "DA_18_Zyra"},
+   {"kind": "champion", "id": "DA_KogMaw18_AD"},
+   {"kind": "champion", "id": "DA_18_Yorick"}
+  ],
+  "items": {
+   "components": [],
+   "completed": [],
+   "emblems": [],
+   "others": [
+    {"id": "DA_Consumable_ItemRemover", "category": "consumable"},
+    {"id": "DA_Reforger", "category": "consumable"}
+   ]
+  }
+ },
+ "expect": {
+  "undecided": false,
+  "blind_late": true,
+  "top_comp_in": ["juggernaut-zyra-amumu", "inferno-ashe", "executioner-draven", "elderwood-aphelios", "juggernaut-elderdragon"],
+  "reason_contains": "레벨 템포·메타로 추정",
+  "question_absent": ["comp_board_fit_0"],
+  "n_target_min": 2,
+  "n_target_max": 3
+ }
+}

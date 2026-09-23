@@ -499,9 +499,13 @@ def default_db_path() -> Path:
 
 
 def latest_json(stats_dir: Path | None = None, source: str = "metatft") -> Path | None:
-    files = sorted((stats_dir or PROJECT_ROOT / "data" / "stats").glob(f"{source}_*.json"),
-                   key=lambda p: p.stat().st_mtime)
-    return files[-1] if files else None
+    """최신 `{source}_{패치}.json`: 패치 번호를 숫자로 비교하고(`18.10` > `18.9`), 같은 패치끼리만 수정 시각으로 가른다.
+
+    수정 시각만 보면 git checkout·복사 뒤 오래된 패치가 최신으로 뽑힌다(08 stats §3).
+    """
+    from tft_advisor.patch_version import latest_snapshot
+
+    return latest_snapshot(stats_dir or PROJECT_ROOT / "data" / "stats", f"{source}_")
 
 
 def open_repository(*, db_path: Path | None = None, source: str = "metatft", patch: str | None = None,

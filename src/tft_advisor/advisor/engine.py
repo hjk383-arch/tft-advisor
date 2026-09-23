@@ -25,8 +25,8 @@ from typing import Any, Literal
 
 from ..config import Settings, Weights, load_settings, load_weights
 from ..contracts import FallbackReason, GameState, Recommendation, ScreenMode, ShopSlotKind
-from .candidates import Candidate, augment_comp_fit, prefilter
-from .features import View, build_view, craftable_items, global_level, item_fit
+from .candidates import Candidate, augment_comp_fit, late_cfg, prefilter
+from .features import View, build_view, craftable_items, global_level, is_late, item_fit
 from .jev_client import GatewayResult, JevBackend, JevGateway, LiveJevBackend, MockJevBackend
 from .jev_state import NameBook, StateParts, build_state, state_hash
 from .questions import (
@@ -239,11 +239,11 @@ class Advisor:
             "n_questions": len(qs), "question_ids": list(qs.questions), "jev_state": parts.state,
             "jev": res.answers.to_debug() if res.answers else None,
             "fallback_detail": res.detail or None, "resource_sig": sig, "sig_unchanged": sig_unchanged,
-            "global_level": glv, "p_undecided": round(scorer.p_undecided, 4),
+            "global_level": glv, "p_undecided": round(scorer.p_undecided, 4), "blind_late": scorer.blind_late,
             "candidates": [
                 {"comp_id": r["cand"].comp_id, "p": round(r["cand"].p, 4), "I": round(r["cand"].I, 4),
                  "A": round(r["cand"].A, 4), "U": round(r["cand"].U, 4), "S": round(r["cand"].S, 4),
-                 "adj": round(r["cand"].adj, 4), "L": r["cand"].L,
+                 "adj": round(r["cand"].adj, 4), "L": r["cand"].L, "T": r["cand"].T, "T_exp": r["cand"].T_exp,
                  "terms": {t: {"avail": x.avail, "gate": x.gate, "norm": round(x.norm, 4), "src": x.source}
                            for t, x in r["terms"].items()},
                  "score": round(r["score"], 4), "H": r["H"], "final": round(r["final"], 4)}
@@ -299,8 +299,10 @@ class Advisor:
                 carry = names(c.comp.carry) if c.comp.carry else "-"
                 crit[comp_labels[k]] = f"`candidate_comps[{k}]`: main carry {carry}, key traits {traits}"
                 hints[comp_labels[k]] = rows[c.comp_id]["final"]
-            crit[UNDECIDED] = C4_UNDECIDED
-            hints[UNDECIDED] = 1.5 * sum(hints.values()) if not any(avail.values()) else 0.0
+            # 09 J1: 후반(스테이지 ≥ undecided_until_stage)에는 '너무 이르다' 선택지를 주지 않는다(합성도 무시한다)
+            if not is_late(view, late_cfg(self.w).undecided_until_stage):
+                crit[UNDECIDED] = C4_UNDECIDED
+                hints[UNDECIDED] = 1.5 * sum(hints.values()) if not any(avail.values()) else 0.0
             qs.choice("comp_pick", C4, crit, hints)
 
         if include_shop and "shop" in st and view.shop is not None:

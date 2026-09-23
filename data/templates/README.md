@@ -6,6 +6,9 @@
 |---|---|---|---|
 | `{set}/items/` | 아이템 아이콘 원본 (CommunityDragon) | `python -m tft_advisor.vision.templates fetch-items` | **커밋하지 않음** (`.gitignore`) |
 | `{set}/items_screen/` | 사용자 원본 캡처에서 잘라낸 실화면 아이템 아이콘 | `python -m tft_advisor.vision.templates harvest-items SCREENSHOT LABEL.json` | **커밋하지 않음** (`.gitignore`) |
+| `{set}/augments/` | 증강 글리프 원본 (CommunityDragon hexcore 아이콘). 보드 왼쪽 위 보유 증강 줄 판독용 | `python -m tft_advisor.vision.templates fetch-augments` | **커밋하지 않음** (`.gitignore`) |
+| `{set}/augments_alt/` | CDragon에 아이콘이 없는(`missing-*` 자리표시) 세트 증강의 대체 출처 아이콘(tactics.tools `ap.tft.tools/img/augments/{apiName}{등급}.png`, 글리프 외곽으로 정규화한 64px) + `sources.json`(ID별 출처 URL, 같은 그림 묶음) | `fetch-augments`가 CDragon 다음에 함께 받는다(`--no-alt`로 끔, 요청 간격 `--delay` 기본 0.5초) | **커밋하지 않음** (`.gitignore`) |
+| `{set}/augments_screen/` | 준비 화면 보유 증강 줄에서 잘라낸 실화면 글리프(CDragon 아이콘이 없거나 공유돼 식별 불가한 증강 보충). **실시간 루프가 증강 선택 순간 자동으로 추가한다**(제시된 3개 안에서 확정된 새 칸) | `harvest-augments SCREENSHOT LABEL.json` 또는 실시간 자동 학습 | **커밋하지 않음** (`.gitignore`) |
 | `{set}/digits/` | HUD 숫자 글리프(흑백 이진 이미지, 0-9 / - %) | `python -m tft_advisor.vision.templates harvest-digits SCREENSHOT LABEL.json` | 커밋 가능 |
 
 ## 출처와 고지
@@ -14,6 +17,8 @@
   (`raw.communitydragon.org/latest/game/…`, 비공식 커뮤니티 미러)에서 받는다. CommunityDragon은 별도 라이선스를 주지 않으며,
   사용은 Riot의 팬 콘텐츠 정책("Legal Jibber Jabber", https://www.riotgames.com/en/legal)을 따른다.
 - `items_screen/`은 게임 화면을 잘라 낸 것이므로 역시 Riot 아트워크다.
+- `augments_alt/`은 tactics.tools가 공개 페이지에서 쓰는 증강 아이콘(역시 Riot 아트워크)을 개인용으로 한 번 받아 둔 것이다.
+  CDragon에 아이콘이 없는 세트 증강(18세트 48개 + CDragon 404 1개)을 식별하려고만 쓴다. 요청은 한 번에 하나씩, 간격을 두고, 이미 받은 파일은 다시 받지 않는다.
 - 그래서 두 디렉터리는 **재생성 가능한 로컬 캐시**로만 두고 저장소에 올리지 않는다.
 - `digits/`는 HUD 숫자 모양을 흑백으로 잘라 낸 작은 글리프(아트워크가 아닌 숫자 모양)라서 저장소에 둘 수 있다.
   원한다면 이것도 `.gitignore`에 넣고 `harvest-digits`로 재생성하면 된다.

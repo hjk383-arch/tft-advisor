@@ -31,7 +31,7 @@ from ..contracts import GameState, Recommendation
 from .names import NameBook
 from .platform_window import apply_always_on_top, apply_click_through, click_through_note
 from .report import (
-    StatusInfo, augment_lines, comp_lines, item_lines, jev_label, recognition_warnings, shop_lines,
+    KeptInfo, StatusInfo, augment_lines, comp_lines, item_lines, jev_label, recognition_warnings, shop_lines,
     state_line, status_line,
 )
 
@@ -63,6 +63,7 @@ class OverlayWindow(QWidget):
         self.click_effect = None      # 마지막 클릭 통과 적용 결과(platform_window.WindowEffect)
         self.state: GameState | None = None
         self.rec: Recommendation | None = None
+        self.kept: KeptInfo | None = None   # 직전 추천 표시 중이면(전투 등) 그 정보
         self.status = StatusInfo(backend=self.settings.advisor.jev_backend)
         self.tray: QSystemTrayIcon | None = None
 
@@ -127,10 +128,11 @@ class OverlayWindow(QWidget):
 
     # ------------------------------------------------------------------ 표시 내용
     def set_data(self, state: GameState | None, rec: Recommendation | None,
-                 status: StatusInfo | None = None) -> None:
-        """상태·추천을 넣고 다시 그린다(UI 스레드에서 호출)."""
+                 status: StatusInfo | None = None, kept: KeptInfo | None = None) -> None:
+        """상태·추천을 넣고 다시 그린다(UI 스레드에서 호출). `kept`: 직전 추천을 보여 주는 화면이면 그 표시 정보."""
         self.state = state
         self.rec = rec
+        self.kept = kept
         if status is not None:
             self.status = status
         self.status.rec = rec
@@ -154,7 +156,10 @@ class OverlayWindow(QWidget):
             parts.append("<i>추천 대기 중…</i>" if state is None else "<i>이 화면에서는 새 추천이 없다</i>")
             return "<br>".join(parts)
 
-        parts.append(_section("목표 덱", jev_label(rec)))
+        kept = self.kept
+        if kept is not None:
+            parts.append(f"<span style='color:{WARN}'>{_line(kept.note())}</span>")
+        parts.append(_section("목표 덱", jev_label(rec) + (f" · {kept.label}" if kept is not None else "")))
         shown = rec.target_comps[:self.settings.ui.max_target_comps]
         if not shown:
             parts.append("<i>후보 없음 — 인식 정보 부족</i>")
@@ -163,10 +168,12 @@ class OverlayWindow(QWidget):
             parts.append(f"<b>{_line(lines[0])}</b>")
             parts += [f"<span style='color:{DIM}'>{_line(ln)}</span>" for ln in lines[1:]]
         if rec.shop:
-            parts.append(_section("상점"))
+            parts.append(_section("상점", kept.label if kept is not None else None))
             for line in shop_lines(rec, self.names):
-                color = GOOD if "[구매]" in line else DIM
+                color = GOOD if "[구매]" in line and kept is None else DIM   # 직전 추천은 흐리게
                 parts.append(f"<span style='color:{color}'>{_line(line)}</span>")
+        elif kept is not None and (kept.bought or kept.changed):
+            parts.append(_section("상점", f"{kept.label} — 남은 추천 칸 없음"))
         if rec.augment is not None:
             parts.append(_section("증강 선택"))
             parts += [f"<span style='color:{WARN if ln.startswith('★') else DIM}'>{_line(ln)}</span>"
@@ -191,12 +198,15 @@ class OverlayWindow(QWidget):
             return
         state = update.state or self.state
         rec = update.recommendation if update.recommendation is not None else self.rec
+        kept = update.kept if update.recommendation is not None else self.kept
         if update.kind == "advice" and update.recommendation is not None:
             self.status.updated_at = update.at
         self.status.warnings = list(recognition_warnings(state, threshold)) if state is not None else []
         if update.kind == "error" and update.message:
             self.status.warnings = [update.message]
-        self.set_data(state, rec, self.status)
+        elif update.message:   # "새 판 확인 중" 등
+            self.status.warnings = [update.message, *self.status.warnings]
+        self.set_data(state, rec, self.status, kept=kept)
 
     # ------------------------------------------------------------------ 창 조작
     def place(self) -> None:

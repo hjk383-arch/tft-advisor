@@ -17,7 +17,8 @@ from pathlib import Path
 from ..config import Settings, load_settings
 from ..contracts import GameState, Recommendation
 from .names import NameBook
-from .report import format_report
+from .report import format_report, kept_view
+from .session import KEEP_MODES
 
 log = logging.getLogger(__name__)
 
@@ -89,11 +90,14 @@ def _one(image_path: Path, recognizer, advisor, names: NameBook, settings: Setti
     t0 = time.perf_counter()
     rec: Recommendation | None = advisor.advise(state)
     t_advise = (time.perf_counter() - t0) * 1000
+    kept = None
+    if rec is not None and state.screen_mode in KEEP_MODES:   # 직전 이미지의 추천: 산·바뀐 상점 칸을 빼고 표시
+        rec, kept = kept_view(rec, state)
 
     title = f"{image_path.name}  {w}x{h}  (인식 {t_recog:.0f}ms · 추천 {t_advise:.0f}ms)"
     # 상태줄(패치·백엔드·경과)은 실시간 오버레이용이다. 스크린샷 요약은 머리글에 이미 패치·백엔드가 있다.
     out(format_report(state, rec, names=names, threshold=settings.vision.state_min_confidence,
-                      title=title, max_comps=settings.ui.max_target_comps))
+                      title=title, max_comps=settings.ui.max_target_comps, kept=kept))
     if debug_dir is not None:
         _dump(debug_dir, image_path, image, state, recognizer)
 
@@ -101,8 +105,7 @@ def _one(image_path: Path, recognizer, advisor, names: NameBook, settings: Setti
 def _dump(debug_dir: Path, image_path: Path, image, state: GameState, recognizer) -> None:
     """`--debug`: 인식된 GameState(JSON)와 ROI를 그린 PNG."""
     try:
-        import cv2
-
+        from ..vision.capture import save_image
         from ..vision.regions import FrameMapper, draw_rois
 
         debug_dir.mkdir(parents=True, exist_ok=True)
@@ -112,7 +115,7 @@ def _dump(debug_dir: Path, image_path: Path, image, state: GameState, recognizer
         content = recognizer.content_for(image, None)
         mapper = FrameMapper.for_image(image, content)
         _, _, bw, bh = mapper.box
-        cv2.imwrite(str(debug_dir / f"{stem}.rois.png"), draw_rois(image, recognizer.profile_for(bw, bh), mapper))
+        save_image(debug_dir / f"{stem}.rois.png", draw_rois(image, recognizer.profile_for(bw, bh), mapper))
         log.info("디버그 덤프: %s", debug_dir)
     except Exception:
         log.warning("디버그 덤프 실패", exc_info=True)

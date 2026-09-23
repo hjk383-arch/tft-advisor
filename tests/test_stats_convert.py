@@ -132,6 +132,18 @@ def test_comp_id_slug_collision_and_reuse():
     assert mc.assign_comp_ids(clusters, prev)["3"] == "old-aphelios"
 
 
+def test_comp_id_reuse_is_stable_for_identical_boards():
+    """stats 08: 18.3에서 424021(primal-nidalee_ap)과 424033(hunter-nidalee_ap-sivir)의 보드가 같아 Jaccard가 동률이면
+    재변환 때 ID가 서로 뒤바뀌었다. 동률이면 자기 헤드라인 slug와 같은 이전 ID를 먼저 배정해야 한다."""
+    board = "DA_18_Sivir, DA_Amumu18, DA_Nidalee18_AP, DA_Taric18"
+    clusters = {"21": {"name_string": "DA_Primal18, DA_Nidalee18_AP", "units_string": board},
+                "33": {"name_string": "DA_Hunter18, DA_Nidalee18_AP, DA_18_Sivir", "units_string": board}}
+    first = mc.assign_comp_ids(clusters)
+    assert first == {"21": "primal-nidalee_ap", "33": "hunter-nidalee_ap-sivir"}
+    prev = {cid: mc.split_ids(board) for cid in first.values()}
+    assert mc.assign_comp_ids(clusters, prev) == first
+
+
 def test_cluster_id_of():
     assert cluster_id_of("424017", None) == "424"
     assert cluster_id_of("424017", {"cluster_info": {"cluster_id": 425}}) == "425"

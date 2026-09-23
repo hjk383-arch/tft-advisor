@@ -18,6 +18,10 @@ stat_avg_worst = 5.2        # stat_norm: 이 평균 등수 이상 = 0
 show_ratio_undecided = 0.6  # 초반 방향 미정일 때 표시 컷 (<= show_ratio)
 undecided_min_p = 0.5       # P(undecided) 임계
 tie_eps = 0.02              # 타이브레이커 적용 점수차
+# (09 J1) 후반 처리
+undecided_until_stage = 4   # 이 스테이지 이상은 '초반: 방향 미정' 금지, 보드 미인식이면 레벨 템포 항 사용
+w_tempo = 0.30              # 템포 항 가중(보드 항 wb 대체)
+tempo_span = 2.0            # 레벨 차 이 값 이상 → 템포 적합 0
 
 [prefilter]
 # 덱 후보 1차 필터 (설계 2.1~2.3). p(c) = w_item*I + w_aug*A + w_unit*U + w_stat*S  (합 = 1)
@@ -36,6 +40,7 @@ unit_w_final = 0.6
 unit_w_buildup = 0.3
 unit_star_mult = 1.5        # 2성 이상 배수
 stat_quota = 2              # 통계 상위 쿼터(코드에서 min(·, max_candidate_comps))
+w_tempo = 0.25              # (09 J1) 후반·보드 미인식일 때 p(c)에 더하는 템포 가중(합=1 제약 밖 가산 항)
 
 [item_fit]
 # 아이템-덱 적합 b(x,c) (설계 2.2, 6.2, I1). carry_bis >= core_unit >= usage, emblem_other <= emblem_key_trait

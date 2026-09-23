@@ -331,7 +331,7 @@ class DigitTemplateReader:
     @staticmethod
     def harvest(image: np.ndarray, label: str, out_dir: str | Path) -> bool:
         """정답 문자열을 아는 숫자 ROI에서 글리프를 잘라 저장. 글자 수가 맞지 않으면 False(저장 안 함)."""
-        import cv2
+        from .capture import save_image
 
         label = label.replace(" ", "")
         bw = binarize_light_text(image)
@@ -343,7 +343,7 @@ class DigitTemplateReader:
         for ch, (x, y, w, h) in zip(label, boxes):
             if ch not in GLYPH_CHARS:
                 continue
-            cv2.imwrite(str(out / f"{_GLYPH_FILE.get(ch, ch)}.png"), bw[y:y + h, x:x + w])
+            save_image(out / f"{_GLYPH_FILE.get(ch, ch)}.png", bw[y:y + h, x:x + w])
         return True
 
 

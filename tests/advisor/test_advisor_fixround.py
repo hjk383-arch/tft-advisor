@@ -61,17 +61,39 @@ def repo_all_recs(repo_stats, settings, weights):
 
 @pytest.mark.real_stats
 @pytest.mark.parametrize("name", fixture_names())
-def test_fixture_expectations_on_repository(name, repo_stats, repo_all_recs, settings, weights):
-    """설계 §9 fixture 기대값 전부를 StatsRepository 구현(실제 저장소 / mini)에서도 확인."""
+def test_fixture_expectations_on_repository(request, name, repo_stats, repo_all_recs, settings, weights):
+    """설계 §9 fixture 기대값 전부를 StatsRepository 구현(실제 저장소 / mini)에서도 확인.
+
+    실제 저장소 + s09: 1스텝 1위가 zyra/veigar 근소차(18.2b +0.002 zyra, 18.3 +0.006 veigar)라 패치 데이터에 묶인다.
+    그래서 top_comp 고정값 대신 데이터 독립 불변식으로 본다: 기대 덱이 상위 2위 안이고, 이후 스텝의 1위는 1스텝
+    1위와 같다(히스테리시스). mini 저장소는 기대값 그대로 확인한다. (stats 08)
+
+    jev-strategist 검토(09): 채택. 1스텝 보유 아이템(대천사+보석 건틀릿)은 베이가 BIS이기도 해서 자이라/베이가
+    근소차는 데이터상 정당하다 — 고정 1위를 요구하면 패치마다 깨진다. 단 2스텝은 재료만 추가돼 무보너스 점수가
+    1스텝과 같으므로 '1위 유지'만으로는 히스테리시스가 검증되지 않는다(보너스 0이어도 통과). 그래서 2스텝이
+    시그니처 불변(sig_unchanged)인지도 확인하고, 근소 역전을 실제로 막는지는 데이터 독립 테스트
+    `test_advisor_late_game::test_hysteresis_holds_near_tie_and_follows_clear_change`가 맡는다.
+    """
     fx = load_fixture(name)
     kw = {"fail": FallbackReason(fx["jev"]["fail"])} if (fx.get("jev") or {}).get("fail") else {}
     adv = Advisor(stats=repo_stats, settings=settings, weights=weights, backend=MockJevBackend(**kw))
     steps = fx.get("steps") or [{"state": fx["state"], "expect": fx.get("expect", {})}]
+    near_tie = name == "s09_hysteresis" and "real" in request.node.callspec.id
+    first_top = None
     for step in steps:
         rec = adv.advise(GameState.model_validate(step["state"]))
         assert rec is not None
         check_invariants(rec)
-        check_expect(step.get("expect", {}), rec, adv, repo_all_recs)
+        expect = dict(step.get("expect", {}))
+        if near_tie and "top_comp" in expect:
+            ids = [t.comp_id for t in rec.target_comps]
+            assert expect.pop("top_comp") in ids[:2], ids
+            if first_top is None:
+                first_top = ids[0]
+            else:
+                assert rec.debug["sig_unchanged"] is True
+            assert ids[0] == first_top, (first_top, ids)
+        check_expect(expect, rec, adv, repo_all_recs)
 
 
 @pytest.mark.real_stats

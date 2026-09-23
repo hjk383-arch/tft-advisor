@@ -15,20 +15,42 @@ vision은 무상태다(프레임 1장 → GameState, 모르면 None). 실시간 
 보유 증강(`augments_owned`)
 - 증강 선택 화면의 `augment_offer`만으로는 사용자가 무엇을 골랐는지 알 수 없다. **1위 추천을 골랐다고 가정하지
   않는다.** 확정 신호는 HUD 보유 증강 판독(vision 미구현, 캡처 필요) 또는 사용자 수동 입력뿐이다.
-- vision이 언젠가 `augments_owned`를 채우면 그대로 받아 `field_source="vision"`으로 둔다.
-- 수동 입력(`set_augments_owned`)은 `field_source="manual"`, 세션 추적값은 `"tracked"`다.
+- vision이 `augments_owned`를 채우면(보유 증강 줄의 모든 칸을 전체 목록으로 식별) **한 판 안에서는 늘기만 한다** 규칙에
+  맞을 때만 받는다(10 app, QA08 A2 — 준비 단계에 상대 보드를 관전하면 상대 증강 줄이 같은 자리에 보인다):
+  1. 기존 칸의 값은 바뀌지 않는다: 세션이 아는 칸과 앞부분이 모두 같아야 한다(같은 그림이면 같은 것으로 보고,
+     이름은 세션 값을 유지한다 — 선택 순간 학습으로 확정한 이름이 더 구체적이다).
+  2. 칸 수는 줄지 않는다: 세션보다 짧으면 버린다.
+  3. 칸 수는 증강 선택 시점(2-1/3-2/4-2) 이후에만 는다: 현재 스테이지에서 가능한 개수(`augments_allowed_at`)를
+     넘으면 버린다. 스테이지를 모르면 늘리지 않는다.
+  4. 수동 입력이 우선한다: 수동 목록과 어긋나는 vision 값은 버리고, 수동 목록의 **확장**(뒤에 칸이 붙음)만 받는다.
+  버린 값은 advisor에 가지 않는다(세션 값이 대신 간다). 선택 순간 학습(`_learn_owned`)도 같은 규칙으로 줄을 거른다.
+- 수동 입력(`set_augments_owned`)은 `field_source="manual"`, 세션 추적값은 `"tracked"`다. 수동 입력은 언제나 덮어쓴다.
 - 확정 전에는 None이다(advisor가 "모름"으로 다룬다).
+
+선택 순간 자동 학습(09 vision, `vision.augment_learn`)
+- 증강 선택 화면에서 읽은 후보(`augment_offer`, 3개 모두 인식된 경우만)를 `offer_pool`에 모은다. 같은 스테이지의 리롤로
+  바뀐 후보도 더한다. 스테이지가 다른 새 증강 라운드가 오면 소비되지 않은 이전 목록은 버린다.
+  이때 **선택 전 칸 수**(`offer_base` = 마지막 준비 화면의 보유 증강 칸 수)를 같이 기억한다.
+- 준비 화면에서 보유 증강 줄이 `offer_base + 1`칸이 되면(새 칸 정확히 1개, 오른쪽 끝) 그 칸을 **후보 안에서만** 비교해
+  확정한다(`AugmentLearner.decide`). 확정되면 칸 그림을 실화면 템플릿으로 저장하고(`augments_screen/`, 다음 판부터 전체
+  목록에서도 인식) 보유 증강 목록을 갱신한다(`tracked`).
+- 학습하지 않는 경우: 제시 목록이 없음 / 선택 전 칸 수를 모름(앱을 증강 선택 중에 켬) / 새 칸이 2개 이상이거나 줄어듦 /
+  후보 사이 점수 차가 작음 / 같은 그림의 서로 다른 증강이 함께 제시됨 / vision이 제시되지 않은 증강으로 읽음.
+- 영속: `offer_pool`·`offer_base`·`owned_count`·`learned`가 `session.json`에 남는다. 새 판(loading/game_over)이면 비운다
+  (저장된 실화면 템플릿은 판과 무관하므로 남는다).
 """
 from __future__ import annotations
 
 import json
 import logging
+import shutil
 import time
 from collections import Counter
 from collections.abc import Collection, Iterable
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import Any
 
 from ..contracts import AugmentRef, FieldSource, GameState, ScreenMode, ShopSlotKind
 
@@ -53,13 +75,18 @@ SESSION_MAX_AGE_S = 2 * 3600.0
 _ALL_MODES = frozenset(ScreenMode)
 GROUP_READ_MODES: dict[str, frozenset[ScreenMode]] = {
     # `Recognizer.recognize`가 그 묶음을 실제로 읽는 화면(그 밖의 화면에서는 요청해도 값이 안 나온다)
+    # `vision.recognizer.READ_MODES`와 같아야 한다(tests/app/test_session.py가 고정). 2026-09-22 vision 07: 전투(COMBAT)를
+    # 따로 판별하게 되면서 전투 중에도 HUD·상점·특성·아이템을 읽고, 캐러셀·특수 선택 화면에서도 아이템 벤치를 읽는다.
     "stage": _ALL_MODES,
     "players": _ALL_MODES,
-    "hud": frozenset({ScreenMode.PLANNING}),
-    "shop": frozenset({ScreenMode.PLANNING}),
-    "traits": frozenset({ScreenMode.PLANNING}),
-    "items": frozenset({ScreenMode.PLANNING, ScreenMode.AUGMENT_SELECT}),
+    "hud": frozenset({ScreenMode.PLANNING, ScreenMode.COMBAT}),
+    "shop": frozenset({ScreenMode.PLANNING, ScreenMode.COMBAT}),
+    "traits": frozenset({ScreenMode.PLANNING, ScreenMode.COMBAT}),
+    "items": frozenset({ScreenMode.PLANNING, ScreenMode.COMBAT, ScreenMode.AUGMENT_SELECT,
+                        ScreenMode.ITEM_SELECT, ScreenMode.CAROUSEL}),
     "augment": frozenset({ScreenMode.AUGMENT_SELECT}),
+    # 보유 증강 줄(augments_owned). 병합은 _CARRY_FIELDS 규칙(새 값이 있을 때만 덮어씀)이라 이 표는 문서·일치 검사용이다.
+    "owned": frozenset({ScreenMode.PLANNING}),
 }
 RESET_MODES = frozenset({ScreenMode.LOADING, ScreenMode.GAME_OVER})
 """이 화면을 보면 새 판으로 보고 세션을 비운다(advisor 계약과 같다)."""
@@ -71,6 +98,29 @@ TRANSIENT_FIELDS = frozenset({"augment_offer"})
 
 _CARRY_FIELDS = ("board", "bench", "augments_owned")
 """FIELD_GROUP에 없는(= vision이 묶음으로 읽지 않는) 관측 필드. 새 값이 있으면 쓰고 없으면 유지한다."""
+AUGMENT_STAGES = ("2-1", "3-2", "4-2")
+"""증강 선택 라운드. 보유 증강 칸 수는 이 시점을 지날 때만 는다."""
+SESSION_ARCHIVE_DIR = "sessions"
+"""새 판 때 이전 `session.json`을 보관하는 하위 폴더(`{state_dir}/sessions/session_YYYYmmdd_HHMMSS_ffffff.json`)."""
+
+
+def stage_key(stage: str | None) -> tuple[int, int] | None:
+    """스테이지 "3-2" → (3, 2). 읽을 수 없으면 None."""
+    if not stage:
+        return None
+    try:
+        a, b = stage.split("-", 1)
+        return int(a), int(b)
+    except ValueError:
+        return None
+
+
+def augments_allowed_at(stage: str | None) -> int | None:
+    """이 스테이지까지 고를 수 있었던 증강 수(2-1 → 1, 3-2 → 2, 4-2 → 3). 스테이지를 모르면 None."""
+    key = stage_key(stage)
+    if key is None:
+        return None
+    return sum(1 for s in AUGMENT_STAGES if stage_key(s) <= key)
 
 
 def merge_state(prev: GameState | None, new: GameState, groups: Collection[str]) -> GameState:
@@ -132,6 +182,11 @@ class SessionData:
     augments_source: str | None = None          # "vision" | "manual" | "tracked"
     last_offer: list[str] = field(default_factory=list)      # 마지막으로 본 증강 후보(선택 확인 대기)
     last_offer_stage: str | None = None
+    offer_pool: list[str] = field(default_factory=list)      # 이번 증강 라운드에 제시된 후보 전부(리롤 포함, 학습 대기)
+    offer_pool_stage: str | None = None
+    offer_base: int | None = None                            # 선택 전 보유 증강 칸 수(모르면 None → 학습 안 함)
+    owned_count: int | None = None                           # 마지막으로 본 보유 증강 칸 수(준비 화면)
+    learned: list[dict] = field(default_factory=list)        # 선택 순간 학습 기록(ID, 스테이지, 점수, 근거)
     purchases: Counter[str] = field(default_factory=Counter)  # 상점 칸이 사라진 횟수(추정 구매)
     frames: int = 0
     recognitions: int = 0
@@ -146,6 +201,11 @@ class SessionData:
             "augments_source": self.augments_source,
             "last_offer": list(self.last_offer),
             "last_offer_stage": self.last_offer_stage,
+            "offer_pool": list(self.offer_pool),
+            "offer_pool_stage": self.offer_pool_stage,
+            "offer_base": self.offer_base,
+            "owned_count": self.owned_count,
+            "learned": list(self.learned),
             "purchases": dict(self.purchases),
             "frames": self.frames,
             "recognitions": self.recognitions,
@@ -161,6 +221,11 @@ class SessionData:
             augments_source=raw.get("augments_source"),
             last_offer=[str(a) for a in raw.get("last_offer") or []],
             last_offer_stage=raw.get("last_offer_stage"),
+            offer_pool=[str(a) for a in raw.get("offer_pool") or []],
+            offer_pool_stage=raw.get("offer_pool_stage"),
+            offer_base=_opt_int(raw.get("offer_base")),
+            owned_count=_opt_int(raw.get("owned_count")),
+            learned=[dict(x) for x in raw.get("learned") or [] if isinstance(x, dict)],
             frames=int(raw.get("frames") or 0),
             recognitions=int(raw.get("recognitions") or 0),
         )
@@ -172,13 +237,21 @@ class SessionTracker:
     """루프의 기억. 부분 인식 병합 + 보유 증강·구매 추적 + `session.json` 영속."""
 
     def __init__(self, path: Path | None = None, *, max_age_s: float = SESSION_MAX_AGE_S,
-                 clock: object = None) -> None:
+                 clock: object = None, archive_keep: int = 10) -> None:
         self.path = Path(path) if path is not None else None
         self.max_age_s = max_age_s
+        self.archive_keep = archive_keep
+        self.last_archive: Path | None = None
+        self.augments_rejected = 0
+        """이번 판에 '늘기만 한다' 규칙에 걸려 버린 vision 보유 증강 판독 수(표시·로그용)."""
+        self._aug_accepted = False
         self._now = clock or time.time
         self.data = SessionData()
         self.state: GameState | None = None      # 마지막으로 합친 GameState
         self._prev_shop: list[tuple[str, str] | None] | None = None
+        self.learner: Any = None
+        """선택 순간 학습기(`vision.augment_learn.AugmentLearner`: decide/commit/same_picture). None이면 학습하지 않는다.
+        LiveLoop가 인식기의 것을 넣는다."""
 
     # ------------------------------------------------------------------ 영속
     def load(self) -> bool:
@@ -218,22 +291,70 @@ class SessionTracker:
 
     # ------------------------------------------------------------------ 추적
     def reset(self, reason: str = "new_game") -> None:
-        """새 판: 합친 상태와 추적값을 비운다(loading/game_over)."""
+        """새 판: 합친 상태와 추적값을 비운다(loading/game_over). 지우기 전에 이전 세션을 보관한다."""
         log.info("세션 초기화 (%s)", reason)
+        self.last_archive = self.archive()
         self.data = SessionData()
         self.state = None
         self._prev_shop = None
+        self.augments_rejected = 0
         self.save()
 
-    def observe(self, recognized: GameState, groups: Collection[str]) -> GameState:
-        """부분 인식 결과를 받아 합친 GameState를 돌려준다(advisor 입력)."""
+    def archive(self) -> Path | None:
+        """현재 세션을 `{state_dir}/sessions/session_<시각>.json`으로 보관하고 보관본은 `archive_keep`개만 남긴다.
+
+        오판으로 초기화돼도 수동 입력 증강 등을 되살릴 수 있게 한다. 쌓인 것이 없는 세션(프레임 0, 증강 없음)은 보관하지 않는다.
+        """
+        if self.path is None or self.archive_keep <= 0:
+            return None
+        if self.data.frames == 0 and not self.data.augments_owned:
+            return None
+        self.save()
+        folder = self.path.parent / SESSION_ARCHIVE_DIR
+        try:
+            folder.mkdir(parents=True, exist_ok=True)
+            stamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")   # 이름순 = 시간순
+            dest = folder / f"session_{stamp}.json"
+            n = 1
+            while dest.exists():
+                n += 1
+                dest = folder / f"session_{stamp}_{n}.json"
+            if self.path.is_file():
+                shutil.copy2(self.path, dest)
+            else:
+                dest.write_text(json.dumps(self.data.to_json(), ensure_ascii=False, indent=1), encoding="utf-8")
+            kept = sorted(folder.glob("session_*.json"), key=lambda p: p.name)
+            for old in kept[:-self.archive_keep]:
+                old.unlink(missing_ok=True)
+            log.info("이전 세션 보관: %s", dest)
+            return dest
+        except OSError as e:   # 보관 실패로 앱이 죽지 않는다
+            log.warning("세션 보관 실패(%s): %s", folder, e)
+            return None
+
+    def looks_like_new_game(self, state: GameState) -> bool:
+        """스테이지가 1-x로 되돌아갔다(세션은 2-1 이상) → 새 판 후보. 로딩 화면을 놓쳤을 때의 보조 신호.
+
+        OCR 오독일 수 있으므로 루프는 이것도 game_over와 같은 연속 확인을 거친다.
+        """
+        cur, known = stage_key(state.stage), stage_key(self.data.stage)
+        return cur is not None and known is not None and cur[0] == 1 and known >= (2, 1)
+
+    def observe(self, recognized: GameState, groups: Collection[str], owned_row: Any = None) -> GameState:
+        """부분 인식 결과를 받아 합친 GameState를 돌려준다(advisor 입력).
+
+        `owned_row`: 이번 프레임에 읽은 보유 증강 줄(`vision.augment_learn.OwnedRow`, 칸 그림 + 칸별 ID). 선택 순간 학습용.
+        """
         prev = self.state
         merged = merge_state(prev, recognized, groups)
         self.data.frames += 1
         if merged.stage:
             self.data.stage = merged.stage
         self._track_shop(prev, merged)
-        self._track_augments(merged)
+        self._track_augments(recognized, merged)
+        self._track_offer_pool(recognized)
+        if owned_row is not None:
+            self._learn_owned(owned_row)
         merged = self._apply_augments(merged)
         self.state = merged
         return merged
@@ -256,13 +377,136 @@ class SessionTracker:
             if before is not None and after is None:
                 self.data.purchases[before[1]] += 1
 
-    def _track_augments(self, cur: GameState) -> None:
-        if cur.augment_offer:
-            self.data.last_offer = [a.id for a in cur.augment_offer]
-            self.data.last_offer_stage = cur.stage
-        if cur.augments_owned:   # vision이 HUD 보유 증강을 읽으면 그대로 믿는다
-            self.data.augments_owned = [a.id for a in cur.augments_owned]
-            self.data.augments_source = str(cur.field_source.get("augments_owned", FieldSource.VISION))
+    def _same_augment(self, a: str | None, b: str | None) -> bool:
+        """같은 증강인가. 이름이 다르더라도 같은 그림이면 같다고 본다(학습기가 있을 때)."""
+        if a is None or b is None:
+            return False
+        if a == b:
+            return True
+        try:
+            return bool(self.learner is not None and self.learner.same_picture(a, b))
+        except Exception:
+            return False
+
+    def _track_augments(self, recognized: GameState, merged: GameState) -> None:
+        """증강 후보 기록 + 이번 프레임 vision 보유 증강 판독을 '늘기만 한다' 규칙으로 걸러 세션에 반영."""
+        self._aug_accepted = False
+        if merged.augment_offer:
+            self.data.last_offer = [a.id for a in merged.augment_offer]
+            self.data.last_offer_stage = merged.stage
+        if not recognized.augments_owned:
+            return
+        ids = [a.id for a in recognized.augments_owned]
+        verdict = self._augment_verdict(ids, merged.stage or self.data.stage)
+        if isinstance(verdict, str):
+            self.augments_rejected += 1
+            log.info("보유 증강 판독을 버린다(%s): vision %s / 세션 %s(%s)", verdict, ids,
+                     self.data.augments_owned, self.data.augments_source)
+            return
+        new_ids, source = verdict
+        self.data.augments_owned = new_ids
+        self.data.augments_source = source
+        self._aug_accepted = source == "vision" and new_ids == ids
+
+    def _augment_verdict(self, ids: list[str], stage: str | None) -> tuple[list[str], str] | str:
+        """(새 목록, 출처) 또는 버리는 이유(str). 규칙은 모듈 docstring '보유 증강' 참고."""
+        known = list(self.data.augments_owned)
+        src = self.data.augments_source or "vision"
+        if len(ids) < len(known):
+            return f"칸 수 감소 {len(known)}->{len(ids)}"
+        for i, k in enumerate(known):
+            if not self._same_augment(ids[i], k):
+                why = "수동 입력 우선" if src == "manual" else "한 판 안에서 기존 칸은 바뀌지 않는다"
+                return f"{i + 1}번째 칸이 다름({why})"
+        if len(ids) > len(known):
+            cap = augments_allowed_at(stage)
+            if cap is None:
+                return "스테이지를 몰라 칸 수를 늘리지 않는다"
+            if len(ids) > cap:
+                return f"{stage}에는 증강이 최대 {cap}개"
+        new_ids = known + ids[len(known):]
+        if len(ids) == len(known):
+            return new_ids, src
+        if not known or src == "vision":
+            return new_ids, "vision"
+        return new_ids, "tracked"   # 수동/추적 목록 + vision이 읽은 새 칸
+
+    def _track_offer_pool(self, recognized: GameState) -> None:
+        """증강 선택 화면의 후보 → 학습 대기 목록(리롤 포함). 새 증강 라운드면 이전 목록을 버린다."""
+        offer = recognized.augment_offer
+        if not offer:
+            return
+        d = self.data
+        stage = recognized.stage or d.stage
+        if d.offer_pool and d.offer_pool_stage != stage:
+            log.info("증강 학습: 이전 제시 목록(%s)을 쓰지 못하고 새 라운드(%s)", d.offer_pool_stage, stage)
+            d.offer_pool = []
+        if not d.offer_pool:
+            d.offer_pool_stage = stage
+            d.offer_base = d.owned_count
+        for a in offer:
+            if a.id and a.id not in d.offer_pool:
+                d.offer_pool.append(a.id)
+
+    def _clear_offer_pool(self) -> None:
+        self.data.offer_pool = []
+        self.data.offer_pool_stage = None
+        self.data.offer_base = None
+
+    def _learn_owned(self, row: Any) -> None:
+        """준비 화면 보유 증강 줄 → 칸 수 추적 + (제시 목록이 있고 새 칸이 정확히 1개면) 그 칸을 후보 안에서 확정."""
+        d = self.data
+        ids = list(getattr(row, "ids", []) or [])
+        n = len(ids)
+        known = d.augments_owned
+        cap = augments_allowed_at(d.stage)
+        if (n < len(known) or (cap is not None and n > cap)
+                or any(ids[i] is not None and not self._same_augment(ids[i], known[i]) for i in range(len(known)))):
+            # 내 줄이 아니다(상대 보드 관전 등). 칸 수 추적·학습에 쓰지 않는다.
+            log.info("보유 증강 줄이 세션과 맞지 않아 학습에 쓰지 않는다: 칸 %d, 판독 %s / 세션 %s", n, ids, known)
+            return
+        d.owned_count = n
+        if not d.offer_pool or d.offer_base is None or n == d.offer_base:
+            return   # 학습할 것이 없거나, 고른 증강이 아직 줄에 나타나지 않았다
+        pool = list(d.offer_pool)
+        if n != d.offer_base + 1:
+            log.info("증강 학습 안 함: 칸 수 %s -> %d (새 칸이 정확히 1개가 아니다)", d.offer_base, n)
+            self._clear_offer_pool()
+            return
+        learner = self.learner
+        same = learner.same_picture if learner is not None else (lambda a, b: a == b)
+        new_id = ids[-1]
+        record: dict[str, Any] = {"stage": d.stage, "offered": pool}
+        if new_id is not None:
+            if not any(same(new_id, c) for c in pool):
+                log.warning("증강 학습 안 함: 새 칸을 제시되지 않은 증강(%s)으로 읽었다(후보 %s)", new_id, pool)
+                self._clear_offer_pool()
+                return
+            api = new_id
+            record.update(api=api, reason="vision")
+        else:
+            if learner is None:
+                return
+            cells = list(getattr(row, "cells", []) or [])
+            if len(cells) != n:
+                return
+            decision = learner.decide(cells[-1], pool)
+            if decision is None:
+                return   # 다음에 줄이 다시 읽힐 때 재시도. 새 라운드가 오면 목록은 버려진다.
+            api = decision.api
+            saved = learner.commit(cells[-1], api)
+            record.update(api=api, reason=decision.reason, score=decision.score, margin=decision.margin,
+                          template=str(saved) if saved else None)
+            log.info("증강 학습: %d칸째 = %s (%s, 점수 %.3f, 차 %.3f)", n, api, decision.reason,
+                     decision.score, decision.margin)
+        d.learned.append(record)
+        prev = d.augments_owned if len(d.augments_owned) == n - 1 else None
+        known = [ids[i] or (prev[i] if prev else None) for i in range(n - 1)]
+        if all(known):
+            d.augments_owned = [*known, api]
+            d.augments_source = "tracked"
+        self._clear_offer_pool()
+        self.save()
 
     def set_augments_owned(self, ids: Iterable[str], source: str = "manual") -> None:
         """사용자 수동 입력(또는 외부 확인). advisor에 `field_source=manual`로 전달된다."""
@@ -271,11 +515,24 @@ class SessionTracker:
         self.save()
 
     def _apply_augments(self, state: GameState) -> GameState:
-        """세션이 알고 있는 보유 증강을 상태에 얹는다(vision이 이미 채웠으면 그대로 둔다)."""
-        if state.augments_owned is not None or not self.data.augments_owned:
+        """advisor에 가는 보유 증강 = 세션 값. 이번 프레임 vision 값을 그대로 받았으면 vision 신뢰도를 살린다.
+
+        규칙에 걸려 버린 vision 값이나 직전 프레임에서 이어진 값은 세션 값으로 바꾼다. 세션이 모르면 None.
+        """
+        ids = self.data.augments_owned
+        if not ids:
+            if state.augments_owned is None:
+                return state
+            return state.model_copy(update={
+                "augments_owned": None,
+                "field_source": {k: v for k, v in state.field_source.items() if k != "augments_owned"},
+                "confidence": {k: v for k, v in state.confidence.items() if k != "augments_owned"},
+            })
+        if self._aug_accepted and state.augments_owned is not None and [a.id for a in state.augments_owned] == ids:
             return state
-        source = FieldSource.MANUAL if self.data.augments_source == "manual" else FieldSource.TRACKED
-        refs = [AugmentRef(id=i) for i in self.data.augments_owned[:4]]
+        source = {"manual": FieldSource.MANUAL, "vision": FieldSource.VISION}.get(
+            self.data.augments_source or "", FieldSource.TRACKED)
+        refs = [AugmentRef(id=i) for i in ids[:4]]
         return state.model_copy(update={
             "augments_owned": refs,
             "field_source": {**state.field_source, "augments_owned": source},
@@ -293,6 +550,13 @@ class SessionTracker:
         if d.purchases:
             bits.append(f"구매추정 {sum(d.purchases.values())}")
         return " · ".join(bits)
+
+
+def _opt_int(v: Any) -> int | None:
+    try:
+        return None if v is None else int(v)
+    except (TypeError, ValueError):
+        return None
 
 
 def _shop_key(state: GameState) -> list[tuple[str, str] | None] | None:

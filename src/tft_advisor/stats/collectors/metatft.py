@@ -131,10 +131,29 @@ def cluster_id_of(comp: str, info: dict | None) -> str:
     return str(comp)[:-3]
 
 
-def latest_raw_dir(root: Path | None = None) -> Path | None:
-    """data/raw/metatft/ 아래 가장 최근 날짜 디렉터리(comps_data.json이 있는 것)."""
+def raw_dir_complete(d: Path) -> bool:
+    """캐시가 변환에 충분한가: patch/units/comps_data가 있고 comps_data의 모든 클러스터에 comp_details가 있다."""
+    if not all((d / f).is_file() for f in ("comps_data.json", "units.json", "patch.json")):
+        return False
+    try:
+        clusters = json.loads((d / "comps_data.json").read_text(encoding="utf-8"))["results"]["data"]["cluster_details"]
+    except (OSError, ValueError, KeyError, TypeError):
+        return False
+    return all((d / f"comp_details_{cid}.json").is_file() for cid in clusters)
+
+
+def latest_raw_dir(root: Path | None = None, *, require_complete: bool = True) -> Path | None:
+    """data/raw/metatft/ 아래 가장 최근 날짜 디렉터리(comps_data.json이 있는 것).
+
+    require_complete(기본)이면 `raw_dir_complete`인 것 중 최신을 고른다. 완전한 캐시가 하나도 없을 때만 불완전한
+    최신 캐시로 폴백한다(stats 08: 2026-09-21 comp_details 1개짜리 캐시가 최신이면 테스트·변환이 깨졌다).
+    """
     root = root or PROJECT_ROOT / "data" / "raw" / "metatft"
     dirs = sorted(p for p in root.glob("????-??-??") if (p / "comps_data.json").is_file())
+    if require_complete:
+        complete = [p for p in dirs if raw_dir_complete(p)]
+        if complete:
+            return complete[-1]
     return dirs[-1] if dirs else None
 
 

@@ -45,13 +45,21 @@ class AppCfg(_Cfg):
     data_dir: str = "data"
     log_dir: str = "logs"
     state_dir: str = "_state"   # 세션·오버레이 위치 같은 실행 상태(gitignore). app/session.py, app/overlay.py
+    # 새 판 판정(app/loop.py). game_over/loading 한 번의 오판으로 세션(수동 증강 포함)을 잃지 않게 한다.
+    reset_strong_confidence: Unit = 0.95   # 화면 신뢰도가 이 이상(예: "최종 순위" + "나가기")이면 즉시 새 판
+    reset_confirm_frames: int = Field(3, ge=1, le=30)   # 아니면 이 횟수 연속 관측되거나
+    reset_confirm_s: float = Field(3.0, ge=0)           # 첫 관측 뒤 이 시간(초)이 지나 다시 관측되면 새 판
+    reset_recheck_s: float = Field(1.0, gt=0)           # 확인 대기 중 화면 변화가 없어도 이 주기로 다시 판별한다
+    session_archive_keep: int = Field(10, ge=0, le=500)  # 새 판 때 이전 session.json을 _state/sessions/에 보관할 개수
 
 
 class CaptureCfg(_Cfg):
     """캡처 대상. 캡처 주기·안정 프레임은 `[vision] capture_fps` / `change_stable_frames`(Phase 3 config round에서
     옛 `poll_interval_ms`·`stable_frames`를 대체. 두 키는 아무 코드도 읽지 않았고, 같은 뜻의 키가 둘이면 어긋난다)."""
 
-    monitor: int = Field(1, ge=0)   # mss 모니터 번호(0 = 전체 가상 화면, 1 = 주 모니터)
+    # mss 모니터 번호(0 = 전체 가상 화면, 1 = 주 모니터, 2 = 두 번째 …) 또는 "auto"(기본: TFT 화면이 있는 모니터를 자동 선택,
+    # `vision.capture.MssSource`). 듀얼 모니터에서 게임이 두 번째 모니터에 있어도 설정 없이 동작하게 하려는 것이다.
+    monitor: Annotated[int, Field(ge=0)] | Literal["auto"] = "auto"
 
 
 ContentBox = tuple[Unit, Unit, Unit, Unit]
@@ -285,6 +293,10 @@ class CompWeights(_Cfg):
     show_ratio_undecided: Unit = 0.6
     undecided_min_p: Unit = 0.5
     tie_eps: float = Field(0.02, ge=0, le=0.2)
+    # 09 J1 후반 처리(advisor/candidates.py `late_cfg`)
+    undecided_until_stage: int = Field(4, ge=1, le=9)   # 이 스테이지 이상은 '초반: 방향 미정' 금지, 보드 미인식이면 템포 항
+    w_tempo: Unit = 0.30                                # 레벨 템포 항 가중(보드 항 wb를 대신하므로 같은 척도)
+    tempo_span: float = Field(2.0, gt=0, le=9)          # 레벨 차가 이 값 이상이면 템포 적합 0
 
     @model_validator(mode="after")
     def _constraints(self) -> CompWeights:
@@ -316,6 +328,7 @@ class PrefilterWeights(_Cfg):
     unit_w_buildup: Unit = 0.3
     unit_star_mult: float = Field(1.5, ge=1, le=3)
     stat_quota: int = Field(2, ge=0, le=8)
+    w_tempo: Unit = 0.25   # 09 J1: 후반·보드 미인식일 때 p(c)에 더하는 템포 가중(합=1 제약 밖의 가산 항)
 
     @model_validator(mode="after")
     def _constraints(self) -> PrefilterWeights:

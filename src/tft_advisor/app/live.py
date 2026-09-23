@@ -53,13 +53,14 @@ def build(settings: Settings, jev: str, debug_dir: Path | None = None,
 
     recognizer = Recognizer(cfg=settings.vision)
     advisor = create_advisor(jev, settings=settings)
-    tracker = SessionTracker(session_path(settings.app.state_dir))
+    tracker = SessionTracker(session_path(settings.app.state_dir), archive_keep=settings.app.session_archive_keep)
     if tracker.load():
         log.info("이전 세션을 이어 받았다: %s", tracker.summary())
     if source is None:
         from ..vision.capture import MssSource
 
-        source = MssSource(monitor=settings.capture.monitor)
+        # monitor="auto"면 인식기의 스테이지 OCR로 게임 모니터를 고른다(듀얼 모니터, vision 07 보고)
+        source = MssSource(monitor=settings.capture.monitor, scorer=recognizer.screen_score)
     loop = LiveLoop(source=source, recognizer=recognizer, settings=settings, tracker=tracker,
                     advisor=advisor, debug_dir=debug_dir)   # advisor= 면 ThreadAdviceRunner가 붙는다
     return loop, advisor
@@ -103,24 +104,29 @@ def run_live(*, settings: Settings | None = None, jev: str = "auto", overlay: bo
 def _run_console(loop: LiveLoop, settings: Settings, backend: str, patch: str | None,
                  max_frames: int | None) -> int:
     names = NameBook()
-    last_id: int | None = None
+    last_key: tuple | None = None
 
     def on_update(u: LoopUpdate) -> None:
-        nonlocal last_id
+        nonlocal last_key
         if u.kind == "error":
             print(f"[오류] {u.message}")
             return
         if u.kind == "reset":
-            print("[새 판] 세션을 초기화했다")
-            last_id = None
+            print("[새 판] 세션을 초기화했다" + (f" (이전 세션 {u.message})" if u.message else ""))
+            last_key = None
             return
-        if u.recommendation is None or id(u.recommendation) == last_id:
+        if u.recommendation is None:
             return
-        last_id = id(u.recommendation)
-        status = StatusInfo(patch=patch, backend=backend, rec=u.recommendation, updated_at=u.at)
+        # 같은 추천 + 같은 직전 추천 표시면 다시 찍지 않는다(전투 중 표시용 사본은 매번 새 객체다)
+        key = (id(loop.last_recommendation), u.kept, u.message)
+        if key == last_key:
+            return
+        last_key = key
+        status = StatusInfo(patch=patch, backend=backend, rec=u.recommendation, updated_at=u.at,
+                            warnings=[u.message] if u.message else [])
         print("\n" + format_report(u.state, u.recommendation, names=names, status=status,
                                    threshold=settings.vision.state_min_confidence,
-                                   max_comps=settings.ui.max_target_comps))
+                                   max_comps=settings.ui.max_target_comps, kept=u.kept))
 
     loop.on_update = on_update
     stop = threading.Event()

@@ -6,9 +6,16 @@ set_number = 18
 data_dir = "data"
 log_dir = "logs"
 state_dir = "_state"     # 세션 상태(_state/session.json)·오버레이 위치(overlay.json). git에 올리지 않는다
+# 새 판 판정: 게임 종료/로딩 화면을 한 번 오판해도 세션(수동 입력 증강 포함)을 잃지 않게 한다
+reset_strong_confidence = 0.95   # 화면 판별 신뢰도가 이 이상("최종 순위"+"나가기")이면 즉시 새 판
+reset_confirm_frames = 3         # 아니면 게임 종료/로딩이 이 횟수 연속 보이거나
+reset_confirm_s = 3.0            # 처음 본 뒤 이 초가 지나 다시 보일 때 새 판
+reset_recheck_s = 1.0            # 확인 대기 중에는 화면 변화가 없어도 이 주기(초)로 다시 판별
+session_archive_keep = 10        # 새 판 때 이전 세션을 _state/sessions/ 에 보관할 개수(0 = 보관 안 함)
 
 [capture]
-monitor = 1              # mss 모니터 번호(1 = 주 모니터)
+monitor = "auto"         # "auto"(기본) = TFT 화면이 있는 모니터를 자동으로 찾는다(스테이지 글자 OCR, 30초마다 재확인).
+                         # 숫자로 못박을 수도 있다: 1 = 주 모니터, 2 = 두 번째 모니터 …, 0 = 모든 모니터를 합친 화면
 # 캡처 주기·안정 프레임은 [vision] capture_fps / change_stable_frames (옛 poll_interval_ms·stable_frames 대체)
 
 [vision]

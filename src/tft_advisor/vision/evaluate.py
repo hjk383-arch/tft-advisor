@@ -6,6 +6,8 @@
 - 정답 파일에 있는 필드만 비교(`ExpectedScreen.fields`). `note_level` 등 추정 라벨 필드는 "(추정)"으로 표시한다.
 - 인식이 None이면 "none"(미인식, 틀림과 구분). 값이 있는데 다르면 "wrong".
 - shop은 칸 단위(kind+id)로도 센다.
+- 여러 모니터를 이어 붙인 캡처(Windows Win+PrtSc, 예: 4480x1440)는 인식기가 게임 모니터를 자동으로 고른다
+  (`Recognizer.content_for` → `regions.screen_candidates` + 스테이지 OCR). 크롭 사본을 만들 필요가 없다.
 """
 from __future__ import annotations
 

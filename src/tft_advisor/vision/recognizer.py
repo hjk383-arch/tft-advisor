@@ -3,7 +3,7 @@
 원칙
 - 화면 픽셀만 쓴다. 입력 이미지는 BGR ndarray(실시간 캡처와 스크린샷 파일이 같은 경로).
 - 불확실하면 None. 값이 있는 필드는 `GameState.confidence[field]`에 0~1 신뢰도를 기록한다.
-- 신뢰도 = OCR 점수 × 파싱/매칭 점수 × 필드별 보정. ROI가 원본 캡처로 검증되기 전이므로 값은 모두 PROVISIONAL.
+- 신뢰도 = OCR 점수 × 파싱/매칭 점수 × 필드별 보정. ROI는 1080p·16:10 원본 캡처로 확인했다(07 보고). 표본이 두 판뿐이라 여전히 잠정.
 """
 from __future__ import annotations
 
@@ -21,20 +21,25 @@ from ..config import VisionCfg
 from ..contracts import (
     ActiveTrait, AugmentRef, FieldSource, GameState, ItemRef, ItemState, ScreenMode, ShopSlot, ShopSlotKind,
 )
-from ..static_data import PROJECT_ROOT, StaticData, load_static
+from ..static_data import PROJECT_ROOT, StaticData, load_static, preference_key
 from . import parse
-from .icons import IconMatcher, slot_is_empty
+from .augment_learn import AugmentLearner, OwnedRow, augment_visual_keys, load_alt_manifest
+from .icons import AugmentIconMatcher, IconMatcher, find_icon_row, slot_is_empty
 from .item_ids import ItemCatalog
 from .matching import NameMatcher
 from .ocr import OcrEngine, TextBox, create_ocr
-from .regions import FrameMapper, Profile, Rect, detect_content_box, profile_for_frame
-from .screen_mode import ModeSignals, classify, frame_is_dark, hud_panel_pixels
+from .regions import (
+    FrameMapper, Profile, Rect, detect_content_box, profile_for_frame, screen_candidates, stage_bar_score,
+)
+from .screen_mode import (
+    ModeSignals, classify, count_enemy_bars, frame_is_dark, hud_panel_pixels, parse_board_count,
+)
 
 log = logging.getLogger(__name__)
 T = TypeVar("T")
 # 부분 인식 묶음(QA04-V7). stage와 화면 상태 신호는 항상 읽는다(한 줄 인식만, 싸다).
 # app 루프는 `change.ChangeDetector`가 알려 준 묶음만 넘기고, 결과를 직전 GameState에 합친다(FIELD_GROUP 참고).
-GROUPS: tuple[str, ...] = ("hud", "shop", "items", "augment", "players", "traits")
+GROUPS: tuple[str, ...] = ("hud", "shop", "items", "augment", "players", "traits", "owned")
 # 기본값에서 "traits"(특성 패널)는 뺀다: 검출+인식이 프레임 시간의 약 35%인데, active_traits는 신뢰도가 TRAITS_FACTOR로
 # 임계 미만이라 advisor가 쓰지 않는다. 필요하면 groups=GROUPS 로 켠다(평가·디버그, app이 몇 초에 한 번).
 DEFAULT_GROUPS: tuple[str, ...] = tuple(g for g in GROUPS if g != "traits")
@@ -43,14 +48,40 @@ FIELD_GROUP: dict[str, str] = {
     "level": "hud", "xp": "hud", "gold": "hud", "shop_odds": "hud", "streak": "hud",
     "shop": "shop", "items": "items", "augment_offer": "augment", "hp": "players", "active_traits": "traits",
 }
+# "owned"(보유 증강 줄 → augments_owned)는 FIELD_GROUP에 넣지 않는다: app 병합에서 augments_owned는 "새 값이 있으면 쓰고
+# 없으면 유지"(수동 입력·추적값을 vision의 '못 읽음'으로 지우지 않는다, app/session._CARRY_FIELDS).
+
+_ALL = frozenset(ScreenMode)
+READ_MODES: dict[str, frozenset[ScreenMode]] = {
+    # 묶음 → 그 묶음을 실제로 읽는 화면. `recognize()`의 분기는 이 표만 본다(단일 출처).
+    # app/session.GROUP_READ_MODES는 이것과 같아야 한다(tests/app/test_session.py가 같음을 고정).
+    "stage": _ALL,
+    "players": _ALL,
+    # 전투 중에도 하단 HUD·상점·특성 패널은 그대로 보이고 살 수 있다(1080p 준비/전투 쌍으로 확인).
+    "hud": frozenset({ScreenMode.PLANNING, ScreenMode.COMBAT}),
+    "shop": frozenset({ScreenMode.PLANNING, ScreenMode.COMBAT}),
+    "traits": frozenset({ScreenMode.PLANNING, ScreenMode.COMBAT}),
+    # 왼쪽 아이템 벤치는 캐러셀·모루/특수 선택·증강 선택 화면에서도 보인다.
+    "items": frozenset({ScreenMode.PLANNING, ScreenMode.COMBAT, ScreenMode.AUGMENT_SELECT,
+                        ScreenMode.ITEM_SELECT, ScreenMode.CAROUSEL}),
+    "augment": frozenset({ScreenMode.AUGMENT_SELECT}),
+    # 보유 증강 줄은 보드에 붙어 있다: 준비 단계(내 보드, 카메라 고정)에서만 읽는다. 원정 전투에서는 상대 줄도 보인다.
+    "owned": frozenset({ScreenMode.PLANNING}),
+}
+AUGMENT_MATCH_MIN = 0.80      # 보유 증강 글리프 매칭 최소 점수(실측 정답 0.89~0.96, 오답 1위 <= 0.66)
+AUGMENT_MATCH_MARGIN = 0.05   # 1위와 2위(다른 아이콘) 차 하한(초월 0.951 vs 불완전한 초월 0.878 = 0.073)
+# 1위가 대체 출처 아이콘(글리프 정규화 경로)이면 더 큰 차를 요구한다: 정규화가 비슷한 모양(육각 특성 글리프)끼리의 점수도
+# 올리기 때문(내면의 야수 정답 0.855 vs 종결자 협곡야수 0.725 = 0.130, 09 보고서 §3).
+AUGMENT_GLYPH_MARGIN = 0.10
 _HUD_WORDS = ("경험치", "새로고침", "구매", "buy", "refresh")
 _TITLE_WORDS = ("선택", "choose")
 
 # 필드별 보정 계수 — 검증되지 않은 해석 규칙이 들어간 필드는 낮춘다.
-# 연승/연패 부호를 아이콘 색으로 추정(연패 예시 fixture 없음). QA04-V4: 임계(0.6)에 딱 걸리면 포함 여부가 반올림으로
-# 정해진다 → 임계에서 떨어뜨려 **부호가 검증될 때까지 advisor 입력에서 제외**(0.5). streak=0은 부호 무관이라 OCR 점수 그대로.
-# 연패 캡처(요청서 #8)로 부호 규칙을 확인하면 0.8로 올린다.
-STREAK_SIGN_FACTOR = 0.5
+# 연승/연패 부호를 아이콘 색으로 판단: **주황·빨강 불꽃 = 연승, 파란 물방울 = 연패**. 2026-09-22 1080p 원본으로 검증:
+# 파란 물방울 1·3·4·5(2-2 → 3-1, 내 HP 95 → 84 → 76 → 71로 계속 감소 = 연패), 빨강 불꽃 9(5-1 → 5-5 HP 28 유지 = 연승).
+# 그래서 예전 0.5(advisor 입력에서 제외)를 요청서 계획대로 0.8로 올린다. QA04-V4: 임계(0.6)에서 0.05 이상 떨어져 있어야 한다.
+# streak=0은 부호 무관이라 OCR 점수 그대로.
+STREAK_SIGN_FACTOR = 0.8
 HP_FACTOR = 0.7              # 내 HP = 플레이어 목록에서 가장 큰 글자 숫자(규칙 추정)
 TRAITS_FACTOR = 0.55         # 특성 패널 OCR: 인원 1인 비활성 행을 자주 놓침(fixture), 스크롤/접힘 미확인 → 기본 임계 0.6 미만
 LEVEL_FROM_XP_FACTOR = 0.8   # 레벨 숫자가 안 보여 XP 필요량으로 추정
@@ -91,6 +122,7 @@ class Recognizer:
         ocr: OcrEngine | None = None,
         profile: Profile | None = None,
         item_template_dir: str | Path | Collection[str | Path] | None = None,
+        augment_template_dir: str | Path | None = None,
     ) -> None:
         self.static = static or load_static()
         self.cfg = cfg or VisionCfg()
@@ -113,6 +145,21 @@ class Recognizer:
             dirs = list(item_template_dir)   # 여러 디렉터리 → ID별로 합친다
         self.item_matcher = IconMatcher.from_dirs(
             dirs, valid=lambda stem: self.static.get("items", stem) is not None, group=self.items.rep)
+        # 대체 출처 아이콘(augments_alt, CDragon에 없는 세트 증강)은 기본 디렉터리를 쓸 때만 싣는다(테스트는 지정 디렉터리만).
+        alt_dir = augment_alt_dir(self.static.set_number) if augment_template_dir is None else None
+        self.augment_icons = AugmentIconMatcher.from_dirs(
+            augment_template_dirs(self.static.set_number) if augment_template_dir is None else [augment_template_dir],
+            valid=lambda stem: self.static.get("augments", stem) is not None,
+            glyph_dirs=[alt_dir] if alt_dir is not None else [])
+        self._augment_keys = augment_visual_keys(self.static, load_alt_manifest(alt_dir))
+        self._icon_owners = _augment_icon_owners(self.static, self._augment_keys)
+        # 선택 순간 자동 학습(app/session이 호출). 기본 디렉터리를 쓸 때만 실화면 템플릿을 저장한다.
+        self.augment_learner = AugmentLearner(
+            self.static, self.augment_icons, self._augment_keys,
+            save_dir=augment_template_dirs(self.static.set_number)[1] if augment_template_dir is None else None)
+        self.last_owned_row: OwnedRow | None = None
+        """직전 `recognize()`가 읽은 보유 증강 줄(칸 그림 + 칸별 ID). 읽지 않았으면 None. app 학습 경로가 쓴다."""
+        self._screen_cache: dict[tuple, tuple[int, int, int, int]] = {}
 
     # ------------------------------------------------------------------ 프로파일
     def profile_for(self, width: int, height: int) -> Profile:
@@ -131,13 +178,75 @@ class Recognizer:
 
     def content_for(self, image: np.ndarray, content: tuple[int, int, int, int] | None,
                     ) -> tuple[int, int, int, int] | None:
-        """이 프레임의 게임 화면 영역. 인자 > 설정 `content_box` > (content_box_auto면) 레터박스 자동 탐지."""
+        """이 프레임의 게임 화면 영역. 인자 > 설정 `content_box` > (content_box_auto면) 자동 탐지:
+        ① 여러 모니터를 이어 붙인 캡처(Win+PrtSc)면 게임 화면이 있는 모니터(`pick_screen`), ② 레터박스 검은 띠."""
         if content is not None:
             return content
         box = self.cfg.content_px(image.shape[1], image.shape[0])
         if box is not None:
             return box
-        return detect_content_box(image) if self.cfg.content_box_auto else None
+        if not self.cfg.content_box_auto:
+            return None
+        found = screen_candidates(image)
+        if len(found) <= 1:
+            return detect_content_box(image)
+        # 세로 모니터·순수 검정 조각이 만든 좁은 조각은 게임 화면일 수 없다(프로파일 유도 불가) → 뺀다(QA08).
+        # 쓸 수 있는 후보가 없으면(한 화면이 검정 조각으로 쪼개진 경우) 한 화면으로 본다.
+        cands = [c for c in found if self._profile_ok(c[2], c[3])]
+        if not cands:
+            return detect_content_box(image)
+        left, top, w, h = cands[0] if len(cands) == 1 else self.pick_screen(image, cands)
+        inner = detect_content_box(image[top:top + h, left:left + w])
+        if inner is not None:
+            return left + inner[0], top + inner[1], inner[2], inner[3]
+        return left, top, w, h
+
+    def _profile_ok(self, width: int, height: int) -> bool:
+        try:
+            self.profile_for(width, height)
+        except ValueError:
+            return False
+        return True
+
+    def pick_screen(self, image: np.ndarray, cands: list[tuple[int, int, int, int]]) -> tuple[int, int, int, int]:
+        """모니터 후보 중 게임 화면: 스테이지 글자("2-5")가 읽히는 후보 > 기억한 후보 > 스테이지 막대가 어두운 후보.
+
+        스테이지로 고른 결과는 (프레임 크기, 후보) 단위로 기억한다 — 같은 배치의 다음 캡처(게임 종료 화면처럼 스테이지가
+        없는 화면 포함)는 같은 모니터를 쓴다.
+        """
+        key = (image.shape[1], image.shape[0], tuple(cands))
+        # 세로 모니터(1080x1920)나 좁은 조각은 16:9 유도가 불가능하다(derive_profile ValueError) → 후보에서 뺀다(QA08).
+        usable = []
+        for c in cands:
+            try:
+                usable.append((c, self.profile_for(c[2], c[3])))
+            except ValueError:
+                log.debug("게임 화면 후보 제외(비율 %.2f): %s", c[2] / max(c[3], 1), c)
+        if not usable:
+            return max(cands, key=lambda c: c[2] * c[3])
+        cands = [c for c, _ in usable]
+        crops = []
+        for (left, top, w, h), prof in usable:
+            m = FrameMapper.for_image(image, (left, top, w, h))
+            crops.append(m.crop(image, prof.stage))
+        for c, tb in zip(cands, self._lines(crops)):
+            if tb is not None and parse.parse_stage(tb.text):
+                self._screen_cache[key] = c
+                return c
+        if key in self._screen_cache:
+            return self._screen_cache[key]
+        scored = [(stage_bar_score(image, c, prof), c[2] * c[3], c) for c, prof in usable]
+        return max(scored)[2]
+
+    def screen_score(self, image: np.ndarray) -> float:
+        """이 프레임(모니터 1대)이 TFT 게임 화면일 가능성 0~1. 스테이지 글자가 읽히면 1, 아니면 스테이지 막대 픽셀 점수 x 0.5.
+        실시간 캡처의 모니터 자동 선택(`capture.MssSource(monitor="auto")`)이 쓴다."""
+        h, w = image.shape[:2]
+        P = self.profile_for(w, h)
+        tb = self._lines([FrameMapper.for_image(image).crop(image, P.stage)])[0]
+        if tb is not None and parse.parse_stage(tb.text):
+            return 1.0
+        return 0.5 * stage_bar_score(image, (0, 0, w, h), P)
 
     # ------------------------------------------------------------------ 공개 API
     def recognize(
@@ -157,6 +266,7 @@ class Recognizer:
         stage·screen_mode는 항상 읽는다. 필드 → 묶음은 FIELD_GROUP.
         """
         g = set(DEFAULT_GROUPS if groups is None else groups)
+        self.last_owned_row = None
         unknown_groups = g - set(GROUPS)
         if unknown_groups:
             raise ValueError(f"알 수 없는 묶음: {sorted(unknown_groups)} (가능: {GROUPS})")
@@ -167,47 +277,66 @@ class Recognizer:
         _, _, box_w, box_h = m.box
         P = self.profile_for(box_w, box_h)
 
-        # 항상 읽는 4칸(스테이지, HUD 버튼 2개, 증강 제목)은 한 줄 인식 한 번(배치)으로 먼저 읽는다.
-        pre = self._lines([m.crop(image, r) for r in (P.stage, P.xp_button, P.refresh_button, P.augment_title)])
+        # 항상 읽는 칸(스테이지, HUD 버튼 2개, 증강 제목, 화면 상태 신호 5개)은 한 줄 인식 한 번(배치)으로 먼저 읽는다.
+        signal_rois = (P.board_count, P.prep_banner, P.select_title, P.game_over_title, P.exit_button)
+        pre = self._lines([m.crop(image, r) for r in
+                           (P.stage, P.xp_button, P.refresh_button, P.augment_title, *signal_rois)])
         (stage, stage_conf), = self._read_parsed_many(image, m, [(P.stage, parse.parse_stage)], lines=pre[:1])
         out.put("stage", stage, stage_conf)
 
         # 화면 상태 신호
         hud_by_ocr = self._find_keyword(image, m, (P.xp_button, P.refresh_button), _HUD_WORDS, lines=pre[1:3])
         hud = hud_by_ocr or hud_panel_pixels(m.crop(image, P.xp_button))
+        bc_line, banner_line, select_line, over_line, exit_line = pre[4:9]
+        select_title = not hud_by_ocr and _has(select_line, _TITLE_WORDS)
         # 증강 화면에는 상점 HUD가 없다 → HUD 글자가 읽혔으면 제목은 한 줄 인식만(검출 생략).
-        augment_title = self._find_keyword(image, m, (P.augment_title,), _TITLE_WORDS, detect=not hud_by_ocr,
-                                           lines=pre[3:])
-        offers = self._read_augment_offer(image, m, P) if ((augment_title or not hud) and "augment" in g) else []
+        augment_title = self._find_keyword(image, m, (P.augment_title,), _TITLE_WORDS,
+                                           detect=not hud_by_ocr and not select_title, lines=pre[3:4])
+        offers = (self._read_augment_offer(image, m, P)
+                  if ((augment_title or not hud) and not select_title and "augment" in g) else [])
+        board_count = prep_banner = False
+        enemy_bars = 0
+        game_over_title = exit_button = False
+        if hud:
+            board_count = self._board_count(image, m, P, bc_line)
+            prep_banner = _has(banner_line, ("준비",))
+            if not (board_count or prep_banner):
+                enemy_bars = count_enemy_bars(m.crop(image, P.combat_area), m.box[3])
+        elif stage is None and not select_title:
+            # 게임 종료: 스테이지 막대도 HUD도 없다. 제목은 두 줄("최종 순위" / "1위")이라 한 줄 인식이 아래 줄만 읽는다 → 검출.
+            exit_button = _has(exit_line, ("나가기",))
+            game_over_title = _has(over_line, ("순위",)) or any(
+                "순위" in b.text for b in self._read(image, m, P.game_over_title))
         sig = ModeSignals(
             shop_hud=hud, shop_hud_by_ocr=hud_by_ocr, augment_title=augment_title,
             augment_names_matched=sum(1 for a in offers if a is not None), stage=stage,
-            dark=frame_is_dark(image),
+            dark=frame_is_dark(image), board_count=board_count, prep_banner=prep_banner, enemy_bars=enemy_bars,
+            select_title=select_title, game_over_title=game_over_title, exit_button=exit_button,
         )
         mode, mode_conf = classify(sig)
         if mode != ScreenMode.UNKNOWN:
             out.put("screen_mode", mode, mode_conf)
 
-        if "players" in g:
+        def reads(group: str) -> bool:
+            return group in g and mode in READ_MODES[group]
+
+        if reads("players"):
             out_hp = self._read_hp(image, m, P)
             if out_hp:
                 out.put("hp", *out_hp)
-
-        if mode == ScreenMode.AUGMENT_SELECT:
-            if offers and all(a is not None for a in offers):
-                refs = [a for a, _ in offers]
-                out.put("augment_offer", refs, min(c for _, c in offers))
-            if "items" in g:
-                self._read_items(image, m, P, out)
-        elif mode == ScreenMode.PLANNING:
-            if "hud" in g:
-                self._read_hud_numbers(image, m, P, out)
-            if "shop" in g:
-                self._read_shop(image, m, P, out)
-            if "items" in g:
-                self._read_items(image, m, P, out)
-            if "traits" in g:
-                self._read_traits(image, m, P, out)
+        if reads("augment") and offers and all(a is not None for a in offers):
+            refs = [a for a, _ in offers]
+            out.put("augment_offer", refs, min(c for _, c in offers))
+        if reads("hud"):
+            self._read_hud_numbers(image, m, P, out)
+        if reads("shop"):
+            self._read_shop(image, m, P, out)
+        if reads("items"):
+            self._read_items(image, m, P, out)
+        if reads("traits"):
+            self._read_traits(image, m, P, out)
+        if reads("owned"):
+            self._read_augments_owned(image, m, P, stage, out)
 
         values = dict(out.values)
         return GameState(
@@ -285,7 +414,62 @@ class Recognizer:
                     return True
         return False
 
+    # ------------------------------------------------------------------ 화면 상태 신호
+    def _board_count(self, image: np.ndarray, m: FrameMapper, P: Profile, line: TextBox | None) -> bool:
+        """보드 인원 워터마크("3/3"). 한 줄 인식이 실패하면(유닛·효과에 일부 가림) 검출+인식으로 한 번 더."""
+        if line is not None and line.score >= 0.5 and parse_board_count(line.text):
+            return True
+        return any(b.score >= 0.5 and parse_board_count(b.text) for b in self._read(image, m, P.board_count))
+
     # ------------------------------------------------------------------ 필드별
+    def _read_augments_owned(self, image: np.ndarray, m: FrameMapper, P: Profile, stage: str | None,
+                             out: _Out) -> None:
+        """보드 왼쪽 위 보유 증강 줄 → augments_owned. 한 칸이라도 못 알아보면 None(부분 목록은 "이것뿐"으로 오해된다).
+
+        줄이 없을 때: 스테이지 1(첫 증강 전)이면 [](확실히 없음), 그 밖에는 None(유닛·효과에 가렸을 수 있다).
+        """
+        crop = m.crop(image, P.augments_owned)
+        cells = find_icon_row(crop, m.box[3])
+        if not cells:
+            if stage is not None and stage.startswith("1-"):
+                out.put("augments_owned", [], 0.9)
+                self.last_owned_row = OwnedRow()   # 확실히 0칸(첫 증강 전) — 학습 경로의 "선택 전 칸 수"
+            return
+        row = OwnedRow()
+        refs: list[AugmentRef] = []
+        for x1, y1, x2, y2 in cells:
+            cell = crop[y1:y2, x1:x2].copy()
+            match = self.augment_icons.match(cell)
+            rec = None
+            if match is not None and match.score >= AUGMENT_MATCH_MIN and match.margin >= (
+                    AUGMENT_GLYPH_MARGIN if match.via_glyph else AUGMENT_MATCH_MARGIN):
+                rec = self._resolve_augment_icon(match.api_name)
+            row.cells.append(cell)
+            row.ids.append(rec["apiName"] if rec is not None else None)
+            row.scores.append(round(match.score, 3) if match is not None else 0.0)
+            if rec is not None:
+                refs.append(AugmentRef(id=rec["apiName"], name_ko=rec.get("name_ko"), rarity=rec.get("tier"),
+                                       confidence=round(match.score, 3)))
+        self.last_owned_row = row
+        if len(refs) == len(cells):   # 한 칸이라도 모르면 필드 전체 None(칸별 결과는 last_owned_row로 app 학습에 넘긴다)
+            out.put("augments_owned", refs, min(r.confidence or 0.0 for r in refs))
+
+    def _resolve_augment_icon(self, api: str) -> dict | None:
+        """템플릿 ID → 증강 레코드. 같은 그림(아이콘 경로 또는 대체 출처 그림 묶음, `augment_visual_keys`)을 쓰는
+        **다른 이름의** 세트 증강이 있으면 모호 → None."""
+        rec = self.static.get("augments", api)
+        if rec is None:
+            return None
+        keys = getattr(self, "_augment_keys", None)
+        if keys is None:   # __new__로 만든 부분 객체(테스트) 호환
+            keys = self._augment_keys = augment_visual_keys(self.static)
+        owners = self._icon_owners.get(keys.get(api, "api:" + api), [rec])
+        native = [r for r in owners if r.get("set_native")] or owners
+        if len({r.get("name_ko") or r["apiName"] for r in native}) > 1:
+            log.debug("증강 아이콘 모호: %s → %s", api, [r["apiName"] for r in native])
+            return None
+        return min(native, key=preference_key)
+
     def _read_hud_numbers(self, image: np.ndarray, m: FrameMapper, P: Profile, out: _Out) -> None:
         (level, level_conf), (xp, xp_conf), (gold, gold_conf), (odds, odds_conf), streak_n = self._read_parsed_many(
             image, m, [(P.level, parse.parse_level), (P.xp, lambda t: parse.parse_xp(t, self.xp_table)),
@@ -459,6 +643,33 @@ class Recognizer:
             return None
         b, v = big[0]
         return v, b.score * HP_FACTOR
+
+
+def augment_template_dirs(set_number: int) -> list[Path]:
+    """증강 글리프 템플릿: CDragon 원본(augments, `fetch-augments`) + 실화면(augments_screen, `harvest-augments`·선택 순간 학습)."""
+    base = PROJECT_ROOT / "data" / "templates" / str(set_number)
+    return [base / "augments", base / "augments_screen"]
+
+
+def augment_alt_dir(set_number: int) -> Path:
+    """CDragon에 없는 세트 증강의 대체 출처 아이콘(`fetch-augments`, tactics.tools). 글리프 정규화 경로로 비교한다."""
+    return PROJECT_ROOT / "data" / "templates" / str(set_number) / "augments_alt"
+
+
+def _augment_icon_owners(static: StaticData, keys: dict[str, str] | None = None) -> dict[str, list[dict]]:
+    """그림 키(`augment_visual_keys`, 생략하면 대체 출처 없이 계산) → 그 그림을 쓰는 증강 레코드들."""
+    if keys is None:
+        keys = augment_visual_keys(static)
+    owners: dict[str, list[dict]] = {}
+    for rec in static.tables.get("augments", []):
+        k = keys.get(rec["apiName"])
+        if k:
+            owners.setdefault(k, []).append(rec)
+    return owners
+
+
+def _has(tb: TextBox | None, words: tuple[str, ...]) -> bool:
+    return tb is not None and any(w in tb.text or w in tb.text.lower() for w in words)
 
 
 def item_template_dirs(set_number: int) -> list[Path]:

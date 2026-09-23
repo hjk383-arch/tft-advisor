@@ -243,3 +243,25 @@ def test_keep_snapshots_from_settings_or_default():
     from tft_advisor.config import Settings
     assert rf.keep_snapshots(Settings()) == 5
     assert rf.keep_snapshots(Settings.model_validate({"stats": {"keep_snapshots": 9}})) == 9
+
+
+def test_latest_raw_dir_prefers_newest_complete_cache(tmp_path):
+    """stats 08 (c): 최신 날짜 캐시가 불완전(comp_details 누락)이면 더 오래된 완전한 캐시를 고른다."""
+    def make(day, details):
+        d = tmp_path / day
+        d.mkdir()
+        (d / "comps_data.json").write_text(json.dumps(
+            {"results": {"data": {"cluster_details": {"1": {}, "2": {}}}}}), encoding="utf-8")
+        for f in ("units.json", "patch.json"):
+            (d / f).write_text("{}", encoding="utf-8")
+        for cid in details:
+            (d / f"comp_details_{cid}.json").write_text("{}", encoding="utf-8")
+        return d
+
+    old = make("2026-01-01", ["1", "2"])
+    new = make("2026-01-02", ["1"])
+    assert collector.raw_dir_complete(old) and not collector.raw_dir_complete(new)
+    assert collector.latest_raw_dir(tmp_path) == old
+    assert collector.latest_raw_dir(tmp_path, require_complete=False) == new
+    (old / "units.json").unlink()   # 완전한 캐시가 없으면 최신으로 폴백
+    assert collector.latest_raw_dir(tmp_path) == new

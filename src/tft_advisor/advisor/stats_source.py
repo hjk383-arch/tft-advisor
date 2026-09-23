@@ -16,6 +16,7 @@ from pathlib import Path
 from typing import Any, Protocol, runtime_checkable
 
 from ..contracts import AugmentTier, CompStats, UnitItemStats
+from ..patch_version import patch_sort_key  # noqa: F401  (재노출: 기존 호출·테스트 호환)
 from ..static_data import PROJECT_ROOT, StaticData, load_static
 
 log = logging.getLogger(__name__)
@@ -54,9 +55,10 @@ class AdvisorStats(Protocol):
 
 
 def default_stats_path(data_dir: Path | None = None) -> Path | None:
-    """최신 `data/stats/metatft_*.json`(파일명 사전순 마지막)."""
+    """최신 `data/stats/metatft_*.json`: 파일명의 패치 번호를 숫자로 비교한 마지막(동률이면 파일명)."""
     d = (data_dir or PROJECT_ROOT / "data") / "stats"
-    return max(d.glob("metatft_*.json"), default=None)
+    return max(d.glob("metatft_*.json"),
+               key=lambda p: (patch_sort_key(p.stem.removeprefix("metatft_")), p.name), default=None)
 
 
 @dataclass

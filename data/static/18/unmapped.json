@@ -1,6 +1,7 @@
 {
  "checked_at": "2026-09-22",
  "note": "통계 소스 응답 ID 중 정적 데이터(data/static/18)에 없는 것. 스냅샷이 18.2b보다 오래됐을 가능성. summons_in_boards는 챔피언이 아니라서 변환 시 보드에서 제거하는 유닛(metatft_convert.SUMMON_IDS + 상점 풀 필터).",
+ "patch_18.3_check": "2026-09-22 MetaTFT 18.3 캐시(raw 2026-09-22) 대조: 새 미매핑 0. units.json(18.3)에는 TFT18_* 없음, comp_details에는 TFT18_MasterYi·TFT18_NidaleeCougar만 남음(Akali·Gromp는 18.2b 스냅샷 호환용으로 선언 유지). CDragon latest(16.18, 2026-09-12)는 기존 raw_cdragon과 바이트 동일 → 정적 데이터 변경 없음.",
  "units": {"metatft": ["TFT18_Akali", "TFT18_Gromp", "TFT18_MasterYi", "TFT18_NidaleeCougar"],
            "summons_in_boards": ["DA_Elderwood18_Lifeblossom", "DA_Elderwood18_StonebarkTree", "DA_Elderwood18_Protector",
                                  "DA_TheTower_TrainingDummy", "DA_TrainingDummy"]},

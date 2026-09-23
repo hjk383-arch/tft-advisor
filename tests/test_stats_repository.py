@@ -128,9 +128,16 @@ def test_augment_tier_scopes(repo):
 # --------------------------------------------------------------------------- 유닛 / 유닛+아이템 / 아이템
 
 
-def test_unit_stats(repo):
+def test_unit_stats(repo, built):
+    """데이터 독립 불변식(18.2b 69개 → 18.3 65개로 바뀌어 고정 개수를 뺐다): 원본 units.json 행 수와 같고,
+    모든 unit_id는 정적 챔피언이거나 report.unmapped_ids에 기록돼 있다."""
     us = repo.all_unit_stats()
-    assert len(us) == 69 and all(isinstance(u, UnitStats) and u.games for u in us.values())
+    raw_units = {r["unit"] for r in json.loads((RAW / "units.json").read_text(encoding="utf-8"))["results"]}
+    assert set(us) == raw_units and len(us) >= 50
+    assert all(isinstance(u, UnitStats) and u.games for u in us.values())
+    static = load_static(18)
+    unknown = {u for u in us if static.get("champions", u) is None}
+    assert unknown <= set(built.report["unmapped_ids"]), unknown
     assert repo.unit_stats("DA_18_Zyra") is us["DA_18_Zyra"]
 
 

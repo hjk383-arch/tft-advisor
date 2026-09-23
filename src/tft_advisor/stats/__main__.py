@@ -21,6 +21,7 @@ import sys
 from pathlib import Path
 
 from tft_advisor.config import load_settings
+from tft_advisor.patch_version import latest_snapshot
 from tft_advisor.stats import db as statsdb
 from tft_advisor.stats import diff as statsdiff
 from tft_advisor.stats import refresh as rf
@@ -51,7 +52,10 @@ def cmd_refresh(a: argparse.Namespace) -> int:
 
 
 def cmd_load(a: argparse.Namespace) -> int:
-    path = Path(a.json) if a.json else max(rf.STATS_DIR.glob("metatft_*.json"), key=lambda p: p.stat().st_mtime)
+    path = Path(a.json) if a.json else latest_snapshot(rf.STATS_DIR, "metatft_")
+    if path is None:
+        print(f"통계 JSON 없음: {rf.STATS_DIR}")
+        return 2
     sid = rf.load_json(path, db_path=_db(a))
     print(f"loaded {path} -> {_db(a)} snapshot {sid}")
     return 0

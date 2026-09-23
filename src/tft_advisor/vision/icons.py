@@ -39,6 +39,7 @@ class IconMatch:
     api_name: str
     score: float      # TM_CCOEFF_NORMED 최댓값 (-1~1)
     margin: float     # 1위 - 다른 묶음 1위
+    via_glyph: bool = False   # 1위 점수가 글리프 정규화 경로(대체 출처 증강 아이콘)에서 나왔는가
 
 
 class IconMatcher:
@@ -102,3 +103,192 @@ class IconMatcher:
         g = self.group(api)
         second = next((sc for sc, a in scores[1:] if self.group(a) != g), -1.0)
         return IconMatch(api_name=api, score=top, margin=top - second)
+
+
+# ---------------------------------------------------------------------------
+# 보유 증강 줄 (보드 왼쪽 위, 1080p 원본 실측 2026-09-22)
+# ---------------------------------------------------------------------------
+# 준비 화면에서 보드 왼쪽 위에 짙은 회색 상자(BGR ≈ 28,29,29) 안에 보유 증강 글리프가 한 줄로 그려진다.
+# 칸은 38x37px 정사각(1080p), 줄은 가운데 정렬(x≈0.266)로 증강 수만큼 늘어난다(2-2 1칸, 5-1 3칸 확인).
+# 글리프는 CommunityDragon hexcore 아이콘(`fetch-augments`)과 같은 그림이다(어수선한 마음 0.905, 초월 0.956).
+
+AUG_BG = (28, 29, 29)        # 줄 상자 배경색(BGR)
+AUG_CELL = 38                # 칸을 이 크기로 맞춘다
+AUG_PAD = 4                  # ±4px 위치 오차 탐색
+AUG_TEMPLATE = 36            # 템플릿 크기(실측 최적: 칸 38 대비 36)
+
+
+def find_icon_row(crop: np.ndarray, frame_h: int) -> list[tuple[int, int, int, int]]:
+    """탐색 영역 크롭 → 증강 칸들 [(x1, y1, x2, y2)] (크롭 좌표, 왼쪽부터). 줄이 없으면 [].
+
+    짙은 회색 상자를 찾는다: 배경색 픽셀 마스크 → 글리프 구멍을 닫기 → 가장 큰 덩어리. 높이가 칸 크기(화면 높이의 약 3.4%)와
+    맞고 가로가 칸 크기의 정수배(1~5)에 가까울 때만 줄로 본다(보드 무늬·유닛 그림자 오탐 방지).
+    """
+    if crop.size == 0:
+        return []
+    import cv2
+
+    diff = np.abs(crop.astype(np.int16) - np.array(AUG_BG, np.int16)).max(axis=2)
+    mask = (diff <= 10).astype(np.uint8)
+    mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, np.ones((9, 9), np.uint8))
+    n, _, stats, _ = cv2.connectedComponentsWithStats(mask, 8)
+    if n <= 1:
+        return []
+    k = 1 + int(np.argmax(stats[1:, cv2.CC_STAT_AREA]))
+    x, y, w, h = (int(v) for v in stats[k][:4])
+    cell = 0.0343 * frame_h                      # 1080p 37px
+    if not 0.8 * cell <= h <= 1.25 * cell:
+        return []
+    count = round(w / h)
+    if not 1 <= count <= 5 or abs(w / count - h) > 0.2 * h:
+        return []
+    if float(mask[y:y + h, x:x + w].mean()) < 0.85:   # 상자는 꽉 찬 사각형이어야 한다
+        return []
+    step = w / count
+    return [(int(round(x + i * step)), y, int(round(x + (i + 1) * step)), y + h) for i in range(count)]
+
+
+def _composite(img: np.ndarray, bg: tuple[int, int, int] = AUG_BG) -> np.ndarray:
+    """RGBA/회색 아이콘 → 줄 배경색 위에 합성한 BGR."""
+    if img.ndim == 2:
+        return np.dstack([img] * 3)
+    if img.shape[2] == 4:
+        a = img[..., 3:].astype(np.float32) / 255.0
+        return (img[..., :3].astype(np.float32) * a + np.array(bg, np.float32) * (1 - a)).astype(np.uint8)
+    return img
+
+
+GLYPH_SIZE = 36             # 글리프 정규화 비교 크기(글리프 외곽 정사각형 → 이 크기)
+GLYPH_PAD = 3               # 정규화한 칸 주위 여백(±3px 탐색)
+GLYPH_DIFF = 40             # 배경색과 이만큼(채널 최대 차) 다르면 글리프 픽셀
+
+
+def glyph_normalize(img: np.ndarray, size: int = GLYPH_SIZE) -> np.ndarray | None:
+    """아이콘/칸 → 글리프 외곽(배경과 다른 픽셀) 정사각형을 잘라 `size`로 맞춘 BGR. 글리프가 없으면 None.
+
+    대체 출처(tactics.tools) 증강 아이콘은 글리프 둘레에 빛 번짐이 있고 글리프가 차지하는 비율(약 0.81)이 CDragon 원본(약 0.92)·
+    게임 칸(약 0.95)과 달라, 원본 기하(`match`의 고정 크기 ±4px)로는 정답도 0.42~0.50에 그친다(1080p 실측). 양쪽을 글리프 외곽으로
+    맞추면 정답 0.83~0.86, 다른 증강 1위 0.73 이하가 된다(`_workspace/09_vision_augment_icons.md` §3).
+    """
+    if img is None or img.size == 0:
+        return None
+    import cv2
+
+    c = _composite(img)
+    d = np.abs(c.astype(np.int16) - np.array(AUG_BG, np.int16)).max(axis=2)
+    ys, xs = np.nonzero(d > GLYPH_DIFF)
+    if len(xs) < 4:
+        return None
+    x1, x2, y1, y2 = int(xs.min()), int(xs.max()) + 1, int(ys.min()), int(ys.max()) + 1
+    side = max(x2 - x1, y2 - y1)
+    canvas = np.empty((side, side, 3), np.uint8)
+    canvas[:] = AUG_BG
+    ox, oy = (side - (x2 - x1)) // 2, (side - (y2 - y1)) // 2
+    canvas[oy:oy + y2 - y1, ox:ox + x2 - x1] = c[y1:y2, x1:x2]
+    return cv2.resize(canvas, (size, size), interpolation=cv2.INTER_AREA)
+
+
+class AugmentIconMatcher:
+    """증강 글리프 템플릿 매칭. 템플릿: {apiName: 이미지} 또는 [(apiName, 이미지)](실화면 템플릿은 ID별로 추가).
+
+    `glyph_templates`: 대체 출처 아이콘(CDragon에 없는 증강). 칸과 템플릿을 모두 글리프 외곽으로 정규화해 비교한다
+    (`glyph_normalize`). 한 ID의 점수는 두 경로 중 최댓값이고, 1위가 글리프 경로에서 나왔으면 `IconMatch.via_glyph`.
+    """
+
+    def __init__(self, templates: Iterable[tuple[str, np.ndarray]],
+                 glyph_templates: Iterable[tuple[str, np.ndarray]] = ()) -> None:
+        self.pairs: list[tuple[str, np.ndarray]] = []
+        self.glyph_pairs: list[tuple[str, np.ndarray]] = []
+        for api, img in templates:
+            self.add(api, img)
+        for api, img in glyph_templates:
+            self.add(api, img, glyph=True)
+
+    def add(self, api: str, img: np.ndarray, glyph: bool = False) -> bool:
+        """템플릿 1장 추가(실시간 학습이 저장한 칸도 이것으로 바로 쓴다). 글리프가 없는 이미지는 False."""
+        import cv2
+
+        if glyph:
+            g = glyph_normalize(img)
+            if g is None:
+                return False
+            self.glyph_pairs.append((api, g))
+        else:
+            self.pairs.append((api, cv2.resize(_composite(img), (AUG_TEMPLATE, AUG_TEMPLATE),
+                                               interpolation=cv2.INTER_AREA)))
+        return True
+
+    def __len__(self) -> int:
+        return len(self.pairs) + len(self.glyph_pairs)
+
+    @property
+    def ids(self) -> set[str]:
+        return {a for a, _ in self.pairs} | {a for a, _ in self.glyph_pairs}
+
+    @staticmethod
+    def _load_dir(d: Path, valid: Callable[[str], bool] | None) -> list[tuple[str, np.ndarray]]:
+        import cv2
+
+        out: list[tuple[str, np.ndarray]] = []
+        if not d.is_dir():
+            return out
+        for p in sorted(d.glob("*.png")):
+            if valid is not None and not valid(p.stem):
+                log.warning("증강 템플릿 무시(정적 데이터 ID 아님): %s", p)
+                continue
+            img = cv2.imdecode(np.fromfile(str(p), dtype=np.uint8), cv2.IMREAD_UNCHANGED)
+            if img is not None:
+                out.append((p.stem, img))
+        return out
+
+    @classmethod
+    def from_dirs(cls, dirs: Iterable[str | Path], valid: Callable[[str], bool] | None = None,
+                  glyph_dirs: Iterable[str | Path] = ()) -> AugmentIconMatcher:
+        pairs = [p for d in dirs for p in cls._load_dir(Path(d), valid)]
+        glyphs = [p for d in glyph_dirs for p in cls._load_dir(Path(d), valid)]
+        return cls(pairs, glyphs)
+
+    def scores(self, cell: np.ndarray) -> dict[str, tuple[float, bool]]:
+        """ID → (점수, 글리프 경로 여부). 한 ID의 점수는 그 ID 템플릿들(두 경로) 중 최댓값."""
+        best: dict[str, tuple[float, bool]] = {}
+        if cell.size == 0:
+            return best
+        import cv2
+
+        if self.pairs:
+            src = cv2.resize(cell, (AUG_CELL, AUG_CELL), interpolation=cv2.INTER_AREA)
+            src = cv2.copyMakeBorder(src, AUG_PAD, AUG_PAD, AUG_PAD, AUG_PAD, cv2.BORDER_REPLICATE)
+            for api, tpl in self.pairs:
+                sc = float(cv2.matchTemplate(src, tpl, cv2.TM_CCOEFF_NORMED).max())
+                if sc > best.get(api, (-2.0, False))[0]:
+                    best[api] = (sc, False)
+        if self.glyph_pairs:
+            g = glyph_normalize(cell)
+            if g is not None:
+                src = cv2.copyMakeBorder(g, GLYPH_PAD, GLYPH_PAD, GLYPH_PAD, GLYPH_PAD, cv2.BORDER_CONSTANT,
+                                         value=AUG_BG)
+                for api, tpl in self.glyph_pairs:
+                    sc = float(cv2.matchTemplate(src, tpl, cv2.TM_CCOEFF_NORMED).max())
+                    if sc > best.get(api, (-2.0, False))[0]:
+                        best[api] = (sc, True)
+        return best
+
+    def match(self, cell: np.ndarray) -> IconMatch | None:
+        if not len(self) or cell.size == 0:
+            return None
+        best = self.scores(cell)
+        if not best:
+            return None
+        ranked = sorted(((sc, api, via) for api, (sc, via) in best.items()), reverse=True)
+        top, api, via = ranked[0]
+        second = ranked[1][0] if len(ranked) > 1 else -1.0
+        return IconMatch(api_name=api, score=top, margin=top - second, via_glyph=via)
+
+
+def augment_cell_template(cell: np.ndarray) -> np.ndarray:
+    """실화면 칸 → 저장용 템플릿(AUG_CELL로 맞춘 뒤 가운데 AUG_TEMPLATE만). `match`의 기하와 같아 자기 자신과 1.0."""
+    import cv2
+
+    big = cv2.resize(cell, (AUG_CELL, AUG_CELL), interpolation=cv2.INTER_AREA)
+    off = (AUG_CELL - AUG_TEMPLATE) // 2
+    return big[off:off + AUG_TEMPLATE, off:off + AUG_TEMPLATE]

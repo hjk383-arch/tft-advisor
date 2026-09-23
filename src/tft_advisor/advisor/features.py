@@ -314,6 +314,35 @@ def board_at(comp: CompStats, level: int) -> BuildupBoard | None:
     return best_board(comp.buildup.get(lv, []))
 
 
+def resource_availability(view: View, owned: list[str]) -> dict[str, bool]:
+    """덱 선정 자원 신호 3종(§5.2)의 가용 여부: 아이템(보유 완성템 또는 재료) / 증강 / 보유 유닛."""
+    return {
+        "item": view.items_known and bool(owned or view.components),
+        "augment": bool(view.augments),
+        "board": view.units_known and bool(view.units),
+    }
+
+
+def is_late(view: View, until_stage: int) -> bool:
+    """'초반'이 아닌가: 스테이지를 알고 그 번호가 until_stage 이상(09 J1). 스테이지를 모르면 False(보수적)."""
+    return view.stage_number is not None and view.stage_number >= until_stage
+
+
+def tempo_fit(view: View, comp: CompStats, span: float) -> tuple[float, int] | None:
+    """레벨 템포 적합(09 J1): 현재 스테이지에서 이 덱이 보통 도달하는 레벨과 내 레벨의 차.
+
+    expected = estimate_level(stage, level_timing). 반환 (1 − |level − expected| / span 을 0~1로 자른 값, expected).
+    레벨·스테이지·level_timing 중 하나라도 없으면 None. 결정적 계산이라 Jev에 묻지 않는다.
+    """
+    if view.level is None or view.stage is None:
+        return None
+    exp = estimate_level(view.stage, comp.level_timing)
+    if exp is None:
+        return None
+    x = 1.0 - abs(view.level - exp) / span if span > 0 else float(view.level == exp)
+    return (0.0 if x < 0 else 1.0 if x > 1 else x), exp
+
+
 def next_buildup_board(comp: CompStats, L: int | None) -> BuildupBoard | None:
     """§5.4 next_buildup_board 2~5단계."""
     if L is None or L >= 10:

@@ -193,6 +193,61 @@ def item_lines(rec: Recommendation, names: NameBook) -> list[str]:
 
 
 # ---------------------------------------------------------------------------
+# 직전 추천 유지(전투·아이템 선택·알 수 없는 화면)
+# ---------------------------------------------------------------------------
+
+KEPT_LABELS: dict[ScreenMode, str] = {
+    ScreenMode.COMBAT: "전투 중",
+    ScreenMode.ITEM_SELECT: "아이템 선택 중",
+    ScreenMode.UNKNOWN: "화면 판별 실패",
+}
+
+
+@dataclass(frozen=True)
+class KeptInfo:
+    """새 추천을 만들지 않는 화면에서 직전 추천을 보여 줄 때의 표시 정보."""
+
+    mode: ScreenMode
+    bought: int = 0      # 직전 추천 칸이 지금 빈 칸 → 산 것으로 보고 뺐다
+    changed: int = 0     # 직전 추천 칸에 지금 다른 유닛 → 낡은 추천이라 뺐다(새로고침 등)
+
+    @property
+    def label(self) -> str:
+        return f"직전 추천({KEPT_LABELS.get(self.mode, screen_label(self.mode))})"
+
+    def note(self) -> str:
+        bits = [f"{self.label}: 준비 단계 추천을 유지한다(목표 덱 고정)"]
+        if self.bought:
+            bits.append(f"산 칸 {self.bought}개 제외")
+        if self.changed:
+            bits.append(f"바뀐 칸 {self.changed}개는 준비 단계에서 다시 계산")
+        return " · ".join(bits)
+
+
+def kept_view(rec: Recommendation, state: GameState) -> tuple[Recommendation, KeptInfo]:
+    """직전 추천 → 지금 화면에 맞춘 표시용 사본 + 표시 정보. 목표 덱은 그대로 두고 상점 칸만 거른다.
+
+    직전 추천의 상점 칸이 지금 상점(병합 상태)과 다르면 뺀다: 빈 칸이 됐으면 산 것, 다른 유닛이면 새로고침된 것이다.
+    지금 상점을 모르면(None) 거르지 않는다. 원본 `rec`는 바꾸지 않는다(advisor 세션의 직전 추천이다).
+    """
+    cur = state.shop
+    if cur is None or not rec.shop:
+        return rec, KeptInfo(state.screen_mode)
+    keep: list = []
+    bought = changed = 0
+    for advice in rec.shop:
+        slot = cur[advice.slot] if advice.slot < len(cur) else None
+        cur_id = slot.id if slot is not None and slot.kind in (ShopSlotKind.CHAMPION, ShopSlotKind.SPECIAL) else None
+        if (advice.offer_id or None) == cur_id:
+            keep.append(advice)
+        elif cur_id is None:
+            bought += 1
+        else:
+            changed += 1
+    return rec.model_copy(update={"shop": keep}), KeptInfo(state.screen_mode, bought, changed)
+
+
+# ---------------------------------------------------------------------------
 # 상태줄
 # ---------------------------------------------------------------------------
 
@@ -239,8 +294,8 @@ def status_line(info: StatusInfo, now: datetime | None = None) -> str:
 
 def format_report(state: GameState, rec: Recommendation | None, *, names: NameBook | None = None,
                   status: StatusInfo | None = None, threshold: float = 0.6,
-                  title: str | None = None, max_comps: int = 3) -> str:
-    """스크린샷·콘솔 모드의 사람이 읽는 요약(한국어)."""
+                  title: str | None = None, max_comps: int = 3, kept: KeptInfo | None = None) -> str:
+    """스크린샷·콘솔 모드의 사람이 읽는 요약(한국어). `kept`: 직전 추천을 보여 주는 화면이면 그 표시 정보(`kept_view`)."""
     nb = names or NameBook()
     lines: list[str] = []
     if title:
@@ -258,13 +313,18 @@ def format_report(state: GameState, rec: Recommendation | None, *, names: NameBo
         else:
             lines.append("[추천] 없음")
     else:
+        if kept is not None:
+            lines.append(f"[{kept.note()}]")
         lines.append(f"[목표 덱] advisor 순서 (점수로 재정렬하지 않음) — {jev_label(rec)}")
         if not rec.target_comps:
             lines.append("  (후보 없음 — 인식 정보 부족)")
         for i, comp in enumerate(rec.target_comps[:max_comps], start=1):
             lines += ["  " + ln for ln in comp_lines(comp, i, nb)]
         if rec.shop:
-            lines += ["", "[상점]"] + ["  " + ln for ln in shop_lines(rec, nb)]
+            head = f"[상점 — {kept.label}]" if kept is not None else "[상점]"
+            lines += ["", head] + ["  " + ln for ln in shop_lines(rec, nb)]
+        elif kept is not None and (kept.bought or kept.changed):
+            lines += ["", f"[상점 — {kept.label}] 남은 추천 칸 없음"]
         if rec.augment is not None:
             lines += ["", "[증강 선택]"] + ["  " + ln for ln in augment_lines(rec, nb)]
         if rec.item is not None and (rec.item.suggestions or rec.item.hold):

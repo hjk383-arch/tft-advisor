@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import Any
 
 from tft_advisor.config import Settings, load_settings
+from tft_advisor.patch_version import latest_snapshot
 from tft_advisor.static_data import PROJECT_ROOT, StaticData, load_static
 from tft_advisor.stats import db as statsdb
 from tft_advisor.stats import diff as statsdiff
@@ -82,7 +83,7 @@ def refresh(*, fetch: bool = True, date: str | None = None, raw_dir: Path | None
     prev_info = statsdb.find_snapshot(db_path, source="metatft") if db_path.is_file() else None
     prev_doc = statsdb.read_snapshot(db_path, prev_info.id) if prev_info else None
     if prev_doc is None:
-        js = max(json_dir.glob("metatft_*.json"), key=lambda p: p.stat().st_mtime, default=None)
+        js = latest_snapshot(json_dir, "metatft_")   # 패치 번호 숫자 비교(수정 시각은 checkout 뒤 뒤섞인다)
         if js is not None:
             prev_doc = json.loads(js.read_text(encoding="utf-8"))
             notes.append(f"이전 스냅샷: DB 없음 → {js.name}")

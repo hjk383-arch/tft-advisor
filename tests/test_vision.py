@@ -425,6 +425,7 @@ def _frame_with_items(icons: list[np.ndarray | None]):
 
 def test_harvest_items_maps_korean_labels_to_ids_and_supplements_cdragon(static, tmp_path, caplog):
     """QA04-V1 경로: 한국어 라벨 → 정적 ID로 저장, 모르는 이름은 오류. 실화면 템플릿 몇 개가 CDragon 아이콘 전체를 가리지 않는다."""
+    from tft_advisor.vision.capture import save_image
     from tft_advisor.vision.recognizer import Recognizer
     from tft_advisor.vision.templates import harvest_items
 
@@ -439,7 +440,7 @@ def test_harvest_items_maps_korean_labels_to_ids_and_supplements_cdragon(static,
     assert saved == ["DA_Component_BFSword"]
     assert len(errors) == 1 and "없는 아이템" in errors[0]
     assert sorted(p.stem for p in screen.glob("*.png")) == ["DA_Component_BFSword"]
-    cv2.imwrite(str(screen / "B.F. 대검.png"), cv2.resize(_icon(10), (32, 32)))   # 옛 방식 한글 파일명(무시돼야 함)
+    save_image(screen / "B.F. 대검.png", cv2.resize(_icon(10), (32, 32)))   # 옛 방식 한글 파일명(무시돼야 함)
 
     rec = Recognizer(static=static, ocr=ocr, item_template_dir=[cdragon, screen])
     assert rec.item_matcher.ids == set(ids)                          # 합집합, 한글 stem 제외
@@ -550,7 +551,8 @@ def test_recognize_groups_limits_fields(static):
     s = rec.recognize(img, groups={"hud"})
     assert s.stage == "3-2" and s.gold == 62 and s.shop is None
     assert s.screen_mode == ScreenMode.PLANNING
-    assert set(FIELD_GROUP.values()) - {"stage"} == set(GROUPS)
+    # "owned"(보유 증강 줄)만 FIELD_GROUP 밖이다: augments_owned는 app에서 "있을 때만 덮어쓰기" 병합(_CARRY_FIELDS)
+    assert set(FIELD_GROUP.values()) - {"stage"} == set(GROUPS) - {"owned"}
     with pytest.raises(ValueError):
         rec.recognize(img, groups={"nope"})
 

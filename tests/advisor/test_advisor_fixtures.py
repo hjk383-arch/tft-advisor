@@ -174,6 +174,8 @@ def check_expect(expect: dict, rec: Recommendation, adv, all_recs: dict) -> None
             assert tc[0].next_buildup_board is not None and tc[0].next_buildup_board.level == val
         elif key == "sig_unchanged":
             assert rec.debug["sig_unchanged"] is val
+        elif key == "blind_late":
+            assert rec.debug["blind_late"] is val
         else:
             raise AssertionError(f"알 수 없는 expect 키: {key}")
 

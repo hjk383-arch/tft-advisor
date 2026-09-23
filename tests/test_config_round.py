@@ -50,7 +50,15 @@ def test_capture_superseded_keys_are_rejected():
     for k in ("poll_interval_ms", "stable_frames"):
         with pytest.raises(ValidationError):
             CaptureCfg.model_validate({k: 1})
-    assert CaptureCfg().monitor == 1
+    assert CaptureCfg().monitor == "auto"   # vision 07: 듀얼 모니터 사용자를 위해 기본 자동 선택
+
+
+def test_capture_monitor_accepts_auto_or_index():
+    assert CaptureCfg.model_validate({"monitor": 2}).monitor == 2
+    assert CaptureCfg.model_validate({"monitor": "auto"}).monitor == "auto"
+    for bad in (-1, "second", 1.5):
+        with pytest.raises(ValidationError):
+            CaptureCfg.model_validate({"monitor": bad})
 
 
 # --------------------------------------------------------------------------- 범위·제약 거부

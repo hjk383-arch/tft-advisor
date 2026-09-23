@@ -20,7 +20,7 @@ from ..contracts import (
     ShopSlotKind,
     TargetComp,
 )
-from .candidates import Candidate, augment_comp_fit, augment_proxy, stat_norm, tier_score
+from .candidates import Candidate, augment_comp_fit, augment_proxy, late_blind, late_cfg, stat_norm, tempo_active, tier_score
 from .features import (
     View,
     board_at,
@@ -28,11 +28,14 @@ from .features import (
     buy_makes_3star,
     comp_board_units,
     copies_owned,
+    is_late,
     item_fit,
     key_trait_ids,
     next_buildup_board,
+    resource_availability,
 )
 from .jev_client import JevAnswers
+from .jev_state import NameBook, augment_entry
 from .questions import HOLD, UNDECIDED
 from .stats_source import AdvisorStats
 
@@ -99,12 +102,20 @@ class Scorer:
     # 최종 덱 (§5.2)
     # ------------------------------------------------------------------
     def availability(self) -> dict[str, bool]:
-        v = self.view
-        return {
-            "item": v.items_known and bool(self.owned or v.components),
-            "augment": bool(v.augments),
-            "board": v.units_known and bool(v.units),
-        }
+        return resource_availability(self.view, self.owned)
+
+    @property
+    def owned_aug_desc_lost(self) -> bool:
+        """보유 증강이 있고 그 설명이 모두 없음/의미 손실(jev_state.augment_entry 기준)."""
+        if not self.view.augments:
+            return False
+        names = NameBook(self.stats)
+        return all(augment_entry(a.id, self.stats, names)[1] for a in self.view.augments)
+
+    def weight_map(self) -> dict[str, float]:
+        """항별 가중. tempo는 후반 + 보드 미인식(tempo_active)일 때만 항으로 들어온다(09 J1)."""
+        cw = self.w.comp
+        return {"item": cw.wi, "augment": cw.wa, "board": cw.wb, "tempo": late_cfg(self.w).w_tempo}
 
     def comp_terms(self, k: int, c: Candidate, aug_override: tuple[float, float, str] | None = None) -> dict[str, Term]:
         avail = self.availability()
@@ -118,17 +129,21 @@ class Scorer:
             if not avail[t]:
                 terms[t] = Term(0, 1.0, 0.0, "none")
                 continue
-            js = self.jscore(f"{QPREFIX[t]}_{k}", 4)
+            # 보유 증강 설명이 전부 없거나 의미를 잃었으면(static 미수록 증강 등) Jev 증강 판단의 gate를 낮춘다(09 §3)
+            js = self.jscore(f"{QPREFIX[t]}_{k}", 4, force_low=(t == "augment" and self.owned_aug_desc_lost))
             if js is not None:
                 terms[t] = Term(1, js[1], js[0], "jev")
             else:
                 terms[t] = Term(1, 1.0, proxy[t], "proxy")
+        # 09 J1: 후반인데 보드를 모르면 레벨 템포(코드 계산)가 보드 항을 대신해 플랜(리롤/빠른 레벨업)을 반영한다
+        if c.T is not None and tempo_active(self.view, self.owned, self.w):
+            terms["tempo"] = Term(1, 1.0, c.T, "code")
         return terms
 
     def comp_score(self, c: Candidate, terms: dict[str, Term]) -> tuple[float, float, float]:
         """(comp_score, J, m)."""
         cw = self.w.comp
-        wk = {"item": cw.wi, "augment": cw.wa, "board": cw.wb}
+        wk = self.weight_map()
         J = sum(wk[t] * x.avail * x.gate * x.norm for t, x in terms.items())
         m = sum(wk[t] * x.avail * x.gate for t, x in terms.items())
         s = (1 - cw.wt) * J + (cw.wt + (1 - cw.wt) * (1 - m)) * c.S
@@ -147,12 +162,17 @@ class Scorer:
         self.rel = {r["cand"].comp_id: (r["final"] / mx if mx > 0 else 0.0) for r in self.comp_rows}
 
         # 방향 미정 판단(§5.2): Jev comp_pick P(undecided), 폴백은 "자원 신호 전무"
+        # 09 J1: '초반' 판단은 스테이지 < undecided_until_stage 에서만. 후반 무자원은 blind_late(정보 부족)로 따로 표시
         pick = self.jchoice("comp_pick")
-        if pick is not None:
+        late = is_late(self.view, late_cfg(self.w).undecided_until_stage)
+        if late:
+            self.p_undecided = 0.0
+        elif pick is not None:
             self.p_undecided = pick.probabilities.get(UNDECIDED, 0.0)
         else:
             self.p_undecided = 1.0 if not any(self.availability().values()) else 0.0
         self.undecided = self.p_undecided >= cw.undecided_min_p
+        self.blind_late = late_blind(self.view, self.owned, self.w)
 
         order = sorted(self.comp_rows, key=lambda r: (-r["final"], r["k"]))
         protected_top = bool(order) and order[0]["H"] >= 1.0   # 직전 1위가 그대로 1위면 타이브레이커로 뒤집지 않는다
@@ -163,7 +183,7 @@ class Scorer:
             if p1 > p0:
                 order[0], order[1] = order[1], order[0]
                 self.debug["comp_tiebreak"] = "comp_pick"
-        ratio = cw.show_ratio_undecided if self.undecided else cw.show_ratio
+        ratio = cw.show_ratio_undecided if (self.undecided or self.blind_late) else cw.show_ratio
         limit = min(cw.max_shown, self.settings.ui.max_target_comps)
         shown = order[:1]
         for r in order[1:]:
@@ -238,8 +258,7 @@ class Scorer:
         ready = self.items_ready(c)
 
         # 1. 자원 근거(최대 2개)
-        cw = self.w.comp
-        wk = {"item": cw.wi, "augment": cw.wa, "board": cw.wb}
+        wk = self.weight_map()
         contrib = []
         for t, term in row["terms"].items():
             if term.avail and term.norm * term.gate >= 0.5:
@@ -250,13 +269,17 @@ class Scorer:
                 reasons.append(f"핵심 아이템: {', '.join(ok)} → {self.ko(comp.carry)}" if ok else "보유 아이템 적합")
             elif t == "augment":
                 reasons.append(self.augment_reason(comp))
+            elif t == "tempo":
+                reasons.append(f"레벨 템포 일치: {v.stage} 레벨 {v.level} (이 덱 평균 레벨 {c.T_exp})")
             else:
                 core = {u.id for u in comp.final_board if u.is_core}
                 m = sum(1 for u in owned_units if u in core)
                 reasons.append(f"보유 유닛 {len(owned_units)}/{len(B)}기 (핵심 {m})")
         # 2. 통계
         reasons.append(f"메타 평균 {c.adj:.2f}등 · {comp.games or 0:,}판")
-        # 3. 상태 플래그
+        # 3. 상태 플래그 (후반 무자원 안내는 오버레이가 근거 앞 3개만 보여 주므로 보드 플래그보다 앞에 둔다)
+        if self.blind_late and not self.undecided:
+            reasons.append("보유 아이템·증강 신호 없음: 레벨 템포·메타로 추정")
         if not v.units_known:
             reasons.append("보드 미인식: 보유/부족 유닛은 수동 입력 시 표시")
         if not v.items_known:
@@ -498,7 +521,7 @@ class Scorer:
             js_a1 = self.jscore(f"aug_comp_fit_{a_i}_{k}", 4, force_low=force_low)   # 본 점수 경로와 같은 gate
             if js_a1 is not None:
                 a1n, a1g = js_a1
-                c2 = self.jscore(f"comp_augment_fit_{k}", 4) if n else None
+                c2 = self.jscore(f"comp_augment_fit_{k}", 4, force_low=self.owned_aug_desc_lost) if n else None
                 if c2 is not None:
                     newn = (n * c2[0] + a1n) / (n + 1)
                     g = min(c2[1], a1g)

@@ -8,15 +8,19 @@
       → on_update 콜백         : 오버레이/콘솔이 그린다
 
 화면 모드 계약(advisor와 같다, `session.RESET_MODES`/`KEEP_MODES`)
-- loading / game_over : 세션·advisor 세션을 초기화하고 표시를 비운다.
-- combat / item_select / unknown : **추천을 다시 계산하지 않는다**(직전 추천 유지). 상태 병합은 계속한다.
+- loading / game_over : 세션·advisor 세션을 초기화하고 표시를 비운다. 단 **한 번의 판정으로는 초기화하지 않는다**
+  (10 app, QA08 A3: "나가기" 글자 하나로 game_over 0.8 → 수동 증강까지 잃었다). 화면 신뢰도가
+  `app.reset_strong_confidence`(0.95, "최종 순위"+"나가기") 이상이면 즉시, 아니면 `reset_confirm_frames`번 연속 또는
+  첫 관측 후 `reset_confirm_s`초 뒤 다시 관측될 때 초기화한다. 확인 대기 중에는 화면이 안 바뀌어도
+  `reset_recheck_s`마다 다시 판별한다(정지 화면은 변화 감지에 안 걸린다). 초기화 전 세션은 `_state/sessions/`에 보관한다.
+  스테이지가 1-x로 되돌아간 것(`SessionTracker.looks_like_new_game`)도 같은 확인을 거쳐 새 판으로 본다.
+- combat / item_select / unknown : **추천을 다시 계산하지 않는다**(직전 추천 유지, 목표 덱 고정). 상태 병합은 계속하고,
+  표시용 사본에서 이미 산(빈 칸이 된)·바뀐 상점 칸을 빼며 "직전 추천(전투 중)" 표시를 단다(`report.kept_view`).
 - carousel : advisor가 Jev 없이 재료 우선순위만 갱신한다.
 - planning / augment_select : 정상 추천.
 
-알려진 제약: vision이 **전투 화면을 planning으로 오분류**한다(같은 라운드의 준비/전투 쌍 캡처가 있어야 고칠 수 있다,
-05_vision_aspect_and_labels.md §7). 그래서 루프는 애매한 화면에서 **상태를 버리지 않고**(`session.merge_state`),
-추천이 흔들리지 않도록 **자원 시그니처가 같으면 advisor가 직전 결과를 유지**하는 구조에 의존한다. 전투 중에도
-상점 구매는 가능하므로 planning으로 처리해도 해롭지 않다.
+전투 판별(vision 07)이 생기면서 전투 중(라운드의 절반쯤)에는 새 추천이 없다. 전투 중 상점 새로고침에 대한 가벼운
+재계산은 advisor 계약(COMBAT → 직전 추천) 변경이 필요해 하지 않았다(10 app 보고서).
 """
 from __future__ import annotations
 
@@ -31,6 +35,7 @@ from typing import Any, Literal, Protocol
 
 from ..config import Settings, load_settings
 from ..contracts import GameState, Recommendation
+from .report import KeptInfo, kept_view
 from .session import KEEP_MODES, RESET_MODES, SessionTracker
 
 log = logging.getLogger(__name__)
@@ -49,6 +54,8 @@ class LoopUpdate:
     warnings: tuple[str, ...] = ()
     at: datetime = field(default_factory=lambda: datetime.now(UTC))
     message: str | None = None
+    kept: KeptInfo | None = None
+    """직전 추천을 보여 주는 화면이면 표시 정보(`recommendation`은 이미 거른 표시용 사본이다)."""
 
 
 # ---------------------------------------------------------------------------
@@ -150,6 +157,8 @@ class LiveLoop:
         self.source = source
         self.recognizer = recognizer
         self.tracker = tracker if tracker is not None else SessionTracker()
+        if self.tracker.learner is None:   # 보유 증강 선택 순간 학습(vision 09). 인식기에 없으면 학습하지 않는다.
+            self.tracker.learner = getattr(recognizer, "augment_learner", None)
         self.on_update = on_update or (lambda u: None)
         self.clock = clock
         self.sleep = sleep
@@ -169,6 +178,7 @@ class LiveLoop:
         self._last_traits = -1e9
         self._frames = 0
         self._debug_dumps = 0
+        self._pending_reset: dict[str, Any] | None = None   # 새 판 확인 대기: mode, first, count, recheck
 
     def _make_detector(self):
         from ..vision.change import ChangeDetector
@@ -188,8 +198,12 @@ class LiveLoop:
         changed = set(self.detector.update(image, content=content))
         now = self.clock()
         if not changed:
-            return None
-        groups = self._groups(changed, now)
+            if not self._recheck_due(now):
+                return None
+            changed = {"stage"}   # 새 판 확인: 정지 화면이라도 화면 판별만 다시 한다
+            groups = {"stage"}
+        else:
+            groups = self._groups(changed, now)
         try:
             state = self.recognizer.recognize(
                 image, content=content, source_image=frame.source,
@@ -200,7 +214,7 @@ class LiveLoop:
         self.tracker.data.recognitions += 1
         if self.debug_dir is not None:
             self._dump_debug(image, state)
-        return self._handle(state, groups)
+        return self._handle(state, groups, owned_row=getattr(self.recognizer, "last_owned_row", None))
 
     def _content(self, image) -> tuple[int, int, int, int] | None:
         fn = getattr(self.recognizer, "content_for", None)
@@ -221,33 +235,81 @@ class LiveLoop:
             self._last_traits = now
         return groups or set(DEFAULT_GROUPS)
 
-    def _handle(self, state: GameState, groups: Collection[str]) -> LoopUpdate:
-        mode = state.screen_mode
-        if mode in RESET_MODES:
-            self.tracker.reset(f"화면 {mode.value}")
-            if self.advisor is not None:
-                self.advisor.reset()
-            self.last_recommendation = None
-            self.last_state = None
-            self.last_advice_at = None
-            return self._emit(LoopUpdate(kind="reset", state=state, recognized=tuple(sorted(groups))))
+    def _recheck_due(self, now: float) -> bool:
+        p = self._pending_reset
+        if p is None or now - p["recheck"] < self.settings.app.reset_recheck_s:
+            return False
+        p["recheck"] = now
+        return True
 
-        merged = self.tracker.observe(state, groups)
+    def _reset_confirmed(self, state: GameState, reason: str, now: float) -> bool:
+        """새 판 신호 → 지금 초기화할지. 강한 신호면 즉시, 아니면 연속 관측·경과 시간으로 확인한다."""
+        cfg = self.settings.app
+        if state.screen_mode in RESET_MODES and state.confidence_of("screen_mode") >= cfg.reset_strong_confidence:
+            return True
+        p = self._pending_reset
+        if p is None or p["reason"] != reason:
+            self._pending_reset = {"reason": reason, "first": now, "count": 1, "recheck": now}
+            log.info("새 판 신호(%s, 신뢰도 %.2f) — 확인 대기", reason, state.confidence_of("screen_mode"))
+            return cfg.reset_confirm_frames <= 1
+        p["count"] += 1
+        return p["count"] >= cfg.reset_confirm_frames or now - p["first"] >= cfg.reset_confirm_s
+
+    def _do_reset(self, state: GameState, groups: Collection[str], reason: str) -> LoopUpdate:
+        self._pending_reset = None
+        self.tracker.reset(reason)
+        if self.advisor is not None:
+            self.advisor.reset()
+        self.last_recommendation = None
+        self.last_state = None
+        self.last_advice_at = None
+        note = f"보관: {self.tracker.last_archive.name}" if self.tracker.last_archive else None
+        return self._emit(LoopUpdate(kind="reset", state=state, recognized=tuple(sorted(groups)), message=note))
+
+    def _handle(self, state: GameState, groups: Collection[str], owned_row: Any = None) -> LoopUpdate:
+        mode = state.screen_mode
+        now = self.clock()
+        reason = None
+        if mode in RESET_MODES:
+            reason = f"화면 {mode.value}"
+        elif self.tracker.looks_like_new_game(state):
+            reason = f"스테이지 {state.stage}로 되돌아감"
+        if reason is not None:
+            if self._reset_confirmed(state, reason, now):
+                return self._do_reset(state, groups, reason)
+            # 확인 대기: 세션 상태를 바꾸지 않고(스테이지도 병합하지 않는다) 직전 추천을 유지한다
+            return self._emit(self._kept_update(state, groups, message=f"새 판 확인 중({reason})"))
+        else:
+            self._pending_reset = None
+
+        merged = self.tracker.observe(state, groups, owned_row=owned_row)
         self.last_state = merged
         if mode in KEEP_MODES:
-            # 직전 추천을 그대로 둔다(advisor 계약). 전투·알 수 없는 화면에서 추천이 흔들리지 않게.
-            return self._emit(LoopUpdate(kind="kept", state=merged, recommendation=self.last_recommendation,
-                                         recognized=tuple(sorted(groups))))
+            # 직전 추천을 그대로 둔다(advisor 계약, 목표 덱 고정). 표시용 사본에서 산·바뀐 상점 칸만 뺀다.
+            return self._emit(self._kept_update(merged, groups))
         self.runner.submit(merged)
         return self._emit(LoopUpdate(kind="recognized", state=merged, recommendation=self.last_recommendation,
                                      recognized=tuple(sorted(groups))))
 
+    def _kept_update(self, state: GameState, groups: Collection[str], message: str | None = None) -> LoopUpdate:
+        rec, kept = self.last_recommendation, None
+        if rec is not None:
+            rec, kept = kept_view(rec, state)
+        return LoopUpdate(kind="kept", state=state, recommendation=rec, recognized=tuple(sorted(groups)),
+                          kept=kept, message=message)
+
     def _on_advice(self, state: GameState, rec: Recommendation | None) -> None:
-        """추천 스레드에서 호출된다. 오버레이는 이 콜백을 Qt 시그널로 UI 스레드에 넘긴다."""
+        """추천 스레드에서 호출된다. 오버레이는 이 콜백을 Qt 시그널로 UI 스레드에 넘긴다.
+
+        계산하는 사이 화면이 전투 등으로 넘어갔으면 그 화면 기준의 표시용 사본(산 칸 제외)을 보낸다.
+        """
         if rec is not None:
             self.last_recommendation = rec
             self.last_advice_at = datetime.now(UTC)
-        self._emit(LoopUpdate(kind="advice", state=state, recommendation=rec))
+        shown, kept, cur = rec, None, self.last_state
+        if rec is not None and cur is not None and cur.screen_mode in KEEP_MODES:
+            shown, kept = kept_view(rec, cur)
+        self._emit(LoopUpdate(kind="advice", state=state, recommendation=shown, kept=kept))
 
     def _emit(self, update: LoopUpdate) -> LoopUpdate:
         try:
@@ -262,8 +324,8 @@ class LiveLoop:
             return
         self._debug_dumps += 1
         try:
+            from ..vision.capture import save_image
             from ..vision.regions import FrameMapper, draw_rois
-            import cv2
 
             self.debug_dir.mkdir(parents=True, exist_ok=True)
             stamp = datetime.now().strftime("%H%M%S_%f")[:-3]
@@ -273,7 +335,7 @@ class LiveLoop:
             mapper = FrameMapper.for_image(image, content)
             _, _, bw, bh = mapper.box
             profile = self.recognizer.profile_for(bw, bh)
-            cv2.imwrite(str(self.debug_dir / f"{stamp}_rois.png"), draw_rois(image, profile, mapper))
+            save_image(self.debug_dir / f"{stamp}_rois.png", draw_rois(image, profile, mapper))
         except Exception:
             log.debug("디버그 덤프 실패", exc_info=True)
 

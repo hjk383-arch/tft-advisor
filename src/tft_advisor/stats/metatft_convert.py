@@ -402,14 +402,21 @@ def assign_comp_ids(clusters: Mapping[str, Mapping[str, Any]], previous: Mapping
 
     previous({comp_id: 최종 보드 유닛})가 있으면 최종 보드 Jaccard 최대이고 threshold 이상인 이전 comp_id를 재사용한다
     (1:1, Jaccard 높은 쌍부터 탐욕 배정). 나머지는 name_string slug, 충돌 시 `~2`, `~3` 접미사.
+    Jaccard가 같은 쌍(보드가 같은 클러스터가 둘 이상, 예: 18.3의 424021/424033)은 이전 comp_id가 그 클러스터의
+    헤드라인 slug(또는 `slug~n`)와 같은 쌍을 먼저 배정한다. 그래야 같은 원본을 다시 변환해도 ID가 뒤바뀌지 않는다.
     """
     out: dict[str, str] = {}
     used: set[str] = set()
     if previous:
-        pairs = sorted(((jaccard(split_ids(c["units_string"]), units), cid, pid)
-                        for cid, c in clusters.items() for pid, units in previous.items()), reverse=True)
-        for j, cid, pid in pairs:
-            if j < threshold:
+        bases = {cid: comp_id_from_name(headline_ids(c)) for cid, c in clusters.items()}
+
+        def own(cid: str, pid: str) -> bool:
+            return pid == bases[cid] or pid.startswith(bases[cid] + "~")
+
+        pairs = sorted(((-jaccard(split_ids(c["units_string"]), units), not own(cid, pid), cid, pid)
+                        for cid, c in clusters.items() for pid, units in previous.items()))
+        for neg_j, _, cid, pid in pairs:
+            if -neg_j < threshold:
                 break
             if cid not in out and pid not in used:
                 out[cid] = pid
@@ -424,7 +431,7 @@ def assign_comp_ids(clusters: Mapping[str, Mapping[str, Any]], previous: Mapping
             cand = f"{base}~{n}"
         out[cid] = cand
         used.add(cand)
-    return out
+    return {cid: out[cid] for cid in sorted(out)}   # 기준선 유무와 관계없이 같은 순서(JSON diff 잡음 방지)
 
 
 def display_name(ids: Iterable[str], static: StaticData, lang: str = "ko") -> str:
@@ -613,6 +620,8 @@ def build_all(raw: Path, static: StaticData | None = None, previous: Mapping[str
                                          comp_id=ids[cid], source_title=v.get("source_title")))
     unit_rows = []
     for r in (units_raw or {}).get("results") or []:
+        if static.get("champions", r["unit"]) is None:   # 18.2b의 TFT18_* 4개처럼 정적에 없는 유닛도 unmapped로 남긴다
+            unmapped.add(r["unit"])
         unit_rows.append(UnitStats(unit_id=r["unit"], **placement_from_places(r["places"]).model_dump(), **prov))
 
     items_raw = _load(raw / "items.json") if (raw / "items.json").is_file() else None
