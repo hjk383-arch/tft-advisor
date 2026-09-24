@@ -409,7 +409,12 @@ def test_screenshot_mode_on_a_real_capture_fills_board_bench_and_equipped(settin
     # 3. 문구: "보드 미인식"이 아니다
     text = "\n".join(lines)
     assert "보드 미인식" not in text
-    assert units_knowledge(state, settings.vision.state_min_confidence) is UnitsKnowledge.SEEN
+    # 19(vision 이름 식별) 이후: 특성 패널·모델 라이브러리로 이름을 아는 칸이 생길 수 있다 → SEEN(이름 0기) 또는
+    # PARTIAL/VISION(이름 일부·전부). 어느 쪽이든 "보드를 읽었다"는 사실은 그대로다.
+    kind = units_knowledge(state, settings.vision.state_min_confidence)
+    assert kind in (UnitsKnowledge.SEEN, UnitsKnowledge.PARTIAL, UnitsKnowledge.VISION), kind
+    if kind is not UnitsKnowledge.SEEN:
+        assert state.field_source["board"] == FieldSource.VISION
 
     # 4. 장착분이 목표 덱의 핵심 아이템과 겹치면 "(보유)"로 나온다(벤치에 없는 아이템으로만 검사)
     equipped = set(read.all_item_ids()) - set(state.items.all_ids())

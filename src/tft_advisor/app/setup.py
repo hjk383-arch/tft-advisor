@@ -526,6 +526,7 @@ class SetupChoice:
     jev_backend: str = "mock"
     overlay_opacity: float | None = None
     overlay_scale: float | None = None
+    test_view: bool | None = None   # [ui] test_view — 인식 확인 창(None = 건드리지 않음)
 
     def updates(self) -> dict[str, dict[str, object]]:
         """`settings.toml`에 쓸 {섹션: {키: 값}}. 값이 None이면 그 키를 주석 처리한다."""
@@ -544,6 +545,8 @@ class SetupChoice:
                    if v is not None}
         if overlay:
             out["overlay"] = overlay
+        if self.test_view is not None:
+            out["ui"] = {"test_view": bool(self.test_view)}
         return out
 
     def apply(self, settings: Settings) -> Settings:
@@ -562,6 +565,7 @@ def choice_from_detection(det: SetupDetection, settings: Settings) -> SetupChoic
         jev_backend=settings.advisor.jev_backend,
         overlay_opacity=settings.overlay.opacity,
         overlay_scale=settings.overlay.scale,
+        test_view=settings.ui.test_view,
     )
     if det.game_size[0] and det.game_size[1]:
         choice.resolution = f"{det.game_size[0]}x{det.game_size[1]}"

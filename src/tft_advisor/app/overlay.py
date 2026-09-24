@@ -9,6 +9,7 @@ Qt 시그널로 UI 스레드에 넘긴다(**UI 스레드에서 인식·Jev 호�
 조작(트레이 아이콘 메뉴 / 창이 잠금 해제 상태일 때 단축키)
 - Jev 실시간 판단     트레이 메뉴 체크(과금). 켜면 live, 끄면 mock으로 **재시작 없이** 바꾸고 설정에 저장한다
                       (`app/jev_toggle.py`. 교체는 작업 스레드에서 하고, 새 백엔드는 다음 추천부터 쓰인다)
+- 인식 확인 창        트레이 메뉴 체크. 보드·벤치·장착/미사용 아이템을 보여 주는 보조 창(`app/recog_window.py`)
 - 표시/숨기기         Ctrl+Shift+O
 - 이동 잠금/해제       Ctrl+Shift+L  (해제하면 드래그로 옮길 수 있다. 잠금 = 클릭 통과)
 - 위치 저장           Ctrl+S         → `_state/overlay.json`(다음 실행에 복원)
@@ -78,6 +79,7 @@ class OverlayWindow(QWidget):
         self._jev_actions: list[QAction] = []    # 메뉴마다 만들어지는 체크 항목(상태를 같이 맞춘다)
         self.jev_thread = None                   # 마지막 전환 작업 스레드(종료·테스트에서 기다린다)
         self._lock_note: str | None = None       # 상태줄 `extra`의 기본값(잠금 상태)
+        self.recog = None                        # recog_window.RecogController (인식 확인 창, 없으면 메뉴 항목 없음)
 
         self.setWindowTitle("TFT Advisor")
         self.setWindowFlags(Qt.WindowType.FramelessWindowHint | Qt.WindowType.Tool)
@@ -205,7 +207,20 @@ class OverlayWindow(QWidget):
         """루프(다른 스레드)에서 부른다 → Qt 큐를 거쳐 UI 스레드에서 처리한다."""
         self.loop_update.emit(update)
 
+    def attach_recog(self, controller) -> None:
+        """인식 확인 창 컨트롤러를 붙인다(트레이 메뉴를 만들기 전, 즉 `show_overlay()` 전에 부른다)."""
+        self.recog = controller
+
+    def _feed_recog(self, update) -> None:
+        if self.recog is None:
+            return
+        try:
+            self.recog.feed(update)
+        except Exception:   # 보조 창 오류로 추천 표시가 멈추지 않는다
+            log.exception("인식 확인 창 갱신 실패")
+
     def _on_update_main(self, update) -> None:
+        self._feed_recog(update)
         threshold = self.settings.vision.state_min_confidence
         if update.kind == "reset":
             self.set_data(update.state, None, self.status)
@@ -289,7 +304,16 @@ class OverlayWindow(QWidget):
             if self.tray is not None:
                 self.tray.showMessage("TFT Advisor", "설정을 저장했습니다. 화면 설정은 앱을 다시 시작하면 적용됩니다.")
             self._apply_saved_jev(dialog.outcome)
+            self._apply_saved_recog(dialog.outcome)
         return dialog.outcome
+
+    def _apply_saved_recog(self, outcome) -> None:
+        """설정 화면의 "인식 확인 창 표시"도 재시작 없이 적용한다(파일은 대화상자가 이미 썼다)."""
+        choice = getattr(outcome, "choice", None)
+        want = getattr(choice, "test_view", None)
+        if self.recog is None or want is None or bool(want) == self.recog.enabled:
+            return
+        self.recog.set_enabled(bool(want), persist=False)
 
     def _apply_saved_jev(self, outcome) -> None:
         """설정 화면에서 바꾼 Jev 백엔드는 **재시작 없이** 적용한다(파일은 대화상자가 이미 썼다)."""
@@ -437,6 +461,8 @@ class OverlayWindow(QWidget):
         _add(m, "위치 저장\tCtrl+S", self.save_position)
         m.addSeparator()
         self._add_jev_action(m)
+        if self.recog is not None:
+            self.recog.add_menu_action(m)
         _add(m, "설정(화면 자동 감지)…", self.open_setup)
         _add(m, "불투명도 +", lambda: self.adjust_opacity(0.05))
         _add(m, "불투명도 −", lambda: self.adjust_opacity(-0.05))

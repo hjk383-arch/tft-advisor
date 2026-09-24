@@ -8,11 +8,13 @@
 """
 from __future__ import annotations
 
+import sys
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 
 from ..contracts import (
-    FallbackReason, GameState, ItemReadiness, Recommendation, ScreenMode, ShopSlotKind, TargetComp,
+    UNKNOWN_UNIT_ID, FallbackReason, GameState, ItemReadiness, Recommendation, ScreenMode, ShopSlotKind, TargetComp,
+    UnitOnBoard,
 )
 from ..unit_status import UnitsKnowledge, units_knowledge, units_note
 from .names import NameBook
@@ -113,6 +115,32 @@ def recognition_warnings(state: GameState, threshold: float) -> list[str]:
     if low:
         warns.append("낮은 신뢰도: " + ", ".join(low))
     return warns
+
+
+def _unit_label(u: UnitOnBoard, nb: NameBook, threshold: float) -> str:
+    name = "이름 미상" if u.id == UNKNOWN_UNIT_ID else nb.name(u.id)
+    if u.id != UNKNOWN_UNIT_ID and u.confidence < threshold:
+        name += "(?)"
+    if u.star and u.star > 1:
+        name += f" {u.star}성"
+    return name
+
+
+def units_lines(state: GameState, nb: NameBook, threshold: float = 0.6) -> list[str]:
+    """보드·벤치 유닛 목록(이름·자리). 보드는 (줄,칸) — 줄 0 = 내 쪽 맨 앞, 벤치는 왼쪽부터 1~9.
+    이름을 모르면 "이름 미상", 신뢰도가 임계값 미만이면 "(?)", 보드에 있는 것만 알고 칸을 모르면 "자리 미상"."""
+    out: list[str] = []
+    if state.board is not None:
+        bits = []
+        for u in state.board:
+            where = f"({u.hex[0]},{u.hex[1]})" if u.hex is not None else "(자리 미상)"
+            bits.append(f"{_unit_label(u, nb, threshold)} {where}")
+        out.append(f"보드 {len(state.board)}기: " + (" · ".join(bits) or "없음"))
+    if state.bench is not None:
+        bits = [f"{(u.bench_slot + 1) if u.bench_slot is not None else '?'} {_unit_label(u, nb, threshold)}"
+                for u in state.bench]
+        out.append(f"벤치 {len(state.bench)}기: " + (" · ".join(bits) or "없음"))
+    return out
 
 
 def confidence_line(state: GameState) -> str:
@@ -323,6 +351,7 @@ def format_report(state: GameState, rec: Recommendation | None, *, names: NameBo
     lines.append(state_line(state))
     if state.shop_odds:
         lines.append("상점 확률: " + "/".join(str(p) for p in state.shop_odds))
+    lines += units_lines(state, nb, threshold)
     lines.append("")
 
     if rec is None:
@@ -359,3 +388,17 @@ def format_report(state: GameState, rec: Recommendation | None, *, names: NameBo
     if status is not None:
         lines.append("상태: " + status_line(status))
     return "\n".join(lines)
+
+
+def ensure_utf8_stdio() -> None:
+    """콘솔 출력을 UTF-8로 맞춘다. Windows에서 출력을 파이프로 넘기면 cp1252가 되어 한국어에서
+    `UnicodeEncodeError`로 죽었다(`--screenshot … | more`). 바꿀 수 없는 스트림(테스트 캡처 등)은 그대로 둔다."""
+    for stream in (sys.stdout, sys.stderr):
+        enc = (getattr(stream, "encoding", None) or "").lower().replace("-", "")
+        reconfigure = getattr(stream, "reconfigure", None)
+        if enc == "utf8" or reconfigure is None:
+            continue
+        try:
+            reconfigure(encoding="utf-8", errors="replace")
+        except (ValueError, OSError, AttributeError):
+            pass

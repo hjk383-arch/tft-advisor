@@ -4,6 +4,8 @@
     python -m tft_advisor --screenshot PATH     # 스크린샷 1장(또는 폴더) 인식 + 추천 출력
     python -m tft_advisor                       # 실시간(= --live). 오버레이 + 백그라운드 인식/추천
     python -m tft_advisor --live --no-overlay   # 오버레이 없이 콘솔에만 출력
+    python -m tft_advisor --test-view           # 인식 확인 창(보드·벤치·장착/미사용 아이템)도 함께 띄움
+    python -m tft_advisor --screenshot PATH --test-view   # 그 이미지의 인식 결과를 확인 창으로(콘솔에도 출력)
 
 첫 실행(= `_state/setup.json`이 없을 때)에는 실시간 모드가 설정 화면을 먼저 연다. `--no-setup`으로 건너뛴다.
 
@@ -11,6 +13,7 @@
 TypeSafe 키는 환경변수 `TYPESAFE_API_KEY` → OS 키체인 → `~/.config/tft-advisor/credentials.toml` 순서로
 읽는다(설정 화면에서 넣는다). 기본 Jev 백엔드는 `mock`(네트워크·과금 없음)이다.
 Jev 백엔드 우선순위: **CLI(--jev/--no-jev) > 오버레이 트레이 토글 "Jev 실시간 판단" > `[advisor] jev_backend`**.
+인식 확인 창 우선순위: **CLI(--test-view/--no-test-view) > 트레이 토글 "인식 확인 창" > `[ui] test_view`**.
 """
 from __future__ import annotations
 
@@ -44,6 +47,13 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--resolution", default=None, metavar="WxH",
                    help="게임 해상도 명시(예 1920x1080). 설정 [vision] resolution 덮어씀")
     p.add_argument("--no-overlay", action="store_true", help="오버레이 없이 콘솔에만 출력")
+    tv = p.add_mutually_exclusive_group()
+    tv.add_argument("--test-view", dest="test_view", action="store_const", const=True, default=None,
+                    help="인식 확인 창을 띄웁니다(보드·벤치 유닛, 장착/미사용 아이템을 실시간 표시). "
+                         "--no-overlay면 콘솔에 출력하고, --screenshot과 함께 쓰면 그 이미지의 결과를 보여 줍니다. "
+                         "우선순위: CLI > 트레이 \"인식 확인 창\" > 설정 [ui] test_view")
+    tv.add_argument("--no-test-view", dest="test_view", action="store_const", const=False,
+                    help="이번 실행에는 인식 확인 창을 띄우지 않습니다(설정 [ui] test_view 무시)")
     setup = p.add_mutually_exclusive_group()
     setup.add_argument("--setup", action="store_true",
                        help="설정 화면을 엽니다(화면 해상도·모니터 자동 감지 → settings.toml 저장). 첫 실행에는 자동으로 열립니다")
@@ -126,6 +136,9 @@ def debug_dir(settings: Settings, args: argparse.Namespace) -> Path | None:
 
 
 def main(argv: list[str] | None = None) -> int:
+    from .app.report import ensure_utf8_stdio
+
+    ensure_utf8_stdio()
     args = build_parser().parse_args(argv)
     settings = load_settings(args.config)
     load_weights(args.config)  # 설정 오류를 시작 시점에 드러낸다
@@ -146,12 +159,15 @@ def main(argv: list[str] | None = None) -> int:
             if not args.screenshot.exists():
                 log.error("경로 없음: %s", args.screenshot)
                 return 2
+            # 스크린샷 모드의 인식 확인은 CLI --test-view로만 켠다(설정값 때문에 배치 실행이 창에서 멈추지 않게)
             return run_screenshot(args.screenshot, settings=settings, jev=jev_backend(args),
-                                  debug_dir=debug_dir(settings, args))
+                                  debug_dir=debug_dir(settings, args), test_view=bool(args.test_view),
+                                  test_window=bool(args.test_view) and not args.no_overlay)
         from .app.live import run_live
 
         return run_live(settings=settings, jev=jev_backend(args), overlay=not args.no_overlay,
-                        debug_dir=debug_dir(settings, args), config_dir=args.config)
+                        debug_dir=debug_dir(settings, args), config_dir=args.config,
+                        test_view=args.test_view)
     except KeyboardInterrupt:
         print("중단됨", file=sys.stderr)
         return 130

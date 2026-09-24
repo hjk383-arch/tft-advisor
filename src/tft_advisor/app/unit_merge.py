@@ -4,8 +4,8 @@
 
 | 누가 | 무엇을 |
 |---|---|
-| vision | **자리**(보드 육각칸·벤치 칸), **성급**(별 개수), **장착 아이템**. 3D 모델로는 챔피언을 식별하지 못한다 |
-| app(여기) | **정체**(어느 챔피언인가) — 상점 구매 추적 장부(`app.ledger`) |
+| vision | **자리**(보드 육각칸·벤치 칸), **성급**(별 개수), **장착 아이템**, 그리고 확신할 때만 **이름**(`unit_id`, 19 보고: 특성 패널 구속 + 모델 크롭 라이브러리) |
+| app(여기) | vision이 이름을 못 붙인 칸의 **정체** — 상점 구매 추적 장부(`app.ledger`) |
 
 병합 규칙
 1. vision이 칸마다 `unit_id`까지 줄 수 있으면 그 값이 이긴다(직접 본 것이다).
@@ -16,7 +16,11 @@
    장부가 더 많으면 남는 유닛은 내보내지 않는다(팔았거나 잘못 추적한 것이다).
 4. **ID를 지어내지 않는다.** 정체를 모르는 칸은 언제나 `UNKNOWN_UNIT_ID`이고, 그 값은
    실제 챔피언 ID가 아님을 이름표(`이름 미상`)로 드러낸다.
-5. vision 판독이 아예 없으면(현재 상태) 장부만으로 만든다: 자리는 모르므로 `hex`/`bench_slot`은 None이고,
+5. vision이 보드 챔피언 **집합**만 알고 칸을 못 정했으면(`BoardRead.unplaced`, 이름 없는 보드 칸 수와 같을 때만)
+   그 챔피언들을 **자리 미상**(`hex=None`, 아이템 없음 — 장착 아이템은 `items.equipped`에 소유자 없이 남는다)으로 둔다.
+6. vision 이름이 섞이면 보드·벤치 신뢰도를 따로 잰다(이름 아는 유닛 신뢰도 평균 x 이름 아는 비율, 판독 신뢰도 상한).
+   출처는 이름을 전부 vision이 붙였으면 `vision`, 장부가 섞이면 `tracked`.
+7. vision 판독이 아예 없으면 장부만으로 만든다: 자리는 모르므로 `hex`/`bench_slot`은 None이고,
    레벨만큼 보드에, 나머지는 벤치에 둔다(advisor는 `board + bench`를 합쳐 쓴다).
 
 `GameState.board`/`bench`의 필드 신뢰도는 `ledger.field_confidence()`로 계산한다. 정체를 모르는 칸이
@@ -38,6 +42,8 @@ log = logging.getLogger(__name__)
 BENCH_SLOTS = 9
 UNKNOWN_CONFIDENCE = 0.2
 """정체를 모르는 칸의 유닛 신뢰도. `state_min_confidence`(0.6)보다 낮아 advisor의 계산에서 빠진다."""
+UNPLACED_CONFIDENCE = 0.8
+"""특성 패널 풀이(해가 하나)로 **보드에 있다는 것**은 확실하지만 칸을 모르는 유닛의 신뢰도."""
 
 
 # ---------------------------------------------------------------------------
@@ -71,8 +77,9 @@ class SlotObs:
     hex: tuple[int, int] | None = None
     bench_slot: int | None = None
     confidence: float = 1.0
-    unit_id: str | None = None      # vision이 정체까지 아는 드문 경우(보통 None)
+    unit_id: str | None = None      # vision이 정체까지 안 경우(`vision.units.UnitNamer`)
     on_bench: bool = False
+    unit_conf: float = 0.0          # vision 이름 신뢰도(0 = 이름 없음 또는 모름)
 
 
 @dataclass(frozen=True)
@@ -82,6 +89,8 @@ class BoardObs:
     board: tuple[SlotObs, ...] = ()
     bench: tuple[SlotObs, ...] = ()
     confidence: float = 1.0
+    unplaced: tuple[str, ...] = ()
+    """보드에 있는 것은 확실하지만 칸을 모르는 챔피언(vision 특성 패널 풀이). 이름 없는 보드 칸 수와 같을 때만 쓴다."""
 
     @property
     def count(self) -> int:
@@ -108,6 +117,7 @@ def _slot_obs(raw: Any, *, on_bench: bool) -> SlotObs | None:
     bench_slot = _get(raw, "bench_slot", "slot", "index")
     conf = _get(raw, "confidence", "conf")
     unit_id = _get(raw, "unit_id", "id", "champion_id")
+    unit_conf = _get(raw, "unit_conf")
     if isinstance(hexes, Sequence) and not isinstance(hexes, str) and len(hexes) == 2:
         hexes = (int(hexes[0]), int(hexes[1]))
     else:
@@ -124,6 +134,7 @@ def _slot_obs(raw: Any, *, on_bench: bool) -> SlotObs | None:
         confidence=float(conf) if isinstance(conf, (int, float)) else 1.0,
         unit_id=str(unit_id) if unit_id and str(unit_id) != UNKNOWN_UNIT_ID else None,
         on_bench=on_bench,
+        unit_conf=float(unit_conf) if isinstance(unit_conf, (int, float)) else 0.0,
     )
 
 
@@ -140,8 +151,10 @@ def board_obs_from(raw: Any) -> BoardObs | None:
     board = tuple(s for s in (_slot_obs(r, on_bench=False) for r in board_raw or ()) if s is not None)
     bench = tuple(s for s in (_slot_obs(r, on_bench=True) for r in bench_raw or ()) if s is not None)
     conf = _get(raw, "confidence")
+    unplaced = _get(raw, "unplaced") or ()
     return BoardObs(board=board, bench=bench,
-                    confidence=float(conf) if isinstance(conf, (int, float)) else 1.0)
+                    confidence=float(conf) if isinstance(conf, (int, float)) else 1.0,
+                    unplaced=tuple(str(c) for c in unplaced if c))
 
 
 def board_obs_from_state(state: GameState) -> BoardObs | None:
@@ -176,6 +189,8 @@ class MergeResult:
     unknown: int = 0        # vision은 보지만 정체를 모르는 유닛 수
     dropped: int = 0        # 장부에는 있으나 vision이 보지 못해 뺀 유닛 수
     star_conflicts: int = 0  # 장부의 성급과 vision의 성급이 다른 칸 수(vision을 따른다)
+    board_confidence: float | None = None   # vision 이름이 섞였을 때만: 보드·벤치를 따로 잰 신뢰도
+    bench_confidence: float | None = None
 
     @property
     def total(self) -> int:
@@ -264,7 +279,21 @@ def merge_units(ledger: UnitLedger, obs: BoardObs | None, *, level: int | None =
         match = next((b for b in left if b.champion_id == slot.unit_id), None)
         if match is not None:
             left.remove(match)
-        fixed[i] = match or Body(slot.unit_id, slot.star or 1, slot.confidence, "vision")
+        vconf = slot.unit_conf if slot.unit_conf > 0 else slot.confidence
+        fixed[i] = Body(slot.unit_id, slot.star or (match.star if match else 1), min(1.0, vconf), "vision")
+    # 집합만 아는 보드 챔피언(자리 미상): 이름 없는 보드 칸 수와 정확히 같을 때만
+    unplaced_idx: set[int] = set()
+    open_board = [i for i, (on_bench, _) in enumerate(slots) if not on_bench and i not in fixed]
+    if obs.unplaced and len(obs.unplaced) == len(open_board):
+        stars = {slots[i][1].star for i in open_board}
+        star = stars.pop() if len(stars) == 1 else None
+        for i, cid in zip(open_board, sorted(obs.unplaced), strict=True):
+            match = next((b for b in left if b.champion_id == cid), None)
+            if match is not None:
+                left.remove(match)
+            fixed[i] = Body(cid, star or (match.star if match else 1), UNPLACED_CONFIDENCE, "vision")
+            unplaced_idx.add(i)
+    consumed = len(bodies) - len(left)      # vision 이름과 같은 챔피언이라 장부에서 빠진 유닛 수
 
     free_idx = [i for i in range(len(slots)) if i not in fixed]
     pairs = _assign(left, [slots[i][1] for i in free_idx])
@@ -275,26 +304,61 @@ def merge_units(ledger: UnitLedger, obs: BoardObs | None, *, level: int | None =
         assigned[idx] = body
         used += 1 if body is not None else 0
 
+    vision_known = ledger_known = 0
     for i, (on_bench, slot) in enumerate(slots):
         body = assigned.get(i)
-        unit = _unit(body, slot, star_conflicts=conflicts)
+        if i in unplaced_idx and body is not None:
+            # 자리 미상: 칸 정보(자리·아이템)를 붙이지 않는다 — 어느 칸의 아이템인지 모른다
+            unit = UnitOnBoard(id=body.champion_id, star=slot.star, hex=None, bench_slot=None,
+                               confidence=body.confidence)
+        else:
+            unit = _unit(body, slot, star_conflicts=conflicts)
         (result.bench if on_bench else result.board).append(unit)
         if body is None:
             result.unknown += 1
         else:
             result.known += 1
+            if body.source == "vision":
+                vision_known += 1
+            else:
+                ledger_known += 1
     result.bench = result.bench[:BENCH_SLOTS]   # 계약상 벤치는 9칸이다(오인식 방어)
     result.star_conflicts = len(conflicts)
-    result.dropped = max(0, len(bodies) - result.known)
-    result.confidence = min(
-        field_confidence(cfg, ledger.ambiguous, result.known, max(1, result.total)),
-        obs.confidence,
-    )
-    result.source = FieldSource.MANUAL if ledger.manual else FieldSource.TRACKED
+    result.dropped = max(0, len(bodies) - ledger_known - consumed)
+    if vision_known:
+        result.board_confidence = _side_confidence(result.board, obs.confidence, cfg, ledger, ledger_known)
+        result.bench_confidence = _side_confidence(result.bench, obs.confidence, cfg, ledger, ledger_known)
+        result.confidence = min(result.board_confidence, result.bench_confidence)
+    else:
+        result.confidence = min(
+            field_confidence(cfg, ledger.ambiguous, result.known, max(1, result.total)),
+            obs.confidence,
+        )
+    if ledger.manual:
+        result.source = FieldSource.MANUAL
+    elif vision_known and not ledger_known:
+        result.source = FieldSource.VISION
+    else:
+        result.source = FieldSource.TRACKED
     if result.unknown or result.dropped:
-        log.info("보드 병합: 화면 %d기 · 장부 %d기 → 이름 확인 %d · 미상 %d · 제외 %d",
-                 obs.count, len(bodies), result.known, result.unknown, result.dropped)
+        log.info("보드 병합: 화면 %d기 · 장부 %d기 → 이름 확인 %d(화면 %d) · 미상 %d · 제외 %d",
+                 obs.count, len(bodies), result.known, vision_known, result.unknown, result.dropped)
     return result
+
+
+def _side_confidence(units: list[UnitOnBoard], cap: float, cfg: LedgerCfg, ledger: UnitLedger,
+                     ledger_known: int) -> float:
+    """보드 또는 벤치 한쪽의 필드 신뢰도 = (이름 아는 유닛 신뢰도 평균, 판독 신뢰도 상한) x (이름 아는 비율).
+    장부 이름이 섞였으면 장부 신뢰도(애매한 거래 반영)를 넘지 않는다. 유닛이 없으면 판독 신뢰도 그대로(빈 벤치도 사실이다)."""
+    if not units:
+        return round(max(0.0, min(1.0, cap)), 3)
+    known = [u.confidence for u in units if u.id != UNKNOWN_UNIT_ID]
+    if not known:
+        return 0.0
+    value = min(sum(known) / len(known), cap) * len(known) / len(units)
+    if ledger_known:
+        value = min(value, field_confidence(cfg, ledger.ambiguous))
+    return round(max(0.0, min(1.0, value)), 3)
 
 
 # ---------------------------------------------------------------------------
@@ -332,8 +396,9 @@ def equipped_refs(obs: BoardObs | None, result: MergeResult | None = None, *,
     refs: list[ItemRef] = []
     for i, slot in enumerate(slots):
         holder = None
-        if i < len(units) and units[i].id != UNKNOWN_UNIT_ID:
-            holder = units[i].id
+        if (i < len(units) and units[i].id != UNKNOWN_UNIT_ID
+                and (units[i].hex, units[i].bench_slot) == (slot.hex, slot.bench_slot)):
+            holder = units[i].id        # 자리 미상 유닛(vision 집합만 앎)은 어느 칸의 아이템인지 모른다 → 소유자 없음
         for item_id in slot.items:
             refs.append(_item_ref(costs, item_id, holder=holder, confidence=slot.confidence))
     return refs
@@ -366,7 +431,9 @@ def state_with_units(state: GameState, result: MergeResult, obs: BoardObs | None
     state = state.model_copy(update={
         "board": result.board,
         "bench": result.bench,
-        "confidence": {**state.confidence, "board": result.confidence, "bench": result.confidence},
+        "confidence": {**state.confidence,
+                       "board": result.confidence if result.board_confidence is None else result.board_confidence,
+                       "bench": result.confidence if result.bench_confidence is None else result.bench_confidence},
         "field_source": {**state.field_source, "board": result.source, "bench": result.source},
     })
     if obs is None:

@@ -7,7 +7,8 @@
 - 인식이 None이면 "none"(미인식, 틀림과 구분). 값이 있는데 다르면 "wrong".
 - shop은 칸 단위(kind+id)로도 센다.
 - board_slots / bench_slots(보드·벤치 유닛 라벨)는 **자리 단위**로 센다: 자리(occupancy) · 성급 · 장착 아이템을 따로.
-  vision은 챔피언 정체를 읽지 않으므로 정체는 비교하지 않는다(`vision.board` 머리 주석 참고).
+  챔피언 이름(19 보고, `vision.units`)은 **확인된 라벨(`name`)이 있는 자리만** 센다: ok · wrong(다른 이름) · none(모름).
+  추정 라벨(`name_unconfirmed`) 자리에 이름을 냈으면 `unverified`로 따로 센다(맞는지 알 수 없다).
 - 여러 모니터를 이어 붙인 캡처(Windows Win+PrtSc, 예: 4480x1440)는 인식기가 게임 모니터를 자동으로 고른다
   (`Recognizer.content_for` → `regions.screen_candidates` + 스테이지 OCR). 크롭 사본을 만들 필요가 없다.
 """
@@ -66,8 +67,15 @@ def compare_board(expected: list[dict], got: list, on_bench: bool) -> dict:
               if (u.bench_slot if on_bench else u.hex) is not None}
     same = set(exp_by) & set(got_by)
     star_total = star_ok = item_total = item_ok = 0
+    names = {"ok": 0, "wrong": 0, "none": 0, "total": 0, "unverified": 0}
     for k in sorted(same, key=str):
         e, g = exp_by[k], got_by[k]
+        got_id = getattr(g, "unit_id", None)
+        if e.get("unit_id"):
+            names["total"] += 1
+            names["ok" if got_id == e["unit_id"] else ("none" if got_id is None else "wrong")] += 1
+        elif got_id is not None:
+            names["unverified"] += 1
         if e.get("star") is not None:
             star_total += 1
             star_ok += int(e["star"] == g.star)
@@ -80,6 +88,7 @@ def compare_board(expected: list[dict], got: list, on_bench: bool) -> dict:
         "extra": sorted(map(str, set(got_by) - set(exp_by))),
         "star": {"ok": star_ok, "total": star_total},
         "items": {"ok": item_ok, "total": item_total},
+        "names": names,
     }
 
 
@@ -142,6 +151,8 @@ def summarize(results: list[ScreenResult]) -> dict[str, dict[str, int]]:
                 "wrong": sum(len(b[side]["extra"]) for b in boards),
                 "none": sum(len(b[side]["missing"]) for b in boards),
                 "total": sum(b[side]["expected"] for b in boards)}
+            agg[f"{side}_name"] = {k: sum(b[side]["names"][k] for b in boards)
+                                   for k in ("ok", "wrong", "none", "total")}
             for what in ("star", "items"):
                 agg[f"{side}_{what}"] = {
                     "ok": sum(b[side][what]["ok"] for b in boards), "wrong": 0,
@@ -175,6 +186,7 @@ def main(argv: list[str] | None = None) -> int:
                 b = r.board[side]
                 print(f"  ---- {side:9} 자리 {b['placed_ok']}/{b['expected']} (판독 {b['got']}) "
                       f"성급 {b['star']['ok']}/{b['star']['total']} 아이템 {b['items']['ok']}/{b['items']['total']}"
+                      + f" 이름 {b['names']['ok']}/{b['names']['total']}(틀림 {b['names']['wrong']}, 미확인 칸에 낸 이름 {b['names']['unverified']})"
                       + (f" 놓침={b['missing']}" if b["missing"] else "")
                       + (f" 잘못={b['extra']}" if b["extra"] else ""))
     agg = summarize(results)

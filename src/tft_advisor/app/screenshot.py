@@ -11,6 +11,9 @@
 `GameState.board`/`bench`/`items.equipped`에 넣는다. 한 장짜리 입력에는 **구매 장부가 없으므로**
 챔피언 정체는 알 수 없고 모든 칸이 `UNKNOWN_UNIT_ID`(신뢰도 0)다 — 자리·성급·아이템만 남는다.
 실시간(`--live`)에서는 같은 병합을 `SessionTracker`가 장부와 함께 수행한다(`app.session._apply_units`).
+
+`--test-view`를 함께 주면 이미지마다 인식 확인 내용(보드·벤치·장착/미사용 아이템, `app.recog_view`)을 요약 뒤에
+출력하고, PySide6가 있으면(`--no-overlay`가 아니면) 마지막에 인식 확인 창을 띄워 ←/→ 로 이미지를 넘겨 본다.
 """
 from __future__ import annotations
 
@@ -40,9 +43,18 @@ def collect_images(path: Path) -> list[Path]:
 def run_screenshot(path: Path, *, settings: Settings | None = None, jev: str = "mock",
                    debug_dir: Path | None = None, out: Callable[[str], None] = print,
                    recognizer: object | None = None, advisor: object | None = None,
-                   paths: Sequence[Path] | None = None) -> int:
-    """스크린샷 모드 본체. 0 = 성공, 2 = 입력 없음."""
+                   paths: Sequence[Path] | None = None, test_view: bool = False,
+                   test_window: bool = False) -> int:
+    """스크린샷 모드 본체. 0 = 성공, 2 = 입력 없음.
+
+    `test_view`: 이미지마다 인식 확인 줄을 출력한다. `test_window`: 끝나면 인식 확인 창을 띄워 닫을 때까지 기다린다.
+    """
     settings = settings or load_settings()
+    if out is print:
+        from .report import ensure_utf8_stdio
+
+        ensure_utf8_stdio()   # 파이프(cp1252)로 출력해도 한국어에서 죽지 않게
+
     images = list(paths) if paths is not None else collect_images(path)
     if not images:
         out(f"이미지를 찾지 못했습니다: {path}")
@@ -62,19 +74,42 @@ def run_screenshot(path: Path, *, settings: Settings | None = None, jev: str = "
     patch = _patch_of(advisor)
     backend = getattr(advisor, "backend_name", jev)
     out(f"# TFT Advisor — 스크린샷 모드 · 이미지 {len(images)}장 · Jev {backend} · 패치 {patch or '?'}")
+    snaps: list = []
     try:
         for image_path in images:
-            _one(image_path, recognizer, advisor, names, settings, patch, backend, out, debug_dir)
+            snap = _one(image_path, recognizer, advisor, names, settings, patch, backend, out, debug_dir)
+            if snap is not None and (test_view or test_window):
+                snaps.append(snap)
+                if test_view:
+                    from .recog_view import view_lines
+
+                    out("\n".join(view_lines(snap, names, threshold=settings.vision.state_min_confidence,
+                                              with_age=False)))
     finally:
         if own_advisor:
             close = getattr(advisor, "close", None)
             if close:
                 close()
+    if test_window and snaps:
+        _open_window(settings, snaps, names, out)
     return 0
 
 
+def _open_window(settings: Settings, snaps: list, names: NameBook, out: Callable[[str], None]) -> None:
+    """인식 확인 창(일반 창)을 띄우고 닫을 때까지 기다린다. PySide6가 없으면 알리고 넘어간다."""
+    try:
+        from .recog_window import show_snapshots
+        from .setup import resolve_state_dir
+    except ImportError:
+        out("PySide6가 없어 인식 확인 창을 띄우지 못했습니다(위 콘솔 출력을 확인해 주세요).")
+        return
+    out(f"인식 확인 창을 띄웠습니다({len(snaps)}장, ←/→ 로 넘기고 창을 닫으면 끝납니다).")
+    show_snapshots(settings, snaps, names=names, state_dir=resolve_state_dir(settings))
+
+
 def _one(image_path: Path, recognizer, advisor, names: NameBook, settings: Settings,
-         patch: str | None, backend: str, out: Callable[[str], None], debug_dir: Path | None) -> None:
+         patch: str | None, backend: str, out: Callable[[str], None], debug_dir: Path | None):
+    """이미지 1장. 반환: 인식 확인용 스냅숏(`recog_view.RecogSnapshot`, 인식 실패면 None)."""
     from ..vision.capture import load_image
 
     out("")
@@ -82,7 +117,7 @@ def _one(image_path: Path, recognizer, advisor, names: NameBook, settings: Setti
         image = load_image(image_path)
     except (OSError, ValueError) as e:
         out(f"[{image_path.name}] 이미지를 읽지 못했습니다: {e}")
-        return
+        return None
     h, w = image.shape[:2]
     t0 = time.perf_counter()
     try:
@@ -90,7 +125,7 @@ def _one(image_path: Path, recognizer, advisor, names: NameBook, settings: Setti
     except Exception as e:                     # 한 장이 실패해도 나머지를 계속 본다
         log.exception("인식 실패: %s", image_path)
         out(f"[{image_path.name}] 인식 실패: {e}")
-        return
+        return None
     t_recog = (time.perf_counter() - t0) * 1000
     state = _with_board(state, recognizer)
     t0 = time.perf_counter()
@@ -106,6 +141,10 @@ def _one(image_path: Path, recognizer, advisor, names: NameBook, settings: Setti
                       title=title, max_comps=settings.ui.max_target_comps, kept=kept))
     if debug_dir is not None:
         _dump(debug_dir, image_path, image, state, recognizer)
+    from .recog_view import RecogSnapshot
+
+    return RecogSnapshot(state=state, board_read=getattr(recognizer, "last_board_read", None),
+                         recog_ms=t_recog, groups=(), kind="screenshot", label=f"{image_path.name}  {w}x{h}")
 
 
 def _with_board(state: GameState, recognizer) -> GameState:

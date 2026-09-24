@@ -2,9 +2,9 @@
 
 근거와 실측: `_workspace/16_board_vision.md`. 안전 원칙은 그대로다 — 화면 픽셀만 본다.
 
-## 왜 챔피언을 식별하지 않는가
-보드 유닛은 3D 모델이라 각도·애니메이션·스킨·성급마다 그림이 달라진다. 챔피언별 학습 데이터를 사용자가 만들어야 하는
-방식은 쓰지 않기로 했다. 대신 **2D로 그려져 흔들리지 않는 것만** 읽는다:
+## 챔피언 이름은 여기서 읽지 않는다
+보드 유닛은 3D 모델이라 각도·애니메이션·스킨·성급마다 그림이 달라진다. 이 모듈은 **2D로 그려져 흔들리지 않는 것만** 읽고,
+이름은 `vision.units.UnitNamer`가 따로 붙인다(특성 패널 구속 + 모델 크롭 라이브러리, `_workspace/19_unit_naming.md`):
 
 | 읽는 것 | 신호 | 실측 |
 |---|---|---|
@@ -13,7 +13,8 @@
 | 장착 아이템 | 체력바 **아래 붙는 아이콘 0~3개** | 칸 25px, 아이콘 23px @1080p |
 | 자리 | 체력바 x → 칸(열), y → 줄(행) | 열은 확실, **줄은 추정**(§ `regions.BAR_RISE`) |
 
-정체(`unit_id`)는 항상 None이다. `app.unit_merge`가 상점 구매 장부와 합쳐 `GameState.board`/`bench`를 만든다.
+`BoardReader.read()`의 `unit_id`는 None이고, `Recognizer`가 `UnitNamer`로 채운다. `app.unit_merge`가 상점 구매 장부와 합쳐
+`GameState.board`/`bench`를 만든다(vision 이름이 장부보다 우선).
 
 ## 판독 순서
 1. `find_ally_bars()` — 보드/벤치 탐색 영역에서 초록 체력바를 찾는다. 적(빨강)·내 전략가(주황)는 걸리지 않는다.
@@ -120,8 +121,12 @@ class UnitSlot:
     hex: tuple[int, int] | None = None
     bench_slot: int | None = None
     confidence: float = SLOT_CONF
-    unit_id: None = None
-    """vision은 챔피언 정체를 읽지 않는다. 항상 None(계약상 존재해야 하는 속성)."""
+    unit_id: str | None = None
+    """챔피언 ID. `vision.units.UnitNamer`가 붙인다(특성 패널 구속 + 모델 크롭 라이브러리). 모르면 None."""
+    unit_conf: float = 0.0
+    """이름 판정 신뢰도(0 = 이름 없음)."""
+    name_source: str = "none"
+    """이름 근거: forced(특성 구속만으로 결정) | traits(구속 + 닮음 배정) | library | duplicate | none."""
     item_count: int = 0
     """화면에 붙어 있던 아이템 칸 수(0~3). `len(items)`보다 크면 못 알아본 아이템이 있다는 뜻이다."""
     item_conf: float = 1.0
@@ -143,6 +148,12 @@ class BoardRead:
     """찾은 아군 체력바 수(보드 + 벤치). `len(board) + len(bench)`와 같다."""
     unresolved_items: int = 0
     """아이콘은 붙어 있는데 어떤 아이템인지 못 알아본 칸 수."""
+    board_set: tuple[str, ...] = ()
+    """특성 패널로 확정한 보드의 서로 다른 챔피언 집합(풀이가 하나일 때만). 비었으면 모름."""
+    unplaced: tuple[str, ...] = ()
+    """집합은 알지만 칸을 정하지 못한 보드 챔피언. 이름 없는 보드 칸 수와 같을 때만 채운다(자리 미상으로 쓰라는 뜻)."""
+    trait_solutions: int = 0
+    """특성 패널 풀이 개수(0 = 구속을 쓰지 못함)."""
 
     @property
     def count(self) -> int:

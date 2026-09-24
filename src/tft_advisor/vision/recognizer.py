@@ -32,6 +32,7 @@ from .ocr import OcrEngine, TextBox, create_ocr
 from .regions import (
     FrameMapper, Profile, Rect, detect_content_box, profile_for_frame, screen_candidates, stage_bar_score,
 )
+from .units import TraitPanel, UnitNamer
 from .screen_mode import (
     ModeSignals, classify, count_enemy_bars, frame_is_dark, hud_panel_pixels, parse_board_count,
 )
@@ -130,6 +131,7 @@ class Recognizer:
         profile: Profile | None = None,
         item_template_dir: str | Path | Collection[str | Path] | None = None,
         augment_template_dir: str | Path | None = None,
+        unit_template_dir: str | Path | None = None,
     ) -> None:
         self.static = static or load_static()
         self.cfg = cfg or VisionCfg()
@@ -166,6 +168,11 @@ class Recognizer:
             save_dir=augment_template_dirs(self.static.set_number)[1] if augment_template_dir is None else None)
         self.board_reader = BoardReader.from_recognizer(self.item_matcher, self.items)
         """보드·벤치 판독기. 아이템 벤치용 매처를 장착 아이콘 크기로 다시 정규화해 쓴다(디스크 재로딩 없음)."""
+        self.unit_namer: UnitNamer | None = (
+            UnitNamer.from_static(self.static, unit_template_dir, autolearn=self.cfg.unit_autolearn)
+            if self.cfg.unit_names else None)
+        """보드·벤치 챔피언 이름(특성 패널 구속 + 모델 크롭 라이브러리). 설정 `[vision] unit_names=false`면 None."""
+        self._panel_cache: tuple[np.ndarray, tuple[list[ActiveTrait], float, bool]] | None = None
         self.last_board_read: BoardRead | None = None
         """직전 `recognize()`의 보드 판독(`board` 묶음을 읽었을 때만). app은 `app.unit_merge.board_obs_from`으로 받는다."""
         self.last_owned_row: OwnedRow | None = None
@@ -352,12 +359,20 @@ class Recognizer:
             self._read_shop(image, m, P, out)
         if reads("items"):
             self._read_items(image, m, P, out)
+        panel = None
         if reads("traits"):
-            self._read_traits(image, m, P, out)
+            panel = self._read_traits(image, m, P, out)
         if reads("owned"):
             self._read_augments_owned(image, m, P, stage, out)
         if reads("board"):
-            self.last_board_read = self.board_reader.read(image, m, P)
+            read = self.board_reader.read(image, m, P)
+            if self.unit_namer is not None and read.count:
+                if panel is None and read.board:
+                    panel = self.cached_trait_panel(image, m, P)
+                tp = (TraitPanel({t.id: t.count for t in panel[0]}, complete=panel[2], confidence=panel[1])
+                      if panel is not None and panel[0] else None)
+                read = self.unit_namer.name(image, m, read, tp)
+            self.last_board_read = read
 
         values = dict(out.values)
         return GameState(
@@ -611,11 +626,49 @@ class Recognizer:
             confs.append(match.score)
         out.put("items", state, min(confs) if confs else 0.9)
 
-    def _read_traits(self, image: np.ndarray, m: FrameMapper, P: Profile, out: _Out) -> None:
-        """왼쪽 특성 패널: 행마다 [큰 숫자=인원][이름][구간]. 이름을 퍼지 매칭하고 같은 행 왼쪽 숫자를 인원으로."""
-        boxes = self._read(image, m, P.traits_panel)
+    def _read_traits(self, image: np.ndarray, m: FrameMapper, P: Profile, out: _Out,
+                     ) -> tuple[list[ActiveTrait], float, bool]:
+        """왼쪽 특성 패널 → `active_traits`(묶음 "traits"). 판독 결과는 보드 이름 식별에도 다시 쓴다."""
+        panel = self.cached_trait_panel(image, m, P)
+        if panel[0]:
+            out.put("active_traits", panel[0], panel[1] * TRAITS_FACTOR)
+        return panel
+
+    def cached_trait_panel(self, image: np.ndarray, m: FrameMapper, P: Profile,
+                           ) -> tuple[list[ActiveTrait], float, bool]:
+        """`read_trait_panel` + 캐시: 패널의 **글자 영역**이 직전과 같으면 OCR을 다시 하지 않는다.
+        특성 패널은 보드가 바뀔 때만 바뀐다 → 실시간 루프에서 보드 묶음을 다시 읽어도 대부분 OCR 0회.
+
+        비교(`panel_unchanged`): 인원 숫자·이름·구간 글자가 있는 가로 20~80% 열을 **원래 해상도** 회색조로 두고,
+        밝기 차 40 초과 픽셀이 `PANEL_CACHE_TOL`개 이하일 때만 같다고 본다. 인원 글자 하나 바뀜 = 약 90px,
+        작은 구간 글자 하나 = 약 18px, 같은 패널의 다른 프레임 = 0px(원본 캡처 실측, QA 19 WARN 수정).
+        """
+        crop = m.crop(image, P.traits_panel)
+        if crop.size == 0:
+            return [], 0.0, False
+        key = panel_text_region(crop)
+        if self._panel_cache is not None and panel_unchanged(self._panel_cache[0], key):
+            return self._panel_cache[1]
+        result = self.read_trait_panel(image, m, P)
+        self._panel_cache = (key, result)
+        return result
+
+    def read_trait_panel(self, image: np.ndarray, m: FrameMapper, P: Profile,
+                         ) -> tuple[list[ActiveTrait], float, bool]:
+        """특성 패널: 행마다 [큰 숫자=인원][이름][구간]. → (특성들, OCR 신뢰도, 패널이 완전한가).
+
+        이름을 퍼지 매칭하고 같은 행 왼쪽 숫자를 인원으로 쓴다. OCR은 가는 "1"(I 모양) 글자를 자주 놓친다 →
+        ① 이름 아래 "1/2" 사다리 글자(비활성 행), ② 인원 칸이 가는 세로 막대 하나인지(글자 모양)로 보충한다(19 보고 §3).
+        "완전"하지 않은 경우: 패널 아래 "N+" 넘침 표시가 있다(특성이 더 있는데 가려졌다), 또는 인원을 끝내 못 읽은 행이 있다.
+        보드 챔피언 식별(`vision.units`)은 완전한 패널만 구속으로 쓴다.
+        """
+        from .units import ladder_count, thin_one_glyph
+
+        crop = m.crop(image, P.traits_panel)
+        boxes = self.ocr.read(crop)
         if not boxes:
-            return
+            return [], 0.0, False
+        complete = not any(re.fullmatch(r"\s*\d\s*\+\s*", b.text) for b in boxes)
         numbers = [b for b in boxes if re.fullmatch(r"[0-9Il|]{1,2}", b.text.strip())]
         traits: list[ActiveTrait] = []
         confs: list[float] = []
@@ -624,29 +677,56 @@ class Recognizer:
             match = self.trait_matcher.match(b.text)
             if match is None or match.api_name in seen:
                 continue
+            bps = [bp for bp in (match.record.get("breakpoints") or []) if bp is not None]
             # 인원수 숫자는 이름 **바로 왼쪽**에 붙어 있다. 거리 제한이 없으면 위/아래 행의 구간 사다리("2>4>6")
             # 숫자를 집어 "약탈자 8" 같은 확신에 찬 오답이 나온다(16:10 캡처에서 관측).
             row = [n for n in numbers
                    if n.box[2] <= b.box[0] + 2
                    and b.box[0] - n.box[2] <= max(b.height, n.height) * 1.5
                    and abs(n.cy - b.cy) <= max(b.height, n.height) * 1.2]
-            if not row:
-                continue
-            num = max(row, key=lambda n: n.box[2])
-            count = parse.parse_int(num.text, 0, 15)
+            count: int | None = None
+            score = b.score
+            if row:
+                num = max(row, key=lambda n: n.box[2])
+                count = parse.parse_int(num.text, 0, 15)
+                score = min(score, num.score)
+            if count is None:
+                count = self._trait_count_fallback(crop, boxes, b, bps, ladder_count, thin_one_glyph)
+                score = min(score, 0.8)
             if count is None or count == 0:
+                complete = False            # 이름은 있는데 인원을 못 읽었다 → 합이 맞지 않을 수 있다
                 continue
-            bps = [bp for bp in (match.record.get("breakpoints") or []) if bp is not None]
             if bps and count > max(bps) + 2:
+                complete = False
                 continue   # 최고 구간보다 크게 넘는 인원수는 숫자를 잘못 붙인 것이다
             active = max((bp for bp in bps if bp <= count), default=None)
             nxt = min((bp for bp in bps if bp > count), default=None)
             seen.add(match.api_name)
             traits.append(ActiveTrait(id=match.api_name, name_ko=match.record.get("name_ko"), count=count,
                                       active_breakpoint=active, next_breakpoint=nxt))
-            confs.append(min(b.score, num.score, match.score / 100.0))
-        if traits:
-            out.put("active_traits", traits, min(confs) * TRAITS_FACTOR)
+            confs.append(min(score, match.score / 100.0))
+        return traits, (min(confs) if confs else 0.0), complete and bool(traits)
+
+    @staticmethod
+    def _trait_count_fallback(crop: np.ndarray, boxes: list[TextBox], name: TextBox, bps: list[int],
+                              ladder_count, thin_one_glyph) -> int | None:
+        """숫자 OCR이 인원을 놓친 행: 이름 아래 "인원/다음 구간" 글자 → 인원, 아니면 인원 칸 글자가 "1" 모양인가."""
+        h = max(1.0, name.height)
+        for lb in boxes:
+            if lb is name or not (0.3 * h <= lb.cy - name.cy <= 1.6 * h) or abs(lb.box[0] - name.box[0]) > 1.2 * h:
+                continue
+            got = ladder_count(lb.text)
+            if got is None:
+                continue
+            count, nxt = got
+            if bps and (nxt in bps) and count <= nxt:
+                return count
+        x1, x2 = int(name.box[0] - 1.05 * h), int(name.box[0] - 0.2 * h)
+        y1, y2 = int(name.cy - 0.35 * h), int(name.cy + 0.85 * h)
+        cell = crop[max(0, y1):max(0, y2), max(0, x1):max(0, x2)]
+        if thin_one_glyph(cell, h) and (not bps or 1 <= max(bps)):
+            return 1
+        return None
 
     def _read_hp(self, image: np.ndarray, m: FrameMapper, P: Profile) -> tuple[int, float] | None:
         """플레이어 목록에서 내 HP: 내 칸은 숫자 글자가 다른 칸보다 크다(fixture 관측, 약 1.8배).
@@ -664,6 +744,27 @@ class Recognizer:
             return None
         b, v = big[0]
         return v, b.score * HP_FACTOR
+
+
+PANEL_CACHE_TOL = 6           # 특성 패널 캐시: 글자 영역에서 이보다 많은 픽셀이 바뀌면 다시 읽는다
+PANEL_CACHE_DIFF = 40         # 픽셀 밝기 차 임계
+PANEL_TEXT_COLS = (0.20, 0.80)   # 패널 가로 비율: 인원 숫자(약 0.27~0.37) · 이름 · 구간 글자
+
+
+def panel_text_region(crop: np.ndarray) -> np.ndarray:
+    """특성 패널 크롭 → 캐시 비교용 글자 영역(원래 해상도 회색조, int16)."""
+    import cv2
+
+    gray = cv2.cvtColor(crop, cv2.COLOR_BGR2GRAY) if crop.ndim == 3 else crop
+    w = gray.shape[1]
+    return gray[:, int(w * PANEL_TEXT_COLS[0]):int(w * PANEL_TEXT_COLS[1])].astype(np.int16)
+
+
+def panel_unchanged(prev: np.ndarray, cur: np.ndarray) -> bool:
+    """두 패널 글자 영역이 같은가(크기가 다르면 다르다)."""
+    if prev.shape != cur.shape:
+        return False
+    return int((np.abs(prev - cur) > PANEL_CACHE_DIFF).sum()) <= PANEL_CACHE_TOL
 
 
 def augment_template_dirs(set_number: int) -> list[Path]:

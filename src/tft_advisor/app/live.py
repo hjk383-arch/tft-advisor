@@ -11,6 +11,9 @@ UI 스레드에서는 인식도 Jev 호출도 하지 않는다.
 Jev 백엔드: 시작값은 **CLI(--jev/--no-jev) > `[advisor] jev_backend`**. 오버레이 모드에서는 트레이 메뉴
 "Jev 실시간 판단 (과금)" 체크로 실행 중에 live ↔ mock을 바꾼다(`jev_toggle.JevSwitcher`). CLI로 못박은
 실행에서는 그 토글이 잠긴다.
+
+인식 확인 창(`app/recog_window.py`): 시작값은 **CLI(--test-view/--no-test-view) > `[ui] test_view`**, 실행 중에는
+트레이 "인식 확인 창" 체크로 켜고 끈다. `--no-overlay`(콘솔)에서는 같은 내용을 콘솔에 출력한다(`recog_view.ConsolePrinter`).
 """
 from __future__ import annotations
 
@@ -91,7 +94,9 @@ def warm_up(advisor) -> None:
 
 def run_live(*, settings: Settings | None = None, jev: str = "auto", overlay: bool = True,
              debug_dir: Path | None = None, source: object | None = None,
-             max_frames: int | None = None, config_dir: Path | None = None) -> int:
+             max_frames: int | None = None, config_dir: Path | None = None,
+             test_view: bool | None = None) -> int:
+    """`test_view`: CLI 값(None = 플래그 없음 → `[ui] test_view`)."""
     settings = settings or load_settings()
     ui = choose_ui(settings, overlay)
     loop, advisor = build(settings, jev, debug_dir, source)
@@ -103,10 +108,11 @@ def run_live(*, settings: Settings | None = None, jev: str = "auto", overlay: bo
     warm_up(advisor)
 
     if ui == "console":
-        return _run_console(loop, settings, backend, patch, max_frames)
+        show_recog = settings.ui.test_view if test_view is None else bool(test_view)
+        return _run_console(loop, settings, backend, patch, max_frames, test_view=show_recog)
     # CLI가 백엔드를 못박은 실행(--jev/--no-jev)이면 트레이 토글을 잠근다: CLI > 토글 > 설정 파일
     return _run_overlay(loop, settings, backend, patch, max_frames, config_dir,
-                        jev_cli=jev if jev in ("mock", "live", "off") else None)
+                        jev_cli=jev if jev in ("mock", "live", "off") else None, test_view_cli=test_view)
 
 
 # ---------------------------------------------------------------------------
@@ -144,12 +150,22 @@ def start_unit_console(tracker, stop: threading.Event, stream: object | None = N
 
 
 def _run_console(loop: LiveLoop, settings: Settings, backend: str, patch: str | None,
-                 max_frames: int | None) -> int:
+                 max_frames: int | None, test_view: bool = False) -> int:
     names = NameBook()
     last_key: tuple | None = None
+    recog = None
+    if test_view:   # 인식 확인: 창 대신 콘솔에 보드·벤치·아이템을 찍는다(내용이 바뀔 때만)
+        from .recog_view import ConsolePrinter
+
+        recog = ConsolePrinter(names, settings.vision.state_min_confidence)
 
     def on_update(u: LoopUpdate) -> None:
         nonlocal last_key
+        if recog is not None:
+            try:
+                recog.feed(u)
+            except Exception:   # 확인용 출력 실패로 루프가 멈추지 않는다
+                log.exception("인식 확인 출력 실패")
         if u.kind == "error":
             print(f"[오류] {u.message}")
             return
@@ -185,7 +201,7 @@ def _run_console(loop: LiveLoop, settings: Settings, backend: str, patch: str | 
 
 def _run_overlay(loop: LiveLoop, settings: Settings, backend: str, patch: str | None,
                  max_frames: int | None, config_dir: Path | None = None,
-                 jev_cli: str | None = None) -> int:
+                 jev_cli: str | None = None, test_view_cli: bool | None = None) -> int:
     from .jev_toggle import JevSwitcher
     from .overlay import make_overlay
     from .setup import resolve_state_dir
@@ -196,8 +212,11 @@ def _run_overlay(loop: LiveLoop, settings: Settings, backend: str, patch: str | 
     app, window = make_overlay(settings, state_dir=resolve_state_dir(settings), config_dir=config_dir,
                                jev=switcher)
     window.status = StatusInfo(patch=patch, backend=backend)
+    recog = _make_recog(settings, window, config_dir, test_view_cli)
     loop.on_update = window.on_loop_update
     window.show_overlay()
+    if recog is not None:
+        recog.start()
     log.info("오버레이: %s", status_line(window.status))
 
     stop = threading.Event()
@@ -217,6 +236,20 @@ def _run_overlay(loop: LiveLoop, settings: Settings, backend: str, patch: str | 
     except KeyboardInterrupt:
         shutdown()
         return 0
+
+
+def _make_recog(settings: Settings, window, config_dir: Path | None, cli: bool | None):
+    """인식 확인 창 컨트롤러를 오버레이에 붙인다(트레이 메뉴 "인식 확인 창"). 실패해도 오버레이는 뜬다."""
+    try:
+        from .recog_window import RecogController
+
+        controller = RecogController(settings, state_dir=window.state_dir, config_dir=config_dir, cli=cli,
+                                     names=window.names)
+        window.attach_recog(controller)
+        return controller
+    except Exception:   # noqa: BLE001
+        log.exception("인식 확인 창을 준비하지 못했습니다")
+        return None
 
 
 __all__ = ["run_live", "build", "choose_ui", "overlay_available", "start_unit_console"]

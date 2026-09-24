@@ -328,6 +328,37 @@ def harvest_augments(image, labels: list[str], static, profile, out_dir: Path,
     return saved, errors
 
 
+def harvest_units(image, expected_path: Path, static, profile, out_dir: Path,
+                  content: tuple[int, int, int, int] | None = None) -> tuple[list[str], list[str]]:
+    """정답 파일의 **확인된** 유닛 이름(board_slots/bench_slots의 `name`) → `out_dir/{apiName}/label_{hash}.png`.
+
+    모델 크롭(체력바 기준 1080p 정규화 112x112)을 저장한다. `name_unconfirmed`(추정)는 저장하지 않는다 — 틀린 표본은
+    라이브러리 전체를 오염시킨다. 반환 (저장한 ID들, 오류 메시지들).
+    """
+    from ..fixtures import load_expected
+    from .units import UnitLibrary, labeled_crops
+
+    exp = load_expected(expected_path, static)
+    pairs, errors = labeled_crops(image, exp.extras, profile, content)
+    lib = UnitLibrary(save_dir=out_dir)
+    saved = []
+    for cid, crop in pairs:
+        if lib.add(cid, crop, persist=True, tag="label") is not None:
+            saved.append(cid)
+    return saved, errors
+
+
+def _harvest_units_cmd(img, args, profile, box) -> int:
+    from .units import units_dir
+
+    out = units_dir(args.set)
+    saved, errors = harvest_units(img, args.label, load_static(args.set), profile, out, content=box)
+    print(f"{out}: 저장 {len(saved)} {saved}")
+    for e in errors:
+        print("  오류:", e, file=sys.stderr)
+    return 1 if errors else 0
+
+
 def _main(argv: list[str] | None = None) -> int:
     from .capture import load_image, save_image
     from .ocr import DigitTemplateReader
@@ -345,7 +376,7 @@ def _main(argv: list[str] | None = None) -> int:
     fa.add_argument("--overwrite", action="store_true")
     fa.add_argument("--no-alt", action="store_true", help="대체 출처(tactics.tools) 아이콘을 받지 않습니다")
     fa.add_argument("--delay", type=float, default=FETCH_DELAY_S, help="요청 사이 간격(초)")
-    for name in ("harvest-items", "harvest-digits", "harvest-augments"):
+    for name in ("harvest-items", "harvest-digits", "harvest-augments", "harvest-units"):
         h = sub.add_parser(name)
         h.add_argument("screenshot", type=Path)
         h.add_argument("label", type=Path)
@@ -376,6 +407,8 @@ def _main(argv: list[str] | None = None) -> int:
         print(out)
         return 0
 
+    if args.cmd == "harvest-units":
+        return _harvest_units_cmd(img, args, profile, box)
     label = json.loads(args.label.read_text(encoding="utf-8"))
     if args.cmd == "harvest-items":
         out = template_dir(args.set, "items_screen")

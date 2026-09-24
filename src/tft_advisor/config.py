@@ -112,6 +112,8 @@ class VisionCfg(_Cfg):
     change_stable_frames: int = Field(2, ge=1, le=30)           # 변화 후 이 프레임 수 연속 같아야 재인식
     capture_fps: float = Field(4, gt=0, le=30)                  # 앱 루프 캡처 주기(Phase 4)
     traits_every_s: float = Field(3, gt=0)                      # 앱 루프: 특성 패널("traits" 묶음)을 읽는 주기(초)
+    unit_names: bool = True        # 보드·벤치 유닛 챔피언 이름 식별(특성 패널 구속 + 모델 크롭 라이브러리, vision.units)
+    unit_autolearn: bool = False   # (settings.toml 기본 true) 특성 구속으로 강제된 칸의 모델 크롭을 data/templates/{set}/units_screen/에 저장
 
     @field_validator("content_box", mode="before")
     @classmethod
@@ -230,6 +232,9 @@ class UiCfg(_Cfg):
     opacity: float = Field(0.85, gt=0, le=1)
     click_through: bool = True
     max_target_comps: int = Field(3, ge=1, le=3)
+    # 인식 확인 창(app/recog_window.py): 보드·벤치·장착/미사용 아이템을 실시간으로 보여 주는 작은 창.
+    # 우선순위: CLI(--test-view/--no-test-view) > 트레이 "인식 확인 창" 체크 > 이 값. 콘솔 모드에서는 같은 내용을 출력한다.
+    test_view: bool = False
 
 
 class OverlayCfg(_Cfg):

@@ -9,6 +9,7 @@
 | `{set}/augments/` | 증강 글리프 원본 (CommunityDragon hexcore 아이콘). 보드 왼쪽 위 보유 증강 줄 판독용 | `python -m tft_advisor.vision.templates fetch-augments` | **커밋하지 않음** (`.gitignore`) |
 | `{set}/augments_alt/` | CDragon에 아이콘이 없는(`missing-*` 자리표시) 세트 증강의 대체 출처 아이콘(tactics.tools `ap.tft.tools/img/augments/{apiName}{등급}.png`, 글리프 외곽으로 정규화한 64px) + `sources.json`(ID별 출처 URL, 같은 그림 묶음) | `fetch-augments`가 CDragon 다음에 함께 받는다(`--no-alt`로 끔, 요청 간격 `--delay` 기본 0.5초) | **커밋하지 않음** (`.gitignore`) |
 | `{set}/augments_screen/` | 준비 화면 보유 증강 줄에서 잘라낸 실화면 글리프(CDragon 아이콘이 없거나 공유돼 식별 불가한 증강 보충). **실시간 루프가 증강 선택 순간 자동으로 추가한다**(제시된 3개 안에서 확정된 새 칸) | `harvest-augments SCREENSHOT LABEL.json` 또는 실시간 자동 학습 | **커밋하지 않음** (`.gitignore`) |
+| `{set}/units_screen/{apiName}/*.png` | 보드·벤치 유닛 **모델 크롭**(체력바 기준 1080p 정규화 112x112) — 챔피언 이름 식별 few-shot 라이브러리(`vision.units`). `label_*` = 확인 라벨에서 수확, `auto_*` = 실시간 자동 학습(특성 패널 구속으로 강제된 칸만, 챔피언당 24장) | `python -m tft_advisor.vision.templates harvest-units SCREENSHOT LABEL.json`(라벨 `board_slots`/`bench_slots`의 `name`, `name_unconfirmed`는 저장 안 함) 또는 실시간 자동 학습(`[vision] unit_autolearn`) | **커밋하지 않음** (`.gitignore`) |
 | `{set}/digits/` | HUD 숫자 글리프(흑백 이진 이미지, 0-9 / - %) | `python -m tft_advisor.vision.templates harvest-digits SCREENSHOT LABEL.json` | 커밋 가능 |
 
 ## 출처와 고지

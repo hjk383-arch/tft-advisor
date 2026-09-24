@@ -38,12 +38,16 @@ data/templates/*/augments/
 data/templates/*/augments_screen/
 #  augments_alt/    : CDragon에 없는 세트 증강의 대체 출처 아이콘(tactics.tools 경유 Riot 아트, `fetch-augments`) + sources.json
 data/templates/*/augments_alt/
+#  units_screen/    : 보드·벤치 유닛 모델 크롭(챔피언 이름 식별 라이브러리, `harvest-units` + 실시간 자동 학습). 게임 화면 = Riot 아트
+data/templates/*/units_screen/
 
 # Debug renders of screen crops (Riot art, regenerable)
 _workspace/*.png
 
 # Raw game captures: Riot art + other players' summoner names (repo is public)
 tests/fixtures/screens/raw/
+# 사용자가 따로 넣어 둔 원본 캡처(다른 플레이어 소환사명 포함) — raw/와 같은 이유로 올리지 않는다
+tests/fixtures/screens/test/
 
 # macOS
 .DS_Store

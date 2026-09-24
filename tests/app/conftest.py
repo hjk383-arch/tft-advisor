@@ -34,7 +34,8 @@ def settings():
 def recognizer(settings):
     from tft_advisor.vision.recognizer import Recognizer
 
-    return Recognizer(cfg=settings.vision)
+    # 테스트가 디스크 유닛 라이브러리(data/templates/{set}/units_screen/)에 쓰지 않도록 자동 학습을 끈다.
+    return Recognizer(cfg=settings.vision.model_copy(update={"unit_autolearn": False}))
 
 
 @pytest.fixture(scope="session")

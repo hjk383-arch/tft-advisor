@@ -12,7 +12,10 @@
   `board_slots`: `[{"hex": [줄, 칸], "star": 1|2|3|null, "items": [이름|apiName, …]}, …]` (줄 0 = 내 쪽 맨 앞, 칸 0 = 왼쪽)
   `bench_slots`: `[{"slot": 0~8, "star": …, "items": […]}, …]`
   `star`/`items`/`hex`/`slot`은 모두 선택이다(모르면 빼거나 null). `ExpectedScreen.extras`에 담기며
-  아이템 이름은 대표 ID로 바뀐다. 챔피언 정체(unit_id)는 라벨에 넣지 않는다 — vision이 읽지 않는 값이다.
+  아이템 이름은 대표 ID로 바뀐다.
+  챔피언 이름(19 보고, `vision.units`): `"name": 챔피언 이름|apiName` = **확인된** 이름(정답·라이브러리 수확 대상),
+  `"name_unconfirmed": …` = 추정(비교·수확하지 않는다, 사용자 확인 대기). 정규화 후 `unit_id`(apiName|None)와
+  `unit_guess`(apiName|None)로 담긴다. 근거는 `"_evidence"` 같은 메모 키에 적는다.
 - item_bench: 아이템 벤치 10칸(위→아래) 이름|apiName|null 리스트. GameState 필드가 아니므로
   `ExpectedScreen.extras["item_bench"]`에 대표 ID(빈 칸 None)로 담는다(harvest-items용). `items`가 없으면
   item_bench로 `items`를 채운다(비교 대상이 된다). 둘 다 있으면 같은 아이템 묶음(다중집합)이어야 한다.
@@ -128,7 +131,8 @@ def _item_bench(cat: ItemCatalog, raw: list[str | None]) -> list[str | None]:
     return [None if x is None else _item_id(cat, x) for x in raw]
 
 
-def _unit_slots(cat: ItemCatalog, raw: list[dict[str, Any]], *, on_bench: bool) -> list[dict[str, Any]]:
+def _unit_slots(cat: ItemCatalog, raw: list[dict[str, Any]], *, on_bench: bool,
+                static: StaticData | None = None) -> list[dict[str, Any]]:
     """board_slots / bench_slots 라벨 → 정규화(아이템 이름 → 대표 ID, 자리 → tuple/int)."""
     key = "bench_slots" if on_bench else "board_slots"
     if not isinstance(raw, list):
@@ -142,6 +146,10 @@ def _unit_slots(cat: ItemCatalog, raw: list[dict[str, Any]], *, on_bench: bool) 
             raise ValueError(f"{key}[{i}].star는 1~3 또는 null이어야 한다: {star!r}")
         slot: dict[str, Any] = {"star": star,
                                 "items": [_item_id(cat, x) for x in (r.get("items") or [])]}
+        if static is not None:
+            slot["unit_id"] = _resolve(static, "champions", r["name"])["apiName"] if r.get("name") else None
+            guess = r.get("name_unconfirmed")
+            slot["unit_guess"] = _resolve(static, "champions", guess)["apiName"] if guess else None
         if on_bench:
             n = r.get("slot")
             if n is not None and not 0 <= int(n) <= 8:
@@ -179,7 +187,7 @@ def load_expected(path: str | Path, static: StaticData | None = None) -> Expecte
         extras["item_bench"] = None
     for key, on_bench in (("board_slots", False), ("bench_slots", True)):
         if extras_raw.get(key) is not None:
-            extras[key] = _unit_slots(_item_catalog(static), extras_raw[key], on_bench=on_bench)
+            extras[key] = _unit_slots(_item_catalog(static), extras_raw[key], on_bench=on_bench, static=static)
 
     if "shop" in data and data["shop"] is not None:
         data["shop"] = [_shop_slot(static, s) for s in data["shop"]]

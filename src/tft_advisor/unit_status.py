@@ -45,6 +45,11 @@ def known_unit_count(state: GameState) -> int:
     return sum(1 for u in (state.board or []) + (state.bench or []) if u.id != UNKNOWN_UNIT_ID)
 
 
+def _vision_named(state: GameState) -> bool:
+    """이름을 vision이 붙였다(장부가 아니다)."""
+    return state.field_source.get("board") == FieldSource.VISION
+
+
 def units_knowledge(state: GameState, threshold: float = DEFAULT_THRESHOLD) -> UnitsKnowledge:
     """보유 유닛을 얼마나 아는지 판정한다. advisor의 "안다" 기준(§4.3b)과 같은 조건을 쓴다."""
     if state.board is None and state.bench is None:
@@ -73,6 +78,8 @@ def units_reason(state: GameState, threshold: float = DEFAULT_THRESHOLD) -> str 
         return f"보드 {unknown}기·장착 아이템은 인식했습니다: 챔피언 이름은 구매 추적·수동 입력으로 표시됩니다"
     if kind is UnitsKnowledge.PARTIAL:
         tail = f", 이름 미상 {unknown}기" if unknown else ""
+        if _vision_named(state):
+            return f"보유 유닛 부분 확인: 화면에서 이름을 확인한 유닛 {known_unit_count(state)}기{tail} — 수동 확인을 권합니다"
         return f"보유 유닛 부분 확인: 구매 추적이 불확실합니다{tail} — 수동 확인을 권합니다"
     return "보유 유닛: 구매 추적 기준" + (f"(이름 미상 {unknown}기)" if unknown else "")
 
@@ -88,7 +95,8 @@ def units_note(state: GameState, threshold: float = DEFAULT_THRESHOLD) -> str | 
     if kind is UnitsKnowledge.PARTIAL:
         known = known_unit_count(state)
         tail = f" · 이름 미상 {unknown}기" if unknown else ""
-        return f"부분 확인 — 구매 추적 {known}기{tail}(추천에는 쓰지 않습니다)"
+        how = "화면 인식" if _vision_named(state) else "구매 추적"
+        return f"부분 확인 — {how} {known}기{tail}(추천에는 쓰지 않습니다)"
     if kind is UnitsKnowledge.TRACKED:
         return "구매 추적" + (f" · 이름 미상 {unknown}기" if unknown else "")
     return f"이름 미상 {unknown}기" if unknown else None

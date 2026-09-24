@@ -270,6 +270,9 @@ class SetupDialog(QDialog):
         self.scale_spin.setDecimals(2)
         grid.addWidget(QLabel("오버레이 글꼴 배율"), 3, 2)
         grid.addWidget(self.scale_spin, 3, 3)
+        self.test_view_check = QCheckBox("인식 확인 창 표시 (보드·벤치 유닛과 장착/미사용 아이템을 실시간으로 보여 줍니다)")
+        self.test_view_check.setToolTip("실행 중에는 오버레이 트레이 메뉴 \"인식 확인 창\"으로도 켜고 끌 수 있습니다.")
+        grid.addWidget(self.test_view_check, 4, 0, 1, 4)
         inner.addWidget(box)
 
         # --- 테스트 캡처 ---
@@ -320,6 +323,7 @@ class SetupDialog(QDialog):
         self.refresh_key_row()     # 키 상태 → 안내 + Jev 체크 활성화(_sync_jev를 부른다)
         self.opacity_spin.setValue(s.overlay_opacity())
         self.scale_spin.setValue(s.overlay.scale)
+        self.test_view_check.setChecked(s.ui.test_view)
         self.box_auto.setChecked(s.vision.content_box_auto)
         if s.vision.content_box is not None:
             self.box_manual.setChecked(True)
@@ -508,6 +512,7 @@ class SetupDialog(QDialog):
             jev_backend=core.jev_backend_from_checks(self.jev_live.isChecked(), self.jev_off.isChecked()),
             overlay_opacity=round(self.opacity_spin.value(), 3),
             overlay_scale=round(self.scale_spin.value(), 3),
+            test_view=self.test_view_check.isChecked(),
         )
 
     def preview_settings(self) -> Settings:

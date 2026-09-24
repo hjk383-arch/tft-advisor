@@ -56,6 +56,10 @@ class LoopUpdate:
     message: str | None = None
     kept: KeptInfo | None = None
     """직전 추천을 보여 주는 화면이면 표시 정보(`recommendation`은 이미 거른 표시용 사본이다)."""
+    board_read: Any = None
+    """마지막 vision 보드 판독(`Recognizer.last_board_read`, 이번 프레임에 못 읽었으면 직전 것). 인식 확인 창용."""
+    recog_ms: float | None = None
+    """이번 프레임 인식에 걸린 시간(ms). 인식이 없었던 갱신(추천 결과 등)은 None."""
 
 
 # ---------------------------------------------------------------------------
@@ -219,6 +223,8 @@ class LiveLoop:
         self._frames = 0
         self._debug_dumps = 0
         self._pending_reset: dict[str, Any] | None = None   # 새 판 확인 대기: mode, first, count, recheck
+        self.last_board_read: Any = None      # 마지막 보드 판독(인식 확인 창이 칸별 이름 출처를 보려고 쓴다)
+        self.last_recog_ms: float | None = None
 
     def _make_detector(self):
         from ..vision.change import ChangeDetector
@@ -244,6 +250,7 @@ class LiveLoop:
             groups = {"stage"}
         else:
             groups = self._groups(changed, now)
+        t0 = time.perf_counter()
         try:
             state = self.recognizer.recognize(
                 image, content=content, source_image=frame.source,
@@ -251,11 +258,17 @@ class LiveLoop:
         except Exception as e:
             log.exception("인식 실패: %s", frame.source)
             return self._emit(LoopUpdate(kind="error", message=f"인식 실패: {e}"))
+        self.last_recog_ms = (time.perf_counter() - t0) * 1000.0
         self.tracker.data.recognitions += 1
         if self.debug_dir is not None:
             self._dump_debug(image, state)
-        return self._handle(state, groups, owned_row=getattr(self.recognizer, "last_owned_row", None),
-                            board_read=getattr(self.recognizer, "last_board_read", None))
+        board_read = getattr(self.recognizer, "last_board_read", None)
+        if board_read is not None:
+            self.last_board_read = board_read
+        update = self._handle(state, groups, owned_row=getattr(self.recognizer, "last_owned_row", None),
+                              board_read=board_read)
+        self.last_recog_ms = None   # 다음 갱신(추천 결과 등)에 이번 인식 시간이 묻어가지 않게 한다
+        return update
 
     def _content(self, image) -> tuple[int, int, int, int] | None:
         fn = getattr(self.recognizer, "content_for", None)
@@ -304,6 +317,7 @@ class LiveLoop:
         self.last_recommendation = None
         self.last_state = None
         self.last_advice_at = None
+        self.last_board_read = None
         note = f"보관: {self.tracker.last_archive.name}" if self.tracker.last_archive else None
         return self._emit(LoopUpdate(kind="reset", state=state, recognized=tuple(sorted(groups)), message=note))
 
@@ -354,6 +368,11 @@ class LiveLoop:
         self._emit(LoopUpdate(kind="advice", state=state, recommendation=shown, kept=kept))
 
     def _emit(self, update: LoopUpdate) -> LoopUpdate:
+        if update.kind != "advice":   # 인식 확인 창: 판독·인식 시간을 같은 갱신에 싣는다(추가 인식 없음)
+            if update.board_read is None:
+                update.board_read = self.last_board_read
+            if update.recog_ms is None:
+                update.recog_ms = self.last_recog_ms
         try:
             self.on_update(update)
         except Exception:
