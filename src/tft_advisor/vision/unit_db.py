@@ -22,7 +22,7 @@ units_screen/_trash/{apiName}/...                        삭제(되살릴 수 �
 ## 증거 종류(`Evidence`)
 | 종류 | 언제 | 강도 |
 |---|---|---|
-| `purchase` | 상점 칸 X가 빈 칸이 되고(= 구매), 같은 정산 창 안에 **벤치에 새 칸 하나**가 생겼다(1성) | 가장 강함 |
+| `purchase` | 상점 칸 X가 빈 칸이 되고(= 구매, 상점·장부 보고는 한 건), 같은 정산 창 안에 **직전 2프레임 비어 있던 벤치 칸 하나**가 생겼고 창 안에 다른 벤치·보드 변화가 없다(1성) | 가장 강함 |
 | `traits` | 특성 패널 풀이가 **하나**이고 찾은 보드 칸 수와 맞으며 그 칸이 구속 배정으로 이름을 받았다 | 강함 |
 | `duplicate` | 같은 프레임에서 이름이 확정된 보드 유닛과 같은 모델인 벤치 유닛 | 보통 |
 | `legacy_forced` | 옛 자동 학습(`auto_*`, 승인 폴더에 바로 저장되던 것)을 대기로 옮긴 것 | 검토 필요 |
@@ -68,6 +68,9 @@ PURCHASE_WINDOW_S = 3.0   # 상점 구매와 벤치 새 칸이 이 시간 안에
 TRAITS_MIN_CONF = 0.85    # 특성 풀이 증거로 모을 칸의 최소 이름 신뢰도
 DUPLICATE_MIN_CONF = 0.8
 PANEL_SURE = 0.75         # (units.PANEL_SURE와 같은 값) 패널 판독이 이보다 애매하면 특성 증거로 모으지 않는다
+MIN_EMPTY_FRAMES = 2      # 구매 새 칸은 직전 이 프레임 수만큼 연속으로 비어 있던 칸이어야 한다(판독 깜빡임 거르기)
+CONTRADICT_MIN = 0.8      # 구매 크롭이 다른 챔피언 승인 크롭을 이만큼 이상 닮고
+CONTRADICT_MARGIN = 0.1   # 산 챔피언 승인 크롭보다 이만큼 더 닮으면 모순 -> 저장하지 않는다
 
 
 # ---------------------------------------------------------------------------
@@ -419,12 +422,30 @@ class _NewSlot:
 
 
 @dataclass
+class _Buy:
+    """구매 한 건. 상점 칸 비움(`shop`)과 장부(`ledger`)가 같은 구매를 따로 알리므로, 같은 챔피언·창 안의 다른 출처 보고는
+    한 건으로 합친다(`sources`). `used` = 짝지어 저장했거나 합성·다른 변화로 무효가 된 구매 — 늦게 온 메아리를 흡수하려고
+    창이 끝날 때까지 남겨 둔다."""
+
+    at: float
+    champion: str
+    sources: set[str]
+    used: bool = False
+
+
+@dataclass
 class UnitCollector:
     """프레임마다 증거가 강한 크롭을 `UnitImageDB` 대기에 넣는다(`UnitNamer.name()`이 부른다).
 
-    구매 증거: 상점 칸이 **챔피언 → 빈 칸**으로 바뀐 것(= 샀다, 인식기가 이 프레임의 상점을 읽었을 때) 또는 app 장부가
-    `note_purchase()`로 알려 준 구매 + 같은 창(`PURCHASE_WINDOW_S`) 안에 **벤치에 새로 생긴 칸**(다른 벤치 칸은 그대로, 보드 수
-    그대로, 1성). 창 안의 구매가 모두 같은 챔피언이고 새 칸 수와 같을 때만 짝을 짓는다(아니면 모호 → 버린다).
+    구매 증거(QA 27 F1 뒤 규칙):
+    - 구매 = 상점 칸이 **챔피언 → 빈 칸**(인식기가 이 프레임의 상점을 읽었을 때) 또는 app 장부의 `note_purchase()`.
+      같은 챔피언의 두 출처 보고는 `window_s` 안이면 **한 건**이다(짝이 끝난 뒤 늦게 온 메아리도 흡수한다).
+    - 새 칸 = 이번 프레임에 벤치 칸이 **정확히 하나** 늘고(사라진 칸·성급이 바뀐 칸 없음, 보드 수·성급 구성 그대로), 그 칸이
+      직전 `MIN_EMPTY_FRAMES` 프레임 내내 비어 있었고, 창 안에 다른 변화가 없었다.
+    - 변화(칸 사라짐·성급 바뀜·보드 바뀜 = 옮기기·합성·판독 깜빡임)가 보이면 그때까지의 구매·새 칸을 모두 버린다
+      (합성된 구매도 여기서 소비된다).
+    - 창 안의 남은 구매가 모두 같은 챔피언이고 새 칸 수와 같을 때만 짝을 짓는다. 크롭이 그 챔피언의 승인 크롭보다 다른
+      챔피언의 승인 크롭을 확실히 더 닮았으면 저장하지 않는다.
     """
 
     db: UnitImageDB
@@ -432,23 +453,48 @@ class UnitCollector:
     auto_approve_purchase: bool = False
     window_s: float = PURCHASE_WINDOW_S
     saved: list[CropMeta] = field(default_factory=list)
-    _buys: list[tuple[float, str, str]] = field(default_factory=list)
+    _buys: list[_Buy] = field(default_factory=list)
     _new: list[_NewSlot] = field(default_factory=list)
     _last_shop: tuple[str | None, ...] | None = None
-    _last_bench: dict[int, int | None] | None = None
-    _last_board: int | None = None
+    _history: list[dict[int, int | None]] = field(default_factory=list)
+    """최근 벤치 판독(오래된 → 최근, 최대 `MIN_EMPTY_FRAMES`개): 칸 → 성급."""
+    _last_board: tuple[int, tuple[int, ...]] | None = None
+    """직전 보드 서명: (유닛 수, 성급 구성). 전투 중 유닛이 움직여도 같다(육각칸은 보지 않는다)."""
+    _disturbed_at: float | None = None
 
     def reset(self) -> None:
         """새 판."""
         self.game = time.strftime("%Y%m%d-%H%M%S") + "-" + uuid.uuid4().hex[:4]
         self._buys.clear()
         self._new.clear()
-        self._last_shop = self._last_bench = self._last_board = None
+        self._history.clear()
+        self._last_shop = self._last_board = self._disturbed_at = None
 
     def note_purchase(self, champion_id: str, at: float | None = None, source: str = "ledger") -> None:
         """app 장부의 구매 이벤트(상점에서 산 챔피언). 같은 창 안에 벤치에 새 칸이 생기면 그 크롭의 이름이 된다."""
-        if champion_id:
-            self._buys.append((time.time() if at is None else at, champion_id, source))
+        if not champion_id:
+            return
+        at = time.time() if at is None else at
+        self._add_buy(at, champion_id, source)
+        self._pair(at)
+
+    def _add_buy(self, at: float, champion: str, source: str) -> None:
+        # 같은 구매의 다른 출처 보고(상점 <-> 장부)는 합친다 — 가장 가까운, 아직 그 출처가 없는 같은 챔피언 구매로
+        twins = [b for b in self._buys
+                 if b.champion == champion and source not in b.sources and abs(b.at - at) <= self.window_s]
+        if twins:
+            min(twins, key=lambda b: abs(b.at - at)).sources.add(source)
+            return
+        # 마지막 변화와 같은 프레임(또는 그 전)의 구매 = 그 변화(합성 등)가 이미 소비했다
+        used = self._disturbed_at is not None and at <= self._disturbed_at
+        self._buys.append(_Buy(at, champion, {source}, used=used))
+
+    def _disturb(self, now: float) -> None:
+        """벤치·보드에 새 칸 말고 다른 변화가 보였다 → 창 안의 구매·새 칸을 모두 버린다(합성·옮기기·깜빡임)."""
+        self._disturbed_at = now
+        for b in self._buys:
+            b.used = True
+        self._new.clear()
 
     # ------------------------------------------------------------------ 한 프레임
     def observe(self, ctx: FrameContext, read: Any, names: Any, board_crops: Sequence[np.ndarray],
@@ -490,41 +536,78 @@ class UnitCollector:
             if self._last_shop is not None and len(self._last_shop) == len(ctx.shop):
                 for was, cur in zip(self._last_shop, ctx.shop):
                     if was not in (None, "*") and cur is None:
-                        self._buys.append((now, was, "shop"))
+                        self._add_buy(now, was, "shop")
             self._last_shop = ctx.shop
-        # 2) 벤치 새 칸(다른 칸은 그대로, 보드 수 그대로)
+        # 2) 벤치·보드 변화
         bench = {u.bench_slot: u.star for u in read.bench if u.bench_slot is not None}
         crop_at = {u.bench_slot: c for u, c in zip(read.bench, crops) if u.bench_slot is not None}
-        if self._last_bench is not None:
-            added = [s for s in bench if s not in self._last_bench]
-            gone = [s for s in self._last_bench if s not in bench]
-            if added and not gone and self._last_board == len(read.board):
-                for s in added:
+        board = (len(read.board), tuple(sorted(int(u.star or 0) for u in read.board)))
+        last = self._history[-1] if self._history else None
+        if last is not None and self._last_board is not None:
+            added = [s for s in bench if s not in last]
+            gone = [s for s in last if s not in bench]
+            restar = [s for s in bench if s in last and bench[s] != last[s]]
+            if gone or restar or len(added) > 1 or board != self._last_board:
+                self._disturb(now)
+            elif added:
+                s = added[0]
+                quiet = self._disturbed_at is None or now - self._disturbed_at > self.window_s
+                empty_before = (len(self._history) >= MIN_EMPTY_FRAMES
+                                and all(s not in h for h in self._history[-MIN_EMPTY_FRAMES:]))
+                if quiet and empty_before and len(bench) == len(last) + 1:
                     self._new.append(_NewSlot(now, s, crop_at[s], bench[s], ctx))
-        self._last_bench, self._last_board = bench, len(read.board)
+                else:
+                    self._disturb(now)           # 방금 있던 칸이 다시 보인 것(깜빡임) 등 — 새 칸으로 믿지 않는다
+        self._history = [*self._history, bench][-MIN_EMPTY_FRAMES:]
+        self._last_board = board
         # 3) 짝짓기
-        self._buys = [b for b in self._buys if now - b[0] <= self.window_s]
+        self._pair(now)
+
+    def _pair(self, now: float) -> None:
+        self._buys = [b for b in self._buys if now - b.at <= self.window_s]
         self._new = [n for n in self._new if now - n.at <= self.window_s]
-        if not self._buys or not self._new:
+        live = [b for b in self._buys if not b.used]
+        if not live or not self._new:
             return
-        champs = {c for _, c, _ in self._buys}
-        # 같은 구매가 상점과 장부 양쪽에서 들어오면 두 번 센다 → 출처별로 센 것 중 큰 쪽을 구매 수로 본다
-        per_source: dict[str, int] = {}
-        for _, _, src in self._buys:
-            per_source[src] = per_source.get(src, 0) + 1
-        n_buys = max(per_source.values())
-        if len(champs) != 1 or n_buys != len(self._new):
-            if len(self._new) > n_buys or len(champs) > 1:
-                log.debug("구매-벤치 짝이 모호합니다: 구매 %s / 새 칸 %d", self._buys, len(self._new))
+        champs = {b.champion for b in live}
+        if len(champs) != 1 or len(live) != len(self._new):
+            if len(self._new) > len(live) or len(champs) > 1:
+                log.debug("구매-벤치 짝이 모호합니다: 구매 %s / 새 칸 %d", live, len(self._new))
             return
         champ = next(iter(champs))
         for ns in self._new:
             if ns.star not in (None, 1):         # 산 유닛은 1성이다(2성이면 합성이 끼었다)
                 continue
+            if self._contradicts(champ, ns.crop):
+                log.info("구매 크롭이 %s의 승인 사진보다 다른 챔피언을 더 닮았습니다 — 저장하지 않음", champ)
+                continue
             self._save(champ, ns.crop, evidence=EVIDENCE_PURCHASE, star=1, score=0.95, ctx=ns.ctx,
                        slot=f"bench:{ns.slot}", approve=self.auto_approve_purchase)
-        self._buys.clear()
+        for b in live:
+            b.used = True                        # 창이 끝날 때까지 남겨 늦게 온 다른 출처 보고를 흡수한다
         self._new.clear()
+
+    def _contradicts(self, champion: str, crop: np.ndarray) -> bool:
+        """승인 크롭 기준으로 이 크롭이 다른 챔피언이 확실한가(그 챔피언 승인 크롭이 있을 때만 판단한다)."""
+        from .units import descriptor, similarity
+
+        try:
+            idx = self.db._ensure_index()
+        except Exception:
+            return False
+        d: np.ndarray | None = None
+        own: float | None = None
+        other = 0.0
+        for c, _, st, ref in idx.values():
+            if st != APPROVED:
+                continue
+            d = descriptor(crop) if d is None else d
+            s = similarity(d, ref)
+            if c == champion:
+                own = s if own is None else max(own, s)
+            else:
+                other = max(other, s)
+        return own is not None and other >= CONTRADICT_MIN and other - own >= CONTRADICT_MARGIN
 
 
 __all__ = ["APPROVED", "PENDING", "ChampionCoverage", "Coverage", "CropMeta", "EVIDENCE_KO", "FrameContext",

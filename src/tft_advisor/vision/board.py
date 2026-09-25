@@ -130,6 +130,9 @@ class UnitSlot:
     """이름 판정 신뢰도(0 = 이름 없음)."""
     name_source: str = "none"
     """이름 근거: forced(특성 구속만으로 결정) | traits(구속 + 닮음 배정) | library | duplicate | none."""
+    corroborated: bool | None = None
+    """이름에 모델 닮음 말고 다른 뒷받침(특성 구속·장부 힌트·같은 모델 보드 유닛)이 있는가. False = 라이브러리 닮음 하나만으로 붙인
+    추정(`units.SlotName.corroborated`). None = 이름 없음 또는 모름(`app.recog_view.is_guess`는 이때 신뢰도 규칙으로 본다)."""
     item_count: int = 0
     """화면에 붙어 있던 아이템 칸 수(0~3). `len(items)`보다 크면 못 알아본 아이템이 있다는 뜻이다."""
     item_conf: float = 1.0

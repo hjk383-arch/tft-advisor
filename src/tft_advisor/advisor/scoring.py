@@ -12,6 +12,7 @@ from ..config import Settings, Weights
 from ..contracts import (
     AugmentAdvice,
     AugmentChoice,
+    CompStats,
     ItemAdvice,
     ItemReadiness,
     ItemSuggestion,
@@ -59,6 +60,11 @@ QPREFIX = {"item": "comp_item_fit", "augment": "comp_augment_fit", "board": "com
 
 def clip01(x: float) -> float:
     return 0.0 if x < 0 else 1.0 if x > 1 else x
+
+
+def _holder_reason(holder: str, deck: str | None) -> str:
+    """"니달리 핵심 아이템" / 1위가 아닌 표시 덱 기준이면 "워윅 핵심 아이템(검은 가시 워윅)"."""
+    return f"{holder} 핵심 아이템" + (f"({deck})" if deck else "")
 
 
 @dataclass
@@ -562,10 +568,11 @@ class Scorer:
     # ------------------------------------------------------------------
     # 아이템 (§6)
     # ------------------------------------------------------------------
-    def holder_for(self, item_id: str) -> str | None:
+    def holder_for(self, item_id: str, comp: CompStats | None = None) -> str | None:
+        """보유자(기본: 1위 덱). comp를 주면 그 덱 기준 — bis를 준 덱과 보유자 덱을 맞출 때(27 W3)."""
         if not self.shown:
             return None
-        comp = self.shown[0]["cand"].comp
+        comp = comp if comp is not None else self.shown[0]["cand"].comp
         fw = self.w.item_fit
         if item_fit(item_id, comp, self.stats, fw) < fw.used_by_min:
             return None
@@ -593,8 +600,32 @@ class Scorer:
         return clip01(0.5 - pc / self.w.item.place_change_span)
 
     def bis(self, item_id: str) -> float:
-        return max((self.rel.get(c.comp_id, 0.0) * item_fit(item_id, c.comp, self.stats, self.w.item_fit)
-                    for c in self.cands), default=0.0)
+        return self.bis_source(item_id)[0]
+
+    def bis_source(self, item_id: str) -> tuple[float, Candidate | None]:
+        """(bis, 그 값을 준 후보 덱). 같은 값이면 1위 덱을 먼저 고른다(보유자 표시와 덱을 맞추려고)."""
+        top = self.shown[0]["cand"].comp_id if self.shown else None
+        best: tuple[float, Candidate | None] = (0.0, None)
+        for c in sorted(self.cands, key=lambda c: c.comp_id != top):     # 안정 정렬: 1위 덱 먼저, 나머지는 원래 순서
+            v = self.rel.get(c.comp_id, 0.0) * item_fit(item_id, c.comp, self.stats, self.w.item_fit)
+            if v > best[0]:
+                best = (v, c)
+        return best
+
+    def item_holder(self, item_id: str) -> tuple[str | None, str | None]:
+        """(표시 보유자, 덱 이름 — 1위 덱 기준이면 None). 점수(bis·st)는 바꾸지 않는다.
+
+        bis가 1위 덱에서 왔으면 예전과 같다(1위 덱 보유자). 다른 표시 덱(오버레이의 2·3위)에서 왔으면 그 덱의 보유자를
+        쓰고 덱 이름을 붙인다 — 적합도 근거와 화면의 보유자가 서로 다른 덱에서 오지 않게(27 W3).
+        표시되지 않은 덱에서 왔거나 그 덱에 보유자가 없으면 예전 동작(1위 덱 보유자).
+        """
+        top = self.shown[0]["cand"] if self.shown else None
+        _, src = self.bis_source(item_id)
+        shown_ids = {r["cand"].comp_id for r in self.shown}
+        if top is None or src is None or src.comp_id == top.comp_id or src.comp_id not in shown_ids:
+            return self.holder_for(item_id), None
+        h = self.holder_for(item_id, src.comp)
+        return (h, src.comp.name) if h is not None else (self.holder_for(item_id), None)
 
     def code_hold(self, max_bis: float) -> bool:
         """코드 hold 규칙(§6.8): BIS 적합 낮음 + hp healthy/moderate/unknown + 이른 스테이지."""
@@ -623,13 +654,14 @@ class Scorer:
         rows = []
         for x, (a, b) in self.craftable.items():
             bx = self.bis(x)
-            h = self.holder_for(x)
-            st = self.item_stat(x, h)
+            h, h_deck = self.item_holder(x)          # 표시 보유자: bis를 준 표시 덱 기준(27 W3)
+            st = self.item_stat(x, self.holder_for(x))   # 점수는 예전 그대로(1위 덱 보유자 통계)
             if ans is not None:
                 score = iw.w_bis * bx + iw.w_jev * gate * pj.get(x, 0.0) + iw.w_jev * (1 - gate) * bx + iw.w_stat * st
             else:
                 score = (iw.w_bis + iw.w_jev) * bx + iw.w_stat * st
-            rows.append({"item": x, "components": [a, b], "bis": bx, "st": st, "holder": h, "score": clip01(score)})
+            rows.append({"item": x, "components": [a, b], "bis": bx, "st": st, "holder": h, "deck": h_deck,
+                         "score": clip01(score)})
         # 재료가 겹치지 않게 탐욕 선택(최대 ⌊재료수/2⌋)
         remaining = Counter(v.components)
         picked = []
@@ -643,15 +675,16 @@ class Scorer:
         suggestions = [
             ItemSuggestion(item_id=r["item"], components=r["components"], holder_unit_id=r["holder"],
                            score=round(r["score"], 4),
-                           reason=(f"{self.ko(r['holder'])} 핵심 아이템" if r["holder"] else
+                           reason=(_holder_reason(self.ko(r["holder"]), r["deck"]) if r["holder"] else
                                    ("목표 덱 캐리용" if r["bis"] >= self.w.item_fit.used_by_min else "범용")))
             for r in picked
         ]
         for x in dict.fromkeys(bench_completed):   # 벤치 완성템 → 보유자 추천(§6-9)
-            h = self.holder_for(x)
+            h, h_deck = self.item_holder(x)
             suggestions.append(ItemSuggestion(item_id=x, components=[], holder_unit_id=h,
                                               score=round(clip01(self.bis(x)), 4),
-                                              reason=f"{self.ko(h)}에게" if h else "목표 덱 캐리용"))
+                                              reason=(f"{self.ko(h)}에게" + (f"({h_deck})" if h_deck else ""))
+                                              if h else "목표 덱 캐리용"))
         # hold
         max_bis = max((r["bis"] for r in rows), default=0.0)
         hold = False
@@ -662,7 +695,8 @@ class Scorer:
                 hold = True
             if v.hp_bucket == "critical":
                 hold = False
-        self.debug["item"] = {"rows": [{k: r[k] for k in ("item", "bis", "st", "holder", "score")} for r in rows],
+        keys = ("item", "bis", "st", "holder", "deck", "score")
+        self.debug["item"] = {"rows": [{k: r[k] for k in keys} for r in rows],
                               "max_bis": max_bis, "hold": hold, "jev_choice": ans.choice if ans else None}
         return ItemAdvice(suggestions=suggestions, hold=hold)
 

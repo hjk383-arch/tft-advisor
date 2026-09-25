@@ -577,6 +577,8 @@ class BoardPlanWeights(_Cfg):
     board_member: float = Field(0.6, ge=0)       # 추천 보드 소속 유닛 가산, x plan_now_scale
     trans_min_games: float = Field(20, ge=0)     # 다음 스테이지 전이 최소 표본
     trans_link_min: Unit = 0.15                  # 목표 덱으로 이어지는 전이로 볼 연결 확률
+    trans_match_min: Unit = 0.5                  # 라인업 ↔ 클러스터 Jaccard가 이 이상이면 "이 보드는 보통…"
+    trans_similar_min: Unit = 0.25               # 이 이상이면 "비슷한 보드는 보통…", 미만이면 다음 스테이지 힌트 없음
 
 
 class Weights(_Cfg):

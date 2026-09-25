@@ -757,7 +757,8 @@ class UnitNamer:
         self._learn(nc, nd, bench_names)
 
         def put(u: Any, n: SlotName) -> Any:
-            return replace(u, unit_id=n.unit_id, unit_conf=n.confidence, name_source=n.source)
+            return replace(u, unit_id=n.unit_id, unit_conf=n.confidence, name_source=n.source,
+                           corroborated=bool(n.corroborated) if n.unit_id else None)
 
         board = tuple(put(u, n) for u, n in zip(read.board, board_names))
         bench = tuple(put(u, n) for u, n in zip(read.bench, bench_names))

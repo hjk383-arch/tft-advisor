@@ -568,10 +568,10 @@ class SetupDialog(QDialog):
 
     # ------------------------------------------------------------------ 테스트 캡처
     def _get_recognizer(self, settings: Settings):
-        from ..vision.recognizer import Recognizer
+        from .no_collect import make_recognizer_no_collect
 
-        if self._recognizer is None:
-            self._recognizer = Recognizer(cfg=settings.vision)
+        if self._recognizer is None:   # 테스트 캡처·감지용 — 사진 DB에 쌓지 않는다(QA 27 W5)
+            self._recognizer = make_recognizer_no_collect(settings.vision)
         else:   # 설정만 갈아 끼운다(OCR 모델·템플릿을 다시 싣지 않는다)
             self._recognizer.cfg = settings.vision
             self._recognizer.profile_setting = settings.vision.aspect_setting()

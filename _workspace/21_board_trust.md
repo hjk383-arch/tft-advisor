@@ -454,3 +454,53 @@ def rescore_shop(self, state: GameState, previous: Recommendation | None = None)
   - variation 최소 표본(현재 30)이나 레벨 ± 1 보드 제공을 검토해 달라.
   - 18.3b 갱신 뒤 값이 바뀌는지 다시 볼 것.
 - **튜닝 후보**: `stage_unit`(0.8), `board_member`(0.6), `stage_delta_span`(0.3), `board_max_missing`(2). 실전 로그(`debug`)로 조정한다.
+
+## 12. QA 27 W4(문구 정직성) · W3(아이템 보유자 덱) 수정 — jev-strategist, 2026-09-24
+
+### 12.1 W4-1 "평균 등수 −0.11" → 기준선 대비 문구
+- delta = avg_place − 같은 스테이지 기준선(음수가 좋다)이다. 절대 등수처럼 읽히지 않게 문구를 바꿨다.
+- 새 함수 `stage_boards.vs_baseline(delta)`: 음수 → "평균보다 0.11등 높음", 양수 → "평균보다 0.27등 낮음", |delta| < 0.005 → "평균과 비슷함".
+- 유닛 근거(`UnitSignal.reason`)
+  - 전: "통계: 2스테이지 1성 평균 등수 −0.11"
+  - 후: "통계: 2스테이지 1성 · 평균보다 0.11등 높음(1,234판)"(표본 수 포함)
+- 추천 보드 줄(`board_plan._pick_note`)
+  - 전: "… 7,973판 · 평균 등수 −0.46 · 보유 5/5"
+  - 후: "… 7,973판 · 평균보다 0.46등 높음 · 보유 5/5"
+- 다음 스테이지 줄의 "평균 4.40등"은 절대값이라 그대로 두었다.
+
+### 12.2 W4-2 `next_hint` 최소 일치도
+- `NextHint`에 `match`(라인업 ↔ 출발 클러스터 Jaccard)와 `close` 필드를 더했다.
+- 새 가중 `[board_plan] trans_match_min = 0.5`, `trans_similar_min = 0.25`(config.py · weights.toml).
+  - Jaccard ≥ 0.5 → "다음 스테이지: 이 보드는 보통 …"
+  - 0.25 ≤ Jaccard < 0.5 → "다음 스테이지: 비슷한 보드는 보통 …"
+  - < 0.25(예: 4기 중 1기만 겹침 = 1/7) → 힌트 없음(None)
+- `StageBoardHint` 계약은 바꾸지 않았다(next_* 필드 그대로).
+
+### 12.3 W3 아이템 보유자 덱 일치(선택 항목)
+- 원인: `bis(x)`는 모든 후보 덱 중 `rel × item_fit` 최대값이다. 그런데 `holder_for(x)`는 늘 1위 덱에서 보유자를 찾았다.
+  - 그래서 스테락처럼 적합도는 2위 덱에서 오고, 보유자(니달리)는 1위 덱에서 나오는 불일치가 생겼다.
+- 수정(`scoring.py`)
+  - `bis_source(x)`: (bis, 출처 덱)을 준다. 동률이면 1위 덱을 우선한다. `bis()`는 이 값을 그대로 쓴다(값 불변).
+  - `item_holder(x)` → (표시 보유자, 덱 이름)
+    - 출처가 1위 덱이면 예전 동작과 같다.
+    - 출처가 **표시된** 2·3위 덱이고 그 덱에 보유자가 있으면, 그 덱의 보유자를 보여 주고 근거에 덱 이름을 붙인다. 예: "렉사이 핵심 아이템(주문술사 베이가)", 벤치 완성템은 "렉사이에게(주문술사 베이가)".
+    - 출처가 표시되지 않은 덱이거나 그 덱에 보유자가 없으면 예전처럼 1위 덱 보유자를 쓴다. 화면에 없는 덱 이름은 꺼내지 않는다.
+  - **점수는 바꾸지 않았다**
+    - bis 값, st(아이템 통계)는 예전처럼 1위 덱 보유자 기준이다.
+    - 탐욕 선택도 그대로다. 달라진 것은 `holder_unit_id`, `reason`, `debug["item"].rows[].deck`뿐이다.
+- 참고(mini, 3-2 재료 6개 탐침): 스테락의 bis 출처는 표시되지 않은 `juggernaut-elderdragon`이다. 그래서 보유자는 예전처럼 1위 덱의 니달리다.
+  - test.png에서처럼 출처가 표시된 2위 덱이면 그 덱의 보유자와 덱 이름이 나온다.
+  - 표시되지 않은 덱이 출처인 경우의 불일치는 남는다. 이 경우를 없애려면 bis를 표시 덱으로 제한해야 하는데, 그러면 점수가 바뀐다(사용자 판단, 27 §3.1 (a)).
+
+### 12.4 테스트
+- `tests/advisor/test_stage_boards.py`
+  - 기존 2개 문구 기대값 갱신: 유닛 근거 전체 문자열, 추천 보드 "평균보다 …등 높음"·"평균 등수" 없음
+  - `test_next_hint_follows_transitions`에 match 1.0·close 추가
+  - 새 테스트 `test_vs_baseline_wording`
+  - 새 테스트 `test_next_hint_wording_depends_on_how_well_the_lineup_matches`: 0.5 → "이 보드는", 0.4 → "비슷한 보드는", 1/7 → None, 임계값 설정 반영
+- `tests/advisor/test_advisor_units.py::test_item_holder_comes_from_the_deck_whose_fit_was_used`
+  - 표시 2·3위 출처면 그 덱의 보유자·덱 이름이 나온다(탐침에서 3건 이상).
+  - 그 밖에는 예전 보유자가 나온다.
+  - 근거에 덱 이름이 붙는다.
+  - st는 1위 덱 보유자 기준 그대로다.
+- 전체: `PYTHONIOENCODING=utf-8 .venv/Scripts/python -m pytest -o addopts="" -q` → **1322 passed**, 3 skipped, 1 xfailed, 4 failed. 실패 4건은 알려진 Windows 실패다(api_key 힌트, setup 권한 상자, credentials 0600 두 건).

@@ -282,6 +282,38 @@ def test_item_suggestions_do_not_reuse_components(make_advisor):
     assert len([s for s in rec.item.suggestions if s.components]) <= 2
 
 
+def test_item_holder_comes_from_the_deck_whose_fit_was_used(stats, weights, settings):
+    """27 W3: 아이템 적합도(bis)를 준 덱과 화면의 보유자 덱이 같아야 한다. 점수(bis·st)는 그대로."""
+    comps = [ItemRef(id=C + x) for x in ("BFSword", "GiantsBelt", "ChainVest", "RecurveBow",
+                                         "NeedlesslyLargeRod", "TearOfTheGoddess")]
+    sc = make_scorer(stats, weights, settings, gs(stage="3-2", level=6, hp=60, items=ItemState(components=comps)))
+    assert len(sc.shown) >= 2
+    top = sc.shown[0]["cand"]
+    shown = {r["cand"].comp_id: r["cand"] for r in sc.shown}
+    crossed = 0
+    for x in sc.craftable:
+        bx, src = sc.bis_source(x)
+        assert bx == sc.bis(x)
+        h, deck = sc.item_holder(x)
+        if deck is None:     # 1위 덱 기준(예전 동작)
+            assert h == sc.holder_for(x)
+            assert src is None or src.comp_id == top.comp_id or src.comp_id not in shown                 or sc.holder_for(x, src.comp) is None
+        else:                # 2·3위 표시 덱 기준 → 그 덱의 보유자와 덱 이름
+            crossed += 1
+            assert src.comp_id in shown and src.comp_id != top.comp_id and deck == src.comp.name
+            assert h == sc.holder_for(x, src.comp) and h in {u.id for u in src.comp.final_board}
+    assert crossed >= 1
+    adv = sc.item_advice()
+    rows = {r["item"]: r for r in sc.debug["item"]["rows"]}
+    for s_ in adv.suggestions:
+        r = rows.get(s_.item_id)
+        if r is not None and r["deck"]:
+            assert s_.reason.endswith(f"({r['deck']})") and s_.holder_unit_id == r["holder"]
+        # 점수의 st는 여전히 1위 덱 보유자 통계
+        if r is not None:
+            assert r["st"] == sc.item_stat(r["item"], sc.holder_for(r["item"]))
+
+
 def test_augment_fallback_prefers_trait_augment(make_advisor):
     st = gs(screen_mode="augment_select", stage="3-2", level=6, hp=70, board=[{"id": "DA_18_Ornn"}], bench=[],
             augment_offer=[{"id": "DA_Hustler"}, {"id": "DA_18_ElderwoodTraitAugment"}])

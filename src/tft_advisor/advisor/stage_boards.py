@@ -5,10 +5,13 @@ import하지 않고 덕 타이핑으로 쓴다(`stats.stage_stats` 속성이 없
 
 세 가지를 준다.
 1. `unit_signal`: 이 스테이지에 이 유닛(성급별)을 보드에 올린 판의 성적. 같은 스테이지 기준선 대비 delta(음수가 좋다)를
-   표본 수로 수축(delta x g/(g+k))해 −1~1 신호로 바꾼다. 근거 문구 "통계: 2스테이지 평균 등수 −0.10".
+   표본 수로 수축(delta x g/(g+k))해 −1~1 신호로 바꾼다. 근거 문구 "통계: 2스테이지 1성 · 평균보다 0.10등 높음(1,234판)"
+   (delta는 절대 등수가 아니라 기준선 대비 차이다. 등수는 낮을수록 좋으므로 delta 음수 = "높음").
 2. `best_board`: 지금 스테이지·레벨의 실제 보드(정확한 variation 우선, 없으면 cluster) 중 보유 유닛으로 (거의) 만들 수 있는 것.
    고르기 점수 = 품질(수축 delta) + 보유 비율 + 목표 덱 연결(comp_links, 초반엔 작게).
 3. `next_hint`: 지금 라인업과 닮은 클러스터에서 다음 스테이지로 가장 많이 간 경로(목표 덱으로 이어지는 경로 우선).
+   닮은 정도(Jaccard)가 `trans_match_min` 이상이면 "이 보드는", `trans_similar_min` 이상이면 "비슷한 보드는",
+   그보다 낮으면 힌트를 내지 않는다(유닛 1기만 겹친 클러스터로 "이 보드는 보통…"이라 말하지 않게, 27 W4).
 
 주의(28 §0·§4): top4가 없다(avg_place·win_rate·round_win_rate). 연승 보드일수록 좋아 보이는 상관 관계라 인과 효과가 아니다
 → 가중을 작게(`[board_plan] stage_*`/`board_*`), 표본으로 수축한다.
@@ -31,8 +34,8 @@ class UnitSignal:
     star: int | None        # 쓴 행의 성급(None = 전 성급 합)
 
     def reason(self) -> str:
-        star = f"{self.star}성 " if self.star else ""
-        return f"통계: {self.stage}스테이지 {star}평균 등수 {_signed(self.delta)}"
+        star = f" {self.star}성" if self.star else ""
+        return f"통계: {self.stage}스테이지{star} · {vs_baseline(self.delta)}({self.games:,}판)"
 
 
 @dataclass(frozen=True)
@@ -57,6 +60,8 @@ class NextHint:
     avg_place: float | None
     games: float
     link: float                     # 그 보드의 목표 덱 연결 확률
+    match: float = 1.0              # 지금 라인업 ↔ 출발 클러스터 Jaccard
+    close: bool = True              # match >= trans_match_min → "이 보드는", 아니면 "비슷한 보드는"
 
 
 class StageBoardSource(Protocol):
@@ -69,8 +74,14 @@ class StageBoardSource(Protocol):
                   comp_id: str | None) -> NextHint | None: ...
 
 
-def _signed(x: float) -> str:
-    return f"{x:+.2f}".replace("-", "−")
+def vs_baseline(delta: float) -> str:
+    """기준선 대비 delta(음수가 좋다) → "평균보다 0.11등 높음"/"평균보다 0.11등 낮음"/"평균과 비슷함".
+
+    절대 평균 등수("평균 4.40등")와 헷갈리지 않게 '평균보다'를 붙이고, 등수는 낮을수록 좋으므로 delta 음수를 '높음'이라 쓴다.
+    """
+    if abs(delta) < 0.005:
+        return "평균과 비슷함"
+    return f"평균보다 {abs(delta):.2f}등 {'높음' if delta < 0 else '낮음'}"
 
 
 def _get(obj: Any, name: str, default: Any = None) -> Any:
@@ -161,6 +172,9 @@ class MetaTftStageBoards:
         found = self.st.cluster_for(lineup, s)
         if not found:
             return None
+        match = float(found[1])
+        if match < self.w.trans_similar_min:
+            return None
         cluster = found[0].cluster
         opts: list[tuple[Any, Any, float]] = []
         for t in self.st.transitions(s, cluster, min_games=self.w.trans_min_games):
@@ -172,7 +186,7 @@ class MetaTftStageBoards:
         linked = [o for o in opts if o[2] >= self.w.trans_link_min]
         t, nb, link = max(linked or opts, key=lambda o: (o[0].share, o[0].games))
         return NextHint(stage=s + 1, units=tuple(nb.units), share=t.share, avg_place=t.avg_place, games=t.games,
-                        link=link)
+                        link=link, match=match, close=match >= self.w.trans_match_min)
 
 
-__all__ = ["BoardPick", "MetaTftStageBoards", "NextHint", "StageBoardSource", "UnitSignal"]
+__all__ = ["BoardPick", "MetaTftStageBoards", "NextHint", "StageBoardSource", "UnitSignal", "vs_baseline"]

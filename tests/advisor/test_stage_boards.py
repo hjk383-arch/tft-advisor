@@ -9,9 +9,9 @@ from pathlib import Path
 import pytest
 
 from tft_advisor.advisor import Advisor, MockJevBackend
-from tft_advisor.advisor.board_plan import plan_board
+from tft_advisor.advisor.board_plan import _next_note, plan_board
 from tft_advisor.advisor.features import build_view
-from tft_advisor.advisor.stage_boards import BoardPick, MetaTftStageBoards, NextHint, UnitSignal
+from tft_advisor.advisor.stage_boards import BoardPick, MetaTftStageBoards, NextHint, UnitSignal, vs_baseline
 from tft_advisor.config import BoardPlanWeights
 from tft_advisor.contracts import GameState
 from tft_advisor.static_data import load_static
@@ -64,7 +64,9 @@ def test_unit_signal_is_shrunk_stage_delta(repo, src):
     w = BoardPlanWeights()
     shrunk = row.delta * row.games / (row.games + w.stage_shrink_k)
     assert sig.value == pytest.approx(max(-1, min(1, -shrunk / w.stage_delta_span)))
-    assert sig.value > 0 and "3스테이지" in sig.reason() and "−" in sig.reason()   # delta 음수 = 좋다
+    # delta 음수 = 좋다 → "평균보다 …등 높음"(절대 등수로 읽히는 "평균 등수 −0.39"가 아니다, 27 W4)
+    assert sig.value > 0 and sig.reason() == f"통계: 3스테이지 · 평균보다 {-row.delta:.2f}등 높음({row.games:,}판)"
+    assert "평균 등수" not in sig.reason() and "−" not in sig.reason()
     # 표본 수축: 같은 delta라도 표본이 적으면 신호가 약하다
     small = src._quality(row.delta, 50)
     assert abs(small) < abs(sig.value)
@@ -103,7 +105,36 @@ def test_next_hint_follows_transitions(repo, src):
     nh = src.next_hint(lineup, "2-5", 4, None)
     assert isinstance(nh, NextHint) and nh.stage == 3
     assert nh.units == repo.stage_stats.cluster_board(3, "1").units and nh.share == pytest.approx(0.676, abs=1e-3)
+    assert nh.match == 1.0 and nh.close
     assert src.next_hint(lineup, "5-1", 9, None) is None                      # 스테이지 5 다음은 없다
+
+
+def test_vs_baseline_wording():
+    """delta는 기준선 대비 차이(음수가 좋다). 절대 평균 등수로 읽히지 않게 '평균보다'를 붙이고 방향을 말로 쓴다."""
+    assert vs_baseline(-0.11) == "평균보다 0.11등 높음"
+    assert vs_baseline(0.27) == "평균보다 0.27등 낮음"
+    assert vs_baseline(0.001) == "평균과 비슷함"
+    sig = UnitSignal(value=0.2, delta=-0.11, games=1234, stage=2, star=1)
+    assert sig.reason() == "통계: 2스테이지 1성 · 평균보다 0.11등 높음(1,234판)"
+    assert UnitSignal(value=-0.3, delta=0.2, games=80, stage=4, star=None).reason() == "통계: 4스테이지 · 평균보다 0.20등 낮음(80판)"
+
+
+def test_next_hint_wording_depends_on_how_well_the_lineup_matches(src):
+    """27 W4: 유닛 1기만 겹친 클러스터로 "이 보드는 보통…"이라 말하지 않는다."""
+    ko = lambda u: u   # noqa: E731
+    close = src.next_hint(["DA_18_Kobuko", "DA_18_RekSai", "DA_18_Teemo", "DA_18_Zyra", "DA_18_Ahri"], "2-5", 4, None)
+    assert close is not None and close.match == pytest.approx(0.5) and close.close
+    assert "이 보드는 보통" in _next_note(close, [], ko)
+    loose = src.next_hint(["DA_18_Kobuko", "DA_18_RekSai", "DA_18_Zyra"], "2-5", 4, None)   # 2/5 = 0.4
+    assert loose is not None and loose.match == pytest.approx(0.4) and not loose.close
+    note = _next_note(loose, [], ko)
+    assert "비슷한 보드는 보통" in note and "이 보드는" not in note
+    # 1기만 겹침(1/7): 힌트 없음
+    assert src.next_hint(["DA_18_Kobuko", "DA_18_Zyra", "DA_18_Ahri", "DA_18_Jinx"], "2-5", 4, None) is None
+    # 임계값은 설정으로 조절된다
+    lax = MetaTftStageBoards(src.st, BoardPlanWeights(trans_similar_min=0.1, trans_match_min=0.1))
+    one = lax.next_hint(["DA_18_Kobuko", "DA_18_Zyra", "DA_18_Ahri", "DA_18_Jinx"], "2-5", 4, None)
+    assert one is not None and one.close
 
 
 def test_empty_stage_stats_degrade_to_none():
@@ -137,7 +168,8 @@ def test_plan_fields_the_real_stage_board_from_bench(repo, src, weights):
     hint = p.stage_board
     assert hint is not None and hint.stage == 3 and set(hint.units) == set(SPELL) and hint.games == 7973
     note = next(n for n in p.notes if n.startswith("지금 이 스테이지 추천 보드: "))
-    assert "7,973판" in note and "보유 5/5" in note and "평균 등수 −" in note
+    assert "7,973판" in note and "보유 5/5" in note and f"평균보다 {-hint.delta:.2f}등 높음" in note
+    assert "평균 등수" not in note
     assert any("추천 스테이지 보드" in (e.reason or "") or "통계: 3스테이지" in (e.reason or "") for e in p.lineup)
 
 

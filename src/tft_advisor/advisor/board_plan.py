@@ -37,7 +37,7 @@ from ..contracts import (
 )
 from .candidates import stage_round
 from .features import View, board_at
-from .stage_boards import BoardPick, NextHint, StageBoardSource
+from .stage_boards import BoardPick, NextHint, StageBoardSource, vs_baseline
 from .stats_source import AdvisorStats
 
 DEFAULT_WEIGHTS = BoardPlanWeights()
@@ -206,7 +206,7 @@ def _pick_note(pick: BoardPick, ko: Callable[[str], str]) -> str:
     missing = [u for u in pick.units if u not in pick.owned]
     stat = f"{pick.stage}스테이지 실제 보드 {pick.games:,}판"
     if pick.delta is not None:
-        stat += f" · 평균 등수 {pick.delta:+.2f}".replace("-", "−")
+        stat += f" · {vs_baseline(pick.delta)}"
     stat += f" · 보유 {len(pick.owned)}/{len(pick.units)}"
     text = f"지금 이 스테이지 추천 보드: {_names(pick.units, ko)} ({stat})"
     if missing:
@@ -220,7 +220,8 @@ def _next_note(nh: NextHint, lineup: list[str], ko: Callable[[str], str]) -> str
     tail = f"경로 {nh.share:.0%}"
     if nh.avg_place is not None:
         tail += f" · 평균 {nh.avg_place:.2f}등"
-    return f"다음 스테이지: 이 보드는 보통 {where} 쪽으로 이어집니다({tail})"
+    subject = "이 보드는" if nh.close else "비슷한 보드는"
+    return f"다음 스테이지: {subject} 보통 {where} 쪽으로 이어집니다({tail})"
 
 
 def plan_board(view: View, stats: AdvisorStats, comp: CompStats | None, level: int | None,

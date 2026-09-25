@@ -80,3 +80,33 @@
 - 대기가 쌓이면 디스크가 늘어난다(크롭 112x112 PNG 약 20KB). 상한·중복 제거로 챔피언당 수십 장 수준.
 - 검토 창과 게임 루프가 **같은 파일**을 동시에 옮기는 경우(루프가 대기에 쓰는 순간 창이 같은 챔피언 폴더를 새로 고침)는
   파일 단위라 깨지지 않지만, 창 목록이 한 박자 늦을 수 있다(F5).
+
+## QA 27 F1 수정 (2026-09-24, vision-engineer)
+
+QA 27 §2.3 F1: 끝난(또는 짝이 없는) 구매가 창(3초) 안의 벤치 이동·판독 깜빡임과 짝지어져 **다른 유닛 크롭이 산 챔피언 이름으로** 저장됐다.
+세 경로(상점+장부 이중 보고 뒤 끌어 옮기기 / 보드 합성 구매 뒤 끌어 옮기기 / 벤치 판독 깜빡임)를 모두 막았다.
+
+### 새 규칙 (`vision/unit_db.py` `UnitCollector`)
+| 규칙 | 내용 | 막는 경로 |
+|---|---|---|
+| 구매 한 건 합치기 | 같은 챔피언의 상점(`shop`)·장부(`ledger`) 보고는 `window_s` 안이면 한 건(`_Buy.sources`). 짝지어 쓴 구매는 `used`로 창 끝까지 남겨 늦게 온 메아리를 흡수한다 | 이중 보고 |
+| 변화 = 무효 | 벤치 칸 사라짐 · 기존 칸 성급 바뀜 · 한 프레임에 칸 2개 이상 추가 · 보드 서명(유닛 수 + 성급 구성) 바뀜 → 그때까지의 구매·새 칸을 모두 버린다(`_disturb`). 합성(성급 상승·칸 사라짐)으로 끝난 구매도 여기서 소비된다. 변화 시각 이전 시각의 늦은 장부 보고는 처음부터 소비됨으로 들어온다 | 합성 뒤 옮기기, 깜빡임 |
+| 조용한 창 | 새 칸은 직전 `window_s` 안에 변화가 없어야 한다 | 옮기기(들어 올림 → 내려놓음) |
+| 빈 칸 이력 | 새 칸은 직전 `MIN_EMPTY_FRAMES`(=2) 프레임 내내 비어 있던 칸이고, 벤치 수가 정확히 +1 | 깜빡임(한 프레임 누락 뒤 재등장) |
+| 모순 거부 | 산 챔피언의 승인 크롭이 있고, 크롭이 다른 챔피언 승인 크롭을 `CONTRADICT_MIN`(0.8) 이상·`CONTRADICT_MARGIN`(0.1) 이상 더 닮았으면 저장하지 않는다 | 남은 오류의 안전망 |
+| 보드는 육각칸을 보지 않는다 | 서명 = (수, 성급 구성). 전투 중 유닛 이동으로 증거가 끊기지 않게 | - |
+
+- `note_purchase()`도 바로 짝짓기를 시도한다(장부 보고가 인식 뒤에 와도 같은 프레임의 새 칸과 짝).
+- 비용: 구매 증거가 더 드물다(게임 시작 첫 두 프레임, 옮기기·합성 직후 3초 안의 구매는 버린다). 버리는 쪽이 안전하다(QA 19 FAIL-1과 같은 원리).
+- QA 재현 스크립트(`repro_buy.py`)의 A·D는 이제 아무것도 저장하지 않는다 — 앞 프레임이 하나뿐이라 "빈 칸 이력" 규칙에 걸린다(의도). 앞 프레임을 둔 같은 흐름은 테스트가 덮는다.
+
+### QA 27 W1: `UnitSlot.corroborated`
+- `vision/board.py` `UnitSlot.corroborated: bool | None = None`. `UnitNamer.name()`이 `SlotName.corroborated`를 싣는다(이름 없으면 None).
+- `app.recog_view.is_guess`는 이미 이 속성을 먼저 읽는다 → 라이브러리 닮음 하나만인 이름(여러 프레임 일치로 나간 것 포함)이 신뢰도와 상관없이 "(추정)"으로 표시된다. app 코드는 고치지 않았다.
+
+### 테스트
+- `tests/test_unit_db.py::test_qa27_stale_purchase_never_labels_another_unit` — xfail 제거, 3경로 통과. 이중 보고 경로는 진짜 구매 짝(bench:2)이 저장되는지도 본다.
+- 새: `test_shop_and_ledger_reports_of_two_same_champion_buys_pair_each_once`, `test_new_slot_after_a_recent_disturbance_is_not_purchase_evidence`(창이 지나면 다시 모음), `test_purchase_crop_contradicting_approved_crops_is_not_saved`(모순 검사를 끄면 실패함을 확인).
+- 기존 구매 테스트 3개는 앞 프레임을 하나 더 넣었다(빈 칸 이력 2프레임). 모호 테스트는 이력이 충분한 상태에서 다섯 경우가 여전히 거부된다.
+- `tests/test_vision_units.py::test_named_slots_carry_corroborated_flag_for_recog_view`.
+- 전체: `PYTHONIOENCODING=utf-8 .venv\Scripts\python.exe -m pytest` → 실패는 기존 Windows 4건뿐(api_key 마스크, setup 권한 상자, credentials 0600 2건).

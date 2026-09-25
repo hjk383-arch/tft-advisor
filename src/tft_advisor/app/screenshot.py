@@ -25,6 +25,7 @@ from pathlib import Path
 from ..config import Settings, load_settings
 from ..contracts import GameState, Recommendation
 from .names import NameBook
+from .no_collect import disable_unit_collector, make_recognizer_no_collect
 from .report import format_report, kept_view
 from .session import KEEP_MODES
 
@@ -128,9 +129,8 @@ def run_screenshot(path: Path, *, settings: Settings | None = None, jev: str = "
 
     own_advisor = advisor is None
     if recognizer is None:
-        from ..vision.recognizer import Recognizer
-
-        recognizer = Recognizer(cfg=settings.vision)
+        recognizer = make_recognizer_no_collect(settings.vision)
+    disable_unit_collector(recognizer)   # 스크린샷은 사용자 사진 DB(_pending/)에 쌓지 않는다(QA 27 W5)
     single_frame_names(recognizer)
     if advisor is None:
         from ..advisor import create_advisor

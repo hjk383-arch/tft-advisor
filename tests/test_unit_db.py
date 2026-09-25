@@ -169,6 +169,7 @@ def test_purchase_from_a_ledger_event_labels_the_new_bench_slot(static, tmp_path
     ka = cid(static, "카르마")
     crops = {0: img((0, 0, 255)), 1: img((255, 0, 0)), 2: img((0, 200, 200))}
     r0 = BoardRead(bench=_bench(0, 1))
+    col.observe(D.FrameContext(at=9.5), r0, _names(0, 2), [], [crops[0], crops[1]], None)   # 새 칸은 직전 2프레임 비어 있어야
     col.observe(D.FrameContext(at=10.0), r0, _names(0, 2), [], [crops[0], crops[1]], None)
     col.note_purchase(ka, at=10.5)                                  # 가짜 장부 구매 이벤트
     r1 = BoardRead(bench=_bench(0, 1, 2))
@@ -183,8 +184,9 @@ def test_purchase_detected_from_the_shop_slot_turning_empty(static, tmp_path):
     col = D.UnitCollector(db_at(tmp_path, static), auto_approve_purchase=True)
     ka, ak = cid(static, "카르마"), cid(static, "아칼리")
     a, b = img((0, 0, 255)), img((255, 0, 0))
-    col.observe(D.FrameContext(at=1.0, shop=(ka, ak, None, "*", ak)), BoardRead(bench=_bench(0)), _names(0, 1),
-                [], [a], None)
+    for t in (0.7, 1.0):
+        col.observe(D.FrameContext(at=t, shop=(ka, ak, None, "*", ak)), BoardRead(bench=_bench(0)), _names(0, 1),
+                    [], [a], None)
     saved = col.observe(D.FrameContext(at=1.4, shop=(None, ak, None, "*", ak)), BoardRead(bench=_bench(0, 3)),
                         _names(0, 2), [], [a, b], None)
     assert [(m.champion, m.slot, m.status) for m in saved] == [(ka, "bench:3", D.APPROVED)]    # 설정: 구매 자동 승인
@@ -196,7 +198,8 @@ def test_purchase_is_not_labelled_when_ambiguous(static, tmp_path, case):
     ka, ak = cid(static, "카르마"), cid(static, "아칼리")
     a, b, c = img((0, 0, 255)), img((255, 0, 0)), img((0, 255, 0))
     board0 = (UnitSlot(star=1, hex=(0, 0)),)
-    col.observe(D.FrameContext(at=1.0), BoardRead(board=board0, bench=_bench(0, 1)), _names(1, 2), [a], [a, b], None)
+    for t in (0.8, 1.0):
+        col.observe(D.FrameContext(at=t), BoardRead(board=board0, bench=_bench(0, 1)), _names(1, 2), [a], [a, b], None)
     board1, bench1, at = board0, _bench(0, 1, 2), 1.5
     if case == "too_late":
         col.note_purchase(ka, at=1.0)
@@ -258,8 +261,6 @@ def test_namer_with_collector_passes_frame_context_and_reload_reads_approved(sta
 
 
 # ---------------------------------------------------------------- QA 27: 짝이 끝난(또는 짝이 없는) 구매가 남아 다른 유닛에 붙는 경로
-@pytest.mark.xfail(strict=True, reason="QA 27 FAIL: 남은 구매 기록이 창(3초) 안의 벤치 이동·판독 깜빡임과 짝지어진다 "
-                                       "(vision-engineer 수정 대상, _workspace/27_qa_gate.md)")
 @pytest.mark.parametrize("case", ["ledger_echo_then_drag", "combine_on_board_then_drag", "bench_flicker"])
 def test_qa27_stale_purchase_never_labels_another_unit(static, tmp_path, case):
     """구매 X가 이미 짝지어졌거나(상점+장부 이중 보고) 새 벤치 칸 없이 끝난 뒤(보드 유닛과 합성), 같은 3초 안에 다른 유닛 Y가
@@ -268,22 +269,89 @@ def test_qa27_stale_purchase_never_labels_another_unit(static, tmp_path, case):
     ka = cid(static, "카르마")
     a, y, bought = img((0, 0, 255)), img((0, 255, 255)), img((255, 0, 0))
     if case == "ledger_echo_then_drag":
-        col.observe(D.FrameContext(at=1.0, shop=(ka, None, None, None, None)), BoardRead(bench=_bench(0, 1)),
-                    _names(0, 2), [], [a, y], None)
+        for t in (0.7, 1.0):
+            col.observe(D.FrameContext(at=t, shop=(ka, None, None, None, None)), BoardRead(bench=_bench(0, 1)),
+                        _names(0, 2), [], [a, y], None)
         col.observe(D.FrameContext(at=1.3, shop=(None, None, None, None, None)), BoardRead(bench=_bench(0, 1, 2)),
                     _names(0, 3), [], [a, y, bought], None)               # 상점 증거로 짝지어 저장(맞음)
         col.note_purchase(ka, at=1.3)                                       # 같은 구매를 장부가 뒤늦게 알림(루프 순서)
         col.observe(D.FrameContext(at=1.6), BoardRead(bench=_bench(0, 2)), _names(0, 2), [], [a, bought], None)
         col.observe(D.FrameContext(at=1.9), BoardRead(bench=_bench(0, 2, 5)), _names(0, 3), [], [a, bought, y], None)
     elif case == "combine_on_board_then_drag":
-        col.observe(D.FrameContext(at=1.0), BoardRead(bench=_bench(0, 1)), _names(0, 2), [], [a, y], None)
+        for t in (0.7, 1.0):
+            col.observe(D.FrameContext(at=t), BoardRead(bench=_bench(0, 1)), _names(0, 2), [], [a, y], None)
         col.note_purchase(ka, at=1.1)                                       # 보드의 카르마 2기와 합성 → 벤치 새 칸 없음
         col.observe(D.FrameContext(at=1.3), BoardRead(bench=_bench(0)), _names(0, 1), [], [a], None)          # Y 들어 올림
         col.observe(D.FrameContext(at=1.6), BoardRead(bench=_bench(0, 4)), _names(0, 2), [], [a, y], None)    # Y 내려놓음
     else:
-        col.observe(D.FrameContext(at=1.0), BoardRead(bench=_bench(0, 1)), _names(0, 2), [], [a, y], None)
+        for t in (0.7, 1.0):
+            col.observe(D.FrameContext(at=t), BoardRead(bench=_bench(0, 1)), _names(0, 2), [], [a, y], None)
         col.note_purchase(ka, at=1.1)
         col.observe(D.FrameContext(at=1.3), BoardRead(bench=_bench(0)), _names(0, 1), [], [a], None)          # 1번 칸 판독 누락
         col.observe(D.FrameContext(at=1.6), BoardRead(bench=_bench(0, 1)), _names(0, 2), [], [a, y], None)
     wrong = [m for m in col.saved if m.champion == ka and np.array_equal(db_at(tmp_path, static).load_image(m), y)]
     assert wrong == []
+    if case == "ledger_echo_then_drag":                                     # 진짜 구매 짝은 그대로 저장된다
+        assert [(m.champion, m.slot) for m in col.saved] == [(ka, "bench:2")]
+
+
+# ---------------------------------------------------------------- QA 27 F1 수정 규칙
+def _prime(col, bench, crops, t0=0.4, shop=None):
+    for t in (t0, t0 + 0.3):
+        col.observe(D.FrameContext(at=t, shop=shop), BoardRead(bench=_bench(*bench)), _names(0, len(bench)), [],
+                    crops, None)
+
+
+def test_shop_and_ledger_reports_of_two_same_champion_buys_pair_each_once(static, tmp_path):
+    """같은 챔피언 두 번 구매, 매번 상점·장부가 둘 다 알린다 → 네 보고가 두 건으로 합쳐지고 두 새 칸이 각각 저장된다."""
+    col = D.UnitCollector(db_at(tmp_path, static))
+    ka = cid(static, "카르마")
+    a, b, c = img((0, 0, 255)), img((255, 0, 0)), img((0, 255, 0))
+    _prime(col, (0,), [a], shop=(ka, ka, None, None, None))
+    col.observe(D.FrameContext(at=1.2, shop=(None, ka, None, None, None)), BoardRead(bench=_bench(0, 1)),
+                _names(0, 2), [], [a, b], None)
+    col.note_purchase(ka, at=1.2)
+    col.observe(D.FrameContext(at=1.5), BoardRead(bench=_bench(0, 1)), _names(0, 2), [], [a, b], None)
+    col.observe(D.FrameContext(at=1.8, shop=(None, None, None, None, None)), BoardRead(bench=_bench(0, 1, 2)),
+                _names(0, 3), [], [a, b, c], None)
+    col.note_purchase(ka, at=1.8)
+    assert [(m.champion, m.slot) for m in col.saved] == [(ka, "bench:1"), (ka, "bench:2")]
+    assert all(b.used for b in col._buys) and len(col._buys) == 2
+
+
+def test_new_slot_after_a_recent_disturbance_is_not_purchase_evidence(static, tmp_path):
+    """벤치 유닛을 보드로 올린(보드 변화) 직후 창 안에 산 유닛 → 모호하므로 모으지 않는다(보수적)."""
+    col = D.UnitCollector(db_at(tmp_path, static))
+    ka = cid(static, "카르마")
+    a, b = img((0, 0, 255)), img((255, 0, 0))
+    _prime(col, (0, 1), [a, b])
+    board = (UnitSlot(star=1, hex=(0, 0)),)
+    col.observe(D.FrameContext(at=1.0), BoardRead(board=board, bench=_bench(0)), _names(1, 1), [b], [a], None)
+    col.observe(D.FrameContext(at=1.4), BoardRead(board=board, bench=_bench(0)), _names(1, 1), [b], [a], None)
+    col.note_purchase(ka, at=1.5)
+    col.observe(D.FrameContext(at=1.7), BoardRead(board=board, bench=_bench(0, 3)), _names(1, 2), [b], [a, b], None)
+    assert col.saved == []
+    # 창이 지나면 다시 모은다
+    col.observe(D.FrameContext(at=4.5), BoardRead(board=board, bench=_bench(0, 3)), _names(1, 2), [b], [a, b], None)
+    col.observe(D.FrameContext(at=4.8), BoardRead(board=board, bench=_bench(0, 3)), _names(1, 2), [b], [a, b], None)
+    col.note_purchase(ka, at=5.0)
+    c = img((0, 255, 0))
+    col.observe(D.FrameContext(at=5.1), BoardRead(board=board, bench=_bench(0, 3, 4)), _names(1, 3), [b], [a, b, c],
+                None)
+    assert [(m.champion, m.slot) for m in col.saved] == [(ka, "bench:4")]
+
+
+def test_purchase_crop_contradicting_approved_crops_is_not_saved(static, tmp_path):
+    """산 챔피언의 승인 사진보다 다른 챔피언의 승인 사진을 확실히 더 닮은 크롭 → 저장하지 않는다."""
+    db = db_at(tmp_path, static)
+    ka, ak = cid(static, "카르마"), cid(static, "아칼리")
+    red, blue = img((0, 0, 255)), img((255, 0, 0))
+    db.approve(db.add_pending(ka, red, evidence="manual", star=1))
+    db.approve(db.add_pending(ak, blue, evidence="manual", star=1))
+    col = D.UnitCollector(db)
+    a = img((0, 255, 0))
+    _prime(col, (0,), [a])
+    col.note_purchase(ka, at=1.0)
+    col.observe(D.FrameContext(at=1.1), BoardRead(bench=_bench(0, 1)), _names(0, 2), [], [a, img((250, 5, 5), w=30)],
+                None)
+    assert col.saved == []

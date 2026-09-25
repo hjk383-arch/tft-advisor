@@ -736,3 +736,23 @@ def test_raw_live2_disk_library_names_nothing_wrong(static):
     truth = {s["slot"]: s["unit_id"] for s in _truth(static, LIVE2)["bench_slots"]}
     assert all(u.unit_id in (None, truth[u.bench_slot]) for u in read.bench), \
         [(u.bench_slot, u.unit_id, u.unit_conf) for u in read.bench]
+
+
+def test_named_slots_carry_corroborated_flag_for_recog_view(table, monkeypatch):
+    """QA 27 W1: `UnitSlot.corroborated`가 이름 판정의 뒷받침 여부를 그대로 싣는다(이름 없으면 None).
+    `app.recog_view.is_guess`는 이 값이 있으면 그것으로 '(추정)'을 정한다."""
+    from tft_advisor.vision.board import BoardRead, UnitSlot
+    from tft_advisor.vision.regions import FrameMapper
+
+    names = U.BoardNames(board=(U.SlotName("A", 0.7, "library", 0.7, 0.3, corroborated=False),),
+                         bench=(U.SlotName("B", 0.9, "traits"), U.SlotName(None, 0.0, "none")))
+    monkeypatch.setattr(U, "name_units", lambda *a, **k: names)
+    namer = U.UnitNamer(library=U.UnitLibrary(), table=table, agree_frames=1)
+    img = np.zeros((1080, 1920, 3), np.uint8)
+    read = BoardRead(board=(UnitSlot(star=1, hex=(0, 0), anchor=(0.5, 0.5)),),
+                     bench=(UnitSlot(star=1, bench_slot=0, anchor=(0.3, 0.8)),
+                            UnitSlot(star=1, bench_slot=1, anchor=(0.35, 0.8))))
+    out = namer.name(img, FrameMapper.for_image(img), read, None)
+    assert [u.corroborated for u in (*out.board, *out.bench)] == [False, True, None]
+    from tft_advisor.app.recog_view import is_guess
+    assert [is_guess(u) for u in (*out.board, *out.bench)] == [True, False, False]

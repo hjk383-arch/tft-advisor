@@ -472,11 +472,11 @@ def detect_with_recognizer(settings: Settings, *, out: Callable[[str], None] | N
     """
     scorer = None
     try:
-        from ..vision.recognizer import Recognizer
+        from .no_collect import make_recognizer_no_collect
 
         if out is not None:
             out("화면 인식기를 준비하는 중… (처음에는 몇 초 걸립니다)")
-        scorer = Recognizer(cfg=settings.vision).screen_score
+        scorer = make_recognizer_no_collect(settings.vision).screen_score
     except Exception:   # noqa: BLE001 — 인식기가 없어도 화면 크기는 찾을 수 있다
         log.warning("인식기를 만들지 못했습니다 → 픽셀 채점으로 감지합니다", exc_info=True)
     return detect_live(settings, scorer=scorer)
@@ -963,9 +963,9 @@ def console_test_capture(choice: SetupChoice, settings: Settings, det: SetupDete
         return TestCapture()
     out("  인식하는 중… (처음에는 몇 초 걸립니다)")
     try:
-        from ..vision.recognizer import Recognizer
+        from .no_collect import make_recognizer_no_collect   # 테스트 캡처는 사진 DB에 쌓지 않는다(QA 27 W5)
 
-        result = run_test_capture(probe.frame, Recognizer(cfg=applied.vision), draw=False)
+        result = run_test_capture(probe.frame, make_recognizer_no_collect(applied.vision), draw=False)
     except Exception as e:   # noqa: BLE001
         log.warning("콘솔 테스트 캡처 실패", exc_info=True)
         out(f"  테스트 캡처 실패: {type(e).__name__}: {e}")

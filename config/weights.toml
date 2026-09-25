@@ -165,3 +165,5 @@ board_link = 0.5
 board_member = 0.6          # 고른 보드에 든 보유 유닛 가산(x plan_now_scale)
 trans_min_games = 20        # 다음 스테이지 전이 최소 표본
 trans_link_min = 0.15
+trans_match_min = 0.5       # 지금 라인업 ↔ 출발 클러스터 Jaccard >= 이 값이면 "이 보드는 보통…"
+trans_similar_min = 0.25    # >= 이 값이면 "비슷한 보드는 보통…", 미만이면 다음 스테이지 힌트를 내지 않는다
