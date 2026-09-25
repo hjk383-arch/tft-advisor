@@ -55,7 +55,7 @@ def choose_ui(settings: Settings, want_overlay: bool) -> str:
 
 
 def build(settings: Settings, jev: str, debug_dir: Path | None = None,
-          source: object | None = None) -> tuple[LiveLoop, object]:
+          source: object | None = None, config_dir: Path | None = None) -> tuple[LiveLoop, object]:
     """루프와 advisor를 만든다(오버레이/콘솔 공용). 반환: (loop, advisor)."""
     from ..advisor import create_advisor
     from ..vision.recognizer import Recognizer
@@ -68,6 +68,7 @@ def build(settings: Settings, jev: str, debug_dir: Path | None = None,
                              ledger_cfg=LedgerCfg.from_settings(settings))
     if tracker.load():
         log.info("이전 세션을 이어받았습니다: %s", tracker.summary())
+    live_capture = source is None
     if source is None:
         from ..vision.capture import MssSource
 
@@ -75,7 +76,41 @@ def build(settings: Settings, jev: str, debug_dir: Path | None = None,
         source = MssSource(monitor=settings.capture.monitor, scorer=recognizer.screen_score)
     loop = LiveLoop(source=source, recognizer=recognizer, settings=settings, tracker=tracker,
                     advisor=advisor, debug_dir=debug_dir)   # advisor= 면 ThreadAdviceRunner가 붙는다
+    if live_capture:   # 실제 화면 캡처일 때만: "게임 화면 다시 찾기" + 게임 창 따라가기(캡처 스레드에서 돈다)
+        loop.screen_hook = make_redetector(settings, config_dir)
     return loop, advisor
+
+
+def unit_review_opener(recognizer):
+    """"유닛 사진 검토" 창을 여는 함수(UI 스레드에서 부른다). 유닛 이름 인식이 꺼져 있으면 None.
+
+    창을 닫을 때 바뀐 것이 있으면 `unit_namer.request_reload` → 인식 스레드가 다음 프레임에 승인 사진을 다시 읽는다.
+    """
+    namer = getattr(recognizer, "unit_namer", None)
+    static = getattr(recognizer, "static", None)
+    if namer is None or static is None:
+        return None
+
+    def open_window():
+        from .unit_review import open_review_window
+
+        return open_review_window(static, on_changed=namer.request_reload)
+
+    return open_window
+
+
+def make_redetector(settings: Settings, config_dir: Path | None = None):
+    """`game_window.ScreenRedetector`(실패하면 None — 없어도 앱은 돈다)."""
+    try:
+        from .game_window import ScreenRedetector
+        from .setup import resolve_state_dir
+
+        red = ScreenRedetector(settings, config_dir=config_dir, state_dir=resolve_state_dir(settings))
+        log.info("게임 창 따라가기: %s", f"켬({red.interval_s:g}초마다)" if red.follow else "끔")
+        return red
+    except Exception:   # noqa: BLE001
+        log.exception("게임 화면 다시 찾기를 준비하지 못했습니다")
+        return None
 
 
 def warm_up(advisor) -> None:
@@ -99,7 +134,7 @@ def run_live(*, settings: Settings | None = None, jev: str = "auto", overlay: bo
     """`test_view`: CLI 값(None = 플래그 없음 → `[ui] test_view`)."""
     settings = settings or load_settings()
     ui = choose_ui(settings, overlay)
-    loop, advisor = build(settings, jev, debug_dir, source)
+    loop, advisor = build(settings, jev, debug_dir, source, config_dir=config_dir)
     patch = getattr(getattr(advisor, "stats", None), "meta", None)
     patch = getattr(patch, "patch", None)
     backend = getattr(advisor, "backend_name", jev)
@@ -187,6 +222,9 @@ def _run_console(loop: LiveLoop, settings: Settings, backend: str, patch: str | 
                                    max_comps=settings.ui.max_target_comps, kept=u.kept))
 
     loop.on_update = on_update
+    hook = loop.screen_hook
+    if hook is not None and hasattr(hook, "on_follow"):
+        hook.on_follow = lambda res: print(f"[게임 화면] {res.text()}")
     stop = threading.Event()
     start_unit_console(loop.tracker, stop)
     try:
@@ -212,6 +250,9 @@ def _run_overlay(loop: LiveLoop, settings: Settings, backend: str, patch: str | 
     app, window = make_overlay(settings, state_dir=resolve_state_dir(settings), config_dir=config_dir,
                                jev=switcher)
     window.status = StatusInfo(patch=patch, backend=backend)
+    if loop.screen_hook is not None:
+        window.attach_redetector(loop.screen_hook)   # 트레이 "게임 화면 다시 찾기" + 따라가기 알림
+    window.attach_unit_review(unit_review_opener(loop.recognizer))   # 트레이 "유닛 사진 검토"(없으면 None)
     recog = _make_recog(settings, window, config_dir, test_view_cli)
     loop.on_update = window.on_loop_update
     window.show_overlay()
@@ -225,10 +266,23 @@ def _run_overlay(loop: LiveLoop, settings: Settings, backend: str, patch: str | 
     thread.start()
     start_unit_console(loop.tracker, stop)   # 터미널에서 보유 유닛을 고칠 수 있다(오버레이 패널 전까지)
 
+    done = []
+
     def shutdown() -> None:
+        """모든 종료 경로가 한 번만 여기를 지난다(트레이 "종료"·Ctrl+Q·✕ 손잡이·인식 확인 창 [앱 종료] → app.quit())."""
+        if done:
+            return
+        done.append(True)
         stop.set()
         thread.join(timeout=3.0)
-        loop.close()
+        loop.close()               # 추천 스레드 정지 + 캡처 닫기 + 세션 저장
+        for w in (recog.window if recog is not None else None, window.quit_handle, window):
+            try:
+                if w is not None:
+                    w.hide()
+            except RuntimeError:
+                pass
+        log.info("종료했습니다(세션 저장)")
 
     app.aboutToQuit.connect(shutdown)
     try:
@@ -244,7 +298,10 @@ def _make_recog(settings: Settings, window, config_dir: Path | None, cli: bool |
         from .recog_window import RecogController
 
         controller = RecogController(settings, state_dir=window.state_dir, config_dir=config_dir, cli=cli,
-                                     names=window.names)
+                                     names=window.names,
+                                     on_redetect=window.request_redetect if window.redetector is not None else None,
+                                     on_quit=window.quit,
+                                     on_review=window.open_unit_review if window.unit_review_opener else None)
         window.attach_recog(controller)
         return controller
     except Exception:   # noqa: BLE001
@@ -252,4 +309,4 @@ def _make_recog(settings: Settings, window, config_dir: Path | None, cli: bool |
         return None
 
 
-__all__ = ["run_live", "build", "choose_ui", "overlay_available", "start_unit_console"]
+__all__ = ["run_live", "build", "make_redetector", "choose_ui", "overlay_available", "start_unit_console"]

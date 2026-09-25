@@ -10,7 +10,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any
 
-QUESTIONS_VERSION = "q2"
+QUESTIONS_VERSION = "q3"
 """질문·레벨·구간 라벨 문장 버전. 문구를 바꾸면 올린다(캐시 키·state_hash에 포함)."""
 
 HOLD = "hold_components"
@@ -134,13 +134,18 @@ def c2(k: int, comp: str) -> str:
             f"comp `candidate_comps[{k}]` (\"{comp}\")?")
 
 
+# q3(2026-09-24, 21 §10): 2~3스테이지 유닛은 지나가는 빌드업 — 1성은 약한 증거, 2성·아이템 보유자만 의미 있게
+EARLY_UNITS_NOTE = ("In stages 2 and 3 most units are temporary buildup units the player will sell later: treat 1-star "
+                    "units as weak evidence and count mainly 2-star or better units and units holding items.")
+
+
 def c3(k: int, comp: str) -> str:
     return (f"How close are the player's current units (board and bench) to the team comp `candidate_comps[{k}]` "
-            f"(\"{comp}\"), using that comp's final_board and buildup boards?")
+            f"(\"{comp}\"), using that comp's final_board and buildup boards? {EARLY_UNITS_NOTE}")
 
 
 C4 = ("Which team comp in candidate_comps should the player aim for as their final comp, given their items, augments "
-      "and units?")
+      "and units? Items and augments decide the final comp; units matter more later in the game. " + EARLY_UNITS_NOTE)
 C4_UNDECIDED = ("It is too early to tell: the player's items, augments and units do not point to any one of these "
                 "comps.")
 

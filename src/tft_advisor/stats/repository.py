@@ -22,6 +22,10 @@
   unit_builds(unit, comp_id) = "아이템 구성이 정확히 이 1~3개인 판"(MetaTFT builds).
   comp_id=None(전체) 행은 소스에 없어서 덱 한정 "holds" 행을 games 가중 평균한 **파생값**이다.
 - AugmentTier는 Set 18에서 편집자 등급(source_kind="editorial", games=None)뿐이다.
+
+스테이지별 보드·유닛 성적(MetaTFT Early Comps, `_workspace/28_stage_boards_sources.md`)
+- `repo.stage_stats`: `stage_stats.StageStats`. `open_repository`가 최신 "metatft_early" 스냅샷을 붙인다(없으면 빈 객체
+  — 모든 조회가 None/빈 목록). 편의 위임: `repo.boards_for(...)`, `repo.unit_stage_stat(...)`.
 """
 from __future__ import annotations
 
@@ -47,6 +51,7 @@ from tft_advisor.contracts import (
     UnitStats,
 )
 from tft_advisor.static_data import PROJECT_ROOT, StaticData, load_static
+from tft_advisor.stats.stage_stats import StageBoard, StageStats, UnitStageStat
 
 Record = dict[str, Any]
 
@@ -379,6 +384,26 @@ class InMemoryStatsRepository(_StaticView):
     def from_json(cls, path: Path, static: StaticData | None = None) -> InMemoryStatsRepository:
         return cls.from_doc(json.loads(Path(path).read_text(encoding="utf-8")), static)
 
+    # ---- 스테이지 보드(MetaTFT Early Comps) --------------------------------------------------------
+    stage_stats: StageStats = StageStats()   # 인스턴스마다 attach_stage_doc/open_repository가 교체한다
+
+    def attach_stage_doc(self, doc: Mapping[str, Any] | None) -> StageStats:
+        """early_convert 산출물(또는 DB 스냅샷 dict)을 붙인다. 최종 덱 연결은 이 저장소의 comps로 계산한다."""
+        self.stage_stats = StageStats.from_doc(doc, self._comp_list)
+        if self.stage_stats:
+            self.meta.counts.update({k: len(doc.get(k) or []) for k in ("stage_boards", "unit_stage_stats")})
+        return self.stage_stats
+
+    def boards_for(self, stage: int | str | None = None, *, level: int | None = None, comp_id: str | None = None,
+                   **kw: Any) -> list[StageBoard]:
+        """`StageStats.boards_for` 위임."""
+        return self.stage_stats.boards_for(stage, level=level, comp_id=comp_id, **kw)
+
+    def unit_stage_stat(self, unit_id: str, stage: int | str | None = None, *, level: int | None = None,
+                        star: int | None = None) -> UnitStageStat | None:
+        """`StageStats.unit_stage_stat` 위임."""
+        return self.stage_stats.unit_stage_stat(unit_id, stage, level=level, star=star)
+
     # ---- 덱 -------------------------------------------------------------------------------------
     def comps(self, *, min_games: int | None = None) -> list[CompStats]:
         if min_games is None:
@@ -508,8 +533,47 @@ def latest_json(stats_dir: Path | None = None, source: str = "metatft") -> Path 
     return latest_snapshot(stats_dir or PROJECT_ROOT / "data" / "stats", f"{source}_")
 
 
+def load_stage_doc(db_path: Path, *, allow_json_fallback: bool = True) -> dict[str, Any] | None:
+    """최신 "metatft_early" 스냅샷 dict(DB 읽기 전용 → 없으면 data/stats/stage_boards_*.json). 없으면 None."""
+    from tft_advisor.stats import db as statsdb
+
+    if db_path.is_file():
+        for _ in range(3):
+            snap = statsdb.find_snapshot(db_path, source="metatft_early")
+            if snap is None:
+                break
+            try:
+                return statsdb.read_snapshot(db_path, snap.id)
+            except KeyError:
+                continue
+    if allow_json_fallback:
+        js = latest_json(db_path.parent, "stage_boards") or latest_json(None, "stage_boards")
+        if js is not None:
+            return json.loads(js.read_text(encoding="utf-8"))
+    return None
+
+
 def open_repository(*, db_path: Path | None = None, source: str = "metatft", patch: str | None = None,
-                    static: StaticData | None = None, allow_json_fallback: bool = True) -> InMemoryStatsRepository:
+                    static: StaticData | None = None, allow_json_fallback: bool = True,
+                    stage_stats: bool = True) -> InMemoryStatsRepository:
+    """`_open_main` + 스테이지 보드(`stage_stats=True`면 최신 metatft_early 스냅샷을 `repo.stage_stats`로 붙인다)."""
+    repo = _open_main(db_path=db_path, source=source, patch=patch, static=static,
+                      allow_json_fallback=allow_json_fallback)
+    if stage_stats:
+        try:
+            repo.attach_stage_doc(load_stage_doc(db_path or default_db_path(),
+                                                 allow_json_fallback=allow_json_fallback))
+        except (OSError, ValueError, KeyError) as e:   # 스테이지 데이터는 부가 정보: 실패해도 본 통계는 쓴다
+            repo.meta.counts["stage_stats_error"] = 1
+            repo.stage_stats = StageStats.empty()
+            import logging
+
+            logging.getLogger(__name__).warning("stage stats load failed: %s", e)
+    return repo
+
+
+def _open_main(*, db_path: Path | None = None, source: str = "metatft", patch: str | None = None,
+               static: StaticData | None = None, allow_json_fallback: bool = True) -> InMemoryStatsRepository:
     """최신 스냅샷을 메모리에 올린다. DB는 읽기 전용(`mode=ro`)으로만 연다 — 쓰지 않으며 refresh와 경합하지 않는다.
 
     1순위 SQLite(`db_path`, 기본 settings.stats.db_path)의 (source, patch) 최신 스냅샷.

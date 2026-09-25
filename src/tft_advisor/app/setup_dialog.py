@@ -69,8 +69,12 @@ class SetupDialog(QDialog):
     def __init__(self, settings: Settings | None = None, *, config_dir: Path | None = None,
                  state_dir: Path | None = None, grabber: core.MonitorGrabber | None = None,
                  creds: object | None = None, key_verifier: object | None = None,
+                 window_finder: object | None = None,
                  parent: QWidget | None = None) -> None:
         super().__init__(parent)
+        # 게임 창 찾기(app/game_window.find_game_window). 테스트는 가짜를 넣는다.
+        self.window_finder = window_finder
+        self.window_result = None     # 마지막 [게임 창 자동 찾기] 결과(game_window.WindowDetection)
         # 키 보관소와 연결 테스트 호출자는 갈아 끼울 수 있다(테스트: 가짜 보관소 + 가짜 호출자).
         self.creds = creds or _credentials
         self.key_verifier = key_verifier
@@ -101,7 +105,7 @@ class SetupDialog(QDialog):
         outer = QVBoxLayout(self)
         outer.addWidget(QLabel(
             "<b>게임 화면을 자동으로 찾습니다.</b><br>"
-            "TFT를 <b>테두리 없는 창 모드</b>로 띄운 뒤 [자동 감지]를 누르세요. "
+            "TFT를 <b>테두리 없는 창 모드</b>로 띄운 뒤 [자동 감지]를 누르세요(창 모드면 게임 창 위치를 먼저 읽습니다). "
             "값이 맞으면 [저장 후 시작]만 누르면 됩니다."))
 
         top = QHBoxLayout()
@@ -111,6 +115,12 @@ class SetupDialog(QDialog):
                                       " border-radius: 6px; padding: 6px 18px;")
         self.detect_btn.clicked.connect(self.auto_detect)
         top.addWidget(self.detect_btn)
+        self.window_btn = QPushButton("🪟  게임 창 자동 찾기")
+        self.window_btn.setMinimumHeight(40)
+        self.window_btn.setToolTip("창 모드로 띄운 게임 창의 위치·크기를 읽어 모니터·해상도·게임 화면 영역을 채웁니다"
+                                   "(Windows). 창 위치만 읽고 게임에는 손대지 않습니다.")
+        self.window_btn.clicked.connect(self.find_window)
+        top.addWidget(self.window_btn)
         self.status = QLabel("")
         self.status.setWordWrap(True)
         top.addWidget(self.status, 1)
@@ -185,7 +195,7 @@ class SetupDialog(QDialog):
         for i, name in enumerate(("좌 x1", "상 y1", "우 x2", "하 y2")):
             spin = QDoubleSpinBox()
             spin.setRange(0.0, 1.0)
-            spin.setDecimals(4)
+            spin.setDecimals(6)   # content_box는 소수 6자리로 저장한다(4자리면 넓은 모니터에서 0.2px씩 어긋난다)
             spin.setSingleStep(0.01)
             spin.setPrefix(f"{name} ")
             spin.setEnabled(False)
@@ -436,12 +446,49 @@ class SetupDialog(QDialog):
                 except Exception:   # noqa: BLE001 — 인식기를 못 만들면 픽셀 채점으로 내려간다
                     log.warning("인식기를 만들지 못했습니다 → 픽셀 채점으로 감지합니다", exc_info=True)
             det = core.safe_detect(lambda: core.detect_live(self.settings, scorer=scorer,
-                                                            grabber=self.grabber))
+                                                            grabber=self.grabber,
+                                                            window_finder=self._finder()))
         finally:
             self._busy(None)
         self.detection = det
         self._fill_from_detection(det)
         return det
+
+    def _finder(self):
+        if self.window_finder is not None:
+            return self.window_finder
+        from .game_window import find_game_window
+
+        return find_game_window
+
+    def find_window(self):
+        """[게임 창 자동 찾기] — 게임 창 위치로 모니터·해상도·게임 화면 영역을 채운다(저장은 [저장] 버튼)."""
+        self._busy("게임 창을 찾는 중…")
+        try:
+            scorer = None
+            try:
+                scorer = self._get_recognizer(self.settings).screen_score
+            except Exception:   # noqa: BLE001 — 인식기가 없어도 창 위치는 읽는다
+                log.warning("인식기를 만들지 못했습니다 → 창 위치만 봅니다", exc_info=True)
+            try:
+                res = self._finder()(grabber=self.grabber, scorer=scorer)
+            except Exception as e:   # noqa: BLE001
+                log.warning("게임 창 찾기 실패", exc_info=True)
+                from .game_window import WindowDetection
+
+                res = WindowDetection("error", f"게임 창을 찾다가 오류가 났습니다: {type(e).__name__}: {e}")
+        finally:
+            self._busy(None)
+        self.window_result = res
+        if res.ok and res.detection is not None:
+            self.detection = res.detection
+            self._fill_from_detection(res.detection)
+            color = OK if res.confirmed else WARN
+            self.status.setText(f"<span style='color:{color}'>{_esc(res.message)} — [저장]을 누르면 적용됩니다.</span>")
+        else:
+            color = MUTED if res.status == "not_supported" else BAD
+            self.status.setText(f"<span style='color:{color}'>{_esc(res.message)}</span>")
+        return res
 
     def _fill_from_detection(self, det: core.SetupDetection) -> None:
         self.monitor_combo.clear()
@@ -601,7 +648,7 @@ class SetupDialog(QDialog):
     # ------------------------------------------------------------------ 보조
     def _busy(self, message: str | None) -> None:
         """긴 작업 동안 버튼을 잠그고 상태를 보여 준다(감지 0.1~1s, 테스트 캡처 1~3s)."""
-        for w in (self.detect_btn, self.test_btn, self.start_btn, self.save_btn):
+        for w in (self.detect_btn, self.window_btn, self.test_btn, self.start_btn, self.save_btn):
             w.setEnabled(message is None)
         if message is not None:
             self.status.setText(_esc(message))

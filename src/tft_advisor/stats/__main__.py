@@ -2,6 +2,9 @@
 
     python -m tft_advisor.stats refresh [--no-fetch] [--date YYYY-MM-DD] [--raw DIR] [--refresh-raw]
                                         [--db PATH] [--diff-out PATH|auto|none]
+                                        [--stages include|skip|only] [--stage-full all|N]
+    python -m tft_advisor.stats refresh-stages [--no-fetch] [--date D] [--raw DIR] [--full all|N]
+                                               # 스테이지별 보드만(MetaTFT Early Comps, 약 180요청 ≈ 4분)
     python -m tft_advisor.stats load   [JSON]          # 변환된 metatft_*.json → DB (기본: 최신 파일)
     python -m tft_advisor.stats info   [--db PATH]     # 스냅샷 목록 + 현재 스냅샷 요약
     python -m tft_advisor.stats diff   [--old ID] [--new ID] [--db PATH] [--out PATH]
@@ -31,7 +34,29 @@ def _db(a: argparse.Namespace) -> Path:
     return Path(a.db) if a.db else rf.resolve(load_settings().stats.db_path)
 
 
+def _stage_summary(r: rf.StageRefreshResult) -> dict:
+    return {"raw_dir": str(r.raw_dir), "json": str(r.json_path), "snapshot_id": r.snapshot_id,
+            "manifest": r.manifest, "notes": r.notes,
+            "report": {k: v for k, v in r.report.items() if k != "semantics"}}
+
+
+def _run_stages(a: argparse.Namespace, fetch: bool) -> tuple[dict, int]:
+    from tft_advisor.stats.collectors.metatft_early import parse_full
+
+    r = rf.refresh_stages(fetch=fetch, date=a.date, raw_dir=Path(a.stage_raw) if a.stage_raw else None,
+                          refresh_raw=a.refresh_raw, full=parse_full(str(a.stage_full)), db_path=_db(a))
+    return _stage_summary(r), 1 if r.manifest and r.manifest.get("failures") else 0
+
+
+def cmd_refresh_stages(a: argparse.Namespace) -> int:
+    out, code = _run_stages(a, fetch=not a.no_fetch)
+    print(json.dumps(out, ensure_ascii=False, indent=1, default=str))
+    return code
+
+
 def cmd_refresh(a: argparse.Namespace) -> int:
+    if a.stages == "only":
+        return cmd_refresh_stages(a)
     diff_out: Path | str | None = {"auto": "auto", "none": None}.get(a.diff_out, a.diff_out)
     if isinstance(diff_out, str) and diff_out != "auto":
         diff_out = Path(diff_out)
@@ -48,7 +73,15 @@ def cmd_refresh(a: argparse.Namespace) -> int:
                  "augment_tier_changes": len(d["augment_tiers"]["changed"]),
                  "file": str(r.diff_path) if r.diff_path else None},
     }, ensure_ascii=False, indent=1, default=str))
-    return 1 if r.manifest and r.manifest.get("failures") else 0
+    code = 1 if r.manifest and r.manifest.get("failures") else 0
+    if a.stages == "include":
+        try:
+            out, scode = _run_stages(a, fetch=not a.no_fetch)
+        except FileNotFoundError as e:      # --no-fetch인데 스테이지 캐시가 없으면 본 통계 결과는 유지
+            out, scode = {"error": str(e)}, 0
+        print(json.dumps({"stages": out}, ensure_ascii=False, indent=1, default=str))
+        code = code or scode
+    return code
 
 
 def cmd_load(a: argparse.Namespace) -> int:
@@ -105,7 +138,19 @@ def build_parser() -> argparse.ArgumentParser:
         r.add_argument("--refresh-raw", action="store_true", help="캐시된 원본도 다시 요청")
         r.add_argument("--db", default=None)
         r.add_argument("--diff-out", default="auto", help="auto(패치 변경 시 _workspace/patch_{ver}_diff.md)|none|경로")
+        r.add_argument("--stages", choices=["include", "skip", "only"], default="include",
+                       help="스테이지별 보드(MetaTFT Early Comps)도 갱신할지. 기본 include")
+        r.add_argument("--stage-full", default="all", help='comps_full 범위: all | 스테이지별 상위 N | 0')
+        r.add_argument("--stage-raw", default=None, help="스테이지 원본 디렉터리 직접 지정")
         r.set_defaults(func=cmd_refresh)
+    rs = sub.add_parser("refresh-stages", help="스테이지별 보드만 수집 → 변환 → DB (MetaTFT Early Comps)")
+    rs.add_argument("--no-fetch", action="store_true", help="네트워크 없이 data/raw/metatft_early 최신 캐시만 변환")
+    rs.add_argument("--date", default=None)
+    rs.add_argument("--raw", dest="stage_raw", default=None)
+    rs.add_argument("--refresh-raw", action="store_true")
+    rs.add_argument("--full", dest="stage_full", default="all", help='all | 스테이지별 상위 N | 0(overview만)')
+    rs.add_argument("--db", default=None)
+    rs.set_defaults(func=cmd_refresh_stages)
     ld = sub.add_parser("load", help="metatft_*.json → DB (적재한 것이 '현재' 스냅샷이 됨 = 롤백 경로)")
     ld.add_argument("json", nargs="?")
     ld.add_argument("--db", default=None)

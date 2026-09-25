@@ -40,6 +40,72 @@ def collect_images(path: Path) -> list[Path]:
     return [path] if path.is_file() else []
 
 
+CROP_TOL_PX = 2
+"""content_box로 자른 크기가 [vision] resolution과 이 픽셀 안이면 '모니터 전체 캡처'로 본다."""
+
+
+def content_box_applies(size: tuple[int, int], settings: Settings,
+                        frame_size: tuple[int, int] | None = None) -> bool:
+    """이 이미지에 `[vision] content_box`를 적용해야 하는가.
+
+    content_box는 **실시간 캡처 프레임(모니터 전체)** 기준 비율이다. 게임 영역만 잘라 저장한 스크린샷에 또 적용하면
+    두 번 잘려 전부 "알 수 없음"이 된다(2026-09-23 사용자 보고). 규칙:
+    1. 셋업이 기록한 캡처 프레임 크기(`_state/setup.json` detected.frame_size)를 알면 → 이미지 크기가 같을 때만.
+    2. 모르면 `resolution`(게임 화면 크기)을 본다 → content_box로 자른 크기가 그 해상도(±2px)일 때만.
+    3. 둘 다 모르면(해상도 auto) 예전처럼 적용한다.
+    """
+    v = settings.vision
+    if v.content_box is None:
+        return True
+    w, h = size
+    if frame_size is not None:
+        return (w, h) == tuple(frame_size)
+    res = v.resolution_size()
+    if res is None:
+        return True
+    box = v.content_px(w, h)
+    if box is None:
+        return True
+    return abs(box[2] - res[0]) <= CROP_TOL_PX and abs(box[3] - res[1]) <= CROP_TOL_PX
+
+
+def _capture_frame_size(settings: Settings) -> tuple[int, int] | None:
+    try:
+        import json
+
+        from .setup import resolve_state_dir, setup_state_path
+
+        raw = json.loads(setup_state_path(resolve_state_dir(settings)).read_text(encoding="utf-8"))
+        size = (raw.get("detected") or {}).get("frame_size")
+        if size and len(size) == 2 and all(int(v) > 0 for v in size):
+            return int(size[0]), int(size[1])
+    except (OSError, ValueError, TypeError, AttributeError):
+        pass
+    return None
+
+
+def content_without_box(recognizer, image, settings: Settings):
+    """content_box를 뺀 설정으로 게임 영역을 고른다(레터박스·여러 모니터 이어 붙인 캡처 자동 탐지는 그대로)."""
+    cfg = getattr(recognizer, "cfg", None)
+    if cfg is None:
+        return None
+    try:
+        recognizer.cfg = cfg.model_copy(update={"content_box": None})
+        content = recognizer.content_for(image, None)
+    finally:
+        recognizer.cfg = cfg
+    h, w = image.shape[:2]
+    return content if content is not None else (0, 0, w, h)
+
+
+def single_frame_names(recognizer) -> None:
+    """스크린샷은 한 장씩이라 뒷받침 없는 이름(모델 닮음 하나만)이 '연속 N프레임 일치'를 채울 수 없다 →
+    `unit_namer.agree_frames = 1`(임계·신뢰도 상한 0.75는 그대로, 인식 확인에는 "(추정)"으로 표시). vision 23 보고 §6-4."""
+    namer = getattr(recognizer, "unit_namer", None)
+    if namer is not None and hasattr(namer, "agree_frames"):
+        namer.agree_frames = 1
+
+
 def run_screenshot(path: Path, *, settings: Settings | None = None, jev: str = "mock",
                    debug_dir: Path | None = None, out: Callable[[str], None] = print,
                    recognizer: object | None = None, advisor: object | None = None,
@@ -65,19 +131,22 @@ def run_screenshot(path: Path, *, settings: Settings | None = None, jev: str = "
         from ..vision.recognizer import Recognizer
 
         recognizer = Recognizer(cfg=settings.vision)
+    single_frame_names(recognizer)
     if advisor is None:
         from ..advisor import create_advisor
 
         advisor = create_advisor(jev, settings=settings)
 
     names = NameBook()
+    frame_size = _capture_frame_size(settings)
     patch = _patch_of(advisor)
     backend = getattr(advisor, "backend_name", jev)
     out(f"# TFT Advisor — 스크린샷 모드 · 이미지 {len(images)}장 · Jev {backend} · 패치 {patch or '?'}")
     snaps: list = []
     try:
         for image_path in images:
-            snap = _one(image_path, recognizer, advisor, names, settings, patch, backend, out, debug_dir)
+            snap = _one(image_path, recognizer, advisor, names, settings, patch, backend, out, debug_dir,
+                        frame_size=frame_size)
             if snap is not None and (test_view or test_window):
                 snaps.append(snap)
                 if test_view:
@@ -108,7 +177,8 @@ def _open_window(settings: Settings, snaps: list, names: NameBook, out: Callable
 
 
 def _one(image_path: Path, recognizer, advisor, names: NameBook, settings: Settings,
-         patch: str | None, backend: str, out: Callable[[str], None], debug_dir: Path | None):
+         patch: str | None, backend: str, out: Callable[[str], None], debug_dir: Path | None,
+         frame_size: tuple[int, int] | None = None):
     """이미지 1장. 반환: 인식 확인용 스냅숏(`recog_view.RecogSnapshot`, 인식 실패면 None)."""
     from ..vision.capture import load_image
 
@@ -119,9 +189,13 @@ def _one(image_path: Path, recognizer, advisor, names: NameBook, settings: Setti
         out(f"[{image_path.name}] 이미지를 읽지 못했습니다: {e}")
         return None
     h, w = image.shape[:2]
+    content = None
+    if not content_box_applies((w, h), settings, frame_size):
+        content = content_without_box(recognizer, image, settings)
+        log.info("%s: 실시간 캡처 프레임과 크기가 다른 이미지(%dx%d) — [vision] content_box 대신 게임 영역을 자동으로 찾습니다", image_path.name, w, h)
     t0 = time.perf_counter()
     try:
-        state: GameState = recognizer.recognize(image, source_image=str(image_path))
+        state: GameState = recognizer.recognize(image, content=content, source_image=str(image_path))
     except Exception as e:                     # 한 장이 실패해도 나머지를 계속 본다
         log.exception("인식 실패: %s", image_path)
         out(f"[{image_path.name}] 인식 실패: {e}")
@@ -140,7 +214,7 @@ def _one(image_path: Path, recognizer, advisor, names: NameBook, settings: Setti
     out(format_report(state, rec, names=names, threshold=settings.vision.state_min_confidence,
                       title=title, max_comps=settings.ui.max_target_comps, kept=kept))
     if debug_dir is not None:
-        _dump(debug_dir, image_path, image, state, recognizer)
+        _dump(debug_dir, image_path, image, state, recognizer, content)
     from .recog_view import RecogSnapshot
 
     return RecogSnapshot(state=state, board_read=getattr(recognizer, "last_board_read", None),
@@ -164,7 +238,7 @@ def _with_board(state: GameState, recognizer) -> GameState:
         return state
 
 
-def _dump(debug_dir: Path, image_path: Path, image, state: GameState, recognizer) -> None:
+def _dump(debug_dir: Path, image_path: Path, image, state: GameState, recognizer, content=None) -> None:
     """`--debug`: 인식된 GameState(JSON)와 ROI를 그린 PNG."""
     try:
         from ..vision.capture import save_image
@@ -174,7 +248,7 @@ def _dump(debug_dir: Path, image_path: Path, image, state: GameState, recognizer
         stem = image_path.stem
         (debug_dir / f"{stem}.state.json").write_text(
             state.model_dump_json(indent=1, exclude_none=True), encoding="utf-8")
-        content = recognizer.content_for(image, None)
+        content = recognizer.content_for(image, content)
         mapper = FrameMapper.for_image(image, content)
         _, _, bw, bh = mapper.box
         save_image(debug_dir / f"{stem}.rois.png", draw_rois(image, recognizer.profile_for(bw, bh), mapper))

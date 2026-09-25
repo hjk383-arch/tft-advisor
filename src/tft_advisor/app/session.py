@@ -278,6 +278,8 @@ class SessionTracker:
         """상점 칸 + 골드 변화 → 구매/판매 추론(`app.ledger`). 장부는 `data.units`다."""
         self.last_merge: MergeResult | None = None
         """마지막 보드 병합 결과(표시·로그용)."""
+        self.last_events: list = []
+        """마지막 `observe()`가 장부에 반영한 이벤트(`LedgerEvent`). 루프가 구매를 유닛 사진 수집기에 알린다."""
         self._board_obs: BoardObs | None = None
         """마지막으로 vision이 읽은 보드 판독. **`board_read=None`은 "보드가 비었다"가 아니라 "이번
         프레임에서 안 읽었다"** 이다(`_workspace/16_board_vision.md` §6.1) — 보드 묶음을 읽지 않는 프레임에서
@@ -390,6 +392,7 @@ class SessionTracker:
             prev = self.state
             merged = merge_state(prev, recognized, groups)
             self.data.frames += 1
+            self.last_events = []
             if merged.stage:
                 self.data.stage = merged.stage
             self._track_shop(prev, merged)
@@ -421,6 +424,11 @@ class SessionTracker:
             if before is not None and after is None:
                 self.data.purchases[before[1]] += 1
 
+    def owned_champions(self) -> list[str]:
+        """장부에 있는 보유 챔피언 ID(이름 뒷받침 힌트용, `vision.units.UnitNamer.set_hints`)."""
+        with self._lock:
+            return sorted(cid for cid, n in self.data.units.copies.items() if cid and n > 0)
+
     # ------------------------------------------------------------ 보유 유닛 장부
     def _track_units(self, merged: GameState) -> None:
         """상점 칸 + 골드 변화 → 구매/판매 이벤트를 장부에 반영한다(`app.ledger`)."""
@@ -434,6 +442,7 @@ class SessionTracker:
             return
         if events:
             self.data.units.apply(events)
+            self.last_events = list(events)
 
     def _apply_units(self, state: GameState, board_read: Any = None) -> GameState:
         """장부(정체) + vision 판독(자리·성급·아이템) → `board`/`bench`/`items.equipped`. 둘 다 모르면 그대로 둔다.

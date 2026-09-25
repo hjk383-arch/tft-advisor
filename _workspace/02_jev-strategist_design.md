@@ -317,7 +317,8 @@ S(c) = stat_norm(c)   (5.1절과 같은 함수)
 | 문구 선택 조건 | `"health_status" in jev_state["game"]`이면 A2-hp/I1-hp, 아니면 -nohp. **조건은 state 키 존재 여부 하나로만 판단한다**(GameState를 다시 보지 않는다). I1의 `the current team` 구절은 `"board" in jev_state`일 때만 넣는다(I1-hp에서도 보드를 모르면 `considering the carries of candidate_comps and the player's health (game.health_status)`) |
 
 **(b) 보유 유닛(board·bench)을 모를 때**
-- "보유 유닛을 안다" = `board`와 `bench`가 **둘 다** 신뢰 가능하다(None이 아니고 필드 신뢰도 ≥ 0.6). 출처(vision/tracked/manual)는 따지지 않는다. 구매 추적·수동 입력으로 채우는 쪽(app)은 두 필드를 모두 채워야 한다(보드가 비었으면 `[]`). 하나만 알면 사본 수가 과소 계산되므로 "모른다"로 처리한다.
+- **2026-09-23 개정(`_workspace/21_board_trust.md`, 사용자 결정)**: 보드·벤치를 **따로** 판정한다(`unit_status.owned_units`). 신뢰 가능한 쪽은 이름을 아는 유닛(유닛 신뢰도 ≥ 0.6)을 쓰고, 신뢰도가 낮은 쪽은 출처가 vision일 때만 이름을 확인한 유닛을 쓴다(tracked/manual이면 쓰지 않는다). 쓴 유닛이 하나라도 있으면 "안다"(`units_known`)이고, 미확인 칸(이름 미상·못 읽은 쪽)이 있으면 **부분 확인**(`units_partial`): state에 `unidentified_units`를 넣고, `active_traits`는 보드를 전부 알 때만, `shop[i]`는 `copies_owned_at_least`(하한) + `buy_makes_2star`(true 또는 "unknown")를 쓴다. `missing_units`는 "확인된 유닛 중에 없다"는 뜻이며 근거 문구가 그 한계를 알린다. 장착분은 유닛이 전부 확인될 때만 유닛에서 모은다. 아래 옛 규칙("둘 다 신뢰 가능해야 안다")은 이 개정으로 대체되었다.
+- (옛 규칙) "보유 유닛을 안다" = `board`와 `bench`가 **둘 다** 신뢰 가능하다(None이 아니고 필드 신뢰도 ≥ 0.6). 출처(vision/tracked/manual)는 따지지 않는다. 구매 추적·수동 입력으로 채우는 쪽(app)은 두 필드를 모두 채워야 한다(보드가 비었으면 `[]`). 하나만 알면 사본 수가 과소 계산되므로 "모른다"로 처리한다.
 - 모를 때:
   - state에서 `board`, `bench`, `active_traits` 키를 뺀다. `shop[i]`에서 `copies_owned`, `buy_makes_2star` 키를 **뺀다**(false/0으로 넣지 않는다).
   - `two_star_bonus`, `three_star_bonus` 항 = 0. reason_tag `two_star`는 나오지 않는다.

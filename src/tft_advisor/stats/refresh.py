@@ -17,9 +17,12 @@ from tft_advisor.static_data import PROJECT_ROOT, StaticData, load_static
 from tft_advisor.stats import db as statsdb
 from tft_advisor.stats import diff as statsdiff
 from tft_advisor.stats import metatft_convert as mc
+from tft_advisor.stats import early_convert as ec
 from tft_advisor.stats.collectors import metatft as collector
+from tft_advisor.stats.collectors import metatft_early as early_collector
 
 RAW_ROOT = PROJECT_ROOT / "data" / "raw" / "metatft"
+EARLY_RAW_ROOT = PROJECT_ROOT / "data" / "raw" / "metatft_early"
 STATS_DIR = PROJECT_ROOT / "data" / "stats"
 WORKSPACE = PROJECT_ROOT / "_workspace"
 
@@ -127,3 +130,54 @@ def load_json(path: Path, *, db_path: Path | None = None, settings: Settings | N
     db_path = db_path or resolve(settings.stats.db_path)
     doc = json.loads(path.read_text(encoding="utf-8"))
     return statsdb.write_snapshot(db_path, doc, source="metatft", set_number=settings.app.set_number, keep=keep)
+
+
+@dataclass
+class StageRefreshResult:
+    raw_dir: Path
+    json_path: Path
+    db_path: Path
+    snapshot_id: int
+    manifest: dict[str, Any] | None
+    report: dict[str, Any]
+    skipped_identical: bool = False
+    notes: list[str] = field(default_factory=list)
+
+
+def refresh_stages(*, fetch: bool = True, date: str | None = None, raw_dir: Path | None = None,
+                   refresh_raw: bool = False, full: str | int = "all", db_path: Path | None = None,
+                   json_dir: Path | None = None, settings: Settings | None = None,
+                   static: StaticData | None = None, keep: int | None = None) -> StageRefreshResult:
+    """스테이지별 보드(MetaTFT Early Comps): 수집(선택) → 변환 → data/stats/stage_boards_{patch}.json + DB
+    스냅샷(source="metatft_early"). 간격·UA는 settings.stats. fetch=False면 data/raw/metatft_early 최신 캐시만 변환."""
+    settings = settings or load_settings()
+    static = static or load_static(settings.app.set_number)
+    db_path = db_path or resolve(settings.stats.db_path)
+    json_dir = json_dir or STATS_DIR
+    keep = keep_snapshots(settings) if keep is None else keep
+    notes: list[str] = []
+    manifest = None
+    if fetch:
+        raw_dir = raw_dir or EARLY_RAW_ROOT / (date or dt.date.today().isoformat())
+        manifest = early_collector.collect_early_raw(
+            raw_dir, interval_s=settings.stats.request_interval_s, user_agent=settings.stats.user_agent,
+            refresh=refresh_raw, full=full)
+        if manifest.get("failures"):
+            notes.append(f"수집 실패 {len(manifest['failures'])}건: {sorted(manifest['failures'])[:5]}")
+    else:
+        raw_dir = raw_dir or early_collector.latest_early_dir(EARLY_RAW_ROOT)
+    if raw_dir is None or not (raw_dir / "comps_overview.json").is_file():
+        raise FileNotFoundError(f"MetaTFT Early Comps 원본 없음: {raw_dir}")
+    prev = statsdb.find_snapshot(db_path, source=ec.SOURCE) if db_path.is_file() else None
+    doc = ec.build_early(raw_dir, static)
+    if doc["report"].get("unit_coverage") != "full":
+        notes.append(f"unit_coverage={doc['report']['unit_coverage']}: comps_full 일부만 있어 유닛 스테이지 성적이 불완전")
+    if doc["report"].get("unmapped_ids"):
+        notes.append(f"미매핑 유닛 {doc['report']['unmapped_ids']}")
+    json_path = ec.dump(doc, json_dir)
+    sid = statsdb.write_snapshot(db_path, doc, source=ec.SOURCE, set_number=static.set_number, keep=keep)
+    skipped = prev is not None and sid == prev.id
+    if skipped:
+        notes.append(f"내용이 최신 스테이지 스냅샷 #{sid}와 같아 새로 쓰지 않음")
+    return StageRefreshResult(raw_dir=raw_dir, json_path=json_path, db_path=db_path, snapshot_id=sid,
+                              manifest=manifest, report=doc["report"], skipped_identical=skipped, notes=notes)

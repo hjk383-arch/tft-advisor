@@ -59,7 +59,7 @@ class FakeLoop:
 @pytest.fixture
 def config_dir(tmp_path: Path) -> Path:
     out = tmp_path / "config"
-    shutil.copytree(CONFIG_SRC, out)
+    shutil.copytree(CONFIG_SRC, out, ignore=shutil.ignore_patterns("*.local.toml", "*.bak", "*.tmp"))
     return out
 
 
@@ -224,9 +224,11 @@ def test_switch_persists_to_settings_toml_for_the_next_run(with_key, config_dir)
                      config_dir=config_dir, builder=made([]))
     assert sw.switch("live").saved
     assert load_settings(config_dir).advisor.jev_backend == "live"
-    text = (config_dir / "settings.toml").read_text(encoding="utf-8")
-    assert "# 우선순위: CLI" in text                       # 주석 보존
-    assert (config_dir / "settings.toml.bak").is_file()
+    text = (config_dir / "settings.local.toml").read_text(encoding="utf-8")
+    assert 'jev_backend = "live"' in text                  # 이 PC 전용 층에 저장(공용 settings.toml은 그대로)
+    assert 'jev_backend = "mock"' in (config_dir / "settings.toml").read_text(encoding="utf-8")
+    assert sw.switch("mock").saved
+    assert (config_dir / "settings.local.toml.bak").is_file()
 
 
 def test_switching_to_live_makes_no_jev_call_until_the_next_recommendation(with_key):

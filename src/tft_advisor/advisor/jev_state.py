@@ -104,6 +104,17 @@ def _unit_entry(u, stats: AdvisorStats, names: NameBook, with_items: bool = True
     return {k: v for k, v in e.items() if v is not None}
 
 
+def unidentified_note(view: View) -> dict[str, Any]:
+    """부분 확인일 때 Jev에 알리는 미확인 칸 요약(board/bench 목록에 없는 유닛)."""
+    o = view.owned
+    out: dict[str, Any] = {}
+    out["board"] = o.board_hidden if o.board_seen else "not read"
+    out["bench"] = o.bench_hidden if o.bench_seen else "not read"
+    out["note"] = ("Only identified units are listed in board and bench. The unidentified units may be any "
+                   "champion, so a unit missing from those lists may still be owned.")
+    return out
+
+
 def active_traits(view: View, stats: AdvisorStats, names: NameBook) -> list[dict[str, Any]]:
     """보드 유닛(서로 다른 챔피언)에서 계산한 활성 특성. 보드를 모르면 호출하지 않는다."""
     counts: dict[str, int] = {}
@@ -210,7 +221,10 @@ def build_state(view: View, cands: list[Candidate], stats: AdvisorStats, names: 
     if view.units_known:
         state["board"] = [_unit_entry(u, stats, names) for u in view.board]
         state["bench"] = [_unit_entry(u, stats, names) for u in view.bench]
-        state["active_traits"] = active_traits(view, stats, names)
+        if view.board_complete:     # 보드에 미확인 칸이 있으면 특성 인원이 모자라게 나온다
+            state["active_traits"] = active_traits(view, stats, names)
+        if view.units_partial:      # 21_board_trust: 미확인 칸을 특정 챔피언으로 추측하지 않게 알린다
+            state["unidentified_units"] = unidentified_note(view)
 
     labels: list[str] = []
     comps = []
@@ -241,9 +255,13 @@ def build_state(view: View, cands: list[Candidate], stats: AdvisorStats, names: 
                     "cost": slot.cost if slot.cost is not None else stats.champion_cost(slot.id),
                     "traits": [names(t) for t in stats.champion_traits(slot.id)],
                 }
-                if view.units_known:
+                if view.units_complete:
                     e["copies_owned"] = copies_owned(slot.id, view.units)
                     e["buy_makes_2star"] = buy_makes_2star(slot.id, view.units)
+                elif view.units_known:
+                    # 부분 확인: 확인된 사본 수는 하한이고, 2성 불가는 확정할 수 없다(미확인 칸에 사본이 있을 수 있다)
+                    e["copies_owned_at_least"] = copies_owned(slot.id, view.units)
+                    e["buy_makes_2star"] = True if buy_makes_2star(slot.id, view.units) else "unknown"
                 shop.append(e)
             else:   # special
                 rec = stats.shop_special(slot.id) or {}

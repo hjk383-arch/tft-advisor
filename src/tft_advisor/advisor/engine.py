@@ -19,14 +19,15 @@ import hashlib
 import logging
 import time
 from collections import Counter
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
 from typing import Any, Literal
 
 from ..config import Settings, Weights, load_settings, load_weights
-from ..contracts import FallbackReason, GameState, Recommendation, ScreenMode, ShopSlotKind
-from .candidates import Candidate, augment_comp_fit, late_cfg, prefilter
-from .features import View, build_view, craftable_items, global_level, is_late, item_fit
+from ..contracts import BoardPlan, FallbackReason, GameState, Recommendation, ScreenMode, ShopSlotKind
+from .board_plan import plan_board
+from .candidates import Candidate, augment_comp_fit, late_cfg, prefilter, unit_stage
+from .features import View, build_view, comp_level, craftable_items, global_level, is_late, item_fit
 from .jev_client import GatewayResult, JevBackend, JevGateway, LiveJevBackend, MockJevBackend
 from .jev_state import NameBook, StateParts, build_state, state_hash
 from .questions import (
@@ -60,6 +61,7 @@ from .questions import (
     s3,
 )
 from .scoring import Scorer
+from .stage_boards import MetaTftStageBoards, StageBoardSource
 from .stats_source import AdvisorStats, load_stats
 
 log = logging.getLogger(__name__)
@@ -102,6 +104,9 @@ class Advisor:
         self.gateway = JevGateway(be, self.settings.advisor)
         self.session = Session()
         self._loop: asyncio.AbstractEventLoop | None = None
+        # 스테이지별 실제 보드 통계(MetaTFT Early Comps, 21 §11). stats에 stage_stats가 없거나 비었으면 None(항 0).
+        # 테스트는 가짜 StageBoardSource를 넣을 수 있다.
+        self.stage_boards: StageBoardSource | None = MetaTftStageBoards.from_stats(self.stats, self.w.board_plan)
 
     def _resolve_backend(self, spec: BackendSpec) -> tuple[str, JevBackend | None]:
         if spec == "mock":
@@ -149,6 +154,53 @@ class Advisor:
             return await self._full(state, mode, t0, use_jev=False)   # §1.1: carousel은 Jev를 부르지 않는다
         return await self._full(state, mode, t0)
 
+    def rescore_shop(self, state: GameState, previous: Recommendation | None = None) -> Recommendation | None:
+        """상점 카드만 다시 채점한다(21 §7) — 전투 중 새로고침·라운드 시작 새 상점용. 수 ms, **Jev를 새로 부르지 않는다**.
+
+        - 목표 덱·보드 배치·아이템·증강·재료 우선순위는 `previous`(없으면 직전 추천) 그대로 둔다.
+        - 상점 점수 = 코드·통계 채점(`Scorer.shop_advice`). 경로 가중(`rel`)은 직전 요청의 덱 점수를 그대로 쓴다.
+        - Jev 상점 판단은 **이 상태와 똑같은 요청이 캐시에 있을 때만** 쓴다(`gateway.cached`, 네트워크 없음).
+        - 결과를 세션의 직전 추천으로 저장한다 — 이후 전투 화면의 `recommend()`도 새 상점을 돌려준다.
+        - 직전 추천이 없으면 None, 상점을 못 읽었으면(`shop` 신뢰도 미달) `previous`를 그대로 돌려준다.
+        """
+        t0 = time.perf_counter()
+        prev = previous if previous is not None else self.session.last
+        if prev is None:
+            return None
+        view = build_view(state, self.stats, self.settings.vision.state_min_confidence, None)
+        if view.shop is None:
+            return prev
+        if view.items_known and not (view.units_complete or view.equipped_seen):
+            view.equipped = list(self.session.equipped_tracked.elements())   # 세션을 바꾸지 않고 추적값만 읽는다
+        prev_ids = [t.comp_id for t in prev.target_comps]
+        cands, pool = prefilter(view, self.stats, self.w, self.settings.advisor.max_candidate_comps, prev_ids)
+        names = NameBook(self.stats)
+        parts = build_state(view, cands, self.stats, names, include_shop=True, include_offer=False)
+        key = state_hash(parts.state, QUESTIONS_VERSION, self.settings.advisor.jev_model)
+        answers = self.gateway.cached(key)
+        scorer = self._scorer(view, cands, pool, answers, comp_labels=parts.comp_labels, prev_shown=prev_ids,
+                              sig_unchanged=True)
+        scorer.score_comps()
+        # 목표 덱 고정: 직전 요청의 덱 상대 점수(rel)를 그대로 쓴다(없는 덱만 이번 프록시 값)
+        prev_final = {c["comp_id"]: c["final"] for c in prev.debug.get("candidates", []) if "final" in c}
+        mx = max(prev_final.values(), default=0.0)
+        if mx > 0:
+            for cid, f in prev_final.items():
+                if cid in scorer.rel:
+                    scorer.rel[cid] = f / mx
+        glv = global_level(view, [c.comp for c in cands] or pool)
+        shop = scorer.shop_advice(glv, parts.shop_desc_lost)
+        ms = (time.perf_counter() - t0) * 1000
+        rec = prev.model_copy(update={
+            "shop": shop, "created_at": datetime.now(timezone.utc), "latency_ms": ms,
+            "debug": {**prev.debug, "shop_rescore": {"mode": ScreenMode(state.screen_mode).value, "state_hash": key,
+                                                     "jev_cached": answers is not None, "ms": round(ms, 2),
+                                                     "shop_jev_state": parts.state.get("shop")}},
+        })
+        self.session.last = rec
+        log.info("rescore_shop mode=%s jev_cached=%s %.1fms", ScreenMode(state.screen_mode).value, answers is not None, ms)
+        return rec
+
     # ------------------------------------------------------------------
     # 내부
     # ------------------------------------------------------------------
@@ -158,7 +210,7 @@ class Advisor:
         view = build_view(state, self.stats, min_conf, None)
         # §4.3(c) equipped_tracked: 연속된 두 요청 모두 items 신뢰 가능할 때만 추적.
         # vision이 장착분을 직접 읽었으면(`equipped_seen`) 추정할 필요가 없다 — 추적값으로 덮지 않는다.
-        known = view.units_known or view.equipped_seen
+        known = view.units_complete or view.equipped_seen   # 부분 확인이면 유닛 장착분이 모자라다
         if view.items_known:
             cur = view.bench_owned_counter()
             if s.prev_bench_items is not None and not known:
@@ -190,6 +242,17 @@ class Advisor:
         })
         self.session.last = rec   # carousel 직후 combat 등은 갱신된 component_priority를 돌려준다
         return rec
+
+    def _board_plan(self, view: View, scorer: Scorer, glv: int | None) -> BoardPlan | None:
+        """보드 배치 추천(21 §6): 1위 목표 덱 기준, 코드 전용(Jev 호출 없음)."""
+        comp = scorer.shown[0]["cand"].comp if scorer.shown else None
+        level = comp_level(view, comp) if comp is not None else glv
+        try:
+            return plan_board(view, self.stats, comp, level, scorer.s_now_table(glv), scorer.ko, self.w.board_plan,
+                              stage=self.w.unit_stage, stage_board=self.stage_boards)
+        except Exception:   # 부가 기능이 추천 전체를 막지 않게 한다
+            log.exception("보드 배치 추천 실패")
+            return None
 
     def _candidates(self, view: View) -> tuple[list[Candidate], list[Any]]:
         return prefilter(view, self.stats, self.w, self.settings.advisor.max_candidate_comps, self.session.prev_shown)
@@ -235,6 +298,7 @@ class Advisor:
         augment = scorer.augment_advice(parts.aug_desc_lost) if include_offer else None
         item = scorer.item_advice()
         prio = scorer.component_priority(targets)
+        plan = self._board_plan(view, scorer, glv)
 
         debug: dict[str, Any] = {
             "mode": mode.value, "questions_version": QUESTIONS_VERSION, "backend": self.backend_name,
@@ -242,6 +306,8 @@ class Advisor:
             "jev": res.answers.to_debug() if res.answers else None,
             "fallback_detail": res.detail or None, "resource_sig": sig, "sig_unchanged": sig_unchanged,
             "global_level": glv, "p_undecided": round(scorer.p_undecided, 4), "blind_late": scorer.blind_late,
+            "unit_stage": {**{k: round(v, 4) for k, v in asdict(unit_stage(view, self.w)).items()},
+                           "weights": {k: round(v, 4) for k, v in scorer.weight_map().items()}},
             "candidates": [
                 {"comp_id": r["cand"].comp_id, "p": round(r["cand"].p, 4), "I": round(r["cand"].I, 4),
                  "A": round(r["cand"].A, 4), "U": round(r["cand"].U, 4), "S": round(r["cand"].S, 4),
@@ -256,7 +322,7 @@ class Advisor:
         }
         rec = Recommendation(
             target_comps=targets, shop=shop, augment=augment, item=item, component_priority=prio,
-            jev_used=res.answers is not None, fallback_reason=res.reason if res.answers is None else None,
+            board_plan=plan, jev_used=res.answers is not None, fallback_reason=res.reason if res.answers is None else None,
             state_hash=key, created_at=datetime.now(timezone.utc), debug=debug,
             latency_ms=(time.perf_counter() - t0) * 1000,
         )

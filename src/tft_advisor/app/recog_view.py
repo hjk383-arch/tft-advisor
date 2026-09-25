@@ -32,6 +32,24 @@ VISION_DETAIL = {
 }
 ITEM_GROUPS = (("components", "재료"), ("completed", "완성"), ("emblems", "상징"), ("others", "기타"))
 UNKNOWN_NAME = "이름 미상"
+GUESS_MARK = "(추정)"
+GUESS_CONF_CAP = 0.75
+"""vision `units.LIB_STRICT_CONF_CAP`와 같다: 뒷받침 없는(모델 닮음 하나만) 이름은 신뢰도가 이 값에서 잘린다."""
+
+
+def is_guess(slot: Any) -> bool:
+    """판독 칸의 이름이 뒷받침 없는 추정인가. `corroborated` 속성이 있으면 그것, 없으면(지금 `UnitSlot`)
+    "모델 비교(library) + 신뢰도 ≤ 0.75"로 본다(엄격 임계 이름은 0.75 상한, 힌트로 뒷받침된 이름은 0.90까지)."""
+    if slot is None or getattr(slot, "unit_id", None) is None:
+        return False
+    flag = getattr(slot, "corroborated", None)
+    if isinstance(flag, bool):
+        return not flag
+    try:
+        conf = float(getattr(slot, "unit_conf", 1.0) or 0.0)
+    except (TypeError, ValueError):
+        return False
+    return str(getattr(slot, "name_source", "")) == "library" and conf <= GUESS_CONF_CAP + 1e-9
 
 
 # ---------------------------------------------------------------------------
@@ -92,6 +110,11 @@ class UnitRow:
     source: str = "unknown"         # SOURCE_LABELS 키
     detail: str | None = None       # vision 이름 근거(특성 구속 등)
     empty: bool = False
+    guess: bool = False             # 뒷받침 없는 추정 이름(모델 닮음 하나만, 신뢰도 상한 0.75) → "(추정)"
+
+    @property
+    def name_text(self) -> str:
+        return f"{self.name} {GUESS_MARK}" if self.guess else self.name
 
     @property
     def star_text(self) -> str:
@@ -110,7 +133,7 @@ class UnitRow:
     def text(self) -> str:
         if self.empty:
             return f"{self.pos}  (비어 있음)"
-        return (f"{self.pos}  {self.name} {self.star_text}  [{self.items_text}]"
+        return (f"{self.pos}  {self.name_text} {self.star_text}  [{self.items_text}]"
                 f"  신뢰도 {self.confidence:.2f} · {self.source_text}")
 
 
@@ -136,6 +159,7 @@ class RecogView:
     board: list[UnitRow] = field(default_factory=list)
     bench: list[UnitRow] | None = None   # None = 벤치를 읽지 못함
     board_note: str | None = None
+    board_common_note: str | None = None   # "보드에 확인된 챔피언(자리 미상): 요릭 · 놓친 유닛 1기"
     bench_note: str | None = None
     equipped: list[ItemGroup] = field(default_factory=list)
     unused: list[ItemGroup] | None = None   # None = 아이템 벤치를 읽지 못함
@@ -166,6 +190,8 @@ class RecogView:
             out.append(f"! {self.notice}")
         out.append(f"[보드] {len(self.board)}기" + (f" — {self.board_note}" if self.board_note else ""))
         out += [f"  {r.text()}" for r in self.board] or ["  (유닛 없음)"]
+        if self.board_common_note:
+            out.append(f"  {self.board_common_note}")
         if self.bench is None:
             out.append("[벤치] 읽지 못했습니다")
         else:
@@ -242,6 +268,25 @@ def unit_source(u: UnitOnBoard, *, on_bench: bool, state: GameState,
     return "ledger", None
 
 
+def board_common_note(read: Any, board_rows: list[UnitRow], names: NameBook) -> str | None:
+    """vision `BoardRead.board_common`(보드에 확실히 있는 챔피언, 자리 모름) 중 칸에 안 붙은 것 + `missed_board`(놓친 유닛 수)."""
+    if read is None:
+        return None
+    common = [c for c in (getattr(read, "board_common", ()) or ()) if c]
+    placed = {r.unit_id for r in board_rows if r.unit_id and r.pos != "자리 미상"}
+    loose = [c for c in common if c not in placed]
+    try:
+        missed = int(getattr(read, "missed_board", 0) or 0)
+    except (TypeError, ValueError):
+        missed = 0
+    bits = []
+    if loose:
+        bits.append("보드에 확인된 챔피언(자리 미상): " + " · ".join(names.name(c) for c in loose))
+    if missed > 0:
+        bits.append(f"놓친 유닛 {missed}기")
+    return " · ".join(bits) or None
+
+
 def unit_row(u: UnitOnBoard, *, on_bench: bool, state: GameState, names: NameBook,
              board_read: Any = None) -> UnitRow:
     source, detail = unit_source(u, on_bench=on_bench, state=state, board_read=board_read)
@@ -263,6 +308,7 @@ def unit_row(u: UnitOnBoard, *, on_bench: bool, state: GameState, names: NameBoo
         confidence=u.confidence,
         source=source,
         detail=detail,
+        guess=source == "vision" and is_guess(slot) and getattr(slot, "unit_id", None) == u.id,
     )
 
 
@@ -419,6 +465,7 @@ def build_view(snap: RecogSnapshot | None, names: NameBook, *, threshold: float 
         view.board_note = " · ".join(bits) or None
         bench_unknown = sum(1 for r in view.bench or () if not r.empty and r.source == "unknown")
         view.bench_note = f"이름 미상 {bench_unknown}기" if bench_unknown else None
+    view.board_common_note = board_common_note(read, view.board, names)
     view.equipped = equipped_groups(state, view.board, view.bench, names)
     view.unused = unused_groups(state, names, threshold)
     if view.unused is not None and state.confidence_of("items") < threshold:

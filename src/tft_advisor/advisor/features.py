@@ -21,6 +21,7 @@ from ..contracts import (
     UnitOnBoard,
     stage_tuple,
 )
+from ..unit_status import OwnedUnits, owned_units
 from .stats_source import AdvisorStats
 
 # ItemState.others 중 "보유 완성템" 풀에 넣는 카테고리(QA WARN N5a: 유물·찬란한 BIS)
@@ -107,7 +108,10 @@ class View:
     hp_bucket: str = "unknown"
     shop_odds: list[int] | None = None
     shop: list[ShopSlot] | None = None
-    units_known: bool = False
+    units_known: bool = False                               # 보유 유닛을 조금이라도 쓸 수 있다(부분 확인 포함)
+    units_complete: bool = False                            # 보드·벤치 전부를 안다(미확인 칸 없음)
+    board_complete: bool = False                            # 보드 전부를 안다(활성 특성 계산 가능)
+    owned: OwnedUnits = field(default_factory=OwnedUnits)   # 판정 근거(미확인 칸 수 등)
     board: list[UnitOnBoard] = field(default_factory=list)
     bench: list[UnitOnBoard] = field(default_factory=list)
     items_known: bool = False
@@ -125,6 +129,11 @@ class View:
     @property
     def units(self) -> list[UnitOnBoard]:
         return self.board + self.bench
+
+    @property
+    def units_partial(self) -> bool:
+        """보유 유닛을 쓰지만 미확인 칸(이름 미상·못 읽은 쪽)이 있다 — '없다'를 확정할 수 없다."""
+        return self.units_known and not self.units_complete
 
     def owned_pool(self, stats: AdvisorStats) -> list[str]:
         """보유 완성템 multiset P(§5.4-1): 벤치 completed + emblems + 유물/찬란한 + 장착분.
@@ -165,11 +174,15 @@ def build_view(state: GameState, stats: AdvisorStats, min_conf: float, equipped_
         v.shop_odds = list(state.shop_odds or [])
     if rel("shop"):
         v.shop = list(state.shop or [])
-    # 보유 유닛: board와 bench가 둘 다 신뢰 가능해야 "안다"(§4.3 b)
-    if rel("board") and rel("bench"):
+    # 보유 유닛: 보드·벤치를 따로 판정한다(2026-09-23 사용자 결정, `_workspace/21_board_trust.md`).
+    # 믿을 수 있는 쪽 + 이름을 확인한 유닛만 쓴다. 이름 미상 칸은 어떤 챔피언으로도 세지 않는다.
+    v.owned = owned_units(state, min_conf)
+    if v.owned.usable:
         v.units_known = True
-        v.board = [u for u in state.board or [] if u.confidence >= min_conf]
-        v.bench = [u for u in state.bench or [] if u.confidence >= min_conf]
+        v.units_complete = v.owned.complete
+        v.board_complete = v.owned.board_complete
+        v.board = list(v.owned.board)
+        v.bench = list(v.owned.bench)
     if rel("items") and state.items is not None:
         v.items_known = True
         it = state.items
@@ -185,7 +198,7 @@ def build_view(state: GameState, stats: AdvisorStats, min_conf: float, equipped_
         seen = [r.id for r in _reliable_refs(it.equipped, min_conf)]
         if seen:
             v.equipped, v.equipped_seen = seen, True
-        elif v.units_known:
+        elif v.units_complete:      # 부분 확인이면 미확인 칸의 아이템이 빠지므로 쓰지 않는다
             v.equipped = [i for u in v.units for i in u.items]
         elif equipped_tracked:
             v.equipped = list(equipped_tracked.elements())
@@ -373,7 +386,7 @@ _STAR_EQUIV = {1: 1, 2: 3, 3: 9, 4: 27}
 
 
 def copies_owned(unit_id: str, units: list[UnitOnBoard]) -> int:
-    """1성 등가 개수."""
+    """1성 등가 개수. 부분 확인이면 **하한**이다(이름 미상 칸은 세지 않는다)."""
     return sum(_STAR_EQUIV.get(u.star or 1, 1) for u in units if u.id == unit_id)
 
 

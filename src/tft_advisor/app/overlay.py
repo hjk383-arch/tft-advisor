@@ -10,6 +10,8 @@ Qt 시그널로 UI 스레드에 넘긴다(**UI 스레드에서 인식·Jev 호�
 - Jev 실시간 판단     트레이 메뉴 체크(과금). 켜면 live, 끄면 mock으로 **재시작 없이** 바꾸고 설정에 저장한다
                       (`app/jev_toggle.py`. 교체는 작업 스레드에서 하고, 새 백엔드는 다음 추천부터 쓰인다)
 - 인식 확인 창        트레이 메뉴 체크. 보드·벤치·장착/미사용 아이템을 보여 주는 보조 창(`app/recog_window.py`)
+- 게임 화면 다시 찾기  트레이 메뉴. 게임 창 위치·크기를 OS 창 목록에서 다시 읽어 캡처 영역을 재시작 없이 맞춘다
+                      (`app/game_window.py`. 찾기는 캡처 스레드에서 한다)
 - 표시/숨기기         Ctrl+Shift+O
 - 이동 잠금/해제       Ctrl+Shift+L  (해제하면 드래그로 옮길 수 있다. 잠금 = 클릭 통과)
 - 위치 저장           Ctrl+S         → `_state/overlay.json`(다음 실행에 복원)
@@ -27,7 +29,7 @@ from pathlib import Path
 
 from PySide6.QtCore import Qt, QTimer, Signal
 from PySide6.QtGui import QAction, QColor, QFont, QGuiApplication, QIcon, QPainter, QPixmap
-from PySide6.QtWidgets import QApplication, QLabel, QMenu, QSystemTrayIcon, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QApplication, QLabel, QMenu, QPushButton, QSystemTrayIcon, QVBoxLayout, QWidget
 
 from ..config import Settings, load_settings
 from ..contracts import GameState, Recommendation
@@ -35,17 +37,90 @@ from ..unit_status import units_note
 from .names import NameBook
 from .platform_window import apply_always_on_top, apply_click_through, click_through_note
 from .report import (
-    KeptInfo, StatusInfo, augment_lines, comp_lines, item_lines, jev_label, recognition_warnings, shop_lines,
-    state_line, status_line,
+    KeptInfo, StatusInfo, augment_lines, board_plan_lines, comp_lines, item_lines, jev_label, recognition_warnings,
+    shop_lines, state_line, status_line,
 )
 
 log = logging.getLogger(__name__)
 
 STATE_FILE = "overlay.json"
+QUIT_HINT = "종료: 트레이 아이콘 오른쪽 클릭 → 종료, 또는 ✕ 버튼"
+QUIT_HINT_MS = 30000          # 시작 안내를 상태줄에 보여 주는 시간
+CONFIRM_MS = 3000             # 종료 버튼: 첫 클릭 뒤 이 시간 안에 한 번 더 눌러야 끝난다(실수 방지)
 ACCENT = "#7fd1ff"
 GOOD = "#8ce99a"
 WARN = "#ffd43b"
 DIM = "#9aa4b2"
+
+
+class ConfirmButton(QPushButton):
+    """두 번 눌러야 동작하는 버튼(종료 실수 방지). 첫 클릭 → 확인 문구, `CONFIRM_MS` 안에 다시 누르면 `action()`."""
+
+    def __init__(self, text: str, confirm_text: str, action, parent: QWidget | None = None,
+                 timeout_ms: int = CONFIRM_MS) -> None:
+        super().__init__(text, parent)
+        self._text = text
+        self._confirm_text = confirm_text
+        self._action = action
+        self.armed = False
+        self.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        self._timer = QTimer(self)
+        self._timer.setSingleShot(True)
+        self._timer.setInterval(timeout_ms)
+        self._timer.timeout.connect(self.disarm)
+        self.clicked.connect(self._on_click)
+
+    def _on_click(self) -> None:
+        if not self.armed:
+            self.armed = True
+            self.setText(self._confirm_text)
+            self._timer.start()
+            return
+        self.disarm()
+        self._action()
+
+    def disarm(self) -> None:
+        self.armed = False
+        self._timer.stop()
+        self.setText(self._text)
+
+
+class QuitHandle(QWidget):
+    """오버레이 옆의 작은 "✕ 종료" 손잡이 창.
+
+    오버레이는 잠금(클릭 통과) 상태에서 마우스를 전혀 받지 않으므로, 종료 버튼만 **별도의 작은 창**으로 띄운다
+    (항상 위 · 테두리 없음 · 포커스를 가져가지 않음 · 클릭 통과 아님). 창 일부만 입력을 받게 하는 방식
+    (WM_NCHITTEST 가로채기)보다 플랫폼 차이가 없고 튼튼하다. 오버레이를 따라 움직이고 함께 숨는다.
+    """
+
+    def __init__(self, on_quit, parent: QWidget | None = None) -> None:
+        super().__init__(parent)
+        self.setWindowTitle("TFT Advisor 종료")
+        self.setWindowFlags(Qt.WindowType.FramelessWindowHint | Qt.WindowType.Tool
+                            | Qt.WindowType.WindowDoesNotAcceptFocus)
+        self.setAttribute(Qt.WidgetAttribute.WA_ShowWithoutActivating, True)
+        self.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        self.button = ConfirmButton("✕ 종료", "정말 종료? 다시 클릭", on_quit, self)
+        self.button.setToolTip("TFT Advisor를 끝냅니다(두 번 누르면 종료, 세션은 저장됩니다)")
+        self.button.setStyleSheet(
+            "QPushButton { background: rgba(60, 20, 24, 230); color: #ffd8d8; border: 1px solid #a33;"
+            " border-radius: 4px; padding: 2px 8px; font-size: 11px;"
+            " font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif; }"
+            "QPushButton:hover { background: rgba(140, 30, 36, 240); }")
+        lay = QVBoxLayout(self)
+        lay.setContentsMargins(0, 0, 0, 0)
+        lay.addWidget(self.button)
+        self.adjustSize()
+
+    def follow(self, overlay: QWidget) -> None:
+        """오버레이 오른쪽 위 모서리 바로 위(화면 밖이면 아래 왼쪽)에 붙는다."""
+        self.adjustSize()
+        g = overlay.frameGeometry()
+        x = g.right() - self.width() + 1
+        y = g.top() - self.height() - 2
+        if y < 0:
+            y = g.bottom() + 2
+        self.move(int(x), int(y))
 
 
 class OverlayWindow(QWidget):
@@ -53,6 +128,7 @@ class OverlayWindow(QWidget):
 
     loop_update = Signal(object)
     jev_switched = Signal(object)     # jev_toggle.SwitchResult (작업 스레드 → UI 스레드)
+    redetected = Signal(object)       # game_window.WindowDetection (캡처 스레드 → UI 스레드)
 
     def __init__(self, settings: Settings | None = None, *, names: NameBook | None = None,
                  state_dir: Path | None = None, config_dir: Path | None = None,
@@ -80,6 +156,11 @@ class OverlayWindow(QWidget):
         self.jev_thread = None                   # 마지막 전환 작업 스레드(종료·테스트에서 기다린다)
         self._lock_note: str | None = None       # 상태줄 `extra`의 기본값(잠금 상태)
         self.recog = None                        # recog_window.RecogController (인식 확인 창, 없으면 메뉴 항목 없음)
+        self.quit_handle: QuitHandle | None = None   # 클릭 통과 중에도 누를 수 있는 "✕ 종료" 손잡이(별도 창)
+        self.redetector = None                   # game_window.ScreenRedetector ("게임 화면 다시 찾기", 없으면 메뉴 항목 없음)
+        self.last_redetect = None                # 마지막 다시 찾기 결과(WindowDetection)
+        self.unit_review_opener = None           # () -> 검토 창 ("유닛 사진 검토", app/unit_review.py). 없으면 메뉴 항목 없음
+        self.review_window = None                # 열린 검토 창(참조를 들고 있어야 GC로 닫히지 않는다)
 
         self.setWindowTitle("TFT Advisor")
         self.setWindowFlags(Qt.WindowType.FramelessWindowHint | Qt.WindowType.Tool)
@@ -105,6 +186,7 @@ class OverlayWindow(QWidget):
 
         self.loop_update.connect(self._on_update_main, Qt.ConnectionType.QueuedConnection)
         self.jev_switched.connect(self._on_jev_switched, Qt.ConnectionType.QueuedConnection)
+        self.redetected.connect(self._on_redetected, Qt.ConnectionType.QueuedConnection)
         self._age_timer = QTimer(self)
         self._age_timer.setInterval(5000)          # 상태줄의 "N초 전"을 갱신한다
         self._age_timer.timeout.connect(self._render_status)
@@ -183,13 +265,21 @@ class OverlayWindow(QWidget):
             lines = comp_lines(comp, i, self.names, compact=True, units_note=note)
             parts.append(f"<b>{_line(lines[0])}</b>")
             parts += [f"<span style='color:{DIM}'>{_line(ln)}</span>" for ln in lines[1:]]
+        if rec.board_plan is not None:   # 어떤 유닛을 보드에 둘지(목표 덱 아래, 21 보고 §6)
+            plan = rec.board_plan
+            basis = next((c.name for c in rec.target_comps if c.comp_id == plan.comp_id), None)
+            parts.append(_section("보드 배치"))
+            for ln in board_plan_lines(plan, self.names, comp_name=basis):
+                color = WARN if ln.startswith("교체:") and plan.swaps else DIM
+                parts.append(f"<span style='color:{color}'>{_line(ln)}</span>")
         if rec.shop:
-            parts.append(_section("상점", kept.label if kept is not None else None))
+            parts.append(_section("상점", kept.shop_label if kept is not None else None))
+            fresh = kept is None or kept.shop_fresh      # 지금 상점 기준이면 밝게, 직전 추천은 흐리게
             for line in shop_lines(rec, self.names):
-                color = GOOD if "[구매]" in line and kept is None else DIM   # 직전 추천은 흐리게
+                color = GOOD if "[구매]" in line and fresh else DIM
                 parts.append(f"<span style='color:{color}'>{_line(line)}</span>")
         elif kept is not None and (kept.bought or kept.changed):
-            parts.append(_section("상점", f"{kept.label} — 남은 추천 칸 없음"))
+            parts.append(_section("상점", f"{kept.shop_label} — 남은 추천 칸 없음"))
         if rec.augment is not None:
             parts.append(_section("증강 선택"))
             parts += [f"<span style='color:{WARN if ln.startswith('★') else DIM}'>{_line(ln)}</span>"
@@ -210,6 +300,60 @@ class OverlayWindow(QWidget):
     def attach_recog(self, controller) -> None:
         """인식 확인 창 컨트롤러를 붙인다(트레이 메뉴를 만들기 전, 즉 `show_overlay()` 전에 부른다)."""
         self.recog = controller
+
+    # ------------------------------------------------------------------ 게임 화면 다시 찾기
+    def attach_redetector(self, redetector) -> None:
+        """`game_window.ScreenRedetector`를 붙인다(`show_overlay()` 전에). 자동 따라가기 결과도 여기로 알린다."""
+        self.redetector = redetector
+        if redetector is not None:
+            redetector.on_follow = self.redetected.emit
+
+    def request_redetect(self) -> bool:
+        """트레이 "게임 화면 다시 찾기" / 인식 확인 창 버튼. 실제 찾기는 캡처 스레드에서 한다(UI를 멈추지 않는다)."""
+        if self.redetector is None:
+            self._set_extra("게임 화면 다시 찾기를 쓸 수 없습니다(실시간 캡처가 아닙니다)")
+            return False
+        self._set_extra("게임 화면을 다시 찾는 중…")
+        if self.recog is not None and hasattr(self.recog, "show_redetect"):
+            self.recog.show_redetect("게임 화면을 다시 찾는 중…", busy=True)
+        self.redetector.request(self.redetected.emit)
+        return True
+
+    def _on_redetected(self, res) -> None:
+        """다시 찾기 결과(UI 스레드). 상태줄 + 트레이 알림 + 인식 확인 창에 한국어로 보여 준다."""
+        self.last_redetect = res
+        text = res.text()
+        self._set_extra(res.message if res.ok else f"게임 화면 찾기 실패 — {res.message}")
+        if self.recog is not None and hasattr(self.recog, "show_redetect"):
+            self.recog.show_redetect(text, ok=res.ok)
+        if self.tray is not None:
+            self.tray.showMessage("TFT Advisor", text)
+
+    # ------------------------------------------------------------------ 유닛 사진 검토
+    def attach_unit_review(self, opener) -> None:
+        """"유닛 사진 검토" 창을 여는 함수를 붙인다(`show_overlay()` 전에). 창은 UI 스레드에서 열리고 루프는 계속 돈다."""
+        self.unit_review_opener = opener
+
+    def open_unit_review(self):
+        """트레이 "유닛 사진 검토" / 인식 확인 창 버튼. 이미 열려 있으면 앞으로 가져온다(모달 아님)."""
+        if self.unit_review_opener is None:
+            self._set_extra("유닛 사진 검토를 쓸 수 없습니다(유닛 이름 인식이 꺼져 있습니다)")
+            return None
+        win = self.review_window
+        try:
+            if win is not None and win.isVisible():
+                win.raise_()
+                win.activateWindow()
+                return win
+        except RuntimeError:   # 이미 지워진 창
+            pass
+        try:
+            self.review_window = self.unit_review_opener()
+        except Exception as e:   # noqa: BLE001 — 검토 창 실패가 오버레이를 멈추지 않는다
+            log.exception("유닛 사진 검토 창을 열지 못했습니다")
+            self._set_extra(f"유닛 사진 검토 창을 열지 못했습니다: {type(e).__name__}")
+            return None
+        return self.review_window
 
     def _feed_recog(self, update) -> None:
         if self.recog is None:
@@ -263,6 +407,36 @@ class OverlayWindow(QWidget):
         self._age_timer.start()
         if self.tray is None:
             self.tray = _make_tray(self)
+        self._show_quit_handle()
+        self.show_quit_hint()
+
+    def _show_quit_handle(self) -> None:
+        if self.quit_handle is None:
+            self.quit_handle = QuitHandle(self.quit)
+            apply_always_on_top(self.quit_handle, True)
+        self.quit_handle.follow(self)
+        self.quit_handle.show()
+
+    def show_quit_hint(self) -> None:
+        """시작할 때 한 번: 종료 방법(로그 + 상태줄, QUIT_HINT_MS 동안)."""
+        log.info(QUIT_HINT)
+        self._set_extra(QUIT_HINT)
+
+        def clear() -> None:
+            if self.status.extra == QUIT_HINT:
+                self._set_extra(None)
+
+        QTimer.singleShot(QUIT_HINT_MS, clear)
+
+    def moveEvent(self, event) -> None:   # noqa: N802 — Qt 이름
+        super().moveEvent(event)
+        if self.quit_handle is not None and self.quit_handle.isVisible():
+            self.quit_handle.follow(self)
+
+    def resizeEvent(self, event) -> None:   # noqa: N802
+        super().resizeEvent(event)
+        if self.quit_handle is not None and self.quit_handle.isVisible():
+            self.quit_handle.follow(self)
 
     def apply_lock(self, locked: bool) -> None:
         """잠금 = 클릭 통과(이동 불가). 해제 = 일반 창(드래그·단축키 사용 가능)."""
@@ -300,9 +474,15 @@ class OverlayWindow(QWidget):
             if visible:
                 self.show()
         if dialog.outcome.action != "cancelled":
-            self._set_extra("설정 저장됨 — 화면 설정은 다시 시작해야 적용됩니다")
+            fresh = dialog.outcome.settings
+            if self.redetector is not None and fresh is not None:
+                self.redetector.request_apply(fresh)   # 화면 설정도 재시작 없이(캡처 스레드에서 갈아 끼운다)
+                msg = "설정을 저장하고 화면 설정을 바로 적용했습니다."
+            else:
+                msg = "설정을 저장했습니다. 화면 설정은 앱을 다시 시작하면 적용됩니다."
+            self._set_extra(msg)
             if self.tray is not None:
-                self.tray.showMessage("TFT Advisor", "설정을 저장했습니다. 화면 설정은 앱을 다시 시작하면 적용됩니다.")
+                self.tray.showMessage("TFT Advisor", msg)
             self._apply_saved_jev(dialog.outcome)
             self._apply_saved_recog(dialog.outcome)
         return dialog.outcome
@@ -401,12 +581,22 @@ class OverlayWindow(QWidget):
 
     def toggle_visible(self) -> None:
         self.setVisible(not self.isVisible())
+        if self.quit_handle is not None:   # 숨기면 손잡이도 숨긴다(종료는 트레이 메뉴로)
+            self.quit_handle.setVisible(self.isVisible())
+            if self.isVisible():
+                self.quit_handle.follow(self)
 
     def adjust_opacity(self, delta: float) -> None:
         self._opacity = max(0.2, min(1.0, self._opacity + delta))
         self.setWindowOpacity(self._opacity)
 
     def quit(self) -> None:
+        """모든 종료 경로(트레이 "종료"·Ctrl+Q·✕ 손잡이·인식 확인 창 [앱 종료])가 여기로 온다 → `app.quit()` →
+        `aboutToQuit`에 붙은 종료 처리(루프 정지·세션 저장, `app/live._run_overlay`)가 한 번 돈다."""
+        log.info("종료 요청")
+        for w in (self.quit_handle,):
+            if w is not None:
+                w.hide()
         app = QApplication.instance()
         if app is not None:
             app.quit()
@@ -463,6 +653,10 @@ class OverlayWindow(QWidget):
         self._add_jev_action(m)
         if self.recog is not None:
             self.recog.add_menu_action(m)
+        if self.redetector is not None:
+            _add(m, "게임 화면 다시 찾기", self.request_redetect)
+        if self.unit_review_opener is not None:
+            _add(m, "유닛 사진 검토…", self.open_unit_review)
         _add(m, "설정(화면 자동 감지)…", self.open_setup)
         _add(m, "불투명도 +", lambda: self.adjust_opacity(0.05))
         _add(m, "불투명도 −", lambda: self.adjust_opacity(-0.05))
@@ -529,4 +723,4 @@ def make_overlay(settings: Settings | None = None, *, state_dir: Path | None = N
     return app, window
 
 
-__all__ = ["OverlayWindow", "make_overlay"]
+__all__ = ["ConfirmButton", "OverlayWindow", "QUIT_HINT", "QuitHandle", "make_overlay"]

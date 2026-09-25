@@ -16,10 +16,21 @@
 안 되면 **집합만** 내보낸다(`BoardNames.unplaced`: "보드에 이 챔피언들이 있다, 자리는 모른다").
 벤치는 ②·③만 쓴다. 어느 쪽이든 **불확실하면 이름을 비운다**(틀린 이름보다 "모름"이 낫다).
 
-## 라이브러리
+## 라이브러리 이름은 두 단계다(라이브 2, `_workspace/23_unit_naming_live.md`)
+라이브러리에 표본이 있는 챔피언은 몇 명뿐이라 "가장 닮은 표본"은 **열린 집합** 문제다(표본 없는 챔피언도 1위가 나온다).
+- **뒷받침된** 이름: 1위 챔피언이 이번 프레임 보드에서 이름이 확정됐거나, 보드 집합(모든 특성 풀이 공통)에 있거나,
+  app이 넣은 힌트(장부 구매 기록, `UnitNamer.set_hints`)에 있다 → `LIB_MIN_SCORE`/`LIB_MIN_MARGIN`.
+- **뒷받침 없는** 이름: `LIB_STRICT_*`(다른 모델 실측 최대보다 위) + 신뢰도 상한 + 같은 칸 **연속 `AGREE_FRAMES`프레임** 일치.
+
+## 가려진 보드 유닛
+특성 풀이의 챔피언 수가 찾은 보드 칸보다 많으면(전략가 이름표가 체력바를 가림 등) 칸 수를 `MISSED_SLACK`만큼 늘려
+다시 풀고, 남는 챔피언은 가상 칸으로 받는다(`BoardNames.missed`, `BoardRead.missed_board`).
+
+## 라이브러리 = 유닛 사진 DB의 **승인** 크롭(`vision.unit_db`, `_workspace/25_unit_image_db.md`)
 `data/templates/{set}/units_screen/{apiName}/*.png` — 체력바 기준 1080p 정규화 크롭(112x112). Riot 아트워크이므로
 커밋하지 않는다(`.gitignore`). 채우는 방법: `python -m tft_advisor.vision.templates harvest-units SCREENSHOT LABEL.json`
-(라벨의 `name`), 그리고 실시간 자동 학습(`UnitNamer.autolearn`: 보드 칸 1개 · 풀이 1개 · 챔피언 1명으로 **모호하지 않게 강제된** 칸만 저장, QA 19 FAIL-1).
+(라벨의 `name`, 바로 승인), 그리고 실시간 수집(`UnitNamer.autolearn`) → `_pending/` 검토 대기 → 검토 창
+(`python -m tft_advisor review-units`)에서 사람이 승인. 자동으로 승인 폴더에 쓰는 경로는 없다(설정으로 켜는 구매 증거 제외).
 """
 from __future__ import annotations
 
@@ -48,13 +59,26 @@ CROP_DY1, CROP_DY2 = 8, 120   # 체력바 위쪽 끝 아래로
 CROP_SIZE = 112           # 저장·비교 크기(정사각)
 
 # --- 닮음 ---------------------------------------------------------------------------------
-BG_DIST = 18.0            # 배경(크롭 테두리 색 3군집)과 Lab 거리가 이보다 크면 모델 픽셀
+BG_DIST = 18.0            # 배경(크롭 테두리 색 군집)과 Lab 거리가 이보다 크면 모델 픽셀
+RING_CLUSTERS = 4         # 테두리 색 군집 수. 3 → 4(23 보고 §3): 모래·줄무늬 수건 바닥(라이브 2 맵)에서
+                          # 3군집으로는 바닥 무늬가 모델 픽셀로 남아 색 분포가 흐려졌다. 맵이 다른 같은 모델 닮음 평균
+                          # 0.63 → 0.68, 다른 모델 최대 0.54 → 0.51. 6군집은 교차 맵은 비슷하지만 같은 맵 보드 배정 여유가
+                          # 더 줄었다(아칼리/코그모 0.19 → 0.13)
 BAND_WEIGHT = 0.5         # 세로 3등분(머리·몸·다리) 색 분포의 가중치
 _SIM_NORM = 1.0 + 3 * BAND_WEIGHT
 
-# --- 판정 임계값(실측: `_workspace/19_unit_naming.md` §4) -----------------------------------
-LIB_MIN_SCORE = 0.50      # 라이브러리 kNN 1위 최소 닮음(같은 모델 실측 0.56~0.92, 다른 모델 1위 <= 0.53)
-LIB_MIN_MARGIN = 0.10     # 1위 챔피언 - 2위 챔피언
+# --- 판정 임계값(실측: `_workspace/19_unit_naming.md` §4, `_workspace/23_unit_naming_live.md` §3) -----
+# 라이브러리 이름은 **열린 집합** 문제다: 라이브러리에 없는 챔피언(대부분)도 색이 비슷하면 1위가 나온다.
+# 라이브 2에서 표본 없는 금색 갑옷 유닛이 아칼리(0.514 / 차 0.103)로 이름 붙었다(옛 임계 0.50 / 0.10 바로 위).
+# 그래서 두 단계로 나눈다(맵 3종 · 같은 모델 교차 맵 26칸 실측, 다른 모델 1위 최대 0.56 / 그때 차 0.19):
+LIB_MIN_SCORE = 0.55      # 뒷받침된 이름(그 챔피언이 이번 프레임 보드에 확정 · 보드 집합 · 장부 구매 힌트)의 최소 닮음
+LIB_MIN_MARGIN = 0.12     # 뒷받침된 이름의 1위 - 2위(라이브러리 **전체** 챔피언 기준)
+LIB_STRICT_SCORE = 0.62   # 뒷받침 없는 이름(라이브러리만): 다른 모델 1위 최대 0.56보다 충분히 위
+LIB_STRICT_MARGIN = 0.20  # 뒷받침 없는 이름의 1위 - 2위
+LIB_STRICT_CONF_CAP = 0.75  # 뒷받침 없는 이름의 신뢰도 상한(세션 학습 `AUTOLEARN_MIN_CONF` 아래 → 자기 강화 없음)
+LIB_CONF_CAP = 0.90
+AGREE_FRAMES = 2          # 뒷받침 없는 이름은 같은 칸에서 이 횟수만큼 **연속으로** 같은 이름이 나와야 내보낸다
+MISSED_SLACK = 2          # 체력바를 못 찾은 보드 유닛이 이만큼까지 있을 수 있다고 보고 특성 풀이를 다시 한다
 DUP_MIN_SCORE = 0.55      # 같은 프레임 보드 유닛과의 닮음(표본 없는 중복 판정)
 DUP_MIN_MARGIN = 0.12
 ASSIGN_MIN_MARGIN = 0.08  # 구속 배정: 이 칸이 다른 챔피언이 되면 전체 점수가 이만큼은 떨어져야 한다
@@ -98,7 +122,9 @@ def unit_crop(image: np.ndarray, cx: float, bar_y: float, box_h: int) -> np.ndar
 
 
 def model_mask(crop: np.ndarray) -> np.ndarray:
-    """크롭에서 **모델 픽셀** 마스크. 배경(모래 보드·돌 벤치)은 크롭 테두리 색 3군집으로 잡고 그와 먼 픽셀을 남긴다.
+    """크롭에서 **모델 픽셀** 마스크. 배경(모래 보드·돌 벤치·줄무늬 수건 등 맵마다 다르다)은 크롭 테두리 색
+    `RING_CLUSTERS`군집으로 잡고 그와 먼 픽셀을 남긴다. 테두리만 보므로 맵이 바뀌어도 따로 학습할 것이 없다.
+    (맵 전체 바닥 색을 군집으로 더하는 방법도 재 봤지만 모델 색까지 지워 더 나빴다: 23 보고 §3.)
     아군 체력바의 초록은 뺀다."""
     import cv2
 
@@ -108,7 +134,7 @@ def model_mask(crop: np.ndarray) -> np.ndarray:
     ring = np.concatenate([lab[:, :e].reshape(-1, 3), lab[:, -e:].reshape(-1, 3), lab[-e:].reshape(-1, 3)])
     crit = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 10, 1.0)
     cv2.setRNGSeed(7)
-    _, _, cent = cv2.kmeans(ring, 3, None, crit, 2, cv2.KMEANS_PP_CENTERS)
+    _, _, cent = cv2.kmeans(ring, RING_CLUSTERS, None, crit, 2, cv2.KMEANS_PP_CENTERS)
     dist = np.min(np.linalg.norm(lab.reshape(-1, 1, 3) - cent[None], axis=2), axis=1).reshape(h, w)
     mask = (dist > BG_DIST).astype(np.uint8)
     hsv = cv2.cvtColor(crop, cv2.COLOR_BGR2HSV)
@@ -154,10 +180,15 @@ def units_dir(set_number: int) -> Path:
 
 @dataclass
 class UnitLibrary:
-    """챔피언 ID → 모델 크롭 기술자 여러 개. 점수는 챔피언별 **최대** 닮음(1-NN)."""
+    """챔피언 ID → 모델 크롭 기술자 여러 개. 점수는 챔피언별 **최대** 닮음(1-NN).
+
+    `samples` = **승인된** 표본(유닛 사진 DB의 승인 폴더 + 이번 실행 메모리 학습). `pending` = 검토 대기 표본
+    (`vision.unit_db`)이며 `pending_weight`(기본 0 = 쓰지 않음)를 곱한 닮음으로만 순위에 든다."""
 
     samples: list[tuple[str, np.ndarray]] = field(default_factory=list)
     save_dir: Path | None = None
+    pending: list[tuple[str, np.ndarray]] = field(default_factory=list)
+    pending_weight: float = 0.0
 
     def __len__(self) -> int:
         return len(self.samples)
@@ -167,28 +198,18 @@ class UnitLibrary:
         return {c for c, _ in self.samples}
 
     @classmethod
-    def load(cls, directory: str | Path | None, valid: Any = None, *, save: bool = True) -> UnitLibrary:
-        """`{dir}/{apiName}/*.png`를 읽는다. `valid(apiName)`가 False인 폴더는 경고하고 건너뛴다."""
-        from .capture import load_image
-
-        lib = cls(save_dir=Path(directory) if directory is not None and save else None)
+    def load(cls, directory: str | Path | None, valid: Any = None, *, save: bool = True,
+             pending_weight: float = 0.0) -> UnitLibrary:
+        """`{dir}/{apiName}/*.png`(승인)를 읽는다. `valid(apiName)`가 False인 폴더는 경고하고 건너뛴다.
+        `_`로 시작하는 폴더(`_pending` 대기 · `_trash` 휴지통)는 표본이 아니다. `pending_weight > 0`이면 대기도 싣는다."""
+        lib = cls(save_dir=Path(directory) if directory is not None and save else None, pending_weight=pending_weight)
         if directory is None or not Path(directory).is_dir():
             return lib
-        for sub in sorted(p for p in Path(directory).iterdir() if p.is_dir()):
-            if valid is not None and not valid(sub.name):
-                log.warning("유닛 라이브러리: 알 수 없는 챔피언 폴더 %s — 건너뜀", sub.name)
-                continue
-            for png in sorted(sub.glob("*.png")):
-                try:
-                    img = load_image(png)
-                except Exception:
-                    log.warning("유닛 라이브러리: 읽기 실패 %s", png)
-                    continue
-                if img.shape[:2] != (CROP_SIZE, CROP_SIZE):
-                    import cv2
+        lib.samples = _load_samples(Path(directory), valid)
+        if pending_weight > 0:
+            from .unit_db import PENDING_DIR
 
-                    img = cv2.resize(img, (CROP_SIZE, CROP_SIZE), interpolation=cv2.INTER_AREA)
-                lib.samples.append((sub.name, descriptor(img[..., :3])))
+            lib.pending = _load_samples(Path(directory) / PENDING_DIR, valid)
         return lib
 
     def add(self, champion_id: str, crop: np.ndarray, *, persist: bool = False, tag: str = "auto") -> Path | None:
@@ -219,7 +240,36 @@ class UnitLibrary:
             s = similarity(desc, ref)
             if s > out.get(cid, -1.0):
                 out[cid] = s
+        if self.pending_weight > 0:
+            for cid, ref in self.pending:
+                s = similarity(desc, ref) * self.pending_weight
+                if s > out.get(cid, -1.0):
+                    out[cid] = s
         return out
+
+
+def _load_samples(directory: Path, valid: Any = None) -> list[tuple[str, np.ndarray]]:
+    from .capture import load_image
+
+    out: list[tuple[str, np.ndarray]] = []
+    if not directory.is_dir():
+        return out
+    for sub in sorted(p for p in directory.iterdir() if p.is_dir() and not p.name.startswith("_")):
+        if valid is not None and not valid(sub.name):
+            log.warning("유닛 라이브러리: 알 수 없는 챔피언 폴더 %s — 건너뜀", sub.name)
+            continue
+        for png in sorted(sub.glob("*.png")):
+            try:
+                img = load_image(png)
+            except Exception:
+                log.warning("유닛 라이브러리: 읽기 실패 %s", png)
+                continue
+            if img.shape[:2] != (CROP_SIZE, CROP_SIZE):
+                import cv2
+
+                img = cv2.resize(img, (CROP_SIZE, CROP_SIZE), interpolation=cv2.INTER_AREA)
+            out.append((sub.name, descriptor(img[..., :3])))
+    return out
 
 
 def rank(scores: Mapping[str, float]) -> tuple[str | None, float, float]:
@@ -397,6 +447,8 @@ class SlotName:
     source: str          # traits | library | duplicate | forced | none
     score: float = 0.0
     margin: float = 0.0
+    corroborated: bool = True
+    """False = 라이브러리 닮음 **하나만**으로 붙인 이름(엄격 임계 통과). `UnitNamer`가 여러 프레임 일치를 요구한다."""
 
 
 @dataclass(frozen=True)
@@ -411,6 +463,10 @@ class BoardNames:
     """집합은 알지만 칸을 정하지 못한 보드 챔피언(이름 없는 보드 칸 수와 같을 때만 채운다)."""
     solutions: int = 0
     panel: TraitPanel | None = None
+    common: frozenset[str] = frozenset()
+    """모든 특성 풀이에 들어 있는 챔피언 = 풀이가 여럿이어도 **보드에 확실히 있는** 챔피언(패널 판독이 맞다면)."""
+    missed: int = 0
+    """특성 풀이가 요구하는 챔피언 수 - 찾은 보드 칸 수(> 0이면 체력바를 못 찾은 보드 유닛이 있다)."""
 
 
 def _place_board(S: np.ndarray, champs: list[str], set_conf: float,
@@ -425,6 +481,10 @@ def _place_board(S: np.ndarray, champs: list[str], set_conf: float,
     n, k = S.shape
     if k == 1 and n > 1:
         return _place_single_champion(S, champs[0], set_conf, pair_sim)
+    if k > n:
+        # 풀이 챔피언이 찾은 칸보다 많다 = 체력바를 못 찾은 보드 유닛이 있다(전략가 이름표에 가림 등).
+        # 닮음 0인 **가상 칸**을 더해 남는 챔피언을 받게 하고, 실제 칸만 판정한다.
+        S = np.vstack([S, np.zeros((k - n, k))])
     V = slot_values(S)
     if V is None:
         return None
@@ -477,18 +537,54 @@ def _library_name(scores: Mapping[str, float], *, min_score: float, min_margin: 
     return SlotName(cid, round(conf, 3), source, round(s, 3), round(mg, 3))
 
 
+def _tiered_library_name(scores: Mapping[str, float], corroborating: frozenset[str],
+                         allowed: frozenset[str] | None = None) -> SlotName:
+    """라이브러리 닮음 → 이름(두 단계, 모듈 상단 임계값 설명).
+
+    순위와 차(margin)는 라이브러리 **전체** 챔피언으로 잰다(후보를 먼저 줄이면 표본 없는 진짜 챔피언 대신 표본 있는
+    후보가 2위 없이 1위가 된다). 1위가 `allowed` 밖이면 모름. 1위가 `corroborating`(이번 프레임 보드 확정 이름 · 보드 집합 ·
+    장부 구매 힌트)에 있으면 완화 임계, 아니면 엄격 임계 + 신뢰도 상한 + `corroborated=False`(여러 프레임 일치 필요)."""
+    cid, s, mg = rank(scores)
+    none = SlotName(None, 0.0, "none", round(s, 3), round(mg, 3))
+    if cid is None or (allowed is not None and cid not in allowed):
+        return none
+    if cid in corroborating:
+        if s < LIB_MIN_SCORE or mg < LIB_MIN_MARGIN:
+            return none
+        conf = min(LIB_CONF_CAP, 0.3 + 0.6 * s + 0.8 * mg)
+        return SlotName(cid, round(conf, 3), "library", round(s, 3), round(mg, 3))
+    if s < LIB_STRICT_SCORE or mg < LIB_STRICT_MARGIN:
+        return none
+    conf = min(LIB_STRICT_CONF_CAP, 0.3 + 0.6 * s + 0.8 * mg)
+    return SlotName(cid, round(conf, 3), "library", round(s, 3), round(mg, 3), corroborated=False)
+
+
 def name_units(board_desc: Sequence[np.ndarray], bench_desc: Sequence[np.ndarray], library: UnitLibrary,
-               panel: TraitPanel | None, table: TraitTable | None, *, emblems: Iterable[str] = ()) -> BoardNames:
-    """칸 기술자들 → 이름. 규칙은 모듈 docstring."""
+               panel: TraitPanel | None, table: TraitTable | None, *, emblems: Iterable[str] = (),
+               hints: Iterable[str] = ()) -> BoardNames:
+    """칸 기술자들 → 이름. 규칙은 모듈 docstring.
+
+    `hints`: 이번 판에 가지고 있다고 알려진 챔피언 ID(예: app 장부의 상점 구매 기록). 라이브러리 이름의 **뒷받침**으로만
+    쓴다(힌트만으로는 이름을 붙이지 않는다)."""
+    hint_set = frozenset(hints)
     n = len(board_desc)
     lib_scores = [library.scores(d) for d in board_desc]
     pair_sim = np.array([[similarity(a, b) for b in board_desc] for a in board_desc]) if n else None
     board: list[SlotName] = [SlotName(None, 0.0, "none")] * n
     sols = None
+    missed = 0
     if panel is not None and table is not None and n:
         sols = solve_board_sets(panel, n, table, emblems=emblems)
+        if sols is None and n < MAX_BOARD_UNITS:
+            # 찾은 칸 수로는 풀이가 없다 → 체력바를 못 찾은 유닛이 있을 수 있다(라이브 2: 전략가 이름표가 바를 가림).
+            # 칸 수를 조금 늘려 풀고, **모든** 풀이가 찾은 칸보다 크면 그 풀이를 쓴다(이름은 알고 자리 일부만 모른다).
+            wider = solve_board_sets(panel, min(MAX_BOARD_UNITS, n + MISSED_SLACK), table, emblems=emblems)
+            if wider and all(len(sol) > n for sol in wider):
+                sols = wider
+                missed = min(len(sol) for sol in wider) - n
     board_set: frozenset[str] | None = None
     unplaced: tuple[str, ...] = ()
+    common: frozenset[str] = frozenset.intersection(*sols) if sols else frozenset()
     if sols:
         # 풀이마다 배정 점수를 구해 가장 좋은 풀이를 쓴다. 풀이가 여럿이면 신뢰도를 깎는다.
         scored = []
@@ -518,16 +614,17 @@ def name_units(board_desc: Sequence[np.ndarray], bench_desc: Sequence[np.ndarray
                     if free and sum(left.values()) == free:
                         unplaced = tuple(sorted(left.elements()))
     if not sols or all(s.unit_id is None for s in board) and board_set is None:
-        # 구속이 없으면 라이브러리만(더 엄격하게). 풀이가 여럿이라 구속을 못 썼으면 **풀이 합집합 안의** 챔피언만 받는다
+        # 구속이 없으면 라이브러리만(두 단계 임계). 풀이가 여럿이라 구속을 못 썼으면 **풀이 합집합 안의** 챔피언만 받고,
+        # 모든 풀이에 든 챔피언(`common`)과 힌트만 뒷받침으로 친다
         allowed = frozenset().union(*sols) if sols else None
-        board = [_library_name({c: v for c, v in sc.items() if allowed is None or c in allowed},
-                               min_score=LIB_MIN_SCORE, min_margin=LIB_MIN_MARGIN, source="library")
-                 if b.unit_id is None else b for sc, b in zip(lib_scores, board)]
+        board = [_tiered_library_name(sc, common | hint_set, allowed) if b.unit_id is None else b
+                 for sc, b in zip(lib_scores, board)]
     # 벤치: 라이브러리 + 이번 프레임에서 이름을 안 보드 유닛(같은 모델 = 같은 챔피언)
     extra = [(b.unit_id, d) for b, d in zip(board, board_desc) if b.unit_id and b.confidence >= 0.8]
+    support = frozenset(c for c, _ in extra) | (board_set or frozenset()) | common | hint_set
     bench: list[SlotName] = []
     for d in bench_desc:
-        lib = _library_name(library.scores(d), min_score=LIB_MIN_SCORE, min_margin=LIB_MIN_MARGIN, source="library")
+        lib = _tiered_library_name(library.scores(d), support)
         dup = SlotName(None, 0.0, "none")
         if len({c for c, _ in extra}) >= 2:     # 후보가 하나뿐이면 2위와의 차가 없다 → 쓰지 않는다
             dup = _library_name(UnitLibrary().scores(d, extra), min_score=DUP_MIN_SCORE,
@@ -536,11 +633,12 @@ def name_units(board_desc: Sequence[np.ndarray], bench_desc: Sequence[np.ndarray
             lib = SlotName(None, 0.0, "none", lib.score, lib.margin)   # 두 신호가 엇갈리면 모름
         elif lib.unit_id is None and dup.unit_id:
             lib = dup
-        elif lib.unit_id and dup.unit_id and dup.confidence > lib.confidence:
-            lib = SlotName(lib.unit_id, dup.confidence, lib.source, lib.score, lib.margin)
+        elif lib.unit_id and dup.unit_id:
+            # 두 신호가 같은 이름 = 뒷받침된 이름(같은 프레임 보드 유닛과 같은 모델)
+            lib = SlotName(lib.unit_id, max(lib.confidence, dup.confidence), lib.source, lib.score, lib.margin)
         bench.append(lib)
     return BoardNames(board=tuple(board), bench=tuple(bench), board_set=board_set, unplaced=unplaced,
-                      solutions=len(sols or ()), panel=panel)
+                      solutions=len(sols or ()), panel=panel, common=common, missed=missed)
 
 
 # ---------------------------------------------------------------------------
@@ -592,52 +690,135 @@ SESSION_NOVELTY = 0.90        # 같은 챔피언의 기존 표본과 이보다 �
 class UnitNamer:
     """`BoardRead`에 챔피언 이름을 붙인다. `Recognizer`가 하나 들고 재사용한다(라이브러리를 다시 읽지 않는다).
 
-    `autolearn`: 특성 패널 구속으로 **강제된** 칸(보드에 챔피언이 한 종류뿐 등)의 크롭을 디스크 라이브러리에 저장한다.
-    구속 배정·라이브러리로 이름을 붙인 칸(신뢰도 >= `AUTOLEARN_MIN_CONF`)은 이번 실행 동안 메모리에만 더한다
-    (자기 강화 오류가 디스크에 쌓이지 않게).
+    `autolearn`(= `collector`가 있다): 증거가 강한 크롭(상점 구매 · 유일한 특성 풀이 · 보드와 같은 모델)을 유닛 사진 DB
+    **검토 대기**에 모은다(`vision.unit_db`, 25 보고). 대기 크롭은 사람이 승인하기 전에는 이름 판정에 쓰지 않는다
+    (디스크 라이브러리 = 승인 폴더만). 이름을 붙인 칸(신뢰도 >= `AUTOLEARN_MIN_CONF`)은 이번 실행 동안 **메모리에만** 더한다.
     """
 
     library: UnitLibrary
     table: TraitTable | None
     names: Mapping[str, str] = field(default_factory=dict)
     autolearn: bool = False
+    agree_frames: int = AGREE_FRAMES
+    """뒷받침 없는 라이브러리 이름(`SlotName.corroborated=False`)은 같은 칸에서 이 횟수만큼 연속으로 같아야 내보낸다.
+    스크린샷 한 장 평가에서는 1로 둔다."""
+    hints: frozenset[str] = frozenset()
+    """이번 판에 가진 것으로 알려진 챔피언(app 장부의 구매 기록 등). `set_hints()`로 넣는다. 이름의 뒷받침으로만 쓴다."""
+    collector: Any = None
+    """`vision.unit_db.UnitCollector`(autolearn일 때). 크롭을 검토 대기에 모은다. app이 장부 구매를 알려 줄 수 있다
+    (`collector.note_purchase(champion_id)`)."""
     _session: int = 0
     _base: int = 0
+    _streak: dict[tuple, tuple[str, int]] = field(default_factory=dict)
+    _reload_requested: bool = False
 
     @classmethod
     def from_static(cls, static: StaticData, directory: str | Path | None = None, *,
-                    autolearn: bool = False) -> UnitNamer:
-        d = units_dir(static.set_number) if directory is None else directory
-        lib = UnitLibrary.load(d, valid=lambda stem: static.get("champions", stem) is not None, save=autolearn)
+                    autolearn: bool = False, pending_weight: float = 0.0,
+                    auto_approve_purchase: bool = False) -> UnitNamer:
+        """`directory`(기본 `units_dir`)의 **승인** 크롭으로 라이브러리를 만든다. `autolearn`이면 검토 대기 수집기를 붙이고,
+        옛 자동 학습 크롭(승인 폴더의 `auto_*`)을 대기로 옮긴다(검토 전에는 믿지 않는다)."""
+        from .unit_db import UnitCollector, UnitImageDB
+
+        d = units_dir(static.set_number) if directory is None else Path(directory)
+        valid = lambda stem: static.get("champions", stem) is not None       # noqa: E731
+        collector = None
+        if autolearn:
+            db = UnitImageDB(d, valid=valid)
+            db.migrate_legacy()
+            collector = UnitCollector(db, auto_approve_purchase=auto_approve_purchase)
+        lib = UnitLibrary.load(d, valid=valid, save=False, pending_weight=pending_weight)
         names = {c["apiName"]: c.get("name_ko") or c["apiName"] for c in static._load("champions")}
         return cls(library=lib, table=TraitTable.from_static(static), names=names, autolearn=autolearn,
-                   _base=len(lib))
+                   collector=collector, _base=len(lib))
 
     def crops(self, image: np.ndarray, m: FrameMapper, slots: Sequence[Any]) -> list[np.ndarray]:
         left, top, w, h = m.box
         return [unit_crop(image, left + u.anchor[0] * w, top + u.anchor[1] * h, h) for u in slots]
 
-    def name(self, image: np.ndarray, m: FrameMapper, read: BoardRead, panel: TraitPanel | None) -> BoardRead:
-        """판독에 이름을 붙인 새 `BoardRead`. 유닛이 없으면 그대로 돌려준다."""
+    def name(self, image: np.ndarray, m: FrameMapper, read: BoardRead, panel: TraitPanel | None,
+             ctx: Any = None) -> BoardRead:
+        """판독에 이름을 붙인 새 `BoardRead`. 유닛이 없으면 그대로 돌려준다.
+        `ctx`(`vision.unit_db.FrameContext`): 같은 프레임의 상점·골드·스테이지 — 있으면 수집기가 증거 크롭을 모은다."""
         from dataclasses import replace
 
+        if self._reload_requested:
+            self._reload_requested = False
+            self.reload()
         if read.count == 0:
             return read
         bc, nc = self.crops(image, m, read.board), self.crops(image, m, read.bench)
         bd, nd = [descriptor(c) for c in bc], [descriptor(c) for c in nc]
         emblems = [i for u in read.board for i in u.items]
-        res = name_units(bd, nd, self.library, panel, self.table, emblems=emblems)
-        self._learn(bc, bd, res.board, persist_ok=self._persist_ok(res, bd, panel))
-        self._learn(nc, nd, res.bench)
+        res = name_units(bd, nd, self.library, panel, self.table, emblems=emblems, hints=self.hints)
+        board_names = self._agree(read.board, res.board, "board")
+        bench_names = self._agree(read.bench, res.bench, "bench")
+        self._learn(bc, bd, board_names, persist_ok=self._persist_ok(res, bd, panel))
+        self._learn(nc, nd, bench_names)
 
         def put(u: Any, n: SlotName) -> Any:
             return replace(u, unit_id=n.unit_id, unit_conf=n.confidence, name_source=n.source)
 
-        board = tuple(put(u, n) for u, n in zip(read.board, res.board))
-        bench = tuple(put(u, n) for u, n in zip(read.bench, res.bench))
-        return replace(read, board=board, bench=bench,
-                       board_set=tuple(sorted(res.board_set)) if res.board_set else (),
-                       unplaced=res.unplaced, trait_solutions=res.solutions)
+        board = tuple(put(u, n) for u, n in zip(read.board, board_names))
+        bench = tuple(put(u, n) for u, n in zip(read.bench, bench_names))
+        out = replace(read, board=board, bench=bench,
+                      board_set=tuple(sorted(res.board_set)) if res.board_set else (),
+                      unplaced=res.unplaced, trait_solutions=res.solutions,
+                      board_common=tuple(sorted(res.common)), missed_board=res.missed)
+        if self.collector is not None and ctx is not None:
+            try:
+                self.collector.observe(ctx, out, res, bc, nc, panel.confidence if panel is not None else None)
+            except Exception:                    # 수집 실패가 인식을 멈추게 하지 않는다
+                log.exception("유닛 사진 수집 실패")
+        return out
+
+    def set_hints(self, champion_ids: Iterable[str]) -> None:
+        """이번 판에 가진 것으로 알려진 챔피언(app 장부의 상점 구매 기록 등)을 넣는다. 새 판이면 빈 목록으로 부른다."""
+        self.hints = frozenset(c for c in champion_ids if c)
+
+    def reset(self) -> None:
+        """새 판: 힌트·여러 프레임 일치 기록·수집기 판 ID를 새로 한다(라이브러리는 그대로)."""
+        self.hints = frozenset()
+        self._streak.clear()
+        if self.collector is not None:
+            self.collector.reset()
+
+    def request_reload(self) -> None:
+        """다른 스레드(검토 창 = UI 스레드)에서 부른다: 다음 `name()` 호출 때 인식 스레드에서 다시 읽는다."""
+        self._reload_requested = True
+
+    def reload(self) -> None:
+        """디스크의 승인 크롭을 다시 읽는다(검토 창에서 승인·고친 뒤). 이번 실행 메모리 학습분은 버린다."""
+        if self.library.save_dir is None and self.collector is None:
+            return
+        root = self.collector.db.root if self.collector is not None else self.library.save_dir
+        valid = (lambda c: c in self.names) if self.names else None
+        self.library = UnitLibrary.load(root, valid=valid, save=False, pending_weight=self.library.pending_weight)
+        self._base, self._session = len(self.library), 0
+
+    def _agree(self, slots: Sequence[Any], names: Sequence[SlotName], side: str) -> list[SlotName]:
+        """뒷받침 없는 이름은 같은 칸에서 `agree_frames`번 **연속으로** 같아야 내보낸다(그 전에는 모름).
+        칸 키 = 벤치 칸 / 보드 육각칸(없으면 체력바 좌표). 이번 호출에 없는 칸의 기록은 지운다(연속이 끊긴다)."""
+        out: list[SlotName] = []
+        seen: set[tuple] = set()
+        for u, n in zip(slots, names):
+            pos = getattr(u, "bench_slot", None) if side == "bench" else getattr(u, "hex", None)
+            if pos is None:
+                ax, ay = getattr(u, "anchor", (0.0, 0.0))
+                pos = ("xy", round(ax, 2), round(ay, 2))
+            key = (side, pos)
+            seen.add(key)
+            if n.unit_id is None or n.corroborated or self.agree_frames <= 1:
+                self._streak.pop(key, None)
+                out.append(n)
+                continue
+            prev = self._streak.get(key)
+            count = prev[1] + 1 if prev is not None and prev[0] == n.unit_id else 1
+            self._streak[key] = (n.unit_id, count)
+            out.append(n if count >= self.agree_frames else SlotName(None, 0.0, "none", n.score, n.margin))
+        for key in [k for k in self._streak if k[0] == side and k not in seen]:
+            del self._streak[key]
+        return out
 
     def _persist_ok(self, res: BoardNames, board_desc: Sequence[np.ndarray], panel: TraitPanel | None) -> bool:
         """디스크 자동 학습을 해도 되는 **모호하지 않은** 경우만: 보드 칸 1개 · 풀이 1개 · 집합 크기 1 ·
@@ -651,15 +832,15 @@ class UnitNamer:
 
     def _learn(self, crops: Sequence[np.ndarray], descs: Sequence[np.ndarray], names: Sequence[SlotName],
                *, persist_ok: bool = False) -> None:
-        """이름 붙은 칸을 메모리 표본으로 더한다. 디스크에는 `persist_ok`(`_persist_ok`)이고 `forced`인 칸만 쓴다."""
+        """이름 붙은 칸을 **메모리** 표본으로 더한다. 디스크에는 쓰지 않는다(25: 디스크는 검토 대기 → 사람 승인 경로만).
+        `persist_ok`는 옛 호출과의 호환용이며 무시한다."""
         for crop, d, n in zip(crops, descs, names):
             if n.unit_id is None or n.confidence < AUTOLEARN_MIN_CONF:
                 continue
             same = [similarity(d, ref) for cid, ref in self.library.samples if cid == n.unit_id]
             if same and max(same) >= SESSION_NOVELTY:
                 continue
-            persist = self.autolearn and persist_ok and n.source == "forced"
-            self.library.add(n.unit_id, crop, persist=persist, tag="auto")
+            self.library.add(n.unit_id, crop, persist=False)
             self._session += 1
             if self._session > SESSION_SAMPLES_MAX:
                 # 이번 실행에서 더한 가장 오래된 표본을 버린다(디스크에서 읽은 표본은 앞쪽 `_base`개)

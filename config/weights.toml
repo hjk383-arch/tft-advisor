@@ -110,3 +110,58 @@ place_change_span = 1.0
 hold_bis_max = 0.4
 hold_until_stage = 4        # stage 번호 < 이 값일 때만 hold
 overall_stat_games_factor = 0.25   # 덱 한정 유닛+아이템 행이 없어 전체(파생) 행을 쓸 때 표본 수 할인
+
+[unit_stage]
+# 보유 유닛(보드·벤치)의 스테이지별 영향 (2026-09-24, _workspace/21_board_trust.md §10).
+# 사용자 결정: "2~3스테이지 유닛은 빌드업 — 지나가는 유닛". 최종 덱은 보유 아이템·증강이 정하고 승률이 타이브레이커.
+# 키 = 스테이지 번호. 표에 없는 스테이지는 가장 가까운 아래 키(없으면 최소 키). 스테이지 미인식 = 최대 키 값(전부 반영).
+# interpolate_rounds = true면 스테이지 안에서 다음 스테이지 값으로 (라운드-1)/rounds_per_stage 만큼 선형 보간.
+interpolate_rounds = true
+rounds_per_stage = 7
+# --- 목표 덱 선정(최종 덱)에만 적용. 상점 구매(2성 사본)·보드 배치에는 적용하지 않는다 ---
+# deck_board_scale: comp.wb(보드 항)와 prefilter.w_unit(U)에 곱한다. 예 2-6 → 0.22, 3-1 → 0.25, 3-7 → 0.55, 4-1 → 0.6, 4-7 → 0.94, 5+ → 1
+deck_board_scale = { "1" = 0.15, "2" = 0.15, "3" = 0.25, "4" = 0.6, "5" = 1.0 }
+# deck_one_star: U 프록시에서 1성 유닛 1기의 기여 배수(2성 이상은 1 x unit_star_mult 그대로)
+deck_one_star = { "1" = 0.25, "2" = 0.25, "3" = 0.35, "4" = 0.7, "5" = 1.0 }
+deck_item_holder = 0.8      # 아이템을 든 1성은 max(deck_one_star, 이 값) — 아이템 보유 캐리는 초반에도 신호
+redistribute = true         # 줄어든 보드 몫을 아이템·증강 항에 wi:wa(prefilter w_item:w_aug) 비율로 배분
+# --- 보드 배치(지금 무엇을 올릴지): 유닛은 그대로 쓰되 초반에는 '지금 강함'을 더 본다 ---
+# plan_comp_scale: 목표 덱 소속 가산(캐리/핵심/최종/빌드업)·핵심 특성 배수의 가산분에 곱한다
+plan_comp_scale = { "1" = 0.3, "2" = 0.3, "3" = 0.5, "4" = 0.8, "5" = 1.0 }
+# plan_now_scale: 현 레벨 통계(s_now)·스테이지 보드 통계 신호 배수
+plan_now_scale = { "1" = 2.0, "2" = 2.0, "3" = 1.5, "4" = 1.2, "5" = 1.0 }
+
+[board_plan]
+# 보드 배치 추천(advisor/board_plan.py, 코드 전용·Jev 없음). 키 정의·범위: config.py BoardPlanWeights. 21 §6·§10·§11.
+# 기본 점수 = 목표 덱 소속(x unit_stage.plan_comp_scale) + 성급 + 아이템 + 코스트
+#           + 지금 강함(x unit_stage.plan_now_scale: s_now · 스테이지 유닛 통계 · 추천 스테이지 보드 소속)
+#           + 특성 이득(지금 라인업 기준) + 보드 유지 − 같은 챔피언 중복
+carry = 3.0                 # 목표 덱 캐리 / 핵심 / 최종 보드 / 빌드업(현재·다음 레벨) — 하나만
+core = 2.0
+final = 1.2
+buildup = 0.8
+star2 = 1.5
+star3 = 3.5
+per_item = 0.7              # 장착 아이템 1개당
+per_cost = 0.3              # 코스트 x 이 값
+stat = 1.0                  # s_now(덱별 레벨 빌드업 보드 등장 비중, 0~1) 배수
+stat_reason_min = 0.5
+trait_activate = 1.0
+trait_key_mult = 1.5
+trait_progress = 0.25
+trait_unique = 0.2
+keep = 0.5
+duplicate = -2.5
+# --- 스테이지 보드 통계(MetaTFT Early Comps: 스테이지 2~5 실제 보드). top4 없음(avg_place·win_rate·round_win_rate),
+#     상관 관계(연승 보드가 좋아 보이는 편향)라 가중을 작게, 표본으로 수축한다. 비교는 같은 스테이지 기준선 대비 delta ---
+stage_unit = 0.8            # 유닛(성급별) 신호 −1~1 배수. 신호 = clip(−delta_수축 / stage_delta_span)
+stage_shrink_k = 500        # delta_수축 = delta x games / (games + k)
+stage_delta_span = 0.3
+stage_unit_min_games = 50   # 성급 행 표본이 모자라면 전 성급 행
+board_min_games = 100       # "지금 이 스테이지 추천 보드" 후보 최소 표본
+board_max_missing = 2       # 보유하지 않은 유닛 허용 수(상점에서 구할 유닛, 보유 비율 가중으로 적을수록 우선)
+board_cover = 1.0           # 보드 고르기 = 품질(−delta_수축/span) + board_cover x 보유 비율 + board_link x plan_comp_scale x 목표 덱 연결
+board_link = 0.5
+board_member = 0.6          # 고른 보드에 든 보유 유닛 가산(x plan_now_scale)
+trans_min_games = 20        # 다음 스테이지 전이 최소 표본
+trans_link_min = 0.15

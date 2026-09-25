@@ -517,6 +517,88 @@ class ItemAdvice(ContractModel):
     hold: bool = False
 
 
+class BoardPlanEntry(ContractModel):
+    """보드 배치 추천의 유닛 1기(이름을 아는 보유 유닛만). 2026-09-23 추가(`_workspace/21_board_trust.md` §6).
+
+    action: keep = 보드 유지 / field = 벤치 → 보드 / bench = 보드 → 벤치 / stay = 벤치 유지
+    """
+
+    unit_id: ChampionId
+    star: Star | None = None
+    on_board: bool
+    action: Literal["keep", "field", "bench", "stay"]
+    score: float = 0.0
+    reason: str | None = None      # 짧은 합쇼체/명사형 근거(예 "목표 덱 핵심 · 적응가 1→2 활성")
+
+
+class BoardSwap(ContractModel):
+    """벤치 X ↔ 보드 Y. bench_unit_id(보드에서 내릴 유닛)가 None이면 빈 칸에 올린다."""
+
+    field_unit_id: ChampionId
+    bench_unit_id: ChampionId | None = None
+
+
+class BoardTransition(ContractModel):
+    """지금 보드 → 목표 덱 전환 경로(2026-09-24 추가, `_workspace/21_board_trust.md` §10.3). 모두 챔피언 ID.
+
+    - keep: 라인업 중 목표 덱 최종 보드 유닛(끝까지 간다)
+    - bridge: 목표 덱 빌드업 보드에만 나오는 유닛(다리 역할, 레벨이 오르면 빠진다)
+    - placeholder: 목표 덱과 무관하게 지금 전력으로 올린 유닛(교체 예정)
+    - next_targets / next_level: 다음 레벨 빌드업 보드에서 아직 없는 유닛(사서 채울 것)
+    """
+
+    keep: list[ChampionId] = Field(default_factory=list)
+    bridge: list[ChampionId] = Field(default_factory=list)
+    placeholder: list[ChampionId] = Field(default_factory=list)
+    next_targets: list[ChampionId] = Field(default_factory=list)
+    next_level: Annotated[int, Field(ge=1, le=10)] | None = None
+
+
+class StageBoardHint(ContractModel):
+    """스테이지별 실제 보드 통계(MetaTFT Early Comps)에서 고른 "지금 이 스테이지 추천 보드"와 다음 스테이지 경로.
+    2026-09-24 추가(`_workspace/21_board_trust.md` §11). 상관 관계 통계(top4 없음) — 참고용.
+
+    - units: 그 스테이지 실제 보드(유닛 수 = 레벨). owned: 그중 보유 유닛. games: 참가자-게임 표본
+    - delta: 평균 등수 − 같은 스테이지 기준선(음수가 좋다). comp_link: 목표 덱으로 이어질 확률
+    - next_*: 지금 라인업과 닮은 보드가 다음 스테이지에 가장 많이 간 보드(목표 덱으로 이어지는 경로 우선)
+    """
+
+    stage: Annotated[int, Field(ge=1, le=9)]
+    kind: Literal["variation", "cluster"] = "variation"
+    units: list[ChampionId] = Field(default_factory=list)
+    owned: list[ChampionId] = Field(default_factory=list)
+    games: Annotated[int, Field(ge=0)] = 0
+    avg_place: float | None = None
+    delta: float | None = None
+    comp_link: Annotated[float, Field(ge=0, le=1)] | None = None
+    next_stage: Annotated[int, Field(ge=1, le=9)] | None = None
+    next_units: list[ChampionId] = Field(default_factory=list)
+    next_share: Annotated[float, Field(ge=0, le=1)] | None = None
+    next_avg_place: float | None = None
+
+
+class BoardPlan(ContractModel):
+    """지금 보유한 유닛 중 무엇을 보드에 둘지(코드 계산, Jev 호출 없음). 2026-09-23 추가.
+
+    - lineup: 보드에 둘 유닛(점수 높은 순). 이름 미상 보드 유닛은 들어가지 않지만 칸은 차지한다(`unknown_on_board`)
+    - bench: 벤치에 둘(또는 내릴) 이름 아는 유닛
+    - slots: 보드 칸 수(보통 레벨). free_slots: 올릴 유닛이 모자라 비는 칸
+    - notes: 부분 확인·레벨 미인식 등 한계(합쇼체)
+    """
+
+    comp_id: str | None = None
+    slots: Annotated[int, Field(ge=0)] | None = None
+    lineup: list[BoardPlanEntry] = Field(default_factory=list)
+    bench: list[BoardPlanEntry] = Field(default_factory=list)
+    swaps: list[BoardSwap] = Field(default_factory=list)
+    free_slots: Annotated[int, Field(ge=0)] = 0
+    unknown_on_board: Annotated[int, Field(ge=0)] = 0
+    unknown_on_bench: Annotated[int, Field(ge=0)] = 0
+    notes: list[str] = Field(default_factory=list)
+    transition: BoardTransition | None = None   # 2026-09-24 추가(선택). 같은 내용이 notes에 "전환: …" 한 줄로도 들어간다
+    stage_board: StageBoardHint | None = None   # 2026-09-24 추가(선택). notes에 "지금 이 스테이지 추천 보드: …"/"다음 스테이지: …"
+
+
 class FallbackReason(StrEnum):
     """Jev 미사용 사유(설계 8.1 닫힌 9종, ASCII). 판정 순서는 advisor 책임."""
 
@@ -545,6 +627,7 @@ class Recommendation(ContractModel):
     augment: AugmentAdvice | None = None
     item: ItemAdvice | None = None
     component_priority: list[ItemId] = Field(default_factory=list, max_length=10)
+    board_plan: BoardPlan | None = None   # 보드 배치 추천(2026-09-23 추가, 선택 필드 — 없으면 표시하지 않는다)
     jev_used: bool
     fallback_reason: FallbackReason | None = None
     latency_ms: Annotated[float, Field(ge=0)] | None = None

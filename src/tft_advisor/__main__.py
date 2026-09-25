@@ -1,11 +1,13 @@
 """실행 진입점.
 
     python -m tft_advisor --setup               # 설정 화면(해상도·모니터 자동 감지) → 저장 후 시작
+    python -m tft_advisor --redetect            # 게임 창 위치로 캡처 영역을 다시 맞추고 저장(창 모드, Windows)
     python -m tft_advisor --screenshot PATH     # 스크린샷 1장(또는 폴더) 인식 + 추천 출력
     python -m tft_advisor                       # 실시간(= --live). 오버레이 + 백그라운드 인식/추천
     python -m tft_advisor --live --no-overlay   # 오버레이 없이 콘솔에만 출력
     python -m tft_advisor --test-view           # 인식 확인 창(보드·벤치·장착/미사용 아이템)도 함께 띄움
     python -m tft_advisor --screenshot PATH --test-view   # 그 이미지의 인식 결과를 확인 창으로(콘솔에도 출력)
+    python -m tft_advisor review-units          # 유닛 사진 검토 창(게임 중 모은 보드·벤치 크롭 승인) / --coverage 표
 
 첫 실행(= `_state/setup.json`이 없을 때)에는 실시간 모드가 설정 화면을 먼저 연다. `--no-setup`으로 건너뛴다.
 
@@ -35,6 +37,9 @@ def build_parser() -> argparse.ArgumentParser:
     mode.add_argument("--screenshot", type=Path, metavar="PATH",
                       help="스크린샷 파일 1장 또는 폴더를 인식·추천합니다(디버깅/QA/베타 테스트)")
     mode.add_argument("--live", action="store_true", help="실시간 화면 캡처 + 오버레이 (인자를 주지 않으면 기본)")
+    mode.add_argument("--redetect", action="store_true",
+                      help="게임 창(창 모드)의 위치·크기를 읽어 모니터·해상도·게임 화면 영역을 다시 맞추고 설정에 저장한 뒤 "
+                           "끝냅니다(Windows). 실행 중에는 트레이 \"게임 화면 다시 찾기\"와 같습니다")
     p.add_argument("--config", type=Path, default=None, metavar="DIR", help="설정 디렉터리(기본: config/)")
     p.add_argument("--jev", choices=("mock", "live", "off"), default=None,
                    help="Jev 백엔드를 이번 실행에 고정합니다(트레이 토글이 잠깁니다). 기본은 설정 "
@@ -97,7 +102,7 @@ def wants_setup(settings: Settings, args: argparse.Namespace) -> bool:
 
     if args.setup:
         return True
-    if args.no_setup or args.screenshot is not None:
+    if args.no_setup or args.screenshot is not None or args.redetect:
         return False
     if not needs_setup(settings):
         return False
@@ -124,6 +129,21 @@ def run_setup_step(settings: Settings, args: argparse.Namespace) -> tuple[Settin
     return fresh, (0 if outcome.action == "saved" else None)
 
 
+def run_redetect(settings: Settings, config_dir: Path | None = None, *, finder=None) -> int:
+    """`--redetect`: 게임 창을 찾아 화면 설정을 저장한다. 0 = 저장(또는 이미 같음), 1 = 못 찾음."""
+    from .app.game_window import ScreenRedetector
+    from .app.setup import resolve_state_dir
+
+    red = ScreenRedetector(settings, config_dir=config_dir, state_dir=resolve_state_dir(settings), follow=False,
+                           finder=finder)
+    res = red.redetect(None, reason="cli")
+    print(res.text())
+    if res.ok and not res.unchanged:
+        print(f"저장한 값: 모니터 {res.monitor.number} · 해상도 {res.resolution} · content_box "
+              f"{list(res.content_box) if res.content_box else '없음(모니터 전체)'}")
+    return 0 if res.ok else 1
+
+
 def debug_dir(settings: Settings, args: argparse.Namespace) -> Path | None:
     if not args.debug:
         return None
@@ -139,6 +159,11 @@ def main(argv: list[str] | None = None) -> int:
     from .app.report import ensure_utf8_stdio
 
     ensure_utf8_stdio()
+    rest = list(sys.argv[1:] if argv is None else argv)
+    if rest[:1] == ["review-units"]:          # 유닛 사진 검토(vision 25): python -m tft_advisor review-units [--coverage]
+        from .app.unit_review import main as review_units
+
+        return review_units(rest[1:])
     args = build_parser().parse_args(argv)
     settings = load_settings(args.config)
     load_weights(args.config)  # 설정 오류를 시작 시점에 드러낸다
@@ -149,6 +174,8 @@ def main(argv: list[str] | None = None) -> int:
     log.info("tft_advisor %s / Set %s 정적 데이터 로드", __version__, static.set_number)
 
     try:
+        if args.redetect:
+            return run_redetect(settings, args.config)
         if wants_setup(settings, args):
             settings, code = run_setup_step(settings, args)
             if code is not None:

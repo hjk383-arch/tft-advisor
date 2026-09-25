@@ -137,9 +137,10 @@ def test_view_reliability_filter(stats):
     # 유물은 보유 풀, 전략가 망토는 기타(QA WARN N5a)
     assert v.others_owned == ["DA_Artifact_LichBane"]
     assert "DA_Artifact_LichBane" in v.owned_pool(stats)
-    # board만 있고 bench None → 보유 유닛 "모름"(§4.3 b)
+    # board만 있고 bench None → 보드는 쓰되 "부분 확인"(21_board_trust: 보드·벤치 따로 판정)
     v2 = build_view(gs(board=[UnitOnBoard(id="DA_18_Ornn")]), stats, 0.6, None)
-    assert not v2.units_known
+    assert v2.units_known and v2.units_partial and v2.board_complete
+    assert [u.id for u in v2.units] == ["DA_18_Ornn"]
 
 
 # ---------------------------------------------------------------------------

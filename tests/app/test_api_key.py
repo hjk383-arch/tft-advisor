@@ -101,7 +101,7 @@ class FakeGrabber(core.MonitorGrabber):
 @pytest.fixture
 def config_dir(tmp_path: Path) -> Path:
     out = tmp_path / "config"
-    shutil.copytree(CONFIG_SRC, out)
+    shutil.copytree(CONFIG_SRC, out, ignore=shutil.ignore_patterns("*.local.toml", "*.bak", "*.tmp"))
     return out
 
 
@@ -383,7 +383,7 @@ def test_saving_the_dialog_never_writes_the_key_to_settings(make_dialog, config_
     d.jev_live.setChecked(True)
     outcome = d.save_and_close("saved")
     assert outcome.action == "saved"
-    written = (config_dir / "settings.toml").read_text("utf-8")
+    written = (config_dir / "settings.local.toml").read_text("utf-8")   # 저장은 이 PC 전용 층에
     assert KEY not in written and "api_key" not in written
     for path in tmp_path.rglob("*"):
         if path.is_file() and path.suffix in (".json", ".toml", ".log", ".jsonl"):

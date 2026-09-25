@@ -387,7 +387,7 @@ def test_the_key_never_reaches_settings_logs_or_reports(fake_keyring, monkeypatc
     config_dir.mkdir()
     shutil.copy(Path(__file__).resolve().parents[1] / "config" / "settings.toml", config_dir / "settings.toml")
     setup_core.save_settings({"advisor": {"jev_backend": "live"}}, config_dir=config_dir)
-    written = (config_dir / "settings.toml").read_text("utf-8")
+    written = (config_dir / "settings.toml").read_text("utf-8") + (config_dir / "settings.local.toml").read_text("utf-8")
     assert SENTINEL not in written and "api_key" not in written
 
     # 2) 추천 1회(mock) — Recommendation JSON과 debug 덤프

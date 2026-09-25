@@ -2,11 +2,13 @@
 # 비밀값(API 키)은 여기 두지 않는다(이 저장소는 공개다). TypeSafe 키는 환경변수 TYPESAFE_API_KEY 우선,
 # 없으면 OS 키체인(설정 화면의 [TypeSafe API 키] 칸에서 저장한다) → 폴백 ~/.config/tft-advisor/credentials.toml.
 #
-# 화면 관련 값은 손으로 고칠 필요가 없다 — 설정 화면이 자동으로 감지해서 여기에 쓴다:
+# 화면 관련 값은 손으로 고칠 필요가 없다 — 설정 화면이 자동으로 감지해서 **config/settings.local.toml**(이 PC 전용,
+# gitignore)에 쓰고, 앱은 그 파일을 이 파일 위에 덮어 읽는다. 이 파일은 공개 저장소의 공용 기본값이다:
 #     python -m tft_advisor --setup        (첫 실행에는 자동으로 열리고, 오버레이 트레이 메뉴 "설정"으로도 연다)
 # 설정 화면이 쓰는 키: [capture] monitor · [vision] resolution/aspect/profile/content_box/content_box_auto
 #                     · [advisor] jev_backend · [overlay] opacity/scale
-# 저장할 때 이 파일의 주석·순서는 그대로 두고 값만 바꾸며, 직전 내용을 settings.toml.bak 으로 백업한다.
+# 트레이 토글·"게임 화면 다시 찾기"·게임 창 따라가기도 같은 settings.local.toml 에 저장한다(직전 내용은 .bak).
+# 이 PC 값을 공용 기본값으로 되돌리려면 settings.local.toml 을 지우면 된다.
 
 [app]
 set_number = 18
@@ -32,6 +34,11 @@ ledger_track_sales = true        # 골드가 늘어난 양으로 유닛 판매�
 # 숫자로 못박을 수도 있다: 1 = 주 모니터, 2 = 두 번째 모니터 …, 0 = 모든 모니터를 합친 화면.
 # 설정 화면(--setup)의 "모니터" 목록에서 고른 값이 여기 들어간다.
 monitor = "auto"
+# 창 모드로 띄운 게임 창을 따라갑니다: 실행 중 몇 초마다 게임 창 위치·크기를 확인하고, 옮기거나 크기를 바꾸면
+# 모니터·게임 화면 영역(content_box)·해상도를 자동으로 다시 맞춰 settings.local.toml 에 저장합니다(Windows 전용).
+# 오버레이 트레이 메뉴 / 인식 확인 창의 "게임 화면 다시 찾기" 버튼, CLI --redetect 로도 한 번 맞출 수 있습니다.
+follow_game_window = true
+follow_interval_s = 3.0
 # 캡처 주기·안정 프레임은 [vision] capture_fps / change_stable_frames (옛 poll_interval_ms·stable_frames 대체)
 
 [vision]
@@ -69,8 +76,14 @@ capture_fps = 4               # 앱 루프 캡처 주기(Phase 4). 인식·추�
 traits_every_s = 3            # 앱 루프: 특성 패널을 몇 초에 한 번 읽을지(비싼 ROI)
 # 보드·벤치 유닛 챔피언 이름: 특성 패널 인원으로 보드 챔피언 집합을 풀고, 모델 크롭 라이브러리(few-shot)로 칸을 정한다.
 unit_names = true
-# 특성 패널만으로 이름이 강제된 칸의 크롭을 data/templates/{set}/units_screen/ 에 저장해 라이브러리를 키운다(커밋 안 함)
+# 증거(특성 패널로 강제된 칸·상점 구매 직후 새 벤치 칸 등)가 있는 유닛 크롭을 data/templates/{set}/units_screen/_pending/
+# (검토 대기)에 모은다. 승인 폴더에는 직접 쓰지 않는다 — "유닛 사진 검토" 창(트레이 메뉴·인식 확인 창 버튼,
+# 또는 python -m tft_advisor review-units)에서 승인한 사진만 이름 인식에 쓰인다(커밋 안 함)
 unit_autolearn = true
+# 검토 대기 사진을 이름 순위에 섞는 가중치. 0(기본) = 쓰지 않는다, 0~1 = 닮음 점수에 곱해 순위에만 쓴다(이름을 확정하지는 않음)
+unit_pending_weight = 0.0
+# true = 상점 구매로 이름이 확실한 벤치 크롭을 검토 없이 바로 승인한다(기본 false: 검토 대기로)
+unit_purchase_autoapprove = false
 
 [advisor]
 # "mock"(기본, 네트워크·과금 없음) | "live"(TypeSafe API 키 필요, 과금) | "off"(통계 전용). CLI --no-jev → "off".

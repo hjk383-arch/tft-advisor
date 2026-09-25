@@ -326,6 +326,7 @@ class SetupDetection:
     game_found: bool = False                          # 스테이지 OCR로 TFT 화면을 확인했는가
     scorer_kind: str = "pixel"                        # "ocr"(인식기 채점) | "pixel"(빠른 예비 채점)
     permission_issue: bool = False                    # 모든 캡처가 검다
+    window_note: str | None = None                    # 게임 창 위치로 찾았으면 그 한 줄(`app.game_window`)
     warnings: list[str] = field(default_factory=list)
     notes: list[str] = field(default_factory=list)
 
@@ -344,7 +345,8 @@ class SetupDetection:
         if mon is None:
             return ["모니터를 찾지 못했습니다."]
         gw, gh = self.game_size
-        out = [f"모니터: {mon.label()}"]
+        out = [self.window_note] if self.window_note else []
+        out.append(f"모니터: {mon.label()}")
         out.append(f"캡처 크기: {self.frame_size[0]}x{self.frame_size[1]}")
         if self.content_px is not None:
             left, top, w, h = self.content_px
@@ -495,14 +497,34 @@ def safe_detect(detect_fn: Callable[[], SetupDetection]) -> SetupDetection:
 
 
 def detect_live(settings: Settings, *, scorer: Callable[[Any], float] | None = None,
-                grabber: MonitorGrabber | None = None) -> SetupDetection:
-    """실제 화면에서 감지한다(대화상자의 [자동 감지] 버튼). 캡처기를 넘기면 그것을 쓴다."""
+                grabber: MonitorGrabber | None = None,
+                window_finder: Callable[..., Any] | None = None) -> SetupDetection:
+    """실제 화면에서 감지한다(대화상자의 [자동 감지] 버튼). 캡처기를 넘기면 그것을 쓴다.
+
+    **게임 창 위치를 먼저 본다**(`app.game_window`, Windows): 창 모드 게임은 모니터 전체가 아니라 창의 클라이언트
+    영역이 게임 화면이다. 창을 찾아 검증까지 통과하면 그 결과를 쓰고, 못 찾으면(다른 OS·게임 미실행·최소화·가림)
+    기존 픽셀 감지로 내려가며 이유를 메모로 남긴다.
+    """
     own = grabber is None
     grabber = grabber or MonitorGrabber()
     try:
+        win_note = None
+        try:
+            if window_finder is None:
+                from .game_window import find_game_window as window_finder
+            win = window_finder(grabber=grabber, scorer=scorer)
+            if win.ok and win.detection is not None:
+                return win.detection
+            if win.status != "not_supported":
+                win_note = f"게임 창으로 찾지 못해 화면 픽셀로 감지했습니다 — {win.message}"
+        except Exception:   # noqa: BLE001 — 창 찾기 실패는 픽셀 감지로 대신한다
+            log.debug("게임 창 찾기 실패 → 픽셀 감지", exc_info=True)
         monitors = grabber.monitors()
-        return detect(monitors, grabber.grab, scorer=scorer, prefer=settings.capture.monitor,
-                      content_box_auto=settings.vision.content_box_auto)
+        det = detect(monitors, grabber.grab, scorer=scorer, prefer=settings.capture.monitor,
+                     content_box_auto=settings.vision.content_box_auto)
+        if win_note:
+            det.notes.append(win_note)
+        return det
     finally:
         if own:
             grabber.close()
@@ -693,19 +715,45 @@ def update_toml_text(text: str, updates: dict[str, dict[str, object]]) -> str:
     return "\n".join(lines) + "\n"
 
 
+LOCAL_HEADER = """# 이 PC 전용 TFT Advisor 설정 — git에 올리지 않습니다(.gitignore).
+# config/settings.toml(공용 기본값) 위에 덮어 읽습니다. 설정 화면·"게임 화면 다시 찾기"·게임 창 따라가기·
+# 트레이 토글이 여기에 저장합니다. 키 설명은 settings.toml 을 보세요. 이 파일을 지우면 공용 기본값으로 돌아갑니다.
+"""
+
+
+def _local_updates(updates: dict[str, dict[str, object]]) -> dict[str, dict[str, object]]:
+    """로컬 층에서 None = "공용 기본값으로 되돌림"(키를 주석 처리). 단 content_box None은 "프레임 전체"라는
+    **값**이므로 `[]`로 적는다(공용 파일에 영역이 적혀 있어도 이 PC에서는 전체를 쓰도록)."""
+    out: dict[str, dict[str, object]] = {}
+    for section, keys in updates.items():
+        out[section] = {k: ([] if (section, k) == ("vision", "content_box") and v is None else v)
+                        for k, v in keys.items()}
+    return out
+
+
 def save_settings(updates: dict[str, dict[str, object]], *, config_dir: Path | None = None,
                   path: Path | None = None) -> Path:
-    """`settings.toml`에 저장한다. 쓰기 전에 **검증**하고, 덮어쓰기 전에 `.bak`으로 백업한다.
+    """이 PC 전용 설정 층(`config/settings.local.toml`, gitignore)에 저장한다. `path`를 주면 그 파일에 직접 쓴다.
 
-    주석·형식을 유지한 채 값만 바꾼다(파일이 없으면 새로 만든다). 결과가 설정 검증을 통과하지 못하면
+    공용 `settings.toml`(저장소 기본값)은 건드리지 않는다 — 모니터 배치·게임 창 위치·Jev 백엔드 같은 한 PC의 값이
+    공개 저장소로 새지 않게 한다(2026-09-23). 쓰기 전에 **합친 결과를 검증**하고, 덮어쓰기 전에 `.bak`으로 백업한다.
+    주석·형식을 유지한 채 값만 바꾼다(파일이 없으면 머리 주석과 함께 새로 만든다). 검증을 통과하지 못하면
     아무것도 쓰지 않고 예외를 낸다(깨진 설정으로 앱이 못 뜨는 일을 막는다).
     """
-    target = path or settings_path(config_dir)
-    old = target.read_text(encoding="utf-8") if target.is_file() else ""
-    new = update_toml_text(old, updates)
     import tomllib
 
-    Settings.model_validate(tomllib.loads(new))   # 실패하면 여기서 멈춘다(파일은 그대로)
+    from ..config import local_settings_path, settings_raw
+
+    if path is not None:
+        target = path
+        old = target.read_text(encoding="utf-8") if target.is_file() else ""
+        new = update_toml_text(old, updates)
+        Settings.model_validate(tomllib.loads(new))   # 실패하면 여기서 멈춘다(파일은 그대로)
+    else:
+        target = local_settings_path(config_dir)
+        old = target.read_text(encoding="utf-8") if target.is_file() else ""
+        new = update_toml_text(old or LOCAL_HEADER, _local_updates(updates))
+        Settings.model_validate(settings_raw(config_dir, local_text=new))   # 공용 + 로컬을 합쳐 검증
     target.parent.mkdir(parents=True, exist_ok=True)
     if old:
         target.with_suffix(target.suffix + ".bak").write_text(old, encoding="utf-8")

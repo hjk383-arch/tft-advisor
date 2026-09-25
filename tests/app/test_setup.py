@@ -69,7 +69,7 @@ class FakeGrabber(core.MonitorGrabber):
 def config_dir(tmp_path: Path) -> Path:
     """진짜 config/를 복사한 작업용 설정 디렉터리(주석 보존 검증에 원문이 필요하다)."""
     out = tmp_path / "config"
-    shutil.copytree(CONFIG_SRC, out)
+    shutil.copytree(CONFIG_SRC, out, ignore=shutil.ignore_patterns("*.local.toml", "*.bak", "*.tmp"))
     return out
 
 
@@ -320,21 +320,44 @@ def test_test_capture_survives_a_recognizer_crash():
 # ---------------------------------------------------------------------------
 
 
-def test_save_keeps_comments_and_key_order(config_dir):
+def test_save_writes_the_local_layer_and_leaves_the_shared_file_alone(config_dir):
+    """2026-09-23: 저장은 이 PC 전용 settings.local.toml(gitignore)에. 공용 settings.toml은 그대로(공개 저장소)."""
     before = (config_dir / "settings.toml").read_text(encoding="utf-8")
-    core.save_settings(core.SetupChoice(monitor=2, aspect="21:9").updates(), config_dir=config_dir)
-    after = (config_dir / "settings.toml").read_text(encoding="utf-8")
-    assert "# TFT Advisor 실행 설정" in after
-    assert "# 캡처 주기·안정 프레임은 [vision] capture_fps" in after
-    assert 'monitor = 2' in after and 'aspect = "21:9"' in after
-    assert before.count("\n[vision]") == after.count("\n[vision]") == 1   # 섹션이 늘지 않았다
-    assert after.index("[capture]") < after.index("[vision]") < after.index("[advisor]")
+    path = core.save_settings(core.SetupChoice(monitor=2, aspect="21:9").updates(), config_dir=config_dir)
+    assert path == config_dir / "settings.local.toml"
+    assert (config_dir / "settings.toml").read_text(encoding="utf-8") == before
+    local = path.read_text(encoding="utf-8")
+    assert local.startswith("# 이 PC 전용") and 'monitor = 2' in local and 'aspect = "21:9"' in local
+    assert local.count("\n[vision]") == 1 and local.index("[capture]") < local.index("[vision]")
+    s = load_settings(config_dir)
+    assert s.capture.monitor == 2 and s.vision.aspect == "21:9"
+    # 두 번째 저장은 같은 섹션의 값만 바꾼다(섹션이 늘지 않고 주석이 남는다)
+    core.save_settings(core.SetupChoice(monitor=3, aspect="21:9").updates(), config_dir=config_dir)
+    again = path.read_text(encoding="utf-8")
+    assert again.count("\n[capture]") == 1 and "monitor = 3" in again and again.startswith("# 이 PC 전용")
 
 
 def test_save_backs_up_the_previous_file(config_dir):
-    before = (config_dir / "settings.toml").read_text(encoding="utf-8")
     core.save_settings(core.SetupChoice(monitor=1).updates(), config_dir=config_dir)
-    assert (config_dir / "settings.toml.bak").read_text(encoding="utf-8") == before
+    before = (config_dir / "settings.local.toml").read_text(encoding="utf-8")
+    core.save_settings(core.SetupChoice(monitor=2).updates(), config_dir=config_dir)
+    assert (config_dir / "settings.local.toml.bak").read_text(encoding="utf-8") == before
+
+
+def test_explicit_path_still_writes_that_file_with_comments(config_dir):
+    target = config_dir / "settings.toml"
+    core.save_settings(core.SetupChoice(monitor=2).updates(), path=target)
+    text = target.read_text(encoding="utf-8")
+    assert "# TFT Advisor 실행 설정" in text and "monitor = 2" in text
+    assert (config_dir / "settings.toml.bak").is_file()
+
+
+def test_local_layer_is_ignored_for_the_default_dir_under_tests(monkeypatch):
+    from tft_advisor import config as cfg
+
+    assert not cfg.local_layer_enabled(None)
+    monkeypatch.setenv(cfg.LOCAL_DISABLE_ENV, "1")
+    assert cfg.local_layer_enabled(None)
 
 
 def test_save_round_trips_every_key_the_dialog_writes(config_dir):
@@ -354,9 +377,10 @@ def test_clearing_the_content_box_comments_the_key_out(config_dir):
     core.save_settings(core.SetupChoice(content_box=(0.1, 0.1, 0.9, 0.9)).updates(), config_dir=config_dir)
     assert load_settings(config_dir).vision.content_box is not None
     core.save_settings(core.SetupChoice(content_box=None).updates(), config_dir=config_dir)
-    text = (config_dir / "settings.toml").read_text(encoding="utf-8")
+    text = (config_dir / "settings.local.toml").read_text(encoding="utf-8")
     assert load_settings(config_dir).vision.content_box is None
-    assert "# content_box = " in text          # 설명 겸 예시로 남는다
+    assert "content_box = []" in text          # 로컬 층: "프레임 전체"를 값으로 적는다(공용 값을 덮는다)
+    assert "# content_box = " in (config_dir / "settings.toml").read_text(encoding="utf-8")
 
 
 def test_invalid_combination_is_never_written(config_dir):
@@ -369,7 +393,7 @@ def test_invalid_combination_is_never_written(config_dir):
 
 def test_save_creates_the_file_when_there_is_none(tmp_path):
     path = core.save_settings(core.SetupChoice(monitor=1).updates(), config_dir=tmp_path)
-    assert path.is_file() and not (tmp_path / "settings.toml.bak").exists()
+    assert path.is_file() and not (tmp_path / "settings.local.toml.bak").exists()
     assert load_settings(tmp_path).capture.monitor == 1
 
 
@@ -410,7 +434,7 @@ def test_commit_writes_both_the_settings_and_the_state(config_dir, tmp_path):
     settings = load_settings(config_dir)
     out = core.commit(core.SetupChoice(monitor=2), settings=settings, config_dir=config_dir,
                       action="start", state_dir=tmp_path)
-    assert out.action == "start" and out.path == config_dir / "settings.toml"
+    assert out.action == "start" and out.path == config_dir / "settings.local.toml"
     assert out.settings.capture.monitor == 2
     assert core.setup_completed(tmp_path)
 

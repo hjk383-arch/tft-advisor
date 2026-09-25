@@ -7,7 +7,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from ..config import Weights
-from ..contracts import CompStats
+from ..contracts import CompStats, stage_tuple
 from .features import (
     View,
     board_at,
@@ -48,6 +48,40 @@ def tempo_active(view: View, owned: list[str], w: Weights) -> bool:
 def late_blind(view: View, owned: list[str], w: Weights) -> bool:
     """후반인데 아이템·증강·보유 유닛 신호가 하나도 없다 → UI에 '레벨 템포·메타로 추정' 안내."""
     return is_late(view, late_cfg(w).undecided_until_stage) and not any(resource_availability(view, owned).values())
+
+
+def stage_round(view: View) -> tuple[int | None, int | None]:
+    """(스테이지 번호, 라운드). 스테이지를 모르면 (None, None)."""
+    if view.stage_number is None:
+        return None, None
+    try:
+        return stage_tuple(view.stage)   # type: ignore[arg-type]
+    except (TypeError, ValueError):
+        return view.stage_number, None
+
+
+@dataclass(frozen=True)
+class UnitStage:
+    """목표 덱 선정에서 보유 유닛 영향(21 §10). board_scale: 보드 항 배수, one_star: 1성 1기 기여 배수."""
+
+    board_scale: float
+    one_star: float
+    item_holder: float
+
+
+def unit_stage(view: View, w: Weights) -> UnitStage:
+    us = w.unit_stage
+    s, r = stage_round(view)
+    return UnitStage(us.at(us.deck_board_scale, s, r), us.at(us.deck_one_star, s, r), us.deck_item_holder)
+
+
+def scaled_board_weights(wi: float, wa: float, wb: float, scale: float, redistribute: bool) -> tuple[float, float, float]:
+    """(아이템, 증강, 보드) 가중. 보드 몫을 scale배로 줄이고, redistribute면 줄어든 몫을 wi:wa 비율로 나눈다(합 보존)."""
+    cut = wb * (1.0 - scale)
+    wb2 = wb - cut
+    if redistribute and wi + wa > 0:
+        return wi + cut * wi / (wi + wa), wa + cut * wa / (wi + wa), wb2
+    return wi, wa, wb2
 
 
 @dataclass
@@ -130,13 +164,25 @@ def augment_proxy(comp: CompStats, augment_ids: list[str], stats: AdvisorStats, 
     return sum(augment_comp_fit(a, comp, stats, w) for a in augment_ids) / len(augment_ids)
 
 
-def unit_proxy(comp: CompStats, view: View, L: int | None, w: Weights) -> float:
+def unit_proxy(comp: CompStats, view: View, L: int | None, w: Weights, us: UnitStage | None = None) -> float:
+    """U(c): 보유 유닛이 덱 c에 얼마나 맞나(0~1). 목표 덱 선정 전용 — 상점·보드 배치는 이 값을 쓰지 않는다.
+
+    1성은 스테이지별 `unit_stage.deck_one_star`배(아이템을 들었으면 최소 deck_item_holder), 2성 이상은 unit_star_mult배.
+    `us` 생략 시 스테이지 할인 없음(예전 동작).
+    """
     if not view.units_known:
         return 0.0
     pf = w.prefilter
-    best_star: dict[str, int] = {}
+    best: dict[str, float] = {}      # 유닛별 최고 배수(성급·아이템 반영)
     for u in view.units:
-        best_star[u.id] = max(best_star.get(u.id, 0), u.star or 1)
+        star = u.star or 1
+        if star >= 2:
+            f = pf.unit_star_mult
+        elif us is None:
+            f = 1.0
+        else:
+            f = max(us.one_star, us.item_holder) if u.items else us.one_star
+        best[u.id] = max(best.get(u.id, 0.0), f)
     final = {u.id: u for u in comp.final_board}
     buildup_units: set[str] = set()
     if L is not None:
@@ -145,29 +191,31 @@ def unit_proxy(comp: CompStats, view: View, L: int | None, w: Weights) -> float:
             if b is not None:
                 buildup_units.update(b.units)
     total = 0.0
-    for uid, star in best_star.items():
+    for uid, f in best.items():
         if uid in final:
             wu = pf.unit_w_core if final[uid].is_core else pf.unit_w_final
         elif uid in buildup_units:
             wu = pf.unit_w_buildup
         else:
             continue
-        if star >= 2:
-            wu *= pf.unit_star_mult
-        total += wu
+        total += wu * f
     return min(1.0, total / pf.unit_saturation)
 
 
 def score_candidate(comp: CompStats, view: View, stats: AdvisorStats, w: Weights,
-                    owned: list[str], craftable: list[str], augment_ids: list[str]) -> Candidate:
+                    owned: list[str], craftable: list[str], augment_ids: list[str],
+                    us: UnitStage | None = None) -> Candidate:
     pf = w.prefilter
+    us = us if us is not None else unit_stage(view, w)
     L = comp_level(view, comp)
     I = item_proxy(comp, owned, craftable, stats, w)
     A = augment_proxy(comp, augment_ids, stats, w)
-    U = unit_proxy(comp, view, L, w)
+    U = unit_proxy(comp, view, L, w, us)
     adj = stat_adj(comp, owned, w)
     S = stat_norm(adj, w)
-    p = pf.w_item * I + pf.w_aug * A + pf.w_unit * U + pf.w_stat * S
+    # 21 §10: 초반에는 유닛 몫(w_unit)을 줄여 아이템·증강으로 옮긴다
+    wi, wa, wu = scaled_board_weights(pf.w_item, pf.w_aug, pf.w_unit, us.board_scale, w.unit_stage.redistribute)
+    p = wi * I + wa * A + wu * U + pf.w_stat * S
     tf = tempo_fit(view, comp, late_cfg(w).tempo_span)
     T, T_exp = (tf if tf is not None else (None, None))
     return Candidate(comp=comp, p=p, I=I, A=A, U=U, S=S, adj=adj, L=L, T=T, T_exp=T_exp)
@@ -180,7 +228,8 @@ def prefilter(view: View, stats: AdvisorStats, w: Weights, n: int,
     owned = view.owned_pool(stats)
     craftable = list(craftable_items(view.components, stats)) if view.items_known else []
     aug_ids = [a.id for a in view.augments]
-    scored = [score_candidate(c, view, stats, w, owned, craftable, aug_ids) for c in pool]
+    us = unit_stage(view, w)
+    scored = [score_candidate(c, view, stats, w, owned, craftable, aug_ids, us) for c in pool]
     if tempo_active(view, owned, w):   # 09 J1: 보드 미인식 후반에는 템포가 맞는 덱이 후보 N 안에 들어오게 한다
         wt = late_cfg(w).pf_tempo
         for c in scored:

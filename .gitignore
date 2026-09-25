@@ -54,6 +54,9 @@ tests/fixtures/screens/test/
 
 # 설정 화면(--setup)이 저장 전에 남기는 백업
 config/*.bak
+# 이 PC 전용 설정 층(모니터 배치·게임 창 위치·Jev 백엔드 등). settings.toml 위에 덮어 읽는다(src/tft_advisor/config.py)
+config/*.local.toml
+config/*.tmp
 
 # 자격 증명은 저장소 밖(OS 키체인 / ~/.config/tft-advisor/)에만 둔다. 실수로 들어와도 커밋되지 않게.
 credentials.toml

@@ -21,7 +21,18 @@ from ..contracts import (
     TargetComp,
 )
 from ..unit_status import units_reason
-from .candidates import Candidate, augment_comp_fit, augment_proxy, late_blind, late_cfg, stat_norm, tempo_active, tier_score
+from .candidates import (
+    Candidate,
+    augment_comp_fit,
+    augment_proxy,
+    late_blind,
+    late_cfg,
+    scaled_board_weights,
+    stat_norm,
+    tempo_active,
+    tier_score,
+    unit_stage,
+)
 from .features import (
     View,
     board_at,
@@ -114,9 +125,15 @@ class Scorer:
         return all(augment_entry(a.id, self.stats, names)[1] for a in self.view.augments)
 
     def weight_map(self) -> dict[str, float]:
-        """항별 가중. tempo는 후반 + 보드 미인식(tempo_active)일 때만 항으로 들어온다(09 J1)."""
+        """항별 가중. tempo는 후반 + 보드 미인식(tempo_active)일 때만 항으로 들어온다(09 J1).
+
+        21 §10: 보드 항(wb)은 스테이지별 `unit_stage.deck_board_scale`배 — 2~3스테이지 유닛은 지나가는 빌드업이라
+        목표 덱 선정에 작게 반영하고, 줄어든 몫은 아이템·증강에 wi:wa 비율로 옮긴다(redistribute). 합은 그대로 1.
+        """
         cw = self.w.comp
-        return {"item": cw.wi, "augment": cw.wa, "board": cw.wb, "tempo": late_cfg(self.w).w_tempo}
+        wi, wa, wb = scaled_board_weights(cw.wi, cw.wa, cw.wb, unit_stage(self.view, self.w).board_scale,
+                                          self.w.unit_stage.redistribute)
+        return {"item": wi, "augment": wa, "board": wb, "tempo": late_cfg(self.w).w_tempo}
 
     def comp_terms(self, k: int, c: Candidate, aug_override: tuple[float, float, str] | None = None) -> dict[str, Term]:
         avail = self.availability()
@@ -251,6 +268,7 @@ class Scorer:
         v = self.view
         reasons: list[str] = []
         if v.units_known:
+            # 부분 확인이면 missing_units는 "확인된 유닛 중에 없다"는 뜻이다 — 근거 문구(units_reason)가 그 한계를 알린다
             have = {u.id for u in v.units}
             owned_units = [u for u in B if u in have]
             missing_units = [u for u in B if u not in have]
@@ -275,7 +293,8 @@ class Scorer:
             else:
                 core = {u.id for u in comp.final_board if u.is_core}
                 m = sum(1 for u in owned_units if u in core)
-                reasons.append(f"보유 유닛 {len(owned_units)}/{len(B)}기 (핵심 {m})")
+                lead = "확인된 보유 유닛" if v.units_partial else "보유 유닛"
+                reasons.append(f"{lead} {len(owned_units)}/{len(B)}기 (핵심 {m})")
         # 2. 통계
         reasons.append(f"메타 평균 {c.adj:.2f}등 · {comp.games or 0:,}판")
         # 3. 상태 플래그 (후반 무자원 안내는 오버레이가 근거 앞 3개만 보여 주므로 보드 플래그보다 앞에 둔다)
@@ -417,7 +436,8 @@ class Scorer:
             tag = max(parts, key=lambda t: (parts[t], -list(parts).index(t)))
             reason = f"지금 {now:.2f} · 경로 {path:.2f}"
             if v.units_known:
-                reason += f" · 보유 {copies_owned(uid, v.units)}"
+                n_own = copies_owned(uid, v.units)
+                reason += f" · 확인 보유 {n_own}" if v.units_partial else f" · 보유 {n_own}"   # 부분 확인: 하한
             rows.append({"slot": i, "kind": slot.kind, "id": uid, "score": score, "tag": tag, "reason": reason,
                          "cost": slot.cost if slot.cost is not None else self.stats.champion_cost(uid),
                          "now": round(now, 4), "path": round(path, 4), "s_now": round(sn, 4), "c_path": round(cp, 4),

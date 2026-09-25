@@ -1,4 +1,4 @@
-"""config/settings.toml, config/weights.toml 로더. 키 이름의 단일 정의 장소.
+"""config/settings.toml (+ 이 PC 전용 config/settings.local.toml), config/weights.toml 로더. 키 이름의 단일 정의 장소.
 
 모든 키에 기본값이 있으므로 파일이 없거나 키가 빠져도 동작한다. 모르는 키는 오류(오타 방지).
 키·기본값·범위·제약의 기준: `_workspace/02_jev-strategist_design.md` §10a "최종 설정 키 표"(2026-09-22).
@@ -6,6 +6,7 @@
 """
 from __future__ import annotations
 
+import os
 import tomllib
 from pathlib import Path
 from typing import Annotated, Literal
@@ -67,6 +68,11 @@ class CaptureCfg(_Cfg):
     # mss 모니터 번호(0 = 전체 가상 화면, 1 = 주 모니터, 2 = 두 번째 …) 또는 "auto"(기본: TFT 화면이 있는 모니터를 자동 선택,
     # `vision.capture.MssSource`). 듀얼 모니터에서 게임이 두 번째 모니터에 있어도 설정 없이 동작하게 하려는 것이다.
     monitor: Annotated[int, Field(ge=0)] | Literal["auto"] = "auto"
+    # 창 모드 게임 따라가기(`app.game_window`): 실행 중 몇 초마다 게임 창 위치·크기를 OS 창 목록(user32)에서 읽고,
+    # 옮기거나 크기를 바꾸면 모니터·content_box·resolution을 다시 맞춰 저장한다. Windows 전용(다른 OS는 무시).
+    # 창 **위치만** 읽는다 — 게임 메모리·프로세스·입력에는 접근하지 않는다(CLAUDE.md).
+    follow_game_window: bool = True
+    follow_interval_s: float = Field(3.0, ge=0.5, le=60)
 
 
 ContentBox = tuple[Unit, Unit, Unit, Unit]
@@ -113,7 +119,9 @@ class VisionCfg(_Cfg):
     capture_fps: float = Field(4, gt=0, le=30)                  # 앱 루프 캡처 주기(Phase 4)
     traits_every_s: float = Field(3, gt=0)                      # 앱 루프: 특성 패널("traits" 묶음)을 읽는 주기(초)
     unit_names: bool = True        # 보드·벤치 유닛 챔피언 이름 식별(특성 패널 구속 + 모델 크롭 라이브러리, vision.units)
-    unit_autolearn: bool = False   # (settings.toml 기본 true) 특성 구속으로 강제된 칸의 모델 크롭을 data/templates/{set}/units_screen/에 저장
+    unit_autolearn: bool = False   # (settings.toml 기본 true) 증거가 있는 유닛 크롭을 **검토 대기**에 모은다(승인 폴더에 직접 쓰지 않는다, vision.unit_db)
+    unit_pending_weight: float = Field(0.0, ge=0, le=1)   # 검토 대기 사진을 이름 순위에 쓸 가중치(0 = 무시, 승인된 사진만 이름)
+    unit_purchase_autoapprove: bool = False   # 상점 구매로 이름이 확실한 벤치 크롭을 검토 없이 바로 승인
 
     @field_validator("content_box", mode="before")
     @classmethod
@@ -494,6 +502,83 @@ class ItemWeights(_Cfg):
         return self
 
 
+_StageTable = dict[Annotated[int, Field(ge=1)], Unit]
+
+
+class UnitStageWeights(_Cfg):
+    """보유 유닛(보드·벤치)의 스테이지별 영향(2026-09-24, `_workspace/21_board_trust.md` §10).
+
+    2~3스테이지 유닛은 지나가는 빌드업이다 → 목표 덱 선정(deck_*)에서는 작게, 4스테이지에 올라가 5+에서 전부 반영.
+    보드 배치(plan_*)는 지금 라운드 문제라 유닛을 그대로 쓰되, 초반에는 목표 덱 소속보다 '지금 강함'을 더 본다.
+    상점 구매 점수(2성 사본)에는 적용하지 않는다. 표 조회 규칙은 `at()`.
+    """
+
+    interpolate_rounds: bool = True          # 스테이지 안에서 다음 스테이지 값으로 라운드 비례 보간
+    rounds_per_stage: int = Field(7, ge=1, le=10)
+    deck_board_scale: _StageTable = Field(default_factory=lambda: {1: 0.15, 2: 0.15, 3: 0.25, 4: 0.6, 5: 1.0},
+                                          min_length=1)
+    deck_one_star: _StageTable = Field(default_factory=lambda: {1: 0.25, 2: 0.25, 3: 0.35, 4: 0.7, 5: 1.0},
+                                       min_length=1)
+    deck_item_holder: Unit = 0.8             # 아이템을 든 1성은 max(deck_one_star, 이 값)으로 센다
+    redistribute: bool = True                # 줄어든 보드 몫을 아이템·증강 항에 비례 배분
+    plan_comp_scale: _StageTable = Field(default_factory=lambda: {1: 0.3, 2: 0.3, 3: 0.5, 4: 0.8, 5: 1.0},
+                                         min_length=1)
+    plan_now_scale: dict[Annotated[int, Field(ge=1)], Annotated[float, Field(ge=0, le=5)]] = Field(
+        default_factory=lambda: {1: 2.0, 2: 2.0, 3: 1.5, 4: 1.2, 5: 1.0}, min_length=1)
+
+    def at(self, table: dict[int, float], stage: int | None, round_: int | None = None) -> float:
+        """스테이지 표 조회. 스테이지 미인식이면 최대 키 값(= 예전처럼 전부 반영).
+
+        값 = 스테이지 이하 키 중 최댓값의 값(없으면 최소 키). interpolate_rounds면 다음 스테이지 값으로
+        (round − 1) / rounds_per_stage 만큼 선형 보간한다(예 기본 deck_board_scale: 2-6 → 0.22, 4-1 → 0.6, 4-7 → 0.94).
+        """
+        if stage is None:
+            return table[max(table)]
+        v = _stage_lookup(table, stage)
+        if self.interpolate_rounds and round_ is not None and round_ > 1:
+            nxt = _stage_lookup(table, stage + 1)
+            v += (nxt - v) * min(1.0, (round_ - 1) / self.rounds_per_stage)
+        return v
+
+
+class BoardPlanWeights(_Cfg):
+    """보드 배치 추천(advisor/board_plan.py) 점수 상수(2026-09-24 모듈 상수에서 이전, 21 §6·§10·§11).
+
+    기본 점수 = 목표 덱 소속(x plan_comp_scale) + 성급 + 아이템 + 코스트 + 지금 강함(x plan_now_scale:
+    s_now · 스테이지 유닛 통계 · 추천 스테이지 보드 소속) + 특성 이득 + 보드 유지 − 중복.
+    스테이지 보드 통계(MetaTFT Early Comps)는 상관 관계(연승 편향)라 가중을 작게, 표본으로 수축해 쓴다.
+    """
+
+    carry: float = Field(3.0, ge=0)
+    core: float = Field(2.0, ge=0)
+    final: float = Field(1.2, ge=0)
+    buildup: float = Field(0.8, ge=0)
+    star2: float = Field(1.5, ge=0)
+    star3: float = Field(3.5, ge=0)
+    per_item: float = Field(0.7, ge=0)
+    per_cost: float = Field(0.3, ge=0)
+    stat: float = Field(1.0, ge=0)               # s_now(0~1, 덱별 레벨 빌드업 보드 등장 비중) 배수
+    stat_reason_min: Unit = 0.5                  # 이 이상이면 근거에 "현 레벨 통계 상위"
+    trait_activate: float = Field(1.0, ge=0)     # 이 유닛으로 특성 구간에 도달
+    trait_key_mult: float = Field(1.5, ge=1)     # 목표 덱 핵심 특성이면 배수(가산분 x plan_comp_scale)
+    trait_progress: float = Field(0.25, ge=0)    # 구간은 아니지만 다음 구간으로 한 칸
+    trait_unique: float = Field(0.2, ge=0)       # 1인 고유 특성
+    keep: float = Field(0.5, ge=0)               # 이미 보드에 있으면 가산(작은 차이로 교체를 권하지 않는다)
+    duplicate: float = Field(-2.5, le=0)         # 같은 챔피언이 이미 라인업에 있다
+    # --- 스테이지 보드 통계(MetaTFT Early Comps, stats.stage_stats) ---
+    stage_unit: float = Field(0.8, ge=0)         # 유닛(성급별) 스테이지 성적 신호(−1~1) 배수, x plan_now_scale
+    stage_shrink_k: float = Field(500, ge=0)     # delta 수축: delta x games / (games + k)
+    stage_delta_span: float = Field(0.3, gt=0)   # 수축 delta가 −span이면 신호 +1(좋음), +span이면 −1
+    stage_unit_min_games: int = Field(50, ge=0)  # 성급 행 표본이 이보다 적으면 전 성급 행
+    board_min_games: int = Field(100, ge=0)      # 추천 스테이지 보드 최소 표본(참가자-게임)
+    board_max_missing: int = Field(2, ge=0, le=5)   # 추천 보드에서 없는 유닛 허용 수(상점에서 살 수 있음)
+    board_cover: float = Field(1.0, ge=0)        # 보드 고르기: 보유 비율 가중
+    board_link: float = Field(0.5, ge=0)         # 보드 고르기: 목표 덱 연결 확률 가중(x plan_comp_scale)
+    board_member: float = Field(0.6, ge=0)       # 추천 보드 소속 유닛 가산, x plan_now_scale
+    trans_min_games: float = Field(20, ge=0)     # 다음 스테이지 전이 최소 표본
+    trans_link_min: Unit = 0.15                  # 목표 덱으로 이어지는 전이로 볼 연결 확률
+
+
 class Weights(_Cfg):
     """weights.toml 전체."""
 
@@ -505,6 +590,8 @@ class Weights(_Cfg):
     jev: JevWeights = JevWeights()
     augment: AugmentWeights = AugmentWeights()
     item: ItemWeights = ItemWeights()
+    unit_stage: UnitStageWeights = UnitStageWeights()
+    board_plan: BoardPlanWeights = BoardPlanWeights()
 
 
 def _read_toml(path: Path) -> dict:
@@ -514,8 +601,48 @@ def _read_toml(path: Path) -> dict:
         return tomllib.load(f)
 
 
+LOCAL_SETTINGS_FILE = "settings.local.toml"
+"""이 PC 전용 설정 층(git에 올리지 않는다, .gitignore). `settings.toml`(저장소 공용 기본값) 위에 덮어 읽는다.
+설정 화면·"게임 화면 다시 찾기"·게임 창 따라가기·트레이 토글이 저장하는 곳이 여기다(`app.setup.save_settings`) —
+모니터 배치·게임 창 위치·Jev 백엔드 같은 한 PC의 값이 공개 저장소의 기본값을 바꾸지 않게 한다."""
+LOCAL_DISABLE_ENV = "TFT_ADVISOR_LOCAL_SETTINGS"
+"""이 환경변수가 "0"이면 **기본 설정 디렉터리**(config/)의 로컬 층을 읽지 않는다(테스트가 사용자 PC 값에 흔들리지 않게,
+tests/conftest.py). 임시 설정 디렉터리를 넘기면 그 디렉터리의 로컬 층은 그대로 읽는다(저장→다시 읽기 검증)."""
+
+
+def local_settings_path(config_dir: Path | None = None) -> Path:
+    return (config_dir or DEFAULT_CONFIG_DIR) / LOCAL_SETTINGS_FILE
+
+
+def local_layer_enabled(config_dir: Path | None = None) -> bool:
+    if os.environ.get(LOCAL_DISABLE_ENV, "").strip() != "0":
+        return True
+    return config_dir is not None and Path(config_dir).resolve() != DEFAULT_CONFIG_DIR.resolve()
+
+
+def merge_layers(base: dict, over: dict) -> dict:
+    """TOML 표를 깊게 합친다(섹션 안 키 단위로 `over`가 이긴다)."""
+    out = dict(base)
+    for key, value in over.items():
+        if isinstance(value, dict) and isinstance(out.get(key), dict):
+            out[key] = merge_layers(out[key], value)
+        else:
+            out[key] = value
+    return out
+
+
+def settings_raw(config_dir: Path | None = None, *, local_text: str | None = None) -> dict:
+    """`settings.toml` + (있으면) `settings.local.toml`을 합친 원시 dict. `local_text`를 주면 그 내용을 로컬 층으로 쓴다."""
+    base = _read_toml((config_dir or DEFAULT_CONFIG_DIR) / "settings.toml")
+    if local_text is not None:
+        return merge_layers(base, tomllib.loads(local_text))
+    if not local_layer_enabled(config_dir):
+        return base
+    return merge_layers(base, _read_toml(local_settings_path(config_dir)))
+
+
 def load_settings(config_dir: Path | None = None) -> Settings:
-    return Settings.model_validate(_read_toml((config_dir or DEFAULT_CONFIG_DIR) / "settings.toml"))
+    return Settings.model_validate(settings_raw(config_dir))
 
 
 def load_weights(config_dir: Path | None = None) -> Weights:

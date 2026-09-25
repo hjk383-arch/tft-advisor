@@ -32,7 +32,7 @@ from PySide6.QtWidgets import (
 from ..config import Settings
 from .names import NameBook
 from .platform_window import apply_always_on_top
-from .recog_view import MENU_TEXT, TITLE, RecogSnapshot, RecogView, UnitRow, build_view
+from .recog_view import GUESS_MARK, MENU_TEXT, TITLE, RecogSnapshot, RecogView, UnitRow, build_view
 
 log = logging.getLogger(__name__)
 
@@ -43,6 +43,8 @@ WARN = "#ffd43b"
 BAD = "#ff8787"
 DIM = "#9aa4b2"
 WIDTH = 460
+REDETECT_TEXT = "게임 화면 다시 찾기"
+REVIEW_TEXT = "유닛 사진 검토"
 SOURCE_COLORS = {"vision": GOOD, "ledger": ACCENT, "manual": ACCENT, "unknown": BAD}
 
 
@@ -51,8 +53,14 @@ class RecogWindow(QWidget):
 
     def __init__(self, settings: Settings, *, names: NameBook | None = None, state_dir: Path | None = None,
                  passive: bool = True, on_close: Callable[[], None] | None = None,
+                 on_redetect: Callable[[], Any] | None = None,
+                 on_quit: Callable[[], Any] | None = None,
+                 on_review: Callable[[], Any] | None = None,
                  parent: QWidget | None = None) -> None:
         super().__init__(parent)
+        self.on_review = on_review
+        self.on_redetect = on_redetect
+        self.on_quit = on_quit
         self.settings = settings
         self.names = names or NameBook()
         self.state_dir = Path(state_dir) if state_dir is not None else None
@@ -83,10 +91,38 @@ class RecogWindow(QWidget):
         self.close_btn.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.close_btn.setToolTip("인식 확인 창을 닫습니다")
         self.close_btn.clicked.connect(self.close_window)
+        # "게임 화면 다시 찾기": 게임 창 위치를 다시 읽어 캡처 영역을 맞춘다(app/game_window.py, 캡처 스레드에서).
+        self.redetect_btn = QPushButton(REDETECT_TEXT, self)
+        self.redetect_btn.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        self.redetect_btn.setToolTip("게임 창의 위치·크기를 다시 읽어 인식 영역을 맞춥니다(창을 옮기거나 크기를 바꿨을 때).")
+        self.redetect_btn.setStyleSheet("font-size: 12px; padding: 2px 8px;")
+        self.redetect_btn.clicked.connect(self.redetect)
+        self.redetect_btn.setVisible(on_redetect is not None)
         top = QHBoxLayout()
         top.setContentsMargins(0, 0, 0, 0)
         top.addWidget(self.title, 1)
+        top.addWidget(self.redetect_btn)
+        self.review_btn = QPushButton(REVIEW_TEXT, self)
+        self.review_btn.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        self.review_btn.setToolTip("모은 유닛 사진을 승인·삭제·이름 고치기(승인한 사진만 이름 인식에 쓰입니다)")
+        self.review_btn.setStyleSheet("font-size: 12px; padding: 2px 8px;")
+        self.review_btn.clicked.connect(self._review)
+        self.review_btn.setVisible(on_review is not None)
+        top.addWidget(self.review_btn)
+        # [앱 종료]: 두 번 눌러야 끝난다(실수 방지). 오버레이와 같은 종료 처리(OverlayWindow.quit)로 간다.
+        from .overlay import ConfirmButton
+
+        self.quit_btn = ConfirmButton("앱 종료", "정말 종료? 다시 클릭", self._quit, self)
+        self.quit_btn.setToolTip("TFT Advisor를 끝냅니다(두 번 누르면 종료, 세션은 저장됩니다)")
+        self.quit_btn.setStyleSheet("QPushButton { font-size: 12px; padding: 2px 8px; background: rgb(70, 30, 34); }"
+                                    "QPushButton:hover { background: rgb(140, 30, 36); }")
+        self.quit_btn.setVisible(on_quit is not None)
+        top.addWidget(self.quit_btn)
         top.addWidget(self.close_btn)
+        self.redetect_label = QLabel("", self)
+        self.redetect_label.setTextFormat(Qt.TextFormat.RichText)
+        self.redetect_label.setWordWrap(True)
+        self.redetect_label.setVisible(False)
 
         self.body = QLabel("", self)
         self.body.setTextFormat(Qt.TextFormat.RichText)
@@ -106,6 +142,7 @@ class RecogWindow(QWidget):
         layout.setContentsMargins(10, 8, 10, 8)
         layout.setSpacing(4)
         layout.addLayout(top)
+        layout.addWidget(self.redetect_label)
         layout.addWidget(self.scroll, 1)
         layout.addWidget(self.foot)
         self.setStyleSheet(f"""
@@ -179,6 +216,8 @@ class RecogWindow(QWidget):
         dim_all = not view.board_visible     # 보드가 안 보이는 화면: 마지막 값은 흐리게
         parts.append(_section(f"보드 {len(view.board)}기", view.board_note))
         parts.append(_rows(view.board, self.threshold, dim_all) if view.board else _dim("(유닛 없음)"))
+        if view.board_common_note:
+            parts.append(f"<span style='color:{WARN}'>{_esc(view.board_common_note)}</span>")
         if view.bench is None:
             parts.append(_section("벤치", "읽지 못했습니다"))
         else:
@@ -193,6 +232,27 @@ class RecogWindow(QWidget):
             parts += [_group(g.title, g.items, WARN if g.low_confidence else None)
                       for g in view.unused] or [_dim("(없음)")]
         return "<br>".join(parts)
+
+    def _review(self) -> None:
+        if self.on_review is not None:
+            self.on_review()
+
+    def _quit(self) -> None:
+        if self.on_quit is not None:
+            self.on_quit()
+
+    # ------------------------------------------------------------------ 게임 화면 다시 찾기
+    def redetect(self) -> None:
+        """[게임 화면 다시 찾기] 버튼. 결과는 `show_redetect()`로 돌아온다."""
+        if self.on_redetect is not None:
+            self.on_redetect()
+
+    def show_redetect(self, text: str, *, ok: bool | None = None, busy: bool = False) -> None:
+        """다시 찾기 진행/결과 한 줄. `busy`면 버튼을 잠근다."""
+        color = DIM if ok is None else (GOOD if ok else BAD)
+        self.redetect_label.setText(f"<span style='color:{color}'>{_esc(text).replace(chr(10), '<br>')}</span>")
+        self.redetect_label.setVisible(bool(text))
+        self.redetect_btn.setEnabled(not busy)
 
     # ------------------------------------------------------------------ 창 조작
     def show_window(self) -> None:
@@ -252,6 +312,10 @@ class RecogWindow(QWidget):
     def menu(self) -> QMenu:
         m = QMenu(self)
         m.addAction("위치 저장").triggered.connect(self.save_position)
+        if self.on_redetect is not None:
+            m.addAction(REDETECT_TEXT).triggered.connect(self.redetect)
+        if self.on_review is not None:
+            m.addAction(REVIEW_TEXT).triggered.connect(self._review)
         if len(self.history) > 1:
             m.addAction("이전 장 (←)").triggered.connect(lambda: self.step_history(-1))
             m.addAction("다음 장 (→)").triggered.connect(lambda: self.step_history(1))
@@ -327,7 +391,9 @@ def _rows(rows: list[UnitRow], threshold: float, dim_all: bool) -> str:
         cells.append(
             "<tr>"
             f"<td style='color:{DIM}'>{_esc(r.pos)}</td>"
-            f"<td style='color:{name_color}'>{_esc(r.name)} {_esc(r.star_text)}</td>"
+            f"<td style='color:{name_color}'>{_esc(r.name)}"
+            + (f" <span style='color:{WARN}'>{_esc(GUESS_MARK)}</span>" if r.guess else "")
+            + f" {_esc(r.star_text)}</td>"
             f"<td>{_esc(r.items_text)}</td>"
             f"<td style='color:{conf_color}'>{r.confidence:.2f}</td>"
             f"<td style='color:{src_color}'>{_esc(r.source_text)}</td>"
@@ -355,8 +421,15 @@ class RecogController:
     def __init__(self, settings: Settings, *, state_dir: Path | None = None, config_dir: Path | None = None,
                  cli: bool | None = None, names: NameBook | None = None,
                  saver: Callable[..., Any] | None = None,
-                 window_factory: Callable[..., RecogWindow] | None = None) -> None:
+                 window_factory: Callable[..., RecogWindow] | None = None,
+                 on_redetect: Callable[[], Any] | None = None,
+                 on_quit: Callable[[], Any] | None = None,
+                 on_review: Callable[[], Any] | None = None) -> None:
         self.settings = settings
+        self.on_review = on_review         # 오버레이의 open_unit_review(없으면 버튼을 두지 않는다)
+        self.on_quit = on_quit             # 오버레이의 quit(없으면 [앱 종료] 버튼을 두지 않는다)
+        self.on_redetect = on_redetect     # 오버레이의 request_redetect(없으면 창에 버튼을 두지 않는다)
+        self.redetect_note: tuple[str, bool | None, bool] | None = None   # (글, ok, busy) — 창을 켤 때 다시 보여 준다
         self.state_dir = state_dir
         self.config_dir = config_dir
         self.cli = cli
@@ -418,12 +491,23 @@ class RecogController:
         self._actions.append(action)
         return action
 
+    def show_redetect(self, text: str, *, ok: bool | None = None, busy: bool = False) -> None:
+        """다시 찾기 진행/결과를 창에 보여 준다(창이 꺼져 있으면 기억했다가 켤 때 보여 준다)."""
+        self.redetect_note = (text, ok, busy)
+        if self.window is not None and hasattr(self.window, "show_redetect"):
+            self.window.show_redetect(text, ok=ok, busy=busy)
+
     # ------------------------------------------------------------------
     def _show(self) -> None:
         if self.window is None:
             factory = self._factory or RecogWindow
+            kwargs = {k: v for k, v in (("on_redetect", self.on_redetect), ("on_quit", self.on_quit),
+                                        ("on_review", self.on_review)) if v is not None}
             self.window = factory(self.settings, names=self.names, state_dir=self.state_dir, passive=True,
-                                  on_close=lambda: self.set_enabled(False))
+                                  on_close=lambda: self.set_enabled(False), **kwargs)
+            if self.redetect_note is not None and hasattr(self.window, "show_redetect"):
+                text, ok, busy = self.redetect_note
+                self.window.show_redetect(text, ok=ok, busy=busy)
         self.window.show_snapshot(self.last)
         self.window.show_window()
 

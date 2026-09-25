@@ -39,8 +39,10 @@ def common_query(days: int = 3, rank_filter: str = DEFAULT_RANKS) -> dict[str, s
 class Fetcher:
     """순차 GET + 최소 간격 + 1회 재시도(대체 호스트)."""
 
-    def __init__(self, interval_s: float = 1.2, user_agent: str = DEFAULT_UA, timeout_s: float = 30.0) -> None:
+    def __init__(self, interval_s: float = 1.2, user_agent: str = DEFAULT_UA, timeout_s: float = 30.0,
+                 hosts: tuple[str, ...] = HOSTS) -> None:
         self.interval_s = max(1.0, interval_s)
+        self.hosts = tuple(hosts)
         self.ua = user_agent
         self.timeout_s = timeout_s
         self._last = 0.0
@@ -55,7 +57,7 @@ class Fetcher:
     def get_json(self, path: str, query: dict[str, str] | None = None):
         qs = ("?" + urlencode(query, safe=",")) if query else ""
         err: Exception | None = None
-        for host in HOSTS:  # 1차 + 1회 재시도(대체 호스트)
+        for host in self.hosts:  # 1차 + 1회 재시도(대체 호스트)
             self._wait()
             self.requests += 1
             req = urllib.request.Request(host + path + qs, headers={

@@ -218,6 +218,19 @@ class MssSource:
         self._box = mons[number]
         self._desc = f"mss:monitor={number}(auto)"
 
+    def set_monitor(self, monitor: int | str) -> None:
+        """실행 중 캡처 모니터를 바꾼다("게임 화면 다시 찾기", `app.game_window`). **grab()을 부르는 스레드에서** 부른다.
+
+        다음 grab()에서 모니터 영역을 다시 읽는다. `region`으로 만든 소스는 영역을 버리고 모니터 캡처로 바뀐다.
+        """
+        auto = str(monitor).strip().lower() == "auto"
+        self._region = None
+        self._auto = auto
+        self._monitor = 1 if auto else int(monitor)
+        self._box = None
+        self._picked_at = 0.0
+        self._picked_score = 0.0
+
     def grab(self) -> Frame | None:
         self._ensure()
         shot = self._sct.grab(self._box)

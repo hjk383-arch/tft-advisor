@@ -13,6 +13,13 @@
       item_key: item_ids를 '|'로 이은 문자열(순서 유지)
 - item_stats(snapshot_id, item_id, avg_place, top4, win_rate, games)                     PlacementStats + id
 
+스테이지별 보드(출처 "metatft_early", `early_convert` 산출물 — 계약 모델이 아니라 dict 행, 스키마 v3)
+- stage_baseline(snapshot_id, stage, json)
+- stage_boards(snapshot_id, stage, kind, cluster, units_key, games, avg_place, json)     kind: cluster | variation
+- unit_stage_stats(snapshot_id, unit_id, stage, star, games, avg_place, json)           star NULL = 전 성급 합
+- stage_transitions(snapshot_id, stage, cluster, next_cluster, share, json)
+- stage_round_sizes(snapshot_id, stage, round, num_units, json)
+
 쓰기는 트랜잭션 1개. 같은 (source, patch, fetched_at) 스냅샷을 다시 쓰면 교체한다. 출처별 최근 `keep`개만 남긴다.
 단, 새 스냅샷의 내용 해시(`content_hash`)가 출처의 최신 스냅샷과 같으면 아무것도 쓰지 않고 그 id를 돌려준다
 (같은 캐시로 `refresh`를 다시 돌려도 diff 기준이 되는 이전 스냅샷이 밀려나지 않게 — QA 04 W2).
@@ -37,7 +44,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
-SCHEMA_VERSION = 2          # 2: snapshots.content_hash
+SCHEMA_VERSION = 3          # 2: snapshots.content_hash, 3: 스테이지 보드 테이블(stage_*)
 DEFAULT_KEEP = 5            # 출처별 보존 스냅샷 수 기본값(refresh는 settings.stats.keep_snapshots를 넘긴다)
 BUSY_TIMEOUT_S = 10.0
 
@@ -84,7 +91,45 @@ CREATE TABLE IF NOT EXISTS item_stats (
     item_id TEXT NOT NULL, avg_place REAL, top4 REAL, win_rate REAL, games INTEGER,
     PRIMARY KEY (snapshot_id, item_id)
 );
+CREATE TABLE IF NOT EXISTS stage_baseline (
+    snapshot_id INTEGER NOT NULL REFERENCES snapshots(id) ON DELETE CASCADE,
+    stage INTEGER NOT NULL, json TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS stage_boards (
+    snapshot_id INTEGER NOT NULL REFERENCES snapshots(id) ON DELETE CASCADE,
+    stage INTEGER NOT NULL, kind TEXT NOT NULL, cluster TEXT, units_key TEXT NOT NULL,
+    games INTEGER, avg_place REAL, json TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS ix_sb ON stage_boards(snapshot_id, stage);
+CREATE TABLE IF NOT EXISTS unit_stage_stats (
+    snapshot_id INTEGER NOT NULL REFERENCES snapshots(id) ON DELETE CASCADE,
+    unit_id TEXT NOT NULL, stage INTEGER NOT NULL, star INTEGER, games INTEGER, avg_place REAL, json TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS ix_uss ON unit_stage_stats(snapshot_id, unit_id);
+CREATE TABLE IF NOT EXISTS stage_transitions (
+    snapshot_id INTEGER NOT NULL REFERENCES snapshots(id) ON DELETE CASCADE,
+    stage INTEGER NOT NULL, cluster TEXT NOT NULL, next_cluster TEXT NOT NULL, share REAL, json TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS stage_round_sizes (
+    snapshot_id INTEGER NOT NULL REFERENCES snapshots(id) ON DELETE CASCADE,
+    stage INTEGER NOT NULL, round TEXT NOT NULL, num_units INTEGER NOT NULL, json TEXT NOT NULL
+);
 """
+
+STAGE_TABLES: dict[str, tuple[str, ...]] = {
+    "stage_baseline": ("stage",),
+    "stage_boards": ("stage", "kind", "cluster", "units_key", "games", "avg_place"),
+    "unit_stage_stats": ("unit_id", "stage", "star", "games", "avg_place"),
+    "stage_transitions": ("stage", "cluster", "next_cluster", "share"),
+    "stage_round_sizes": ("stage", "round", "num_units"),
+}
+"""스테이지 보드 테이블 → 키 열(행 dict에서 뽑는다; units_key = '|'.join(units)). 나머지는 json 열."""
+
+
+def _stage_key(table: str, col: str, row: Mapping[str, Any]) -> Any:
+    if table == "stage_boards" and col == "units_key":
+        return "|".join(row.get("units") or [])
+    return row.get(col)
 
 
 @dataclass(frozen=True)
@@ -173,7 +218,7 @@ def _hash_rows(report_json: str, tables: Mapping[str, list]) -> str:
 
 
 def _rows_from_doc(doc: Mapping[str, Any]) -> dict[str, list]:
-    return {
+    out: dict[str, list] = {
         "comps": [_dumps(c) for c in doc.get("comps", [])],
         "augment_tiers": [_dumps(t) for t in doc.get("augment_tiers", [])],
         "unit_stats": [_dumps(u) for u in doc.get("unit_stats", [])],
@@ -182,13 +227,23 @@ def _rows_from_doc(doc: Mapping[str, Any]) -> dict[str, list]:
         "item_stats": [[r["item_id"], r.get("avg_place"), r.get("top4"), r.get("win_rate"), r.get("games")]
                        for r in doc.get("item_stats", [])],
     }
+    for t in STAGE_TABLES:          # 비어 있으면 넣지 않는다 → v2 스냅샷의 해시가 그대로 유지된다
+        if doc.get(t):
+            out[t] = [_dumps(r) for r in doc[t]]
+    return out
+
+
+def _has_table(con: sqlite3.Connection, name: str) -> bool:
+    return con.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name=?", (name,)).fetchone() is not None
 
 
 def _hash_stored(con: sqlite3.Connection, sid: int) -> str:
     """DB에 저장된 스냅샷의 내용 해시(`_rows_from_doc`와 같은 정규형)."""
     rep = con.execute("SELECT report_json FROM snapshots WHERE id=?", (sid,)).fetchone()[0]
     q = lambda sql: [r[0] for r in con.execute(sql, (sid,))]  # noqa: E731
-    return _hash_rows(rep, {
+    stage = {t: rows for t in STAGE_TABLES if _has_table(con, t)
+             and (rows := q(f"SELECT json FROM {t} WHERE snapshot_id=?"))}
+    return _hash_rows(rep, stage | {
         "comps": q("SELECT json FROM comps WHERE snapshot_id=?"),
         "augment_tiers": q("SELECT json FROM augment_tiers WHERE snapshot_id=?"),
         "unit_stats": q("SELECT json FROM unit_stats WHERE snapshot_id=?"),
@@ -241,6 +296,11 @@ def write_snapshot(db_path: Path, doc: Mapping[str, Any], *, source: str = "meta
         con.executemany("INSERT INTO item_stats VALUES (?,?,?,?,?,?)", [
             (sid, r["item_id"], r.get("avg_place"), r.get("top4"), r.get("win_rate"), r.get("games"))
             for r in doc.get("item_stats", [])])
+        for t, cols in STAGE_TABLES.items():
+            if doc.get(t):
+                con.executemany(
+                    f"INSERT INTO {t}(snapshot_id, {', '.join(cols)}, json) VALUES ({', '.join('?' * (len(cols) + 2))})",
+                    [(sid, *(_stage_key(t, c, r) for c in cols), _dumps(r)) for r in doc[t]])
         old = [r[0] for r in con.execute(
             "SELECT id FROM snapshots WHERE source=? ORDER BY built_at DESC, id DESC LIMIT -1 OFFSET ?",
             (source, keep))]
@@ -310,5 +370,10 @@ def read_snapshot(db_path: Path, snapshot_id: int) -> dict[str, Any]:
                 for r in con.execute("SELECT item_id, avg_place, top4, win_rate, games FROM item_stats "
                                      "WHERE snapshot_id=? ORDER BY item_id", (snapshot_id,))],
         }
+        for t in STAGE_TABLES:
+            if _has_table(con, t):
+                rows = col(f"SELECT json FROM {t} WHERE snapshot_id=? ORDER BY rowid")
+                if rows:
+                    doc[t] = rows
     doc["comp_ids"] = {c["source_cluster_id"]: c["comp_id"] for c in doc["comps"] if c.get("source_cluster_id")}
     return doc

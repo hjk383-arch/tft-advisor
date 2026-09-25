@@ -13,8 +13,8 @@ from dataclasses import dataclass, field
 from datetime import UTC, datetime
 
 from ..contracts import (
-    UNKNOWN_UNIT_ID, FallbackReason, GameState, ItemReadiness, Recommendation, ScreenMode, ShopSlotKind, TargetComp,
-    UnitOnBoard,
+    UNKNOWN_UNIT_ID, BoardPlan, FallbackReason, GameState, ItemReadiness, Recommendation, ScreenMode, ShopSlotKind,
+    TargetComp, UnitOnBoard,
 )
 from ..unit_status import UnitsKnowledge, units_knowledge, units_note
 from .names import NameBook
@@ -214,6 +214,39 @@ def shop_lines(rec: Recommendation, names: NameBook) -> list[str]:
     return out
 
 
+def board_plan_lines(plan: BoardPlan, names: NameBook, *, comp_name: str | None = None) -> list[str]:
+    """보드 배치 추천(`Recommendation.board_plan`) → 표시 줄들. 오버레이도 이 줄을 쓸 수 있다(21 §6.3)."""
+
+    def label(uid: str, star: int | None) -> str:
+        return names.name(uid) + (f"★{star}" if star and star >= 2 else "")
+
+    head = []
+    if comp_name:
+        head.append(f"기준 {comp_name}")
+    if plan.slots is not None:
+        head.append(f"칸 {plan.slots}")
+    if plan.free_slots:
+        head.append(f"빈 칸 {plan.free_slots}")
+    out = [" · ".join(head)] if head else []
+    lineup = [f"{label(e.unit_id, e.star)}" + (f"({e.reason})" if e.reason else "") for e in plan.lineup]
+    if plan.unknown_on_board:
+        lineup.append(f"미확인 {plan.unknown_on_board}기(그대로)")
+    out.append("보드: " + (" · ".join(lineup) or "-"))
+    if plan.swaps:
+        moves = [f"벤치 {names.name(sw.field_unit_id)} ↔ 보드 {names.name(sw.bench_unit_id)}" if sw.bench_unit_id
+                 else f"빈 칸에 {names.name(sw.field_unit_id)} 올리기" for sw in plan.swaps]
+        out.append("교체: " + " / ".join(moves))
+    else:
+        out.append("교체: 없음(지금 배치를 유지하세요)")
+    if plan.free_slots:
+        out.append(f"빈 칸 {plan.free_slots}개: 상점에서 유닛을 사서 채우세요")
+    if plan.bench:
+        out.append("벤치: " + " · ".join(f"{label(e.unit_id, e.star)}" for e in plan.bench[:6])
+                   + (f" 외 {len(plan.bench) - 6}" if len(plan.bench) > 6 else ""))
+    out += [f"참고: {n}" for n in plan.notes]
+    return out
+
+
 def augment_lines(rec: Recommendation, names: NameBook) -> list[str]:
     if rec.augment is None:
         return []
@@ -258,18 +291,49 @@ class KeptInfo:
     mode: ScreenMode
     bought: int = 0      # 직전 추천 칸이 지금 빈 칸 → 산 것으로 보고 뺐다
     changed: int = 0     # 직전 추천 칸에 지금 다른 유닛 → 낡은 추천이라 뺐다(새로고침 등)
+    shop_fresh: bool = False
+    """상점 칸 추천은 **지금 상점**으로 다시 계산한 것이다(전투 중 새로고침·라운드 시작, `LiveLoop` 상점 재평가).
+    목표 덱은 여전히 직전 추천 그대로다."""
 
     @property
     def label(self) -> str:
         return f"직전 추천({KEPT_LABELS.get(self.mode, screen_label(self.mode))})"
 
+    @property
+    def shop_label(self) -> str:
+        """[상점] 머리의 꼬리표. 다시 계산한 상점이면 "새 상점 기준", 아니면 직전 추천."""
+        if self.shop_fresh:
+            return f"새 상점 기준({KEPT_LABELS.get(self.mode, screen_label(self.mode))})"
+        return self.label
+
     def note(self) -> str:
         bits = [f"{self.label}: 준비 단계 추천을 유지합니다(목표 덱 고정)"]
+        if self.shop_fresh:
+            bits.append("상점은 지금 상점으로 다시 계산했습니다")
         if self.bought:
             bits.append(f"산 칸 {self.bought}개 제외")
         if self.changed:
-            bits.append(f"바뀐 칸 {self.changed}개는 준비 단계에서 다시 계산")
+            bits.append(f"바뀐 칸 {self.changed}개는 다시 계산 중")
         return " · ".join(bits)
+
+
+def shop_ids(state: GameState | None) -> tuple[str | None, ...] | None:
+    """상점 칸별 상품 ID(빈 칸·못 읽은 칸 = None). 상점을 모르면 None."""
+    if state is None or state.shop is None:
+        return None
+    return tuple(s.id if s.kind in (ShopSlotKind.CHAMPION, ShopSlotKind.SPECIAL) else None for s in state.shop)
+
+
+def shop_needs_rescore(rec: Recommendation | None, state: GameState) -> bool:
+    """지금 상점에 추천이 모르는 **새 상품**이 있는가(새로고침·라운드 시작).
+
+    추천했던 칸이 빈 칸이 된 것(= 산 것)이나 못 읽은 칸은 새 상품이 아니다 → 다시 계산하지 않는다.
+    """
+    cur = shop_ids(state)
+    if rec is None or cur is None:
+        return False
+    known = {a.slot: (a.offer_id or None) for a in rec.shop}
+    return any(cid is not None and known.get(i) != cid for i, cid in enumerate(cur))
 
 
 def kept_view(rec: Recommendation, state: GameState) -> tuple[Recommendation, KeptInfo]:
@@ -370,8 +434,11 @@ def format_report(state: GameState, rec: Recommendation | None, *, names: NameBo
         note = units_note(state, threshold)
         for i, comp in enumerate(rec.target_comps[:max_comps], start=1):
             lines += ["  " + ln for ln in comp_lines(comp, i, nb, units_note=note)]
+        if rec.board_plan is not None:
+            basis = next((c.name for c in rec.target_comps if c.comp_id == rec.board_plan.comp_id), None)
+            lines += ["", "[보드 배치]"] + ["  " + ln for ln in board_plan_lines(rec.board_plan, nb, comp_name=basis)]
         if rec.shop:
-            head = f"[상점 — {kept.label}]" if kept is not None else "[상점]"
+            head = f"[상점 — {kept.shop_label}]" if kept is not None else "[상점]"
             lines += ["", head] + ["  " + ln for ln in shop_lines(rec, nb)]
         elif kept is not None and (kept.bought or kept.changed):
             lines += ["", f"[상점 — {kept.label}] 남은 추천 칸 없음"]

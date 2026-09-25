@@ -28,14 +28,14 @@ import logging
 import threading
 import time
 from collections.abc import Callable, Collection
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, Literal, Protocol
 
 from ..config import Settings, load_settings
 from ..contracts import GameState, Recommendation
-from .report import KeptInfo, kept_view
+from .report import KeptInfo, kept_view, shop_ids, shop_needs_rescore
 from .session import KEEP_MODES, RESET_MODES, SessionTracker
 
 log = logging.getLogger(__name__)
@@ -67,6 +67,24 @@ class LoopUpdate:
 # ---------------------------------------------------------------------------
 
 
+def rescore_shop(advisor: Any, state: GameState, previous: Recommendation | None) -> Recommendation | None:
+    """상점만 다시 평가한다(목표 덱 고정). advisor에 `rescore_shop(state, previous)`가 있으면 그것을 쓴다.
+
+    없으면(어댑터, 2026-09-23 — jev-strategist가 API를 추가하기 전) 준비 단계로 한 번 추천을 계산해 **상점 칸만**
+    직전 추천에 옮겨 담는다. 이 대체 경로는 advisor 세션(히스테리시스·직전 표시)을 한 번 갱신하고, live 백엔드면
+    Jev를 한 번 부른다(과금).
+    """
+    fn = getattr(advisor, "rescore_shop", None)
+    if fn is not None:
+        return fn(state, previous)
+    from ..contracts import ScreenMode
+
+    fresh = advisor.advise(state.model_copy(update={"screen_mode": ScreenMode.PLANNING}))
+    if fresh is None or previous is None:
+        return fresh
+    return previous.model_copy(update={"shop": list(fresh.shop)})
+
+
 class AdviceRunner(Protocol):
     def submit(self, state: GameState) -> None: ...
 
@@ -78,9 +96,11 @@ class AdviceRunner(Protocol):
 class InlineAdviceRunner:
     """같은 스레드에서 즉시 추천(테스트·`--screenshot`)."""
 
-    def __init__(self, advisor: Any, on_result: Callable[[GameState, Recommendation | None], None]) -> None:
+    def __init__(self, advisor: Any, on_result: Callable[[GameState, Recommendation | None], None],
+                 on_shop: Callable[[GameState, Recommendation | None], None] | None = None) -> None:
         self.advisor = advisor
         self.on_result = on_result
+        self.on_shop = on_shop
 
     def submit(self, state: GameState) -> None:
         try:
@@ -89,6 +109,14 @@ class InlineAdviceRunner:
             log.exception("추천 실패 (state stage=%s mode=%s)", state.stage, state.screen_mode)
             return
         self.on_result(state, rec)
+
+    def submit_shop(self, state: GameState, previous: Recommendation | None) -> None:
+        try:
+            rec = rescore_shop(self.advisor, state, previous)
+        except Exception:
+            log.exception("상점 재평가 실패 (stage=%s)", state.stage)
+            return
+        (self.on_shop or self.on_result)(state, rec)
 
     def set_advisor(self, advisor: Any) -> None:
         old, self.advisor = self.advisor, advisor
@@ -106,11 +134,14 @@ class ThreadAdviceRunner:
     """
 
     def __init__(self, advisor: Any, on_result: Callable[[GameState, Recommendation | None], None],
-                 name: str = "tft-advisor") -> None:
+                 name: str = "tft-advisor",
+                 on_shop: Callable[[GameState, Recommendation | None], None] | None = None) -> None:
         self.advisor = advisor
         self.on_result = on_result
+        self.on_shop = on_shop
         self._lock = threading.Lock()
         self._pending: GameState | None = None
+        self._pending_shop: tuple[GameState, Recommendation | None] | None = None   # 상점 재평가(전투 중 새로고침)
         self._next_advisor: Any = None      # 교체 요청(실제 교체는 추천 스레드 안에서)
         self.advisor_swapped = threading.Event()   # 교체가 끝날 때마다 set (테스트·전환기 대기용)
         self._wake = threading.Event()
@@ -119,8 +150,17 @@ class ThreadAdviceRunner:
         self._thread.start()
 
     def submit(self, state: GameState) -> None:
+        """전체 추천. 대기 중인 상점 재평가는 버린다(전체 추천이 상점도 새로 계산한다)."""
         with self._lock:
             self._pending = state
+            self._pending_shop = None
+        self._wake.set()
+
+    def submit_shop(self, state: GameState, previous: Recommendation | None) -> None:
+        """상점만 다시 평가(목표 덱 고정). 전체 추천이 대기 중이면 그것이 상점도 계산하므로 무시한다."""
+        with self._lock:
+            if self._pending is None:
+                self._pending_shop = (state, previous)
         self._wake.set()
 
     def set_advisor(self, advisor: Any) -> None:
@@ -154,6 +194,15 @@ class ThreadAdviceRunner:
             self._swap_if_requested()
             with self._lock:
                 state, self._pending = self._pending, None
+                shop, self._pending_shop = self._pending_shop, None
+            if state is None and shop is not None:
+                try:
+                    rec = rescore_shop(self.advisor, shop[0], shop[1])
+                except Exception:
+                    log.exception("상점 재평가 실패 (stage=%s)", shop[0].stage)
+                    continue
+                (self.on_shop or self.on_result)(shop[0], rec)
+                continue
             if state is None:
                 continue
             try:
@@ -211,7 +260,7 @@ class LiveLoop:
         if runner is not None:
             self.runner = runner
         elif advisor is not None:
-            self.runner = ThreadAdviceRunner(advisor, self._on_advice)
+            self.runner = ThreadAdviceRunner(advisor, self._on_advice, on_shop=self._on_shop_advice)
         else:
             self.runner = _NullRunner()
         self.advisor = advisor
@@ -225,6 +274,14 @@ class LiveLoop:
         self._pending_reset: dict[str, Any] | None = None   # 새 판 확인 대기: mode, first, count, recheck
         self.last_board_read: Any = None      # 마지막 보드 판독(인식 확인 창이 칸별 이름 출처를 보려고 쓴다)
         self.last_recog_ms: float | None = None
+        self.screen_hook: Any = None
+        """캡처 스레드에서 매 프레임 전에 `tick(loop)`을 부르는 객체("게임 화면 다시 찾기"·게임 창 따라가기,
+        `app.game_window.ScreenRedetector`). 화면 설정을 바꿀 때는 `apply_screen()`을 부른다."""
+        self.screen_changes = 0
+        self.shop_fresh = False
+        """직전 추천의 상점 칸이 상점 재평가 결과인가(표시: "새 상점 기준"). 전체 추천이 오면 False."""
+        self._shop_submitted: tuple | None = None   # 마지막으로 재평가를 요청한 상점(같은 상점을 거듭 요청하지 않는다)
+        self.shop_rescores = 0
 
     def _make_detector(self):
         from ..vision.change import ChangeDetector
@@ -234,6 +291,12 @@ class LiveLoop:
     # ------------------------------------------------------------------
     def step(self) -> LoopUpdate | None:
         """프레임 1장 처리. 변화가 없으면 None(= 아무 일도 하지 않음)."""
+        hook = self.screen_hook
+        if hook is not None:
+            try:
+                hook.tick(self)
+            except Exception:   # 다시 찾기 실패로 루프가 멈추지 않는다
+                log.exception("게임 화면 다시 찾기 실패")
         frame = self.source.grab()
         if frame is None:
             self.source_exhausted = True
@@ -312,12 +375,20 @@ class LiveLoop:
     def _do_reset(self, state: GameState, groups: Collection[str], reason: str) -> LoopUpdate:
         self._pending_reset = None
         self.tracker.reset(reason)
+        namer = self._unit_namer()
+        if namer is not None and hasattr(namer, "reset"):
+            try:
+                namer.reset()          # 새 판: 이름 힌트·연속 일치 기록·수집기 판 ID
+            except Exception:
+                log.exception("유닛 이름 인식 초기화 실패")
         if self.advisor is not None:
             self.advisor.reset()
         self.last_recommendation = None
         self.last_state = None
         self.last_advice_at = None
         self.last_board_read = None
+        self.shop_fresh = False
+        self._shop_submitted = None
         note = f"보관: {self.tracker.last_archive.name}" if self.tracker.last_archive else None
         return self._emit(LoopUpdate(kind="reset", state=state, recognized=tuple(sorted(groups)), message=note))
 
@@ -340,17 +411,87 @@ class LiveLoop:
 
         merged = self.tracker.observe(state, groups, owned_row=owned_row, board_read=board_read)
         self.last_state = merged
+        self._feed_unit_namer()
         if mode in KEEP_MODES:
             # 직전 추천을 그대로 둔다(advisor 계약, 목표 덱 고정). 표시용 사본에서 산·바뀐 상점 칸만 뺀다.
+            # 단 상점에 새 상품이 보이면(전투 중 새로고침·라운드 시작) 상점만 다시 평가한다.
+            self._maybe_rescore_shop(merged, groups)
             return self._emit(self._kept_update(merged, groups))
+        self._shop_submitted = shop_ids(merged)
         self.runner.submit(merged)
         return self._emit(LoopUpdate(kind="recognized", state=merged, recommendation=self.last_recommendation,
                                      recognized=tuple(sorted(groups))))
+
+    def _unit_namer(self) -> Any:
+        return getattr(self.recognizer, "unit_namer", None)
+
+    def _feed_unit_namer(self) -> None:
+        """장부 → 유닛 이름 인식(vision 23·25 보고): 보유 챔피언 힌트 + 상점 구매 이벤트를 사진 수집기에 알린다."""
+        namer = self._unit_namer()
+        if namer is None:
+            return
+        try:
+            owned = getattr(self.tracker, "owned_champions", None)
+            if owned is not None and hasattr(namer, "set_hints"):
+                namer.set_hints(owned())
+            collector = getattr(namer, "collector", None)
+            if collector is not None:
+                for ev in getattr(self.tracker, "last_events", None) or ():
+                    if ev.kind == "buy" and ev.unit_id:
+                        collector.note_purchase(ev.unit_id, ev.at)
+        except Exception:   # 보조 기능 — 인식·추천을 막지 않는다
+            log.exception("유닛 이름 힌트/구매 전달 실패")
+
+    def _maybe_rescore_shop(self, state: GameState, groups: Collection[str]) -> bool:
+        """상점을 이번 프레임에 읽었고 추천이 모르는 새 상품이 있으면 상점 재평가를 추천 스레드에 맡긴다.
+
+        산 칸(빈 칸)·못 읽은 칸은 새 상품이 아니다(`report.shop_needs_rescore`). 같은 상점은 한 번만 요청한다.
+        """
+        if "shop" not in groups or self.last_recommendation is None:
+            return False
+        if state.confidence_of("shop") < self.settings.vision.state_min_confidence:
+            return False
+        key = shop_ids(state)
+        prev = self._shop_submitted
+        if key is None or key == prev:
+            return False
+        if prev is None:   # 추천을 만든 상점을 모른다(세션 복원 등) → 추천의 상점 칸과 비교한다
+            due = shop_needs_rescore(self.last_recommendation, state)
+        else:              # 추천을 만든 상점에 없던 상품이 한 칸이라도 보이면(산 칸 = 빈 칸은 새 상품이 아니다)
+            due = any(cid is not None and (i >= len(prev) or prev[i] != cid) for i, cid in enumerate(key))
+        if not due:
+            return False
+        submit = getattr(self.runner, "submit_shop", None)
+        if submit is None:   # 외부에서 넣은 러너
+            return False
+        self._shop_submitted = key
+        self.shop_rescores += 1
+        log.info("상점 변화(%s) → 상점만 다시 평가합니다", state.screen_mode.value)
+        submit(state, self.last_recommendation)
+        return True
+
+    def _on_shop_advice(self, state: GameState, rec: Recommendation | None) -> None:
+        """추천 스레드: 상점 재평가 결과. 목표 덱은 직전 추천 그대로 두고 상점 칸만 바꿔 바로 표시한다."""
+        if rec is None:
+            return
+        prev = self.last_recommendation
+        if prev is not None and rec.target_comps != prev.target_comps:
+            rec = rec.model_copy(update={"target_comps": prev.target_comps})   # 목표 덱 고정(계약)
+        self.last_recommendation = rec
+        self.last_advice_at = datetime.now(UTC)
+        self.shop_fresh = True
+        cur = self.last_state or state
+        shown, kept = rec, None
+        if cur.screen_mode in KEEP_MODES:
+            shown, kept = kept_view(rec, cur)
+            kept = replace(kept, shop_fresh=True)
+        self._emit(LoopUpdate(kind="advice", state=cur, recommendation=shown, kept=kept))
 
     def _kept_update(self, state: GameState, groups: Collection[str], message: str | None = None) -> LoopUpdate:
         rec, kept = self.last_recommendation, None
         if rec is not None:
             rec, kept = kept_view(rec, state)
+            kept = replace(kept, shop_fresh=self.shop_fresh)
         return LoopUpdate(kind="kept", state=state, recommendation=rec, recognized=tuple(sorted(groups)),
                           kept=kept, message=message)
 
@@ -362,6 +503,7 @@ class LiveLoop:
         if rec is not None:
             self.last_recommendation = rec
             self.last_advice_at = datetime.now(UTC)
+            self.shop_fresh = False
         shown, kept, cur = rec, None, self.last_state
         if rec is not None and cur is not None and cur.screen_mode in KEEP_MODES:
             shown, kept = kept_view(rec, cur)
@@ -418,6 +560,38 @@ class LiveLoop:
             if wait > 0:
                 self.sleep(wait)
 
+    def apply_screen(self, settings: Settings) -> None:
+        """실행 중 화면 설정(캡처 모니터 + `[vision]` resolution/aspect/profile/content_box)을 갈아 끼운다.
+
+        **캡처 스레드에서** 부른다(`screen_hook.tick` 안) — 인식기·캡처 소스·변화 감지기가 이 스레드 것이다.
+        세션·장부·직전 추천은 그대로 둔다. 인식기의 화면 캐시와 변화 감지기 서명은 버린다(새 영역에서 처음부터).
+        """
+        self.settings = self.settings.model_copy(update={"capture": settings.capture, "vision": settings.vision})
+        setter = getattr(self.source, "set_monitor", None)
+        if setter is not None:
+            setter(settings.capture.monitor)
+        rec = self.recognizer
+        if getattr(rec, "cfg", None) is not None:
+            rec.cfg = settings.vision
+            if getattr(rec, "pinned_profile", None) is None:
+                rec.profile_setting = settings.vision.aspect_setting()
+            for name in ("_screen_cache",):
+                cache = getattr(rec, name, None)
+                if isinstance(cache, dict):
+                    cache.clear()
+            if hasattr(rec, "_panel_cache"):
+                rec._panel_cache = None
+        try:
+            self.detector = self._make_detector()
+        except Exception:   # 가짜 인식기(테스트) 등 — 있던 감지기를 비운다
+            reset = getattr(self.detector, "reset", None)
+            if reset is not None:
+                reset()
+        self._last_traits = -1e9
+        self.screen_changes += 1
+        log.info("화면 설정 적용: 모니터 %s · %s · content_box=%s", settings.capture.monitor,
+                 settings.vision.resolution, settings.vision.content_box)
+
     def set_advisor(self, advisor: Any) -> None:
         """실행 중 advisor를 갈아 끼운다(트레이 Jev 토글 → `app/jev_toggle.py`).
 
@@ -441,6 +615,9 @@ class LiveLoop:
 
 class _NullRunner:
     def submit(self, state: GameState) -> None:
+        pass
+
+    def submit_shop(self, state: GameState, previous: Recommendation | None) -> None:
         pass
 
     def set_advisor(self, advisor: Any) -> None:

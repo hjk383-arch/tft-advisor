@@ -25,7 +25,8 @@ def test_db_default_keep_matches_settings_default():
 
 
 def test_removed_capture_keys_stay_removed():
-    assert set(CaptureCfg.model_fields) == {"monitor"}
+    # 2026-09-23: 게임 창 따라가기 키 추가(app/game_window.py). 옛 poll_interval_ms·stable_frames는 여전히 없어야 한다
+    assert set(CaptureCfg.model_fields) == {"monitor", "follow_game_window", "follow_interval_s"}
     toml = (ROOT / "config" / "settings.toml").read_text(encoding="utf-8")
     assert not re.search(r"(?m)^\s*(poll_interval_ms|stable_frames)\s*=", toml)
 

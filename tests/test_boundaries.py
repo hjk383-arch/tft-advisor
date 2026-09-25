@@ -237,11 +237,15 @@ def test_unit_item_stats_has_comp_scope():
 
 def test_config_accepts_design_keys():
     """설계 §10a 최종 설정 키 표(기존+신규)를 로더가 받고, config/*.toml 값이 §10a 기본값과 같다."""
+    import os
     import subprocess
     import sys
 
+    # 자식 프로세스 출력 인코딩을 고정한다: PYTHONIOENCODING이 없으면 Windows 콘솔 코드페이지(cp949)로 출력해
+    # UTF-8 디코드가 깨졌다(환경 문제, 27 QA 게이트).
     r = subprocess.run([sys.executable, str(PROJECT_ROOT / "_workspace/qa_scripts/config_proposal_check.py")],
-                       capture_output=True, text=True, encoding="utf-8")
+                       capture_output=True, text=True, encoding="utf-8",
+                       env={**os.environ, "PYTHONIOENCODING": "utf-8"})
     assert r.returncode == 0, r.stderr
     assert "rejected keys: 0" in r.stdout, r.stdout
     assert "config files differ from §10a defaults: 0" in r.stdout, r.stdout

@@ -9,11 +9,12 @@ from __future__ import annotations
 
 import logging
 import re
+import time
 from collections.abc import Callable, Collection
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import TypeVar
+from typing import Any, TypeVar
 
 import numpy as np
 
@@ -169,7 +170,10 @@ class Recognizer:
         self.board_reader = BoardReader.from_recognizer(self.item_matcher, self.items)
         """보드·벤치 판독기. 아이템 벤치용 매처를 장착 아이콘 크기로 다시 정규화해 쓴다(디스크 재로딩 없음)."""
         self.unit_namer: UnitNamer | None = (
-            UnitNamer.from_static(self.static, unit_template_dir, autolearn=self.cfg.unit_autolearn)
+            UnitNamer.from_static(self.static, unit_template_dir, autolearn=self.cfg.unit_autolearn,
+                                  # 25: 설정 키 제안(config.py는 app-integrator 담당) — 없으면 기본값
+                                  pending_weight=float(getattr(self.cfg, "unit_pending_weight", 0.0) or 0.0),
+                                  auto_approve_purchase=bool(getattr(self.cfg, "unit_purchase_autoapprove", False)))
             if self.cfg.unit_names else None)
         """보드·벤치 챔피언 이름(특성 패널 구속 + 모델 크롭 라이브러리). 설정 `[vision] unit_names=false`면 None."""
         self._panel_cache: tuple[np.ndarray, tuple[list[ActiveTrait], float, bool]] | None = None
@@ -371,7 +375,7 @@ class Recognizer:
                     panel = self.cached_trait_panel(image, m, P)
                 tp = (TraitPanel({t.id: t.count for t in panel[0]}, complete=panel[2], confidence=panel[1])
                       if panel is not None and panel[0] else None)
-                read = self.unit_namer.name(image, m, read, tp)
+                read = self.unit_namer.name(image, m, read, tp, ctx=self._unit_ctx(image, m, out, captured_at))
             self.last_board_read = read
 
         values = dict(out.values)
@@ -384,6 +388,21 @@ class Recognizer:
             source_image=source_image,
             frame_size=(image.shape[1], image.shape[0]),
         )
+
+    def _unit_ctx(self, image: np.ndarray, m: FrameMapper, out: _Out, captured_at: datetime | None) -> Any:
+        """유닛 사진 수집기(`vision.unit_db`)에 줄 같은 프레임 판독. 수집기가 없으면 None(계산하지 않는다)."""
+        if self.unit_namer is None or self.unit_namer.collector is None:
+            return None
+        from .unit_db import FrameContext, arena_signature, frame_digest
+
+        shop = None
+        slots = out.values.get("shop")
+        if slots is not None:
+            shop = tuple(s.id if s.kind == ShopSlotKind.CHAMPION else (None if s.kind == ShopSlotKind.EMPTY else "*")
+                         for s in slots)
+        at = captured_at.timestamp() if captured_at is not None else time.time()
+        return FrameContext(at=at, stage=out.values.get("stage"), shop=shop, gold=out.values.get("gold"),
+                            frame=frame_digest(image), arena=arena_signature(image, m.box))
 
     # ------------------------------------------------------------------ OCR 헬퍼
     def _read(self, image: np.ndarray, m: FrameMapper, r: Rect) -> list[TextBox]:
@@ -546,6 +565,11 @@ class Recognizer:
         icon = m.crop(image, P.streak_icon)
         hsv = cv2.cvtColor(icon, cv2.COLOR_BGR2HSV)
         vivid = (hsv[..., 1] > 120) & (hsv[..., 2] > 120)
+        disc = _dark_disc(hsv)
+        if disc is not None:
+            # 불꽃은 **어두운 원** 안에 있다. 원 밖은 반투명 상자 너머 맵 바닥이다 — 라이브 2(모래 맵)에서 주황 모래가
+            # 파란 불꽃(연패)보다 많이 잡혀 연패 2를 연승 +2로 읽었다(23 보고).
+            vivid &= disc
         hues = hsv[..., 0][vivid]
         if hues.size < 5:
             return None
@@ -788,6 +812,25 @@ def _augment_icon_owners(static: StaticData, keys: dict[str, str] | None = None)
         if k:
             owners.setdefault(k, []).append(rec)
     return owners
+
+
+def _dark_disc(hsv: np.ndarray) -> np.ndarray | None:
+    """연승 아이콘 칸(HSV) → 아이콘의 **어두운 원**(불꽃 포함) 마스크. 원을 못 찾으면 None(칸 전체를 쓴다).
+    가장 큰 어두운 덩어리의 볼록 껍질 = 원(안의 불꽃 구멍까지 채워진다)."""
+    import cv2
+
+    dark = (hsv[..., 2] < 50).astype(np.uint8)
+    n, labels, stats, _ = cv2.connectedComponentsWithStats(dark, connectivity=8)
+    if n <= 1:
+        return None
+    big = 1 + int(np.argmax(stats[1:, cv2.CC_STAT_AREA]))
+    if stats[big, cv2.CC_STAT_AREA] < 0.15 * dark.size:
+        return None
+    pts = np.column_stack(np.nonzero(labels == big))[:, ::-1].astype(np.int32)
+    hull = cv2.convexHull(pts)
+    out = np.zeros(dark.shape, np.uint8)
+    cv2.fillConvexPoly(out, hull, 1)
+    return out.astype(bool)
 
 
 def _has(tb: TextBox | None, words: tuple[str, ...]) -> bool:
