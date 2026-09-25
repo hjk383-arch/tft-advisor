@@ -504,3 +504,109 @@ def rescore_shop(self, state: GameState, previous: Recommendation | None = None)
   - 근거에 덱 이름이 붙는다.
   - st는 1위 덱 보유자 기준 그대로다.
 - 전체: `PYTHONIOENCODING=utf-8 .venv/Scripts/python -m pytest -o addopts="" -q` → **1322 passed**, 3 skipped, 1 xfailed, 4 failed. 실패 4건은 알려진 Windows 실패다(api_key 힌트, setup 권한 상자, credentials 0600 두 건).
+
+
+## 13. 아이템 추천 = 1위 덱 캐리 BIS·핵심 아이템 먼저 (QA 27 §3.1 W3 후속) — jev-strategist, 2026-09-25
+
+사용자 결정: 아이템 추천은 **1위 목표 덱의 캐리 BIS·핵심 아이템**을 중심으로 한다. CLAUDE.md 원칙(최종 덱 = 보유 아이템·증강, 아이템은 그 덱을 향해 쌓는다)과 맞춘다.
+
+### 13.1 문제 (test.png, 2-6, 재료 B.F. 대검 · 쇠사슬 조끼 · 곡궁 · 거인의 허리띠)
+- 1위 덱은 적응가 마스터 이 렝가이고, 캐리 BIS 밤의 끝자락(대검+조끼)을 지금 만들 수 있다.
+- 예전 [아이템]은 점수 순 탐욕 선택이었다. 스테락(대검+허리띠, bis 0.986, 2위 워윅 덱 출처)과 거인의 결의(조끼+곡궁)가 먼저 뽑혀 밤의 끝자락 재료를 가져갔다.
+
+### 13.2 변경 (`advisor/scoring.py`, 코드 전용)
+- **역할**: `top_item_role(x)`는 1위 덱 기준으로 `"carry"`(캐리 BIS) / `"core"`(item_fit ≥ `item_fit.used_by_min`: 다른 핵심 유닛 아이템, 핵심 특성 상징) / None을 돌려준다.
+- **재료 배분** `allocate_components`는 탐욕 선택을 대신한다. 재료 ≤ `item.exact_max_components`(10)이면 가능한 부분 매칭을 전부 본다(10개 = 9,496가지, 최악 약 37ms). 사전식으로 다음을 최대화한다.
+  1. 1위 덱 캐리 BIS 수. 이미 가진 것은 빼고, 같은 아이템은 덱이 아직 필요한 개수까지만 센다.
+  2. 1위 덱 다른 핵심 아이템 수
+  3. 보조 점수 합. 다른 덱·범용 아이템만 해당하고, 조건은 두 가지다.
+     - 점수 ≥ `item.secondary_min_score`(0.5)
+     - 아직 없는 1위 덱 캐리 BIS의 재료를 쓰지 않는다(예약 재료)
+     조건을 못 채우면 만들지 않고 보관한다(목록에서 빠진다).
+  4. 고른 수가 적은 쪽
+- 재료가 이 한도보다 많으면 탐욕으로 고른다. 순서는 캐리 → 핵심 → 점수다.
+- **1위 덱 아이템을 하나도 못 만들 때**(mode `fallback`): 예전처럼 점수 합이 가장 큰 배분을 고른다.
+  - stage < `item.tempo_until_stage`(4)이고 보관(hold)이 아니면 "1위 덱 아이템은 아직 만들 수 없어 지금 전력용으로 권해 드립니다 · 지금 보드의 ○○에게"라고 쓴다. 재료를 끝까지 들고 있지 않게 하려는 것이다.
+  - 보드에 근거 있는 유닛이 없으면 보유자를 비운다. 이때 문구는 "지금 보드의 알맞은 유닛에게(나르용 · 처형자 드레이븐)"이다.
+  - 후반이면 "1위 덱 아이템은 지금 만들 수 없습니다 · 만든다면 …"이라고 쓴다.
+  - hold일 때는 "권해 드립니다"를 쓰지 않는다. 그래서 hold 판정을 문구보다 먼저 계산하도록 순서를 옮겼다(hold 규칙 자체는 그대로다).
+- **보유자**
+  - 1위 덱 아이템: `holder_for`(1위 덱 캐리/핵심 유닛)를 쓴다.
+  - 그 유닛이 아직 없고(보유 유닛 판독 있음) 보드에 알맞은 유닛이 있으면 "마스터 이 확보 전까지 카밀에게 임시로"라고 쓴다. `holder_unit_id`는 1위 덱 보유자 그대로다.
+  - 임시 보유자는 `temp_holder`가 고른다. 순위는 다음과 같다.
+    1. 표시 덱에서 그 아이템을 드는 유닛
+    2. 유닛+아이템 전체 통계 값(수축 후 > 0.5). 1위 덱 최종·빌드업 유닛이면 `item.temp_holder_top_bonus`(0.05)를 더한다.
+    3. 코스트
+    근거가 없는 유닛은 고르지 않는다. `item.temp_holder = false`로 끌 수 있다.
+  - 벤치 완성템의 보유자 추천에도 같은 임시 문구를 쓴다(1위 덱 기준 아이템일 때).
+- **문구(존댓말)**
+  - "1위 덱(적응가 마스터 이 렝가) 캐리 아이템 · …" / "1위 덱(…) 핵심 아이템 · …"
+  - 보조: "보조: 워윅 핵심 아이템(검은 가시 워윅)" / "보조: 달빛 아펠리오스 니달리용 아이템(1위 덱 재료와 겹치지 않음)" / "보조: 범용 아이템(…)"
+- **debug["item"]**: `mode`(top/fallback), `top_comp`, `need`(아직 필요한 캐리 BIS·핵심), `rows[].role`, `picked[]`(item, kind = top/secondary/fallback, holder, reason)를 더했다.
+- **점수 공식**(bis·st·Jev 합성)과 hold 규칙은 바꾸지 않았다. 바뀐 것은 배분(무엇을 만들지), 순서, 보유자 문구다.
+
+### 13.3 Jev
+- I1(`item_pick`) 문구를 개정했다. 추가한 문장: "Prefer a core item of the main carry of the candidate comp that best fits the player's items and augments; choose an item for another comp only if it does not use a component that carry needs." 이에 맞춰 `QUESTIONS_VERSION` q3 → **q4**로 올렸다(캐시 키 변경).
+- 배분 규칙은 코드가 결정한다. Jev 확률은 예전처럼 점수(pj)에만 들어가고, 보조·fallback 순서에 영향을 준다.
+  - 1위 덱은 같은 요청의 comp 질문 결과로 정해진다. 그래서 질문 시점에 Jev에게 "1위 덱"을 지정할 수 없고, 문구는 "자원에 가장 맞는 후보 덱"으로 쓴다.
+- mock 힌트(`engine.py` item_pick)도 1위 덱 캐리 +0.3, 핵심 +0.1로 맞췄다(mock 전용).
+
+### 13.4 설정 (`config/weights.toml [item]`, `config.ItemWeights`)
+| 키 | 기본값 | 뜻 |
+|---|---|---|
+| `secondary_min_score` | 0.5 | 1위 덱 아이템이 있을 때 보조 아이템 최소 점수 |
+| `tempo_until_stage` | 4 | 1위 덱 아이템이 없을 때 이 스테이지 전까지 '지금 전력용' |
+| `exact_max_components` | 10 (2~12) | 전체 탐색 한도 |
+| `temp_holder` | true | 임시 보유자 문구 |
+| `temp_holder_top_bonus` | 0.05 | 임시 보유자 순위에서 1위 덱 유닛 가산 |
+
+### 13.5 전/후 (test.png, `--screenshot tests/fixtures/screens/test/test.png --no-jev --no-overlay`)
+전:
+```
+[아이템]
+  · 스테락의 도전 (B.F. 대검 + 거인의 허리띠) → 워윅 0.97 — 워윅 핵심 아이템(검은 가시 워윅)
+  · 거인의 결의 (쇠사슬 조끼 + 곡궁) → 워윅 0.95 — 워윅 핵심 아이템(검은 가시 워윅)
+```
+후:
+```
+[아이템]
+  · 밤의 끝자락 (B.F. 대검 + 쇠사슬 조끼) → 마스터 이 0.93 — 1위 덱(적응가 마스터 이 렝가) 캐리 아이템 · 마스터 이 확보 전까지 카밀에게 임시로
+```
+- 곡궁+허리띠(내셔의 이빨, 점수 0.075)는 만들지 않는다. 곡궁은 1위 덱 캐리 BIS 구인수의 재료(예약)이고, 점수도 보조 기준 미만이다.
+- 임시 보유자로 카밀을 고른 근거는 카밀+밤의 끝자락 전체 통계 −0.19등(2,307판)이다. 코그모는 1위 덱 빌드업 유닛이지만 통계가 없어(0.5) 가산 0.05만으로는 카밀(0.64)을 넘지 못한다.
+- 목표 덱·상점·보드 배치는 변화가 없다. 추천 시간은 6~8ms다.
+
+### 13.6 테스트
+- 새 fixture 4개(`tests/fixtures/states/`). `expect`에는 실제 저장소에서도 성립하는 불변식만, `expect_mini`에는 mini 통계의 구체값을 둔다. fixround(실제 저장소)는 `expect`만 본다.
+  - `s15_item_top_carry_first`
+    - 3-2, 재료 곡궁·지팡이·장갑·프라이팬
+    - 1위 덱 핵심 속사포 상징(0.925)이 캐리 BIS 구인수(0.924)보다 점수가 높고 곡궁을 공유한다
+    - 결과: 구인수 → 아펠리오스가 먼저 나오고, 처형자 상징은 "보조:"다
+  - `s16_item_none_for_top_late`: 4-2, 대검+음전자 → 피바라기, "1위 덱 아이템은 지금 만들 수 없습니다"
+  - `s17_item_early_tempo_slam`: 2-5, 조끼+곡궁 → 거인의 결의 → 보드의 오른, "지금 전력용", hold false
+  - `s18_item_temp_holder`: 2-5, 조끼+허리띠 → 태양불꽃 망토 → 렉사이, "렉사이 확보 전까지 오른에게 임시로"
+- `test_advisor_fixtures.py`
+  - 새 expect 키: `item_top_rule`, `item_mode`, `item_first`, `item_first_holder`, `item_first_reason_has`, `item_absent`, `item_reason_has`
+  - `expect_mini` 병합을 더했다.
+  - `check_invariants`가 모든 fixture 추천에 `check_item_top_rule`을 적용한다. 규칙 세 가지:
+    - 아직 없는 1위 덱 캐리 BIS를 만들 수 있으면 그중 하나가 첫 추천이다.
+    - 1위 덱 아이템이 보조보다 앞선다.
+    - fallback이면 1위 덱 아이템이 없다.
+- `test_advisor_units.py` 새 테스트 11개:
+  - 다른 덱 아이템(보석 건틀릿, 점수를 1.0으로 올림)이 재료를 공유해도 캐리 BIS가 먼저다(예전 탐욕이라면 건너뛰었음을 함께 확인)
+  - 1위 덱 핵심 < 캐리 BIS
+  - 보조는 예약 재료를 쓰지 않는다(재료 4개 조합 210개 전수)
+  - 중복 캐리 BIS는 필요한 개수만 1위 덱 아이템으로 센다
+  - 재료 12개 탐욕 경로
+  - 전체 탐색 = 무차별 대입 최댓값
+  - 초반 템포 슬램(보드 유닛 보유자)
+  - 후반 fallback 문구
+  - hold와 "권해 드립니다"가 같이 나오지 않음
+  - 임시 보유자(보유 시 없음, 설정 끔)
+  - I1 q4 문구
+- 전체: `PYTHONIOENCODING=utf-8 .venv/Scripts/python.exe -m pytest -o addopts="" -q` → **1345 passed**, 3 skipped, 1 xfailed, 4 failed. 실패 4건은 알려진 Windows 실패다(api_key 힌트, setup 권한 상자, credentials 0600 두 건).
+
+### 13.7 남은 점 · 사용자 판단
+- 1위·2위 덱이 근소차이면(test.png는 0.62 대 0.61) 1위가 바뀔 때 아이템 추천도 통째로 바뀐다. 히스테리시스(§5.2)가 널뛰기를 줄이지만, 두 덱이 재료를 두고 경쟁하는 상황에서는 여전히 민감하다.
+- 남은 재료를 "보관합니다(구인수의 격노검용 곡궁)"처럼 알려 주려면 `ItemAdvice`에 메모 필드가 필요하다(contracts, app-integrator). 이번에는 넣지 않았다.
+- 임시 보유자는 유닛+아이템 전체 통계에 기대므로, 통계가 없는 유닛은 후보가 되지 않는다. 그런 유닛만 보드에 있으면 임시 문구 없이 "마스터 이에게"로 나온다.

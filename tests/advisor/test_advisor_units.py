@@ -557,3 +557,211 @@ def test_latency_budget_full_stats(settings, weights):
     rec = adv.advise(st.model_copy(update={"gold": 31}))
     assert rec.latency_ms < 500
     assert isinstance(CompStats.model_validate(adv.stats.comps()[0].model_dump()), CompStats)
+
+
+# ---------------------------------------------------------------------------
+# 아이템: 1위 덱 우선 재료 배분 (2026-09-25, _workspace/21_board_trust.md §13)
+# ---------------------------------------------------------------------------
+_APH_COMPS = ("RecurveBow", "NeedlesslyLargeRod", "SparringGloves", "FryingPan")
+_ORNN_BOARD = [{"id": x, "star": 1} for x in ("DA_18_Ornn", "DA_18_Varus", "DA_18_Xayah", "DA_18_Shen")]
+
+
+def _item_state(stage, level, comps, board=None, **kw):
+    d = dict(stage=stage, level=level, hp=60, items=ItemState(components=[ItemRef(id=C + x) for x in comps]), **kw)
+    if board is not None:
+        d.update(board=board, bench=[])
+    return gs(**d)
+
+
+def _with_item(weights, **upd):
+    return weights.model_copy(update={"item": weights.item.model_copy(update=upd)})
+
+
+def test_top_carry_bis_first_even_when_another_deck_item_scores_higher(stats, weights, settings):
+    """1위 덱 캐리 BIS(구인수 = 곡궁+지팡이)와 다른 표시 덱 아이템(보석 건틀릿 = 지팡이+장갑)이 지팡이를 나눠 쓰고,
+    건틀릿 점수가 더 높다. 예전 탐욕 선택은 건틀릿을 먼저 골라 구인수를 건너뛰었다."""
+    sc = make_scorer(stats, weights, settings, _item_state("3-2", 6, _APH_COMPS))
+    top = sc.shown[0]["cand"].comp
+    assert top.comp_id == "lunar-aphelios-nidalee_ap" and "DA_GuinsoosRageblade" in top.carry_bis_items
+    orig = sc.bis
+    sc.bis = lambda x: 1.0 if x == "DA_JeweledGauntlet" else orig(x)     # 다른 덱 아이템을 최고 점수로
+    _, src = sc.bis_source("DA_JeweledGauntlet")
+    assert src is not None and src.comp_id != top.comp_id                # 다른 덱에서 온 적합도
+    adv = sc.item_advice()
+    rows = {r["item"]: r for r in sc.debug["item"]["rows"]}
+    jg, gr = rows["DA_JeweledGauntlet"], rows["DA_GuinsoosRageblade"]
+    assert jg["score"] > gr["score"] and jg["role"] is None and gr["role"] == "carry"
+    assert set(sc.craftable["DA_JeweledGauntlet"]) & set(sc.craftable["DA_GuinsoosRageblade"])   # 재료 공유
+    # 예전 탐욕 선택이라면 건틀릿이 먼저 → 구인수 불가
+    old, rem = [], Counter(sc.view.components)
+    for r in sorted(rows.values(), key=lambda r: (-r["score"], r["item"])):
+        need = Counter(sc.craftable[r["item"]])
+        if len(old) < 2 and all(rem[k] >= n for k, n in need.items()):
+            rem.subtract(need)
+            old.append(r["item"])
+    assert "DA_GuinsoosRageblade" not in old
+    # 새 배분: 구인수가 먼저, 아펠리오스에게. 건틀릿은 빠지고, 남은 재료의 아이템은 '보조'로만
+    s0 = adv.suggestions[0]
+    assert s0.item_id == "DA_GuinsoosRageblade" and s0.holder_unit_id == top.carry
+    assert s0.reason.startswith("1위 덱(") and "캐리 아이템" in s0.reason
+    ids = [s.item_id for s in adv.suggestions]
+    assert "DA_JeweledGauntlet" not in ids
+    used = Counter(c for s in adv.suggestions for c in s.components)
+    assert all(n <= 1 for n in used.values())
+    for s in adv.suggestions[1:]:
+        assert s.reason.startswith("보조: "), s.reason
+    assert sc.debug["item"]["mode"] == "top"
+
+
+def test_top_core_item_does_not_take_the_carry_bis_components(stats, weights, settings):
+    """1위 덱 핵심(상징)이 캐리 BIS보다 점수가 높고 재료(곡궁)를 나눠 써도 캐리 BIS가 먼저다(사전식: 캐리 > 핵심)."""
+    sc = make_scorer(stats, weights, settings, _item_state("3-2", 6, _APH_COMPS))
+    adv = sc.item_advice()
+    rows = {r["item"]: r for r in sc.debug["item"]["rows"]}
+    assert rows["DA_18_EmblemRapidfire"]["role"] == "core"
+    assert rows["DA_18_EmblemRapidfire"]["score"] > rows["DA_GuinsoosRageblade"]["score"]
+    assert adv.suggestions[0].item_id == "DA_GuinsoosRageblade"
+    assert "DA_18_EmblemRapidfire" not in [s.item_id for s in adv.suggestions]
+
+
+def test_secondary_item_never_uses_a_component_the_missing_carry_bis_needs(stats, weights, settings):
+    """아직 없는 1위 덱 캐리 BIS의 재료를 다른 덱·범용 아이템이 가져가는 조합은 '보조'로 내지 않는다."""
+    checked = 0
+    names = ("BFSword", "ChainVest", "RecurveBow", "GiantsBelt", "NeedlesslyLargeRod", "TearOfTheGoddess",
+             "NegatronCloak", "SparringGloves", "Spatula", "FryingPan")
+    import itertools as it
+
+    for comps in it.combinations(names, 4):
+        sc = make_scorer(stats, weights, settings, _item_state("3-2", 6, comps))
+        adv = sc.item_advice()
+        d = sc.debug["item"]
+        if d["mode"] != "top":
+            continue
+        top = sc.shown[0]["cand"].comp
+        picked = Counter(p["item"] for p in d["picked"] if p["kind"] == "top")
+        still = Counter(d["need"]["carry"]) - picked
+        reserved = {c for x in still for c in (stats.recipe(x) or ())}
+        for s in adv.suggestions:
+            if s.components and s.reason.startswith("보조: "):
+                checked += 1
+                assert not set(s.components) & reserved, (comps, s, reserved, top.comp_id)
+    assert checked >= 1
+
+
+def test_duplicate_carry_bis_counts_only_what_the_deck_still_needs(stats, weights, settings):
+    """구인수 재료 두 벌(+ 프라이팬): 1위 덱이 필요한 개수(1)만 1위 덱 아이템으로 센다. 두 번째 곡궁은
+    구인수 두 번째가 아니라 1위 덱의 다른 핵심 아이템(속사포 상징)으로 간다."""
+    comps = ("RecurveBow", "NeedlesslyLargeRod", "RecurveBow", "NeedlesslyLargeRod", "FryingPan")
+    sc = make_scorer(stats, weights, settings, _item_state("3-2", 6, comps))
+    top = sc.shown[0]["cand"].comp
+    need = top.carry_bis_items.count("DA_GuinsoosRageblade")
+    adv = sc.item_advice()
+    tops = [p for p in sc.debug["item"]["picked"] if p["kind"] == "top" and p["item"] == "DA_GuinsoosRageblade"]
+    assert len(tops) == need == 1
+    assert adv.suggestions[0].item_id == "DA_GuinsoosRageblade"
+    assert [s.item_id for s in adv.suggestions].count("DA_GuinsoosRageblade") == 1
+    assert "DA_18_EmblemRapidfire" in [p["item"] for p in sc.debug["item"]["picked"] if p["kind"] == "top"]
+
+
+def test_many_components_fall_back_to_ordered_greedy(stats, weights, settings):
+    """재료가 exact_max_components를 넘으면 탐욕(캐리 → 핵심 → 점수 순). 1위 덱 캐리 BIS 먼저는 그대로."""
+    comps = _APH_COMPS + ("BFSword", "ChainVest", "GiantsBelt", "TearOfTheGoddess", "NegatronCloak", "Spatula",
+                          "RecurveBow", "NeedlesslyLargeRod")
+    sc = make_scorer(stats, _with_item(weights, exact_max_components=10), settings, _item_state("3-2", 6, comps))
+    assert len(sc.view.components) > 10
+    adv = sc.item_advice()
+    d = sc.debug["item"]
+    assert d["mode"] == "top" and d["picked"][0]["kind"] == "top"
+    assert {r["item"]: r["role"] for r in d["rows"]}[adv.suggestions[0].item_id] == "carry"
+    used = Counter(c for s in adv.suggestions for c in s.components)
+    have = Counter(sc.view.components)
+    assert all(used[c] <= have[c] for c in used)
+
+
+def test_exact_allocation_matches_brute_force_on_small_sets(stats, weights, settings):
+    """전체 탐색은 가능한 배분 중 (캐리 BIS 수, 핵심 수) 사전식 최댓값을 고른다(무차별 대입과 비교)."""
+    import itertools as it
+
+    seen_top = 0
+    for comps in (_APH_COMPS, ("BFSword", "RecurveBow", "NeedlesslyLargeRod", "Spatula"),
+                  ("ChainVest", "GiantsBelt", "RecurveBow", "NeedlesslyLargeRod", "FryingPan", "SparringGloves"),
+                  ("BFSword", "ChainVest", "NegatronCloak", "NeedlesslyLargeRod", "TearOfTheGoddess", "Spatula")):
+        sc = make_scorer(stats, weights, settings, _item_state("3-2", 6, comps))
+        sc.item_advice()
+        d = sc.debug["item"]
+        if d["mode"] != "top":
+            continue
+        seen_top += 1
+        need_c, need_k = Counter(d["need"]["carry"]), Counter(d["need"]["core"])
+        roles = {r["item"]: r["role"] for r in d["rows"]}
+        have = Counter(sc.view.components)
+        best = (0, 0)
+        for k in range(len(comps) // 2 + 1):
+            for sel in it.combinations_with_replacement(list(sc.craftable), k):
+                use = Counter(c for x in sel for c in sc.craftable[x])
+                if any(use[c] > have[c] for c in use):
+                    continue
+                cn, kn, a, b = Counter(need_c), Counter(need_k), 0, 0
+                for x in sel:
+                    if roles[x] == "carry" and cn[x] > 0:
+                        cn[x] -= 1
+                        a += 1
+                    elif roles[x] in ("carry", "core") and kn[x] > 0:
+                        kn[x] -= 1
+                        b += 1
+                best = max(best, (a, b))
+        got = [p["item"] for p in d["picked"] if p["kind"] == "top"]
+        n_carry = sum(1 for x in got if roles[x] == "carry")
+        assert (n_carry, len(got) - n_carry) == best, (comps, got, best)
+    assert seen_top >= 2
+
+
+def test_no_top_item_early_slams_for_tempo_on_a_board_unit(stats, weights, settings):
+    sc = make_scorer(stats, weights, settings, _item_state("2-5", 5, ("ChainVest", "RecurveBow"), _ORNN_BOARD))
+    adv = sc.item_advice()
+    assert sc.debug["item"]["mode"] == "fallback" and adv.hold is False
+    s0 = adv.suggestions[0]
+    assert s0.holder_unit_id in {u["id"] for u in _ORNN_BOARD}
+    assert "지금 전력용" in s0.reason and "지금 보드의" in s0.reason
+
+
+def test_no_top_item_late_says_so_and_keeps_the_best_item(stats, weights, settings):
+    sc = make_scorer(stats, weights, settings, _item_state("4-2", 7, ("BFSword", "NegatronCloak"), _ORNN_BOARD))
+    adv = sc.item_advice()
+    assert sc.debug["item"]["mode"] == "fallback"
+    assert adv.suggestions[0].item_id == "DA_Bloodthirster"
+    assert adv.suggestions[0].reason.startswith("1위 덱 아이템은 지금 만들 수 없습니다")
+    assert "지금 전력용" not in adv.suggestions[0].reason
+
+
+def test_hold_wording_does_not_tell_the_player_to_craft(stats, weights, settings):
+    """보관(hold) 권장과 '지금 전력용으로 권해 드립니다'가 같이 나오지 않는다."""
+    sc = make_scorer(stats, weights, settings, _item_state("2-5", 5, ("Spatula", "NegatronCloak"), _ORNN_BOARD))
+    adv = sc.item_advice()
+    assert adv.hold is True
+    assert all("권해 드립니다" not in (s.reason or "") for s in adv.suggestions)
+
+
+def test_temp_holder_only_when_the_top_holder_is_not_owned(stats, weights, settings):
+    comps = ("ChainVest", "GiantsBelt")
+    sc = make_scorer(stats, weights, settings, _item_state("2-5", 5, comps, _ORNN_BOARD))
+    s0 = sc.item_advice().suggestions[0]
+    assert s0.item_id == "DA_SunfireCape" and s0.holder_unit_id == "DA_18_RekSai"
+    assert "렉사이 확보 전까지 오른에게 임시로" in s0.reason
+    owned = _ORNN_BOARD + [{"id": "DA_18_RekSai", "star": 1}]
+    sc2 = make_scorer(stats, weights, settings, _item_state("2-5", 5, comps, owned))
+    s1 = next(s for s in sc2.item_advice().suggestions if s.item_id == "DA_SunfireCape")
+    if s1.holder_unit_id == "DA_18_RekSai":
+        assert "임시로" not in s1.reason and s1.reason.endswith("렉사이에게")
+    # 설정으로 끌 수 있다
+    sc3 = make_scorer(stats, _with_item(weights, temp_holder=False), settings, _item_state("2-5", 5, comps, _ORNN_BOARD))
+    assert "임시로" not in sc3.item_advice().suggestions[0].reason
+
+
+def test_item_pick_question_prefers_the_best_fitting_comps_carry():
+    from tft_advisor.advisor.questions import QUESTIONS_VERSION, i1
+
+    assert QUESTIONS_VERSION == "q4"
+    for hp in (True, False):
+        for board in (True, False):
+            assert "main carry of the candidate comp that best fits" in i1(hp, board)

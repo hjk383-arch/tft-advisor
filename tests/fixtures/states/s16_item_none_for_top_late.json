@@ -1,0 +1,73 @@
+{
+ "description": "21 §13: 4-2, 1위 덱(처형자 카직스)이 쓰는 아이템을 지금 만들 수 없다(대검+음전자 = 피바라기). 예전처럼 가장 좋은 아이템을 권하되 1위 덱 아이템이 아니라고 밝힌다.",
+ "state": {
+  "screen_mode": "planning",
+  "stage": "4-2",
+  "level": 7,
+  "gold": 30,
+  "shop": [
+   {
+    "kind": "champion",
+    "id": "DA_18_Ornn"
+   },
+   {
+    "kind": "champion",
+    "id": "DA_18_Veigar"
+   },
+   {
+    "kind": "champion",
+    "id": "DA_18_Yorick"
+   },
+   {
+    "kind": "champion",
+    "id": "DA_18_RekSai"
+   },
+   {
+    "kind": "champion",
+    "id": "DA_18_Varus"
+   }
+  ],
+  "items": {
+   "components": [
+    {
+     "id": "DA_Component_BFSword"
+    },
+    {
+     "id": "DA_Component_NegatronCloak"
+    }
+   ]
+  },
+  "augments_owned": [],
+  "hp": 60,
+  "board": [
+   {
+    "id": "DA_18_Ornn",
+    "star": 1
+   },
+   {
+    "id": "DA_18_Varus",
+    "star": 1
+   },
+   {
+    "id": "DA_18_Xayah",
+    "star": 1
+   },
+   {
+    "id": "DA_18_Shen",
+    "star": 1
+   }
+  ],
+  "bench": []
+ },
+ "expect": {
+  "item_top_rule": true,
+  "hold": false
+ },
+ "expect_mini": {
+  "top_comp": "executioner-khazix",
+  "item_mode": "fallback",
+  "item_first": "DA_Bloodthirster",
+  "item_first_reason_has": "1위 덱 아이템은 지금 만들 수 없습니다"
+ },
+ "stats": "tests/fixtures/stats/mini_18.json"
+}

@@ -467,6 +467,7 @@ reason_tag = argmax{ now_power: ws·now, final_comp: wp·path의 final 기여분
 5. **합성**: `item_score(x) = item.w_bis·bis + item.w_jev·gate·pj + item.w_stat·st`(0.5/0.35/0.15). gate<1이면 줄어든 질량을 bis로 옮긴다.
 6. **보유자(holder)**: 1위 덱 중 b(x,c) ≥ `item_fit.used_by_min`(0.7)인 유닛. 우선순위는 carry > is_core > 기타이고, 보드에 있으면 가산한다. 없으면 None("목표 덱 캐리용"으로 표시).
 7. **제안 묶음**: 점수 순으로 **재료가 겹치지 않게** 탐욕적으로 고른다(최대 ⌊재료수/2⌋). `ItemSuggestion.components`에 재료 2개를 넣는다.
+   - **(2026-09-25 개정, `_workspace/21_board_trust.md` §13)** 탐욕 선택 대신 **1위 덱 우선 재료 배분**이다. 가능한 배분을 전부 보고(재료 ≤ `item.exact_max_components`) 사전식 (1위 덱 캐리 BIS 수, 1위 덱 다른 핵심 아이템 수, 보조 점수 합)을 최대화한다. 다른 덱·범용 아이템은 점수 ≥ `item.secondary_min_score`이고 아직 없는 1위 덱 캐리 BIS 재료를 쓰지 않을 때만 "보조:"로 붙는다. 1위 덱 아이템을 못 만들면 예전처럼 점수 합 최대 배분이고, stage < `item.tempo_until_stage`이며 보관이 아니면 지금 보드 유닛에게 '지금 전력용'으로 권한다. 1위 덱 보유자가 없으면 "○○ 확보 전까지 △△에게 임시로". I1 문구 개정(q4).
 8. **"재료 보유"(hold)**: `hold=True` 조건(둘 중 하나)
    - Jev: `choice == "hold_components"`이고 confidence ≥ min_confidence
    - 코드(폴백 포함): `max bis < item.hold_bis_max`(0.4)이고 hp_bucket ∈ {healthy, moderate, **unknown**}이고 stage 번호 < `item.hold_until_stage`(4). hp를 모르면 moderate로 간주한다(§4.3 a)

@@ -110,6 +110,16 @@ place_change_span = 1.0
 hold_bis_max = 0.4
 hold_until_stage = 4        # stage 번호 < 이 값일 때만 hold
 overall_stat_games_factor = 0.25   # 덱 한정 유닛+아이템 행이 없어 전체(파생) 행을 쓸 때 표본 수 할인
+# --- 1위 덱 우선 재료 배분(2026-09-25, _workspace/21_board_trust.md §13) ---
+# 사용자 결정: 아이템 추천은 1위 덱 캐리 BIS·핵심 아이템을 먼저. 재료 배분 전체를 탐색해 사전식으로
+#   (1) 1위 덱 캐리 BIS 수 → (2) 1위 덱 다른 핵심 아이템 수(item_fit >= item_fit.used_by_min)를 최대화하고
+#   (3) 남은 재료로 만드는 다른 덱·범용 아이템은 점수 >= secondary_min_score 이고 1위 덱 캐리 BIS 재료를 쓰지 않을 때만 '보조'로 보인다.
+# 1위 덱 아이템을 하나도 못 만들면 예전처럼 점수 합 최대 배분(stage < tempo_until_stage이고 보관이 아니면 '지금 전력용' + 보드 유닛 보유자).
+secondary_min_score = 0.5
+tempo_until_stage = 4
+exact_max_components = 10   # 재료 수 <= 이 값이면 전체 탐색(10개 = 부분 매칭 9,496가지), 넘으면 탐욕
+temp_holder = true          # 1위 덱 캐리가 없으면 "○○ 확보 전까지 △△에게 임시로"
+temp_holder_top_bonus = 0.05   # 임시 보유자: 보드 유닛+아이템 통계(0~1, 0.5 중립)에 1위 덱 최종·빌드업 유닛이면 가산
 
 [unit_stage]
 # 보유 유닛(보드·벤치)의 스테이지별 영향 (2026-09-24, _workspace/21_board_trust.md §10).

@@ -22,7 +22,8 @@ def run_fixture(name: str, make_advisor, *, branch: bool = False):
     if jev.get("fail"):
         kw["fail"] = FallbackReason(jev["fail"])
     adv = make_advisor(**kw)
-    steps = fx.get("steps") or [{"state": fx["state"], "expect": fx.get("expect", {})}]
+    # expect_mini: mini 통계에서만 성립하는 구체 기대값(실제 저장소 fixround는 expect만 본다)
+    steps = fx.get("steps") or [{"state": fx["state"], "expect": {**fx.get("expect", {}), **fx.get("expect_mini", {})}}]
     if branch:
         steps = steps[:1] + fx["branch"]
     out = []
@@ -58,10 +59,33 @@ def check_invariants(rec: Recommendation) -> None:
             assert idx < lim, qid
         if m2 := re.match(r"aug_comp_fit_(\d+)_(\d+)$", qid):
             assert int(m2.group(1)) < n_offer and int(m2.group(2)) < n_comps
+    if rec.item is not None and "item" in d:
+        check_item_top_rule(rec)
     # 로그/디버그에 API 키 문자열이 없다
     key = os.environ.get("TYPESAFE_API_KEY", "").strip()
     if key:
         assert key not in rec.model_dump_json()
+
+
+def check_item_top_rule(rec: Recommendation) -> None:
+    """21 §13 데이터 독립 불변식: 1위 덱 캐리 BIS를 만들 수 있으면 그것이 추천에 들고 1위 덱 아이템이 앞에 온다.
+    다른 덱·범용 아이템(보조)은 1위 덱 1차 아이템 뒤에만 온다."""
+    d = rec.debug["item"]
+    roles = {r["item"]: r["role"] for r in d["rows"]}
+    kinds = [p["kind"] for p in d["picked"]]
+    assert [p["item"] for p in d["picked"]] == [s.item_id for s in rec.item.suggestions if s.components]
+    need = d["need"] or {"carry": [], "core": []}
+    carry_now = [x for x, r in roles.items() if r == "carry" and x in need["carry"]]
+    top_now = carry_now + [x for x, r in roles.items() if r in ("carry", "core") and x in need["core"]]
+    if carry_now:      # 아직 없는 1위 덱 캐리 BIS를 지금 만들 수 있다 → 그중 하나가 첫 추천
+        assert d["mode"] == "top" and kinds[0] == "top" and d["picked"][0]["item"] in carry_now, d
+    if top_now:
+        assert d["mode"] == "top", d
+    if d["mode"] == "top":
+        assert kinds == sorted(kinds, key=lambda k: k != "top"), kinds
+        assert all(k in ("top", "secondary") for k in kinds), kinds
+    else:
+        assert all(k == "fallback" for k in kinds), kinds
 
 
 def _get(d: dict, path: str):
@@ -176,6 +200,26 @@ def check_expect(expect: dict, rec: Recommendation, adv, all_recs: dict) -> None
             assert rec.debug["sig_unchanged"] is val
         elif key == "blind_late":
             assert rec.debug["blind_late"] is val
+        # --- 아이템: 1위 덱 우선 재료 배분(21 §13) ---
+        elif key == "item_top_rule":
+            assert rec.item is not None and "item" in rec.debug
+            check_item_top_rule(rec)
+        elif key == "item_mode":
+            assert rec.debug["item"]["mode"] == val, rec.debug["item"]
+        elif key == "item_first":
+            assert rec.item is not None and rec.item.suggestions, rec.debug.get("item")
+            assert rec.item.suggestions[0].item_id == val, [s.item_id for s in rec.item.suggestions]
+        elif key == "item_first_holder":
+            assert rec.item.suggestions[0].holder_unit_id == val, rec.item.suggestions[0]
+        elif key == "item_first_reason_has":
+            assert val in (rec.item.suggestions[0].reason or ""), rec.item.suggestions[0].reason
+        elif key == "item_absent":
+            got = {s.item_id for s in rec.item.suggestions}
+            assert not got & set(val), got
+        elif key == "item_reason_has":
+            by = {s.item_id: s.reason or "" for s in rec.item.suggestions}
+            for item, text in val.items():
+                assert item in by and text in by[item], (item, by)
         else:
             raise AssertionError(f"알 수 없는 expect 키: {key}")
 

@@ -431,7 +431,8 @@ class Advisor:
                 lab = names(x)
                 crit[lab] = {"from": [names(a), names(b)], "used_by": used_by}
                 bx = proxy.bis(x)
-                hints[lab] = bx
+                role = proxy.top_item_role(x)       # mock 힌트도 질문(q4)처럼 1위 덱 캐리 아이템을 먼저 본다(21 §13)
+                hints[lab] = bx + (0.3 if role == "carry" else 0.1 if role == "core" else 0.0)
                 max_bis = max(max_bis, bx)
                 labels["item"][lab] = x
             crit[HOLD] = HOLD_HP if has_hp else HOLD_NOHP

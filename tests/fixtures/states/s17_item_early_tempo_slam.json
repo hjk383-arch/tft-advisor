@@ -1,0 +1,73 @@
+{
+ "description": "21 §13: 2-5, 1위 덱 아이템을 만들 수 없다(조끼+곡궁 = 거인의 결의). 초반이라 재료를 들고 있지 않고 지금 보드 유닛(오른)에게 지금 전력용으로 권한다.",
+ "state": {
+  "screen_mode": "planning",
+  "stage": "2-5",
+  "level": 5,
+  "gold": 30,
+  "shop": [
+   {
+    "kind": "champion",
+    "id": "DA_18_Ornn"
+   },
+   {
+    "kind": "champion",
+    "id": "DA_18_Veigar"
+   },
+   {
+    "kind": "champion",
+    "id": "DA_18_Yorick"
+   },
+   {
+    "kind": "champion",
+    "id": "DA_18_RekSai"
+   },
+   {
+    "kind": "champion",
+    "id": "DA_18_Varus"
+   }
+  ],
+  "items": {
+   "components": [
+    {
+     "id": "DA_Component_ChainVest"
+    },
+    {
+     "id": "DA_Component_RecurveBow"
+    }
+   ]
+  },
+  "augments_owned": [],
+  "hp": 60,
+  "board": [
+   {
+    "id": "DA_18_Ornn",
+    "star": 1
+   },
+   {
+    "id": "DA_18_Varus",
+    "star": 1
+   },
+   {
+    "id": "DA_18_Xayah",
+    "star": 1
+   },
+   {
+    "id": "DA_18_Shen",
+    "star": 1
+   }
+  ],
+  "bench": []
+ },
+ "expect": {
+  "item_top_rule": true,
+  "hold": false
+ },
+ "expect_mini": {
+  "item_mode": "fallback",
+  "item_first": "DA_TitansResolve",
+  "item_first_holder": "DA_18_Ornn",
+  "item_first_reason_has": "지금 전력용"
+ },
+ "stats": "tests/fixtures/stats/mini_18.json"
+}

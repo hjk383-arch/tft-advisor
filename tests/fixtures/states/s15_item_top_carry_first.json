@@ -1,0 +1,68 @@
+{
+ "description": "21 §13: 1위 덱(달빛 아펠리오스 니달리) 캐리 BIS 구인수(곡궁+지팡이)와 점수가 조금 더 높은 속사포 상징(곡궁+뒤집개)이 곡궁을 나눠 쓴다. 예전 탐욕 선택은 속사포 상징을 먼저 골라 구인수를 건너뛰었다. 이제 캐리 BIS가 먼저, 남은 재료(장갑+뒤집개)의 처형자 상징은 다른 표시 덱 보조로 붙는다.",
+ "state": {
+  "screen_mode": "planning",
+  "stage": "3-2",
+  "level": 6,
+  "gold": 30,
+  "shop": [
+   {
+    "kind": "champion",
+    "id": "DA_18_Ornn"
+   },
+   {
+    "kind": "champion",
+    "id": "DA_18_Veigar"
+   },
+   {
+    "kind": "champion",
+    "id": "DA_18_Yorick"
+   },
+   {
+    "kind": "champion",
+    "id": "DA_18_RekSai"
+   },
+   {
+    "kind": "champion",
+    "id": "DA_18_Varus"
+   }
+  ],
+  "items": {
+   "components": [
+    {
+     "id": "DA_Component_RecurveBow"
+    },
+    {
+     "id": "DA_Component_NeedlesslyLargeRod"
+    },
+    {
+     "id": "DA_Component_SparringGloves"
+    },
+    {
+     "id": "DA_Component_FryingPan"
+    }
+   ]
+  },
+  "augments_owned": [],
+  "hp": 60
+ },
+ "expect": {
+  "item_top_rule": true,
+  "hold": false
+ },
+ "expect_mini": {
+  "top_comp": "lunar-aphelios-nidalee_ap",
+  "item_mode": "top",
+  "item_first": "DA_GuinsoosRageblade",
+  "item_first_holder": "DA_18_Aphelios",
+  "item_first_reason_has": "1위 덱(달빛 아펠리오스 니달리) 캐리 아이템",
+  "item_absent": [
+   "DA_18_EmblemRapidfire",
+   "DA_JeweledGauntlet"
+  ],
+  "item_reason_has": {
+   "DA_18_EmblemExecutioner": "보조: "
+  }
+ },
+ "stats": "tests/fixtures/stats/mini_18.json"
+}

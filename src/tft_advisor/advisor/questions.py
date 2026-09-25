@@ -10,7 +10,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any
 
-QUESTIONS_VERSION = "q3"
+QUESTIONS_VERSION = "q4"
 """질문·레벨·구간 라벨 문장 버전. 문구를 바꾸면 올린다(캐시 키·state_hash에 포함)."""
 
 HOLD = "hold_components"
@@ -186,7 +186,9 @@ A3 = "Which offered augment in augment_offer should the player take?"
 
 def i1(has_hp: bool, has_board: bool) -> str:
     head = ("The player can combine two item components now (resources.item_components). Which completed item should "
-            "they build first, considering the carries of candidate_comps")
+            "they build first? Prefer a core item of the main carry of the candidate comp that best fits the player's "
+            "items and augments; choose an item for another comp only if it does not use a component that carry "
+            "needs. Consider the carries of candidate_comps")
     if has_hp:
         mid = ", the current team, and the player's health (game.health_status)?" if has_board else \
             " and the player's health (game.health_status)?"

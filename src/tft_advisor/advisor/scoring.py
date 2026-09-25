@@ -20,6 +20,7 @@ from ..contracts import (
     ShopAdvice,
     ShopSlotKind,
     TargetComp,
+    UNKNOWN_UNIT_ID,
 )
 from ..unit_status import units_reason
 from .candidates import (
@@ -633,6 +634,153 @@ class Scorer:
         return (max_bis < iw.hold_bis_max and v.hp_bucket in ("healthy", "moderate", "unknown")
                 and v.stage_number is not None and v.stage_number < iw.hold_until_stage)
 
+    # --- 1위 덱 우선 재료 배분(21 §13) ---
+    def top_item_role(self, item_id: str) -> str | None:
+        """1위 덱 기준 역할: "carry"(캐리 BIS) / "core"(다른 핵심 유닛 아이템·핵심 특성 상징) / None."""
+        if not self.shown:
+            return None
+        comp = self.shown[0]["cand"].comp
+        if comp.carry and item_id in comp.carry_bis_items:
+            return "carry"
+        fw = self.w.item_fit
+        return "core" if item_fit(item_id, comp, self.stats, fw) >= fw.used_by_min else None
+
+    def owned_unit_ids(self) -> set[str]:
+        return {u.id for u in self.view.units if u.id != UNKNOWN_UNIT_ID} if self.view.units_known else set()
+
+    def unit_item_value(self, unit_id: str, item_id: str) -> float:
+        """보드 유닛 u가 아이템 x를 들 때의 통계 값 0~1(0.5 = 중립·모름). 전체 통계 행, 표본 수축."""
+        row = self.stats.unit_item_stat(unit_id, item_id, None, fallback_overall=True)
+        if row is None or row.place_change is None or not row.games:
+            return 0.5
+        games = row.games if row.comp_id is not None else int(row.games * self.w.item.overall_stat_games_factor)
+        pc = self.w.shrinkage.adjust(row.place_change, games, prior=0.0)
+        return clip01(0.5 - pc / self.w.item.place_change_span)
+
+    def temp_holder(self, item_id: str, exclude: str | None = None) -> str | None:
+        """지금 보드에서 아이템 x를 임시로(또는 지금 전력용으로) 들 유닛. 근거가 없으면 None.
+
+        순위: 표시 덱에서 x를 드는 유닛 > 유닛+아이템 통계(1위 덱 최종·빌드업 유닛이면 temp_holder_top_bonus 가산) > 코스트.
+        근거가 하나도 없는 유닛(통계 중립 이하이고 덱에서 x를 들지 않음)은 고르지 않는다.
+        """
+        if not (self.view.units_known and self.view.board):
+            return None
+        top = self.shown[0]["cand"].comp if self.shown else None
+        holders_in_decks = {u.id for r in self.shown for u in r["cand"].comp.final_board if item_id in u.items}
+        top_units = ({u.id for u in top.final_board} | {x for bs in top.buildup.values() for b in bs for x in b.units}
+                     if top is not None else set())
+        best, best_key = None, None
+        for uid in dict.fromkeys(u.id for u in self.view.board):
+            if uid in (UNKNOWN_UNIT_ID, exclude):
+                continue
+            val = self.unit_item_value(uid, item_id)
+            deck_hit = uid in holders_in_decks
+            if not deck_hit and val <= 0.5:
+                continue
+            key = (deck_hit, round(val + (self.w.item.temp_holder_top_bonus if uid in top_units else 0.0), 4),
+                   self.stats.champion_cost(uid) or 0, uid)
+            if best_key is None or key > best_key:
+                best, best_key = uid, key
+        return best
+
+    def allocate_components(self, rows: list[dict[str, Any]]) -> tuple[list[dict[str, Any]], str]:
+        """재료 배분(겹침 없음) → (고른 행, 모드). "top" = 1위 덱 아이템 우선, "fallback" = 1위 덱 아이템 없음.
+
+        top: 사전식 (1위 덱 캐리 BIS 수, 1위 덱 다른 핵심 아이템 수, 보조 가치 합, -고른 수)를 최대화한다.
+          - 캐리 BIS가 핵심 아이템 여러 개보다 먼저다(사용자 결정). 같은 아이템은 1위 덱이 아직 필요한 개수까지만 센다.
+          - 보조 가치: 1차가 아닌 아이템이 점수 >= secondary_min_score 이고, 아직 없는(보유·배분 안 된)
+            1위 덱 캐리 BIS의 재료를 쓰지 않을 때만 그 점수. 아니면 만들지 않고 보관(목록에서 뺀다).
+        fallback(1위 덱 아이템 0개): 예전처럼 점수 합 최대(재료를 최대한 쓴다).
+        재료 <= exact_max_components면 가능한 배분(부분 매칭)을 전부 본다. 넘으면 모드 목표 순서의 탐욕.
+        """
+        iw = self.w.item
+        comps = sorted(self.view.components)
+        by_pair: dict[tuple[str, ...], dict[str, Any]] = {}
+        for r in rows:
+            by_pair[tuple(sorted(r["components"]))] = r
+        top = self.shown[0]["cand"].comp if self.shown else None
+        owned = Counter(self.owned)
+        carry_need = (Counter(top.carry_bis_items) - owned) if top is not None and top.carry else Counter()
+        core_need = Counter({r["item"]: 1 for r in rows if r["role"] == "core"}) - owned
+        bis_recipes = [(x, rec) for x in carry_need for rec in [self.stats.recipe(x)] if rec is not None]
+        self.debug["item_need"] = {"carry": sorted(carry_need.elements()), "core": sorted(core_need.elements())}
+
+        def evaluate(picks: list[dict[str, Any]], mode: str):
+            if mode == "fallback":
+                return (round(sum(r["score"] for r in picks), 9), -len(picks)), [(r, "fallback") for r in picks]
+            cn, kn = Counter(carry_need), Counter(core_need)
+            n_carry, n_core, kinds = 0, 0, []
+            for r in picks:
+                x = r["item"]
+                if r["role"] == "carry" and cn[x] > 0:
+                    cn[x] -= 1
+                    n_carry += 1
+                    kinds.append("top")
+                elif r["role"] in ("carry", "core") and kn[x] > 0:
+                    kn[x] -= 1
+                    n_core += 1
+                    kinds.append("top")
+                else:
+                    kinds.append(None)
+            reserved = {c for x, rec in bis_recipes if cn[x] > 0 for c in rec}
+            sec = 0.0
+            for i, r in enumerate(picks):
+                if kinds[i] is None and r["score"] >= iw.secondary_min_score and not (set(r["components"]) & reserved):
+                    sec += r["score"]
+                    kinds[i] = "secondary"
+            kept = [(r, k) for r, k in zip(picks, kinds) if k]
+            return (n_carry, n_core, round(sec, 9), -len(kept)), kept
+
+        def search(mode: str):
+            if len(comps) > iw.exact_max_components:
+                remaining = Counter(comps)
+                picks = []
+                if mode == "top":
+                    key = lambda r: (r["role"] != "carry", r["role"] != "core", -r["score"], r["item"])  # noqa: E731
+                else:
+                    key = lambda r: (-r["score"], r["item"])  # noqa: E731
+                for r in sorted(rows, key=key):
+                    need = Counter(r["components"])
+                    if all(remaining[k] >= n for k, n in need.items()):
+                        remaining.subtract(need)
+                        picks.append(r)
+                return evaluate(picks, mode)
+            best: dict[str, Any] = {"val": None}
+
+            def rec(rem: list[str], picks: list[dict[str, Any]]) -> None:
+                if not rem:
+                    val, kept = evaluate(picks, mode)
+                    names = tuple(sorted(r["item"] for r, _ in kept))
+                    if best["val"] is None or val > best["val"] or (val == best["val"] and names < best["names"]):
+                        best.update(val=val, kept=kept, names=names)
+                    return
+                c, rest = rem[0], rem[1:]
+                rec(rest, picks)                                   # c를 쓰지 않는다
+                seen = set()
+                for j, d in enumerate(rest):
+                    if d in seen:
+                        continue
+                    seen.add(d)
+                    r = by_pair.get(tuple(sorted((c, d))))
+                    if r is not None:
+                        rec(rest[:j] + rest[j + 1:], picks + [r])
+
+            rec(comps, [])
+            return best["val"], best["kept"]
+
+        val, kept = search("top")
+        if top is not None and val is not None and (val[0] or val[1]):
+            mode = "top"
+        else:
+            val, kept = search("fallback")
+            mode = "fallback"
+        out = []
+        for r, k in kept:
+            r = dict(r)
+            r["kind"] = k
+            out.append(r)
+        return out, mode
+
     def item_advice(self) -> ItemAdvice | None:
         v = self.view
         if not v.items_known:
@@ -661,31 +809,9 @@ class Scorer:
             else:
                 score = (iw.w_bis + iw.w_jev) * bx + iw.w_stat * st
             rows.append({"item": x, "components": [a, b], "bis": bx, "st": st, "holder": h, "deck": h_deck,
-                         "score": clip01(score)})
-        # 재료가 겹치지 않게 탐욕 선택(최대 ⌊재료수/2⌋)
-        remaining = Counter(v.components)
-        picked = []
-        for r in sorted(rows, key=lambda r: (-r["score"], r["item"])):
-            if len(picked) >= len(v.components) // 2:
-                break
-            need = Counter(r["components"])
-            if all(remaining[k] >= n for k, n in need.items()):
-                remaining.subtract(need)
-                picked.append(r)
-        suggestions = [
-            ItemSuggestion(item_id=r["item"], components=r["components"], holder_unit_id=r["holder"],
-                           score=round(r["score"], 4),
-                           reason=(_holder_reason(self.ko(r["holder"]), r["deck"]) if r["holder"] else
-                                   ("목표 덱 캐리용" if r["bis"] >= self.w.item_fit.used_by_min else "범용")))
-            for r in picked
-        ]
-        for x in dict.fromkeys(bench_completed):   # 벤치 완성템 → 보유자 추천(§6-9)
-            h, h_deck = self.item_holder(x)
-            suggestions.append(ItemSuggestion(item_id=x, components=[], holder_unit_id=h,
-                                              score=round(clip01(self.bis(x)), 4),
-                                              reason=(f"{self.ko(h)}에게" + (f"({h_deck})" if h_deck else ""))
-                                              if h else "목표 덱 캐리용"))
-        # hold
+                         "score": clip01(score), "role": self.top_item_role(x)})
+        # 재료 배분: 1위 덱 캐리 BIS·핵심 아이템 먼저(21 §13). 다른 덱 아이템이 그 재료를 먼저 가져가지 않게 전체 탐색
+        # hold(보관) — 근거 문구가 보관과 어긋나지 않게 먼저 정한다
         max_bis = max((r["bis"] for r in rows), default=0.0)
         hold = False
         if rows:
@@ -695,10 +821,88 @@ class Scorer:
                 hold = True
             if v.hp_bucket == "critical":
                 hold = False
-        keys = ("item", "bis", "st", "holder", "deck", "score")
+        picked, mode = self.allocate_components(rows) if rows else ([], "top")
+        rank = {"carry": 0, "core": 1}
+        picked.sort(key=lambda r: (r["kind"] != "top", rank.get(r["role"] or "", 2), -r["score"], r["item"]))
+        top_comp = self.shown[0]["cand"].comp if self.shown else None
+        early = v.stage_number is not None and v.stage_number < iw.tempo_until_stage
+        owned_units = self.owned_unit_ids()
+        suggestions = []
+        for r in picked:
+            holder, reason = self.item_reason(r, top_comp, early and not hold, owned_units)
+            r["shown_holder"], r["reason"] = holder, reason
+            suggestions.append(ItemSuggestion(item_id=r["item"], components=r["components"], holder_unit_id=holder,
+                                              score=round(r["score"], 4), reason=reason))
+        for x in dict.fromkeys(bench_completed):   # 벤치 완성템 → 보유자 추천(§6-9)
+            h, h_deck = self.item_holder(x)
+            if h is None:
+                reason = "목표 덱 캐리용"
+            elif h_deck is None and self.top_item_role(x) is not None:
+                reason = self.temp_text(x, h, owned_units)   # 1위 덱 보유자가 없으면 임시 보유자 안내
+            else:
+                reason = f"{self.ko(h)}에게" + (f"({h_deck})" if h_deck else "")
+            suggestions.append(ItemSuggestion(item_id=x, components=[], holder_unit_id=h,
+                                              score=round(clip01(self.bis(x)), 4), reason=reason))
+        keys = ("item", "bis", "st", "holder", "deck", "score", "role")
         self.debug["item"] = {"rows": [{k: r[k] for k in keys} for r in rows],
+                              "mode": mode, "top_comp": top_comp.comp_id if top_comp else None,
+                              "need": self.debug.pop("item_need", None),
+                              "picked": [{"item": r["item"], "kind": r["kind"], "holder": r["shown_holder"],
+                                          "reason": r["reason"]} for r in picked],
                               "max_bis": max_bis, "hold": hold, "jev_choice": ans.choice if ans else None}
         return ItemAdvice(suggestions=suggestions, hold=hold)
+
+    def temp_text(self, item_id: str, holder: str, owned_units: set[str]) -> str:
+        """보유자 안내. 1위 덱 보유자가 아직 없고 보드에 알맞은 유닛이 있으면 "마스터 이 확보 전까지 카밀에게 임시로",
+        아니면 "마스터 이에게"."""
+        if self.w.item.temp_holder and self.view.units_known and holder not in owned_units:
+            t = self.temp_holder(item_id, exclude=holder)
+            if t is not None:
+                return f"{self.ko(holder)} 확보 전까지 {self.ko(t)}에게 임시로"
+        return f"{self.ko(holder)}에게"
+
+    def item_reason(self, r: dict[str, Any], top_comp: CompStats | None, tempo: bool,
+                    owned_units: set[str]) -> tuple[str | None, str]:
+        """(표시 보유자, 존댓말 근거). 1위 덱 아이템 / 보조(다른 덱·범용) / 1위 덱 아이템 없음.
+
+        tempo = 초반(stage < tempo_until_stage)이고 보관(hold)이 아님 → 1위 덱 아이템이 없으면 지금 보드 유닛에게
+        '지금 전력용'으로 권한다(재료를 끝까지 들고 있지 않게). 보드에 근거 있는 유닛이 없으면 보유자를 비운다.
+        """
+        x, kind = r["item"], r["kind"]
+        if kind == "top":
+            h = self.holder_for(x)
+            deck = top_comp.name if top_comp else ""
+            head = f"1위 덱({deck}) 캐리 아이템" if r["role"] == "carry" else f"1위 덱({deck}) 핵심 아이템"
+            if h is None:
+                return None, head
+            return h, f"{head} · {self.temp_text(x, h, owned_units)}"
+        h, h_deck = r["holder"], r["deck"]
+        if kind == "secondary":
+            if h is None:
+                _, src = self.bis_source(x)
+                shown = {rr["cand"].comp_id for rr in self.shown}
+                if src is not None and top_comp is not None and src.comp_id == top_comp.comp_id:
+                    return None, "보조: 1위 덱 보조 아이템(캐리 재료와 겹치지 않음)"
+                if src is not None and src.comp_id in shown:
+                    return None, f"보조: {src.comp.name}용 아이템(1위 덱 재료와 겹치지 않음)"
+                return None, "보조: 범용 아이템(1위 덱 재료와 겹치지 않음)"
+            return h, "보조: " + _holder_reason(self.ko(h), h_deck)
+        # fallback: 1위 덱 아이템을 지금 만들 수 없다. 초반(보관 아님)이면 지금 보드 유닛에게 '지금 전력용'
+        deck_txt = _holder_reason(self.ko(h), h_deck) if h else None
+        on_board = {u.id for u in self.view.board} if self.view.units_known else set()
+        if tempo:
+            head = "1위 덱 아이템은 아직 만들 수 없어 지금 전력용으로 권해 드립니다"
+            if h is not None and h in on_board:
+                return h, f"{head} · 지금 보드의 {self.ko(h)}에게" + (f"({h_deck})" if h_deck else "")
+            t = self.temp_holder(x)
+            if t is not None:
+                return t, f"{head} · 지금 보드의 {self.ko(t)}에게"
+            use = (f"({self.ko(h)}용" + (f" · {h_deck}" if h_deck else "") + ")") if h else ""
+            return None, f"{head} · 지금 보드의 알맞은 유닛에게{use}"
+        head = "1위 덱 아이템은 지금 만들 수 없습니다"
+        if deck_txt:
+            return h, f"{head} · 만든다면 {deck_txt}"
+        return None, f"{head} · " + ("목표 덱 캐리용" if r["bis"] >= self.w.item_fit.used_by_min else "범용")
 
     # ------------------------------------------------------------------
     # 재료 우선순위 (§10-2)

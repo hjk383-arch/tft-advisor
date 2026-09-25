@@ -1,0 +1,73 @@
+{
+ "description": "21 §13: 1위 덱(주문술사 베이가) 핵심 아이템 태양불꽃 망토의 보유자 렉사이가 아직 없다 → \"렉사이 확보 전까지 오른에게 임시로\".",
+ "state": {
+  "screen_mode": "planning",
+  "stage": "2-5",
+  "level": 5,
+  "gold": 30,
+  "shop": [
+   {
+    "kind": "champion",
+    "id": "DA_18_Ornn"
+   },
+   {
+    "kind": "champion",
+    "id": "DA_18_Veigar"
+   },
+   {
+    "kind": "champion",
+    "id": "DA_18_Yorick"
+   },
+   {
+    "kind": "champion",
+    "id": "DA_18_RekSai"
+   },
+   {
+    "kind": "champion",
+    "id": "DA_18_Varus"
+   }
+  ],
+  "items": {
+   "components": [
+    {
+     "id": "DA_Component_ChainVest"
+    },
+    {
+     "id": "DA_Component_GiantsBelt"
+    }
+   ]
+  },
+  "augments_owned": [],
+  "hp": 60,
+  "board": [
+   {
+    "id": "DA_18_Ornn",
+    "star": 1
+   },
+   {
+    "id": "DA_18_Varus",
+    "star": 1
+   },
+   {
+    "id": "DA_18_Xayah",
+    "star": 1
+   },
+   {
+    "id": "DA_18_Shen",
+    "star": 1
+   }
+  ],
+  "bench": []
+ },
+ "expect": {
+  "item_top_rule": true
+ },
+ "expect_mini": {
+  "top_comp": "spellweaver-veigar",
+  "item_mode": "top",
+  "item_first": "DA_SunfireCape",
+  "item_first_holder": "DA_18_RekSai",
+  "item_first_reason_has": "렉사이 확보 전까지 오른에게 임시로"
+ },
+ "stats": "tests/fixtures/stats/mini_18.json"
+}

@@ -238,8 +238,20 @@ class OverlayWindow(QWidget):
     def render(self) -> None:
         self.body.setText(self._body_html())
         self._render_status()
-        self.adjustSize()
+        self._fit_height()
+
+    def _fit_height(self) -> None:
+        """내용 높이에 맞춘다. `adjustSize()`는 최상위 창을 화면 높이의 2/3에서 잘라 아래 섹션([상점]·[아이템])이
+        보이지 않았다. 줄바꿈 라벨은 폭에 따라 높이가 달라지므로 고정 폭 기준 높이를 구하고, 화면 높이까지만 늘린다."""
         self.setFixedWidth(self.cfg.width)
+        lay = self.layout()
+        h = lay.totalHeightForWidth(self.cfg.width) if lay is not None and lay.hasHeightForWidth() else -1
+        if h <= 0:
+            h = self.sizeHint().height()
+        screen = self.screen() or QGuiApplication.primaryScreen()
+        if screen is not None:
+            h = min(h, screen.availableGeometry().height())
+        self.resize(self.cfg.width, h)
 
     def _render_status(self) -> None:
         self.foot.setText(f"<span style='color:{DIM}'>{_line(status_line(self.status))}</span>")
@@ -672,9 +684,13 @@ def _line(text: str) -> str:
     return indent + html.escape(stripped).replace("  ", " &middot; ")
 
 
+SECTION_GAP = "<span style='font-size:5pt'>&nbsp;</span>"
+"""섹션 제목 앞 빈 줄(본문 한 줄보다 낮다). 섹션끼리 구분되게 한다."""
+
+
 def _section(title: str, note: str | None = None) -> str:
     tail = f" <span style='color:{DIM}'>({html.escape(note)})</span>" if note else ""
-    return f"<b style='color:{ACCENT}'>[{html.escape(title)}]</b>{tail}"
+    return f"{SECTION_GAP}<br><b style='color:{ACCENT}'>[{html.escape(title)}]</b>{tail}"
 
 
 def _add(menu: QMenu, text: str, fn) -> QAction:

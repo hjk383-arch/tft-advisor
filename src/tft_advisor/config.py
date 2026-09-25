@@ -495,6 +495,12 @@ class ItemWeights(_Cfg):
     hold_bis_max: Unit = 0.4
     hold_until_stage: int = Field(4, ge=1, le=10)   # stage 번호 < 이 값일 때만 hold
     overall_stat_games_factor: Unit = 0.25   # §6.3 st(x): 덱 한정 행 없이 전체(파생) 행을 쓸 때 표본 수 할인
+    # 1위 덱 우선 재료 배분(2026-09-25, `_workspace/21_board_trust.md` §13). 사전식: 1위 덱 캐리 BIS 수 > 핵심 아이템 수 > 보조
+    secondary_min_score: Unit = 0.5          # 1위 덱 아이템이 있을 때, 다른 덱·범용 아이템을 보조로 보여 줄 최소 점수
+    tempo_until_stage: int = Field(4, ge=1, le=10)   # 1위 덱 아이템을 못 만들 때 stage 번호 < 이 값이면 '지금 전력용' 문구
+    exact_max_components: int = Field(10, ge=2, le=12)   # 재료가 이 개수 이하면 배분 전체 탐색, 넘으면 탐욕
+    temp_holder: bool = True                 # 1위 덱 보유자가 없으면 보드 유닛을 임시 보유자로 제안
+    temp_holder_top_bonus: Unit = 0.05       # 임시 보유자 순위: 1위 덱 최종·빌드업 유닛이면 통계 값(0~1)에 가산
 
     @model_validator(mode="after")
     def _constraints(self) -> ItemWeights:
