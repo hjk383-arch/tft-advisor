@@ -69,7 +69,12 @@ EVIDENCE_LEGACY = "legacy_forced"
 EVIDENCE_LABEL = "label"
 EVIDENCE_MANUAL = "manual"
 EVIDENCE_LIBRARY = "library"
+EVIDENCE_UNKNOWN = "unknown"
+EVIDENCE_USER = "user"
+UNKNOWN_CHAMPION = "_unknown"
+"""이름 미상 크롭의 챔피언 자리(폴더 `_pending/_unknown/`). 사용자가 검토 창에서 이름을 주면 그 챔피언 승인 폴더로 옮긴다."""
 EVIDENCE_KO = {
+    EVIDENCE_UNKNOWN: "이름 미상(벤치)", EVIDENCE_USER: "사용자 이름",
     EVIDENCE_PURCHASE: "상점 구매", EVIDENCE_TRAITS: "특성 풀이", EVIDENCE_DUPLICATE: "같은 모델(보드)",
     EVIDENCE_LIBRARY: "사진 비교(뒷받침)",
     EVIDENCE_LEGACY: "옛 자동 학습", EVIDENCE_LABEL: "확인 라벨", EVIDENCE_MANUAL: "직접 지정",
@@ -95,6 +100,12 @@ CYAN_FLAG = 0.04
 SIDE_FLAG = 0.05          # 가운데와 이어지지 않고 크롭 좌우 끝에 닿은 모델 조각 = 옆 칸 모델(삭제 0.055~0.068, 승인 대부분 < 0.03)
 HEAD_CUT_FLAG = 0.45      # 크롭 위쪽 줄(체력바 바로 아래) 가운데에 모델이 이만큼 차 있으면 머리가 잘렸을 수 있다
 FLAG_SCORE_MULT = 0.7
+UNKNOWN_MIN_FRAMES = 2    # 이름 없는 벤치 칸이 준비 프레임 연속 이만큼이면 이름 미상 크롭으로 저장한다
+UNKNOWN_CAP = 20          # 판마다 이름 미상 크롭 상한
+UNKNOWN_SAME = 0.70       # 같은 판에서 이 이상 닮으면 같은 유닛(실측 다른 챔피언 최대 0.59)
+UNKNOWN_PER_UNIT = 2      # 한 유닛당 크롭 수(처음 + 나중 한 장)
+UNKNOWN_SECOND_S = 20.0   # 두 번째 크롭은 첫 크롭보다 이만큼 뒤(다른 자세·조명)
+UNKNOWN_SUGGEST_MAX = 8
 
 
 # ---------------------------------------------------------------------------
@@ -120,6 +131,9 @@ class CropMeta:
     slot: str | None = None
     note: str | None = None
     reviewed_at: str | None = None
+    suggestions: list[str] | None = None
+    """이름 미상 크롭의 이름 후보(챔피언 ID, 앞일수록 유력): 같은 판에서 나중에 붙은 이름 > 장부 보유(자리 미상) >
+    특성 풀이 자리 미상 > 이번 판 상점에 나온 챔피언. 검토 창이 빠른 선택 버튼으로 보여 준다(자동 승인 없음)."""
     path: Path | None = field(default=None, compare=False, repr=False)
 
     def to_json(self) -> dict[str, Any]:
@@ -161,13 +175,17 @@ class Coverage:
     def missing(self) -> list[str]:
         return [r.champion for r in self.rows if r.approved_total == 0]
 
+    unknown: int = 0
+    """이름 미상 대기 크롭 수(`_pending/_unknown/`)."""
+
     @property
     def pending(self) -> int:
         return sum(r.pending for r in self.rows)
 
     def summary(self, names: Mapping[str, str] | None = None) -> str:
         """한국어 요약 한 줄."""
-        return (f"승인된 챔피언 {self.covered}/{len(self.rows)} · 검토 대기 {self.pending}장 · "
+        unk = f" · 이름 미상 {self.unknown}장" if self.unknown else ""
+        return (f"승인된 챔피언 {self.covered}/{len(self.rows)} · 검토 대기 {self.pending}장{unk} · "
                 f"사진 없는 챔피언 {len(self.missing)}명")
 
     def table(self, names: Mapping[str, str] | None = None) -> str:
@@ -466,7 +484,49 @@ class UnitImageDB:
                 row[meta.star] = row.get(meta.star, 0) + 1
             else:
                 pend[meta.champion] = pend.get(meta.champion, 0) + 1
-        return Coverage(tuple(ChampionCoverage(c, dict(by.get(c, {})), pend.get(c, 0)) for c in champions))
+        return Coverage(tuple(ChampionCoverage(c, dict(by.get(c, {})), pend.get(c, 0)) for c in champions),
+                        unknown=len(self.unknown_entries()))
+
+    # ------------------------------------------------------------------ 이름 미상(벤치)
+    def unknown_entries(self) -> list[CropMeta]:
+        """이름 미상 대기 크롭(`_pending/_unknown/`), 오래된 것부터."""
+        d = self.root / PENDING_DIR / UNKNOWN_CHAMPION
+        if not d.is_dir():
+            return []
+        return [self._meta_for(png, UNKNOWN_CHAMPION, PENDING) for png in sorted(d.glob("*.png"))]
+
+    def add_unknown(self, crop: np.ndarray, *, star: int | None = None, game: str | None = None,
+                    stage: str | None = None, arena: str | None = None, frame: str | None = None,
+                    slot: str | None = None, suggestions: Sequence[str] = (), note: str | None = None,
+                    score: float | None = None) -> CropMeta | None:
+        """이름 미상 벤치 크롭을 `_pending/_unknown/`에 넣는다. 같은 그림(해시)은 한 번만."""
+        digest = crop_digest(crop)
+        d = self.root / PENDING_DIR / UNKNOWN_CHAMPION
+        if d.is_dir() and any(p.stem.endswith(digest) for p in d.glob("*.png")):
+            return None
+        cid = f"{EVIDENCE_UNKNOWN}_{digest}"
+        meta = CropMeta(id=cid, champion=UNKNOWN_CHAMPION, status=PENDING, star=star, evidence=EVIDENCE_UNKNOWN,
+                        score=score, game=game, stage=stage, arena=arena, at=_now_iso(), frame=frame, slot=slot,
+                        note=note, suggestions=list(dict.fromkeys(suggestions)) or None, path=d / f"{cid}.png")
+        self._write(meta, crop)
+        log.info("유닛 사진 이름 미상: %s ★%s (후보 %s)", slot, star, meta.suggestions)
+        return meta
+
+    def suggest(self, meta: CropMeta, champion: str, note: str | None = None) -> CropMeta:
+        """이름 미상 크롭에 이름 후보를 **맨 앞에** 더한다(같은 판에서 그 유닛에 나중에 이름이 붙었을 때). 승인하지 않는다."""
+        meta.suggestions = [champion, *[c for c in (meta.suggestions or []) if c != champion]]
+        if note:
+            meta.note = note
+        return self._write(meta)
+
+    def label_unknown(self, meta: CropMeta, champion: str) -> CropMeta:
+        """사용자가 이름을 준 이름 미상 크롭 → 그 챔피언 **승인** 폴더(사용자의 이름이 확인이다), 근거 `user`."""
+        if self.valid is not None and not self.valid(champion):
+            raise ValueError(f"알 수 없는 챔피언: {champion}")
+        new = self._move(meta, champion, APPROVED)
+        new.evidence, new.reviewed_at = EVIDENCE_USER, _now_iso()
+        new.note = ("이름 미상 → 사용자 이름 " + (new.note or "")).strip()
+        return self._write(new)
 
 
 def roster(static: Any) -> list[str]:
@@ -525,6 +585,16 @@ class _Buy:
 
 
 @dataclass
+class _UnknownUnit:
+    """같은 판의 이름 미상 유닛 하나(저장한 크롭들). 나중에 이름이 붙으면 `name`에 적고 크롭에 후보로 단다."""
+
+    desc: np.ndarray
+    metas: list[CropMeta]
+    last_at: float
+    name: str | None = None
+
+
+@dataclass
 class UnitCollector:
     """프레임마다 증거가 강한 크롭을 `UnitImageDB` 대기에 넣는다(`UnitNamer.name()`이 부른다).
 
@@ -551,6 +621,12 @@ class UnitCollector:
     skipped: dict[str, int] = field(default_factory=dict)
     """모으지 않은 이유별 횟수(진단용): enough / recognized / quality / tactician."""
     _max_stage: tuple[int, int] | None = None
+    unknown_cap: int = UNKNOWN_CAP
+    _unk_streak: dict[int, int] = field(default_factory=dict)
+    _unk_units: list[_UnknownUnit] = field(default_factory=list)
+    _unk_saved: int = 0
+    _shop_seen: dict[str, None] = field(default_factory=dict)
+    """이번 판 상점에 나온 챔피언(순서 유지) — 이름 미상 크롭의 후보."""
     _buys: list[_Buy] = field(default_factory=list)
     _new: list[_NewSlot] = field(default_factory=list)
     _last_shop: tuple[str | None, ...] | None = None
@@ -569,6 +645,10 @@ class UnitCollector:
         self._last_shop = self._last_board = self._disturbed_at = None
         self.session_stage = None
         self._max_stage = None
+        self._unk_streak.clear()
+        self._unk_units.clear()
+        self._unk_saved = 0
+        self._shop_seen.clear()
 
     def set_stage(self, stage: str | None) -> None:
         """app 세션의 합친 스테이지(오버레이에 보이는 값). 프레임 판독 스테이지보다 이것을 믿는다."""
@@ -625,6 +705,79 @@ class UnitCollector:
         self._library(ctx, read, names, bench_crops)
         self._purchases(ctx, read, bench_crops, names)
         return self.saved[before:]
+
+    # ------------------------------------------------------------------ 이름 미상(벤치)
+    def observe_unknown(self, ctx: FrameContext, read: Any, bench_crops: Sequence[np.ndarray], *,
+                        owned: Iterable[str] = (), unplaced: Iterable[str] = ()) -> list[CropMeta]:
+        """준비 단계 프레임의 **최종** 판독(정체 추적 뒤)에서 이름 없는 벤치 칸의 크롭을 `_pending/_unknown/`에 모은다.
+
+        - 이름 없는 칸이 연속 `UNKNOWN_MIN_FRAMES` 프레임이어야 한다(끌기·효과 한 프레임은 거른다). 벤치만. 전략가 칸·품질 거부는 뺀다.
+        - 같은 판에서 같은 유닛(닮음 >= `UNKNOWN_SAME`)은 `UNKNOWN_PER_UNIT`장까지(두 번째는 `UNKNOWN_SECOND_S` 뒤), 판마다 `unknown_cap`장.
+        - 후보(`suggestions`): 장부 보유인데 칸에 이름이 없는 챔피언 > 특성 풀이 자리 미상 > 이번 판 상점에 나온 챔피언.
+        - 나중에 그 유닛(닮은 크롭)에 이름이 붙으면 저장한 크롭의 후보 맨 앞에 그 이름을 단다(승인하지 않는다).
+        `bench_crops`는 `read.bench`와 같은 순서여야 한다."""
+        from .units import descriptor, similarity
+
+        if ctx.shop is not None:
+            for c in ctx.shop:
+                if c not in (None, "*"):
+                    self._shop_seen[c] = None
+        before = len(self.saved)
+        present: set[int] = set()
+        named = {u.unit_id for u in (*read.board, *read.bench) if getattr(u, "unit_id", None)}
+        for u, crop in zip(read.bench, bench_crops):
+            slot = u.bench_slot
+            if slot is None or crop is None:
+                continue
+            present.add(slot)
+            if u.unit_id:
+                self._unk_streak.pop(slot, None)
+                self._note_named(descriptor(crop), u.unit_id, similarity)
+                continue
+            self._unk_streak[slot] = self._unk_streak.get(slot, 0) + 1
+            if self._unk_streak[slot] < UNKNOWN_MIN_FRAMES or self._unk_saved >= self.unknown_cap:
+                continue
+            if slot in ctx.tactician:
+                self._skip("tactician")
+                continue
+            q = crop_quality(crop)
+            if q.reject is not None:
+                self._skip("quality")
+                continue
+            d = descriptor(crop)
+            unit = next((x for x in self._unk_units if similarity(x.desc, d) >= UNKNOWN_SAME), None)
+            if unit is not None and (len(unit.metas) >= UNKNOWN_PER_UNIT or ctx.at - unit.last_at < UNKNOWN_SECOND_S):
+                continue
+            sugg = [c for c in owned if c not in named] + [c for c in unplaced if c not in named] + \
+                [c for c in self._shop_seen if c not in named]
+            if unit is not None and unit.name:
+                sugg = [unit.name, *sugg]
+            note = f"품질: {', '.join(q.flags)}" if q.flags else None
+            meta = self.db.add_unknown(crop, star=u.star, game=self.game, stage=self._stage_for(ctx), arena=ctx.arena,
+                                       frame=ctx.frame, slot=f"bench:{slot}",
+                                       suggestions=list(dict.fromkeys(sugg))[:UNKNOWN_SUGGEST_MAX], note=note)
+            if meta is None:
+                continue
+            self._unk_saved += 1
+            self.saved.append(meta)
+            if unit is None:
+                self._unk_units.append(_UnknownUnit(d, [meta], ctx.at))
+            else:
+                unit.metas.append(meta)
+                unit.last_at = ctx.at
+        for slot in [s for s in self._unk_streak if s not in present]:
+            del self._unk_streak[slot]
+        return self.saved[before:]
+
+    def _note_named(self, d: np.ndarray, champion: str, similarity: Callable) -> None:
+        for unit in self._unk_units:
+            if unit.name is None and similarity(unit.desc, d) >= UNKNOWN_SAME:
+                unit.name = champion
+                for m in unit.metas:
+                    try:
+                        self.db.suggest(m, champion, note=f"같은 판에서 나중에 붙은 이름: {champion}")
+                    except OSError:
+                        log.warning("이름 미상 크롭 후보 쓰기 실패: %s", m.path)
 
     def _skip(self, why: str) -> None:
         self.skipped[why] = self.skipped.get(why, 0) + 1

@@ -53,9 +53,11 @@ SWAP_MARGIN = 0.30
 SWAP_MIN = 0.45
 KEEP_MIN_AFTER_GAP = 0.65
 """관측 공백(전투·공동 선택, `BUY_WINDOW_S`보다 긴) 뒤 첫 프레임의 같은 칸 유지 최소 닮음(QA 36 W1: 다른 챔피언 최대 0.59)."""
-PAIR_DT = 1.0
+PAIR_DT = 2.5
 """구매 ↔ 새 칸 짝: 구매가 감지된 프레임과 새 칸이 처음 보인 프레임의 시각 차가 이 안(같은 프레임 또는 바로 다음 프레임)이어야 한다
-(QA 36 F1b: 전투 초반 구매가 떨어진 칸이 끝 무렵 합성 구매 이름을 받았다). app은 장부 이벤트에 프레임 캡처 시각을 넘긴다."""
+(QA 36 F1b: 전투 초반 구매가 떨어진 칸이 끝 무렵 합성 구매 이름을 받았다). app은 장부 이벤트에 프레임 캡처 시각을 넘긴다.
+35 §8: 1.0 → 2.5. 실제 루프(캡처 4fps · 변화 안정 2프레임 · 강제 다시 읽기 0.5초 · 장부 정산 최대 2초)에서 산 유닛 칸이
+장부 구매 이벤트보다 1초 넘게 늦게(또는 이르게) 읽힌다 — 1초로는 라이브에서 구매 이름이 거의 붙지 않았다."""
 STAR_KEEP_MIN = 0.55
 DESC_REFRESH_MIN = 0.60       # 같은 칸 닮음이 이 이상이면 표본을 지금 그림으로 바꾼다(자세 변화 따라가기)
 VISION_ADOPT = 0.75
@@ -107,6 +109,10 @@ class UnitTracker:
     _last_shop: tuple | None = None
     _bench_occ: set[int] | None = None
     _arena: str | None = None
+    _arena_seen: dict[str, int] = field(default_factory=dict)
+    """준비 단계 프레임의 맵 서명별 횟수. 가장 많은 것이 **내 맵**(home). 다른 맵(원정·관전)에서는 추적을 멈춘다(지우지 않는다)."""
+    frozen: bool = False
+    """마지막 `update()`가 다른 맵이라 멈췄는가(수집기도 이때는 모으지 않는다)."""
     _last_active: float | None = None
     """마지막으로 갱신한(준비 단계) 프레임 시각. 공백이 길면 그 뒤 첫 프레임에서는 구매 이름을 붙이지 않는다."""
     dropped: int = 0
@@ -119,6 +125,30 @@ class UnitTracker:
         self.appeared.clear()
         self.star_ups.clear()
         self._last_shop = self._bench_occ = self._arena = self._last_active = None
+        self._arena_seen.clear()
+        self.frozen = False
+
+    @property
+    def home_arena(self) -> str | None:
+        """이번 판 내 맵 서명(준비 단계에서 가장 자주 본 것). 모르면 None."""
+        if not self._arena_seen:
+            return None
+        return max(self._arena_seen.items(), key=lambda kv: kv[1])[0]
+
+    def _away(self, arena: str | None) -> bool:
+        """이 프레임이 내 맵이 아닌가(원정 전투·관전·다른 플레이어 보기). 내 맵을 모르면 아니다."""
+        from .units import same_arena
+
+        if arena is None:
+            return False
+        home = self.home_arena
+        if home is None or same_arena(arena, home):
+            self._arena_seen[arena if home is None else home] = self._arena_seen.get(
+                arena if home is None else home, 0) + 1
+            return False
+        # 다른 맵 — 여러 번 보면 그쪽이 내 맵일 수도 있다(첫 프레임이 원정이었던 경우): 횟수만 센다
+        self._arena_seen[arena] = self._arena_seen.get(arena, 0) + 1
+        return self.home_arena != arena
 
     # ------------------------------------------------------------------ 이벤트
     def note_purchase(self, champion_id: str, at: float | None = None, source: str = "ledger") -> None:
@@ -146,15 +176,15 @@ class UnitTracker:
         """판독 → 정체를 붙인 판독. `board_desc`/`bench_desc`는 `read.board`/`read.bench`와 같은 순서의 모델 기술자
         (체력바가 사라진 프레임이면 비어 있어도 된다). `active=False`(준비 단계가 아님)면 갱신하지 않고 이름만 붙인다."""
         try:
+            # 35 §8: 맵이 바뀌어도 **지우지 않는다**(원정 전투·관전으로 화면이 다른 플레이어 맵으로 가는 것은 늘 있다 — 라이브에서
+            # 0a080a → 080806 → 0a080a로 매 전투마다 정체를 전부 잃었다). 새 판 초기화는 app 루프(`reset()`)만 한다.
+            # 내 맵이 아닌 프레임에서는 갱신도 이름 붙이기도 하지 않는다(보이는 보드가 내 것이 아닐 수 있다)
+            self.frozen = active and self._away(arena)
+            if self.frozen:
+                log.debug("추적: 다른 맵(%s, 내 맵 %s) — 멈춤", arena, self.home_arena)
+                return read
             if getattr(read, "bench_held", False) or not active:
                 return self._label_only(read, board_desc, bench_desc)
-            if arena is not None:
-                from .units import same_arena
-
-                if self._arena is not None and not same_arena(arena, self._arena):
-                    log.info("맵이 바뀌었습니다(%s → %s) — 유닛 정체를 비웁니다(새 판)", self._arena, arena)
-                    self.reset()
-                self._arena = arena
             return self._update(read, board_desc, bench_desc, now, shop)
         except Exception:                               # 보조 기능 — 판독을 막지 않는다
             log.exception("유닛 정체 추적 실패")
@@ -216,6 +246,9 @@ class UnitTracker:
             s = similarity(tr.desc, d) if tr.desc is not None and d is not None else None
             star_drop = u.star is not None and tr.star is not None and u.star < tr.star   # QA 36 W1: 같은 유닛은 성급이 안 내려간다
             if (s is not None and s < keep_min) or star_drop:
+                if tr.unit_id:
+                    log.info("추적: 이름 버림 %s %s (%s)", k, tr.unit_id,
+                             "성급 하락" if star_drop else f"같은 칸 닮음 {s:.2f} < {keep_min}")
                 vanished.append((k, tr))                  # 다른 유닛이 이 칸에 섰다(판매 후 구매 등)
                 del self.slots[k]
                 new_keys.append(k)
@@ -252,6 +285,8 @@ class UnitTracker:
                 s_other = max((similarity(tr.desc, cur[k][1]) for k in cands if cur[k][1] is not None), default=0.0)
                 if s_buy >= SINGLE_MIN and s_other < s_buy + MATCH_MARGIN:
                     buy_slot_suspect = True
+                    if tr.unit_id:
+                        log.info("추적: 이름 버림 %s %s (구매 칸으로 옮겼을 수 있음, 닮음 %.2f)", src, tr.unit_id, s_buy)
                     if src is not None and tr.unit_id:
                         self.dropped += 1
                     pool[i] = (src, Track(None, tr.star, None))     # 이 정체는 버린다(어디로 갔는지 모른다)
@@ -262,6 +297,8 @@ class UnitTracker:
             used.add(pi)
             u, d = cur[key]
             tr.moved = True
+            if tr.unit_id:
+                log.info("추적: 이동 %s → %s (%s)", src_key, key, tr.unit_id)
             if u.star is not None:
                 tr.star = u.star
             if d is not None:
@@ -345,6 +382,7 @@ class UnitTracker:
             col = sorted((S[ii, j] for ii in range(S.shape[0]) if ii != i), reverse=True)
             if (row and s - row[0] < MATCH_MARGIN) or (col and s - col[0] < MATCH_MARGIN):
                 self.dropped += 1                         # 애매 → 짝짓지 않는다(정체를 잃는 쪽이 안전)
+                log.info("추적: 이름 버림 %s (옮기기 짝이 애매 %.2f)", pool[i][1].unit_id, s)
                 continue
             taken_i.add(i)
             taken_j.add(j)
@@ -364,12 +402,19 @@ class UnitTracker:
                         and self.slots[a.key].star in (None, 1)),     # 산 유닛은 ★1로 떨어진다(★2 새 칸은 구매가 아니다)
                        key=lambda a: (a.at, a.key[1]))
         if fresh:
-            if (len(fresh) == len(live) and _leftmost_fill(fresh)
-                    and all(abs(a.at - b.at) <= PAIR_DT for b, a in zip(live, fresh))):
+            ok_count = len(fresh) == len(live)
+            ok_fill = _leftmost_fill(fresh)
+            ok_time = ok_count and all(abs(a.at - b.at) <= PAIR_DT for b, a in zip(live, fresh))
+            if not (ok_count and ok_fill and ok_time):
+                log.info("추적: 구매 이름 보류 — 구매 %s / 새 칸 %s (%s)", [b.champion for b in live],
+                         [a.key[1] for a in fresh],
+                         "수가 다름" if not ok_count else ("가장 왼쪽 빈 칸 순서 아님" if not ok_fill else "시각 차 > %.1fs" % PAIR_DT))
+            if ok_count and ok_fill and ok_time:
                 for b, a in zip(live, fresh):
                     tr = self.slots[a.key]
                     tr.unit_id, tr.source, tr.conf = b.champion, "purchase", PURCHASE_CONF
                     b.used = True
+                    log.info("추적: 구매 → 벤치 %d 이름 %s (구매 %.2fs · 칸 %.2fs)", a.key[1], b.champion, b.at, a.at)
                 self.appeared = [a for a in self.appeared if a not in fresh]
             return
         # 새 칸 없이 성급이 오른 칸 = 합성 구매(같은 챔피언 구매 하나일 때만)
@@ -381,6 +426,7 @@ class UnitTracker:
             tr = self.slots[ups[0]]
             champ = champs.pop()
             if tr.unit_id in (None, champ):
+                log.info("추적: 합성 구매 → %s 이름 %s", ups[0], champ)
                 tr.unit_id, tr.source, tr.conf = champ, tr.source if tr.unit_id else "purchase", PURCHASE_CONF
                 for b in live:
                     b.used = True
@@ -397,7 +443,7 @@ class UnitTracker:
                 tr.unit_id, tr.source, tr.conf = u.unit_id, "vision", min(TRACKED_CONF, u.unit_conf)
             return
         if tr.unit_id != u.unit_id and strong:
-            log.info("유닛 정체 충돌(%s: 추적 %s / 화면 %s) — 둘 다 버립니다", key, tr.unit_id, u.unit_id)
+            log.info("추적: 이름 버림 %s — 추적 %s / 화면 %s 충돌", key, tr.unit_id, u.unit_id)
             tr.unit_id, tr.source, tr.conf = None, "conflict", 0.0
             self.dropped += 1
 

@@ -9,6 +9,10 @@ DB·결정: `vision.unit_db`, `_workspace/25_unit_image_db.md`. **승인한 사�
 
 단축키: A 승인 · U 승인 취소 · D/Delete 삭제(휴지통) · R 다른 챔피언으로 · 1/2/3 성급 · 0 성급 모름 ·
 Ctrl+A 모두 선택 · F5 새로 고침. 여러 장을 골라 한 번에 적용할 수 있다.
+
+**이름 미상**(목록 맨 위, vision 25 "이름 미상" 절): 게임 중 이름을 못 붙인 벤치 유닛 크롭. 사진 아래 후보 버튼(단축키 1~5)이나
+R(검색)로 이름을 주면 그 챔피언 **승인** 폴더로 옮긴다(사용자의 이름이 확인이다, 근거 "사용자 이름"). 이 목록에서는 숫자 키가
+성급이 아니라 후보 고르기다.
 """
 from __future__ import annotations
 
@@ -20,13 +24,15 @@ from pathlib import Path
 from typing import Any
 
 from ..vision.unit_db import (
-    APPROVED, EVIDENCE_KO, PENDING, Coverage, CropMeta, UnitImageDB, open_db, roster,
+    APPROVED, EVIDENCE_KO, PENDING, UNKNOWN_CHAMPION, Coverage, CropMeta, UnitImageDB, open_db, roster,
 )
 
 log = logging.getLogger(__name__)
 
 TITLE = "유닛 사진 검토"
 ALL_PENDING = "__pending__"          # 챔피언 목록 맨 위 "대기 전체" 항목
+UNKNOWN_GROUP = "__unknown__"        # 챔피언 목록 맨 위 "이름 미상" 항목
+QUICK_PICKS = 5                      # 이름 미상 크롭의 후보 버튼 수(단축키 1~5)
 ICON = 140
 FILTERS = (("pending", "대기 있는 챔피언"), ("all", "전체 챔피언"), ("missing", "사진 없는 챔피언"))
 VIEWS = (("pending", "대기"), ("approved", "승인"), ("all", "전체"))
@@ -67,7 +73,24 @@ class ReviewModel:
         return cls(db, names, roster(static))
 
     def name(self, champion: str) -> str:
+        if champion == UNKNOWN_CHAMPION:
+            return "이름 미상"
         return self.names.get(champion, champion)
+
+    def unknown(self) -> list[CropMeta]:
+        return self.db.unknown_entries()
+
+    def suggestions(self, metas: Sequence[CropMeta], n: int = QUICK_PICKS) -> list[tuple[str, str]]:
+        """골라 둔 이름 미상 크롭들의 공통 이름 후보(앞 크롭 순서), (apiName, 한국어 이름) 최대 n개."""
+        metas = [m for m in metas if m.champion == UNKNOWN_CHAMPION]
+        if not metas:
+            return []
+        out: list[str] = []
+        for m in metas:
+            for c in m.suggestions or []:
+                if c not in out and c in self.names:
+                    out.append(c)
+        return [(c, self.name(c)) for c in out[:n]]
 
     def coverage(self) -> Coverage:
         return self.db.coverage(self.champions)
@@ -94,6 +117,8 @@ class ReviewModel:
         status = None if view == "all" else (APPROVED if view == "approved" else PENDING)
         if champion == ALL_PENDING:
             return self.db.entries(PENDING)
+        if champion == UNKNOWN_GROUP:
+            return self.db.unknown_entries() if view != "approved" else []
         return self.db.entries(status, champion)
 
     def search(self, query: str) -> list[tuple[str, str]]:
@@ -104,7 +129,8 @@ class ReviewModel:
 
     # 동작 — 모두 새 메타데이터 목록을 돌려준다
     def approve(self, metas: Sequence[CropMeta]) -> list[CropMeta]:
-        out = [self.db.approve(m) for m in metas if m.status != APPROVED]
+        # 이름 미상 크롭은 이름 없이 승인할 수 없다(R·후보 버튼으로 이름을 주면 승인된다)
+        out = [self.db.approve(m) for m in metas if m.status != APPROVED and m.champion != UNKNOWN_CHAMPION]
         self.changed += len(out)
         return out
 
@@ -120,7 +146,9 @@ class ReviewModel:
         return len(metas)
 
     def relabel(self, metas: Sequence[CropMeta], champion: str) -> list[CropMeta]:
-        out = [self.db.relabel(m, champion) for m in metas if m.champion != champion]
+        """다른 챔피언으로. 이름 미상 크롭은 그 챔피언 **승인** 폴더로(사용자 이름 = 확인)."""
+        out = [self.db.label_unknown(m, champion) if m.champion == UNKNOWN_CHAMPION else self.db.relabel(m, champion)
+               for m in metas if m.champion != champion]
         self.changed += len(out)
         return out
 
@@ -146,6 +174,10 @@ class ReviewModel:
                           if x)
         if when:
             lines.append(when)
+        if meta.suggestions:
+            picks = " · ".join(f"{i + 1} {self.name(c)}" for i, c in enumerate(meta.suggestions[:QUICK_PICKS]))
+            rest = [self.name(c) for c in meta.suggestions[QUICK_PICKS:]]
+            lines.append(f"이름 후보: {picks}" + (f" (그 밖: {', '.join(rest)})" if rest else ""))
         if meta.note:
             lines.append(f"메모: {meta.note}")
         lines.append(f"파일: {meta.path}")
@@ -279,6 +311,18 @@ def make_window(model: ReviewModel, *, on_changed: Callable[[], Any] | None = No
                 self.buttons[key] = b
                 bl.addWidget(b)
             rl.addLayout(bl)
+            # 이름 미상 크롭의 이름 후보(단축키 1~5)
+            pl = QHBoxLayout()
+            self.pick_label = QLabel("이름 후보:", right)
+            pl.addWidget(self.pick_label)
+            self.pick_buttons: list[QPushButton] = []
+            for i in range(QUICK_PICKS):
+                b = QPushButton("", right)
+                b.clicked.connect(lambda _c=False, i=i: self.do_quick_pick(i))
+                self.pick_buttons.append(b)
+                pl.addWidget(b)
+            pl.addStretch(1)
+            rl.addLayout(pl)
             split.setSizes([300, 800])
 
             self.filter.currentIndexChanged.connect(lambda _i: self.refresh_champions())
@@ -294,10 +338,13 @@ def make_window(model: ReviewModel, *, on_changed: Callable[[], Any] | None = No
                 self.buttons[f"star{n}"].clicked.connect(lambda _c=False, n=n: self.do_star(n or None))
             for seq, fn in (("A", self.do_approve), ("U", self.do_unapprove), ("D", self.do_delete),
                             ("Delete", self.do_delete), ("R", self.do_relabel), ("F5", self.refresh_all),
-                            ("1", lambda: self.do_star(1)), ("2", lambda: self.do_star(2)),
-                            ("3", lambda: self.do_star(3)), ("0", lambda: self.do_star(None))):
+                            ("1", lambda: self.do_number(1)), ("2", lambda: self.do_number(2)),
+                            ("3", lambda: self.do_number(3)), ("4", lambda: self.do_number(4)),
+                            ("5", lambda: self.do_number(5)), ("0", lambda: self.do_number(0))):
                 QShortcut(QKeySequence(seq), self, activated=fn)
             self.refresh_all()
+            if self.model.unknown():                       # 이름 미상이 있으면 그것부터
+                self.champs.setCurrentRow(0)
 
         # ---------------------------------------------------------------- 그리기
         def refresh_all(self) -> None:
@@ -313,6 +360,12 @@ def make_window(model: ReviewModel, *, on_changed: Callable[[], Any] | None = No
             self.champs.blockSignals(True)
             self.champs.clear()
             pending_total = len(self.model.db.entries(PENDING))
+            unknown_total = len(self.model.unknown())
+            if unknown_total:
+                it = QListWidgetItem(f"? 이름 미상  —  {unknown_total}장 (이름을 주세요)")
+                it.setData(Qt.ItemDataRole.UserRole, UNKNOWN_GROUP)
+                it.setForeground(Qt.GlobalColor.darkYellow)
+                self.champs.addItem(it)
             it = QListWidgetItem(f"◆ 대기 전체  —  {pending_total}장")
             it.setData(Qt.ItemDataRole.UserRole, ALL_PENDING)
             self.champs.addItem(it)
@@ -355,8 +408,19 @@ def make_window(model: ReviewModel, *, on_changed: Callable[[], Any] | None = No
         def selected(self) -> list[CropMeta]:
             return [it.data(Qt.ItemDataRole.UserRole) for it in self.grid.selectedItems()]
 
+        def in_unknown(self) -> bool:
+            return self.current_champion() == UNKNOWN_GROUP
+
         def show_detail(self) -> None:
             sel = self.selected()
+            picks = self.model.suggestions(sel) if sel else []
+            for i, b in enumerate(self.pick_buttons):
+                if i < len(picks):
+                    b.setText(f"{i + 1} {picks[i][1]}")
+                    b.setVisible(True)
+                else:
+                    b.setVisible(False)
+            self.pick_label.setVisible(bool(picks))
             if not sel:
                 self.detail.setText("사진을 고르면 근거가 보입니다. 여러 장을 골라 한 번에 승인·삭제할 수 있습니다.")
             elif len(sel) == 1:
@@ -394,6 +458,23 @@ def make_window(model: ReviewModel, *, on_changed: Callable[[], Any] | None = No
             if champ:
                 self.model.relabel(sel, champ)
                 self._after()
+
+        def do_quick_pick(self, i: int) -> None:
+            sel = self.selected()
+            picks = self.model.suggestions(sel)
+            if sel and i < len(picks):
+                self.model.relabel(sel, picks[i][0])
+                self._after()
+
+        def do_number(self, n: int) -> None:
+            """숫자 키: 이름 미상 목록에서는 후보 고르기(1~5), 그 밖에서는 성급(1~3, 0 = 모름)."""
+            if self.in_unknown():
+                if n >= 1:
+                    self.do_quick_pick(n - 1)
+            elif n in (1, 2, 3):
+                self.do_star(n)
+            elif n == 0:
+                self.do_star(None)
 
         def do_star(self, star: int | None) -> None:
             if self.selected():

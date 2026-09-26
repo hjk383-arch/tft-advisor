@@ -70,6 +70,7 @@ class RecogSnapshot:
     kind: str = "recognized"
     message: str | None = None
     label: str | None = None          # 스크린샷 파일 이름 등(실시간이면 None)
+    ledger_ids: tuple[str, ...] | None = None   # 장부로만 알아 자리를 모르는 유닛 ID(루프가 줄 때만)
 
     @classmethod
     def from_update(cls, update: Any, prev: RecogSnapshot | None = None) -> RecogSnapshot | None:
@@ -88,7 +89,8 @@ class RecogSnapshot:
         return cls(state=getattr(update, "state", None), board_read=getattr(update, "board_read", None),
                    recog_ms=getattr(update, "recog_ms", None), at=getattr(update, "at", None),
                    groups=tuple(getattr(update, "recognized", ()) or ()), kind=kind,
-                   message=getattr(update, "message", None))
+                   message=getattr(update, "message", None),
+                   ledger_ids=getattr(update, "ledger_unplaced", None))
 
 
 # ---------------------------------------------------------------------------
@@ -385,8 +387,12 @@ def board_units(state: GameState, board_read: Any = None) -> list[UnitOnBoard]:
     return keep
 
 
-def ledger_unplaced(state: GameState, board_read: Any, names: NameBook) -> str | None:
-    """"장부 보유(자리 미상): 카밀 · 쉔". 판독이 있을 때만(판독이 없으면 "벤치 ?"/"자리 미상" 행으로 이미 보인다)."""
+def ledger_unplaced(state: GameState, board_read: Any, names: NameBook,
+                    ledger_ids: tuple[str, ...] | None = None) -> str | None:
+    """"장부 보유(자리 미상): 카밀 · 쉔". 판독이 있을 때만(판독이 없으면 "벤치 ?"/"자리 미상" 행으로 이미 보인다).
+
+    `ledger_ids`(루프가 준 마지막 병합의 장부 자리 미상 유닛)가 있으면 그 유닛만 "장부"라고 쓰고, 나머지 자리 없는 이름
+    (vision 집합 풀이 등)은 "화면 확인(자리 미상)"으로 따로 쓴다 — 장부가 아닌 이름을 장부라고 하지 않는다(37 보고)."""
     if board_read is None:
         return None
     vision_loose = set(getattr(board_read, "unplaced", ()) or ())
@@ -394,8 +400,25 @@ def ledger_unplaced(state: GameState, board_read: Any, names: NameBook) -> str |
     loose += [u for u in state.bench or [] if u.bench_slot is None and u.id != UNKNOWN_UNIT_ID]
     if not loose:
         return None
-    text = " · ".join(names.name(u.id) + (f" ★{u.star}" if u.star and u.star > 1 else "") for u in loose)
-    return f"장부 보유(자리 미상): {text}"
+
+    def text(units) -> str:
+        return " · ".join(names.name(u.id) + (f" ★{u.star}" if u.star and u.star > 1 else "") for u in units)
+    if ledger_ids is None:
+        return f"장부 보유(자리 미상): {text(loose)}"
+    left = list(ledger_ids)
+    ledger, seen = [], []
+    for u in loose:
+        if u.id in left:
+            left.remove(u.id)
+            ledger.append(u)
+        else:
+            seen.append(u)
+    bits = []
+    if ledger:
+        bits.append(f"장부 보유(자리 미상): {text(ledger)}")
+    if seen:
+        bits.append(f"화면 확인(자리 미상): {text(seen)}")
+    return " / ".join(bits) or None
 
 
 def equipped_groups(state: GameState, board: list[UnitRow], bench: list[UnitRow] | None,
@@ -513,7 +536,7 @@ def build_view(snap: RecogSnapshot | None, names: NameBook, *, threshold: float 
     view.board = [unit_row(u, on_bench=False, state=state, names=names, board_read=read)
                   for u in sorted(board_units(state, read), key=_board_sort_key)]
     view.bench = bench_rows(state, names, read)
-    view.ledger_note = ledger_unplaced(state, read, names)
+    view.ledger_note = ledger_unplaced(state, read, names, snap.ledger_ids)
     if state.board is None and state.bench is None:
         view.board_note = ("유닛이 보이지 않습니다" if read is not None and not getattr(read, "count", 0)
                            else "읽지 못했습니다")

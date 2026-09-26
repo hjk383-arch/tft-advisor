@@ -87,6 +87,10 @@ def field_group() -> dict[str, str]:
 
 SESSION_VERSION = 1
 SESSION_MAX_AGE_S = 2 * 3600.0
+RESUME_MAX_GAP_S = 30 * 60.0
+"""마지막 프레임 뒤 이만큼 지난 세션은 이어받지 않는다(보관하고 새 세션). 판 사이에 앱을 다시 켜는 경우(37 보고)."""
+HP_JUMP = 10
+"""같은 판에서 체력은 늘지 않는다. 이만큼 이상 늘고 스테이지가 그대로거나 이르면 새 판 신호."""
 """이보다 오래된 `session.json`은 다른 판으로 보고 복원하지 않는다."""
 
 _ALL_MODES = frozenset(ScreenMode)
@@ -212,6 +216,7 @@ class SessionData:
     frames: int = 0
     recognitions: int = 0
     pinned_comp_id: str | None = None      # 사용자가 고정한 목표 덱(오버레이 클릭, 31 보고). 새 판에서 비워진다
+    hp: int | None = None                  # 마지막으로 읽은 체력(새 판 판단: 같은 판에서는 늘지 않는다)
     pinned_comp_name: str | None = None    # 표시용 이름(고정한 덱이 목표 덱 목록에서 빠져도 해제 버튼에 쓴다)
 
     def to_json(self) -> dict:
@@ -233,6 +238,7 @@ class SessionData:
             "units": self.units.to_json(),
             "frames": self.frames,
             "recognitions": self.recognitions,
+            "hp": self.hp,
             "pinned_comp_id": self.pinned_comp_id,
             "pinned_comp_name": self.pinned_comp_name,
         }
@@ -254,6 +260,7 @@ class SessionData:
             learned=[dict(x) for x in raw.get("learned") or [] if isinstance(x, dict)],
             frames=int(raw.get("frames") or 0),
             recognitions=int(raw.get("recognitions") or 0),
+            hp=_opt_int(raw.get("hp")),
             pinned_comp_id=str(raw["pinned_comp_id"]) if raw.get("pinned_comp_id") else None,
             pinned_comp_name=str(raw["pinned_comp_name"]) if raw.get("pinned_comp_name") else None,
         )
@@ -275,6 +282,10 @@ class SessionTracker:
         self.augments_rejected = 0
         """이번 판에 '늘기만 한다' 규칙에 걸려 버린 vision 보유 증강 판독 수(표시·로그용)."""
         self._aug_accepted = False
+        self.resume_gap_s = RESUME_MAX_GAP_S
+        self.inherited_stage: str | None = None
+        """이어받은 세션의 마지막 스테이지. 이어받은 뒤 처음 읽은 스테이지가 이보다 이르면 새 판이다(첫 관측 뒤 None)."""
+        self.inherited_hp: int | None = None
         self._now = clock or time.time
         self.data = SessionData()
         self.state: GameState | None = None      # 마지막으로 합친 GameState
@@ -318,7 +329,16 @@ class SessionTracker:
         if age > self.max_age_s:
             log.info("세션 파일이 오래됐습니다(%.0f분) → 새 세션", age / 60)
             return False
+        if age > self.resume_gap_s and (data.stage or data.units.total_copies()):
+            # 판 사이에 다시 켰다: 이어받지 않고 보관만 한다(다음 저장이 덮어쓰기 전에)
+            log.info("세션 마지막 기록이 %.0f분 전 → 이어받지 않고 보관합니다(새 세션)", age / 60)
+            self.data = data
+            self.last_archive = self.archive()
+            self.data = SessionData()
+            return False
         self.data = data
+        self.inherited_stage = data.stage
+        self.inherited_hp = data.hp
         return True
 
     def save(self) -> None:
@@ -347,6 +367,8 @@ class SessionTracker:
         self.last_archive = self.archive()
         self.data = SessionData()
         self.state = None
+        self.inherited_stage = None
+        self.inherited_hp = None
         self._prev_shop = None
         self.augments_rejected = 0
         self.purchases.reset()
@@ -387,12 +409,32 @@ class SessionTracker:
             return None
 
     def looks_like_new_game(self, state: GameState) -> bool:
-        """스테이지가 1-x로 되돌아갔다(세션은 2-1 이상) → 새 판 후보. 로딩 화면을 놓쳤을 때의 보조 신호.
+        """새 판 후보인가(`new_game_reason` 참고). 루프는 이것도 game_over와 같은 연속 확인을 거친다."""
+        return self.new_game_reason(state) is not None
 
-        OCR 오독일 수 있으므로 루프는 이것도 game_over와 같은 연속 확인을 거친다.
+    def new_game_reason(self, state: GameState) -> str | None:
+        """로딩·게임 종료 화면을 놓쳤을 때의 새 판 신호(사유 문구, 아니면 None). OCR 오독일 수 있어 루프가 연속 확인한다.
+
+        1. 스테이지가 1-x로 되돌아갔다(세션은 2-1 이상)
+        2. 스테이지 **단계**가 되돌아갔다(예 4-2 → 2-1). 같은 단계 안의 라운드 역행은 오독일 수 있어 보지 않는다
+        3. 이어받은 세션(앱 재시작)에서 처음 읽은 스테이지가 세션의 마지막 스테이지보다 이르다(판 사이에 다시 켰다, 37 보고)
+        4. 체력이 `HP_JUMP` 이상 늘었고 스테이지가 그대로거나 이르다(같은 판에서 체력은 늘지 않는다)
         """
         cur, known = stage_key(state.stage), stage_key(self.data.stage)
-        return cur is not None and known is not None and cur[0] == 1 and known >= (2, 1)
+        if cur is None or known is None:
+            return None
+        if cur[0] == 1 and known >= (2, 1):
+            return f"스테이지 {state.stage}로 되돌아감"
+        if cur[0] < known[0]:
+            return f"스테이지 {self.data.stage} → {state.stage}로 되돌아감"
+        inherited = stage_key(self.inherited_stage)
+        if inherited is not None and cur < inherited:
+            return f"이어받은 세션({self.inherited_stage})보다 이른 스테이지 {state.stage}"
+        hp, last = state.hp, self.data.hp
+        if (hp is not None and last is not None and hp >= last + HP_JUMP and cur <= known
+                and state.confidence_of("hp") >= 0.6):
+            return f"체력 {last} → {hp}(스테이지 {state.stage})"
+        return None
 
     def observe(self, recognized: GameState, groups: Collection[str], owned_row: Any = None,
                 board_read: Any = None) -> GameState:
@@ -408,6 +450,9 @@ class SessionTracker:
             self.last_events = []
             if merged.stage:
                 self.data.stage = merged.stage
+                self.inherited_stage = None   # 이어받은 뒤 첫 스테이지를 봤다(새 판이 아니었다)
+            if "players" in groups and recognized.hp is not None and recognized.confidence_of("hp") >= 0.6:
+                self.data.hp = recognized.hp
             self._track_shop(prev, merged)
             self._track_units(merged)
             self._track_augments(recognized, merged)

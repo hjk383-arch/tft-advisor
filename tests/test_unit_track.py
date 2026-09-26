@@ -214,13 +214,37 @@ def test_same_slot_moderately_similar_other_unit_is_not_kept():
     assert out.bench[0].unit_id is None
 
 
-def test_arena_change_resets_identities():
+def test_away_arena_freezes_tracking_and_home_resumes_without_wiping():
+    """35 §8(라이브): 원정 전투·관전으로 맵 서명이 바뀌어도 정체를 지우지 않는다. 다른 맵 프레임에서는 갱신도 이름도 없다."""
     tr = UnitTracker()
     read = BoardRead(bench=(UnitSlot(star=1, bench_slot=0, unit_id=C, name_source="duplicate", unit_conf=0.9),))
     tr.update(read, [], [LOOK["c"]], 0.0, arena="0a080a")
     plain = BoardRead(bench=(UnitSlot(star=1, bench_slot=0),))
     assert tr.update(plain, [], [LOOK["c"]], 1.0, arena="0b080a").bench[0].unit_id == C     # 같은 맵(밝기만 다름)
-    assert tr.update(plain, [], [LOOK["c"]], 2.0, arena="090809").bench[0].unit_id is None  # 다른 맵 = 새 판
+    away = BoardRead(bench=(UnitSlot(star=1, bench_slot=0), UnitSlot(star=1, bench_slot=4)))
+    out = tr.update(away, [], [LOOK["a"], LOOK["b"]], 2.0, arena="080806")                  # 다른 플레이어 맵
+    assert tr.frozen and all(u.unit_id is None for u in out.bench) and ("bench", 4) not in tr.slots
+    assert tr.update(plain, [], [LOOK["c"]], 30.0, arena="0a080a").bench[0].unit_id == C    # 돌아오면 그대로
+    assert not tr.frozen and tr.home_arena == "0a080a"
+    tr.reset()                                                                                 # 새 판은 루프가 비운다
+    assert tr.update(plain, [], [LOOK["c"]], 31.0, arena="0a080a").bench[0].unit_id is None
+
+
+def test_realistic_live_timing_names_the_bought_unit():
+    """실제 루프 시각(캡처 4fps · 변화 안정 2프레임 · 강제 다시 읽기 0.5초 · 장부 정산): 장부 구매 이벤트와 새 칸 판독이
+    1초 넘게 떨어져도(앞뒤 모두) 이름이 붙는다."""
+    for buy_at, seen_at in ((10.0, 11.25), (10.0, 12.0), (12.3, 10.5)):
+        tr = UnitTracker()
+        frame(tr, 9.0, bench=[(0, "a", 1)])
+        frame(tr, 9.75, bench=[(0, "a", 1)])
+        if buy_at <= seen_at:
+            tr.note_purchase(C, buy_at)
+            r, _ = frame(tr, seen_at, bench=[(0, "a", 1), (1, "c", 1)])
+        else:
+            frame(tr, seen_at, bench=[(0, "a", 1), (1, "c", 1)])
+            tr.note_purchase(C, buy_at)
+            r, _ = frame(tr, buy_at + 0.25, bench=[(0, "a", 1), (1, "c", 1)])
+        assert r[1][0] == C, (buy_at, seen_at)
 
 
 def test_pending_buy_takes_the_leftmost_slot_even_if_a_unit_vanished_in_the_same_frame():

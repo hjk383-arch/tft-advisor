@@ -155,3 +155,48 @@ QA 27 §2.3 F1: 끝난(또는 짝이 없는) 구매가 창(3초) 안의 벤치 �
 - `test_crop_quality_rejects_glow_and_selection_outline_and_flags_neighbour`, `test_collector_applies_quality_and_tactician_rules`
 - `test_crop_stage_uses_the_session_stage_and_drops_a_stale_frame_read`
 - 테스트용 단색 크롭 `img()`는 0.75배로 어둡게 했다(원색 255는 "강한 빛"에 걸린다).
+
+## 35+: 이름 미상 벤치 크롭 → 판 뒤 사람이 이름 주기 (2026-09-25, vision-engineer)
+
+사용자 결정: "벤치에 이름 미상이면 그때 스샷 찍어서 인식하도록 해" → AI/API 호출 없이, 이름 미상 벤치 유닛 크롭을 검토 대기에
+**이름 없이** 모으고, 판이 끝난 뒤 검토 창에서 이름을 주면 그 챔피언 승인 사진(라이브러리)이 된다.
+
+### 수집 (`vision/unit_db.py` `UnitCollector.observe_unknown`, `Recognizer._collect_unknown`)
+- 언제
+  - 준비 단계 · 체력바가 보이는 프레임(`bench_held` 아님) · 내 맵(`unit_tracker.frozen` 아님).
+  - 정체 추적 **뒤의 최종 판독**에서 이름 없는 벤치 칸이 연속 `UNKNOWN_MIN_FRAMES`(2) 프레임이면.
+  - 벤치만. 전략가 칸 · 품질 거부(강한 빛·청록 윤곽)는 뺀다. 품질 표시는 note로.
+- 어디
+  - `_pending/_unknown/unknown_{hash}.png + .json`: 챔피언 자리 = `UNKNOWN_CHAMPION`("_unknown"), 근거 `unknown`.
+  - 메타데이터: 세션 스테이지 · 배지 성급 · 맵 서명 · 칸 · 판 ID.
+  - 이름 판정·라이브러리에는 쓰지 않는다(`_`로 시작하는 폴더는 표본이 아니다).
+- 중복·상한
+  - 같은 판에서 같은 유닛(닮음 >= 0.70, 실측 다른 챔피언 최대 0.59)은 2장까지(처음 + 20초 뒤 한 장). 옮겨 다녀도 같은 유닛이다.
+  - 판마다 `unknown_cap`(20)장. `reset()`(새 판)에서 다시 센다.
+- 이름 후보(`CropMeta.suggestions`, 최대 8)
+  - 순서: 장부 보유인데 이름 붙은 칸이 없는 챔피언(`UnitNamer.hints`) > 특성 풀이 자리 미상(`BoardRead.unplaced`) > 이번 판 상점에 나온 챔피언.
+  - 같은 판에서 그 유닛(닮은 크롭)에 나중에 이름이 붙으면 그 이름을 후보 **맨 앞**에 달고 note를 남긴다.
+    승인하지는 않는다(`UnitImageDB.suggest`).
+- 적용 범위: `Coverage.unknown`, 요약 "… · 이름 미상 N장"(`review-units --coverage`·검토 창 머리줄).
+
+### 검토 창 (`app/unit_review.py`)
+- 챔피언 목록 맨 위에 "? 이름 미상 — N장". 있으면 창을 열 때 그것부터 보인다.
+- 사진을 고르면 후보 버튼 최대 5개("1 카르마" …)가 보인다. **이 목록에서는 숫자 키 1~5가 후보 고르기**다(다른 목록에서는 성급).
+  R(검색)도 된다.
+- 이름을 주면 그 챔피언 **승인** 폴더로 옮긴다(`UnitImageDB.label_unknown`, 근거 `user` "사용자 이름" — 사람의 이름이 확인이다).
+  이름 없이 승인(A)은 되지 않는다. 삭제(D)는 휴지통.
+
+### 실제 프레임 확인(임시 DB 사본, 사용자 폴더는 건드리지 않음)
+- live4를 3번 인식 → 벤치 5칸 모두 이름 미상 크롭 5장(★2 둘, ★1 셋, 스테이지 2-5).
+- 후보는 보드 자리 미상 알리스타·렉사이 + 상점 자야·어미 부리·코그모·심술두꺼비(보드에 이름이 붙은 오른은 빠짐).
+- 벤치 0은 "품질: 청록 윤곽"(마우스가 올라가 있던 칸), 벤치 1은 "머리 잘림" 표시.
+
+### 테스트
+- 새 `tests/test_unit_unknown.py` 6개:
+  - 2프레임 뒤 저장 + 후보 순서 + 라이브러리 밖 + 적용 범위
+  - 이름 있음/끊김은 저장 안 함
+  - 유닛당 2장 · 20초 · 판 상한 · reset
+  - 품질·전략가
+  - 나중 이름이 첫 후보
+  - 검토 창(offscreen): 이름 미상 목록 먼저, 후보 버튼, 이름 없이 승인 불가, 숫자 키 2 → 승인 폴더 · 근거 user · 라이브러리에 들어감, R → 다른 챔피언
+- 전체: 알려진 Windows 4건뿐(다른 에이전트가 장부를 고치는 중인 실행 제외, §35-8 참고).

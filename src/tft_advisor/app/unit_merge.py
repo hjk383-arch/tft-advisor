@@ -195,6 +195,7 @@ class MergeResult:
     source: FieldSource = FieldSource.TRACKED
     known: int = 0          # 정체를 아는 유닛 수
     unplaced: int = 0       # 그중 장부로만 알아 자리를 모르는 유닛 수(칸에 이름을 붙이지 않았다)
+    unplaced_ids: list[str] = field(default_factory=list)   # 그 유닛들의 챔피언 ID(인식 확인 창 "장부 보유(자리 미상)")
     unknown: int = 0        # vision은 보지만 정체를 모르는 유닛 수
     dropped: int = 0        # 장부에는 있으나 vision이 보지 못해 뺀 유닛 수
     star_conflicts: int = 0  # 장부의 성급과 vision의 성급이 다른 칸 수(vision을 따른다)
@@ -349,6 +350,7 @@ def merge_units(ledger: UnitLedger, obs: BoardObs | None, *, level: int | None =
                                confidence=body.confidence)
             if body.source != "vision":
                 result.unplaced += 1
+                result.unplaced_ids.append(body.champion_id)
         else:
             unit = _unit(body, slot, star_conflicts=conflicts)
         (result.bench if on_bench else result.board).append(unit)

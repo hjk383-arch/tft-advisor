@@ -65,6 +65,8 @@ class LoopUpdate:
     """마지막 vision 보드 판독(`Recognizer.last_board_read`, 이번 프레임에 못 읽었으면 직전 것). 인식 확인 창용."""
     recog_ms: float | None = None
     """이번 프레임 인식에 걸린 시간(ms). 인식이 없었던 갱신(추천 결과 등)은 None."""
+    ledger_unplaced: tuple[str, ...] | None = None
+    """장부로만 알아 자리를 모르는 유닛 ID(마지막 보드 병합). 인식 확인 창이 "장부 보유"와 화면 이름을 가른다(37 보고)."""
 
 
 # ---------------------------------------------------------------------------
@@ -496,7 +498,9 @@ class LiveLoop:
         if mode in RESET_MODES:
             reason = f"화면 {mode.value}"
         elif self.tracker.looks_like_new_game(state):
-            reason = f"스테이지 {state.stage}로 되돌아감"
+            # 사유: 스테이지 역행 · 이어받은 세션보다 이른 스테이지 · 체력 증가(37 보고). 구버전 tracker는 예전 문구
+            why = getattr(self.tracker, "new_game_reason", None)
+            reason = (why(state) if why is not None else None) or f"스테이지 {state.stage}로 되돌아감"
         if reason is not None:
             if self._reset_confirmed(state, reason, now):
                 return self._do_reset(state, groups, reason)
@@ -632,6 +636,9 @@ class LiveLoop:
                 update.board_read = self.last_board_read
             if update.recog_ms is None:
                 update.recog_ms = self.last_recog_ms
+            if update.ledger_unplaced is None:
+                merge = getattr(self.tracker, "last_merge", None)
+                update.ledger_unplaced = tuple(getattr(merge, "unplaced_ids", None) or ())
         try:
             self.on_update(update)
         except Exception:

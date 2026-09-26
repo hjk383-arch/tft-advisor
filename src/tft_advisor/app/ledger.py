@@ -22,6 +22,17 @@ vision은 보드의 3D 모델에서 챔피언을 식별하지 못한다(위치·
   유닛의 판매가와 **유일하게** 맞을 때만 장부에서 뺀다. 여럿이 맞으면 애매한 것으로 둔다
   (라운드가 바뀌면 이자·연승 수입이 들어오므로 아예 보지 않는다).
 
+- **장부와 무관한 골드 변화는 애매로 세지 않는다**(37 보고, live 5: 10분에 "설명되지 않는 변화" 10번). 창이 끝날 때:
+  - 골드가 **늘었고** 미결 칸이 없다: 보드+벤치 유닛 수가 줄지 않았거나(둘 다 읽었을 때) · 라운드 전환 직후거나 ·
+    늘어난 양이 장부 유닛의 판매가 어느 것과도 맞지 않으면 → 수입(라운드 수입·PvE 구슬·특성/증강 골드, `income`).
+    유닛이 줄었거나 판매가가 맞는 유닛이 있는데 누구인지 모르면 → 애매(판매일 수 있다).
+  - 골드가 줄었다: 미결 칸 코스트 합을 빼고 남은 양이 경험치(4의 배수, 경험치 막대가 늘었거나 막대를 못 읽음) +
+    리롤 2(상점이 바뀌었거나 그동안 상점을 못 읽음)로 설명되면 → 구매 확정 + `xp`/`reroll`.
+    미결 칸 없이 4의 배수만큼 줄면 경험치 막대를 `XP_WAIT_S`까지 기다린다.
+  - 라운드가 바뀐 프레임에 골드를 못 읽었으면 골드 기준을 비운다(다음에 읽은 값이 새 기준, 수입을 오해하지 않게).
+    라운드가 바뀐 뒤 `INCOME_WINDOW_S` 안에 늘어난 골드도 수입이다.
+  - 홀수만큼 줄었는데 사라진 칸이 없다(보지 못한 구매) · 유닛이 줄면서 골드가 늘었는데 판매가가 유일하게 맞지 않는다 → 여전히 애매.
+
 장부(`UnitLedger`)는 챔피언 → **1성 등가 사본 수**를 센다(3사본 = 2성, 9사본 = 3성).
 상점 밖에서 얻는 유닛(공동 선택, 증강, 모루/구슬)은 상점 이벤트가 없으므로 `add()`로 직접 넣는다.
 """
@@ -41,9 +52,15 @@ STAR_COPIES: dict[int, int] = {1: 1, 2: 3, 3: 9, 4: 27}
 
 REROLL_COST = 2
 XP_COST = 4
+XP_WAIT_S = 6.0
+"""미결 칸 없이 4의 배수만큼 줄면(경험치 구매로 보임) 경험치 막대가 따라 바뀌기를 이만큼 기다린다."""
 XP_AMOUNT = 4
 SHOP_SLOTS = 5
 REPLACE_MIN_SLOTS = 3
+INCOME_WINDOW_S = 8.0
+"""라운드(스테이지 글자)가 바뀐 뒤 이 시간 안에 늘어난 골드는 라운드 수입으로 본다(골드 글자가 늦게 바뀌어 읽힌다)."""
+MAX_REROLL_XP_GOLD = 40
+"""미결 칸 없이 짝수만큼 줄어든 골드를 리롤·경험치로 볼 상한(더 크면 OCR 오독일 가능성이 커 애매로 둔다)."""
 """이만큼의 칸이 한꺼번에 다른 유닛으로 바뀌면 상점 새로고침(리롤·라운드 전환)으로 본다."""
 SLOT_ONLY_CONFIDENCE = 0.6
 """골드를 못 읽어 칸 변화만으로 넣은 구매의 신뢰도."""
@@ -61,7 +78,7 @@ SOURCE_LABELS = {
 }
 """장부에 들어온 경로(사용자 표시용)."""
 
-EventKind = Literal["buy", "sell", "add", "remove", "set", "reroll", "xp", "ambiguous", "noise", "clear"]
+EventKind = Literal["buy", "sell", "add", "remove", "set", "reroll", "xp", "income", "ambiguous", "noise", "clear"]
 
 
 def bodies_for(copies: int) -> list[int]:
@@ -362,6 +379,8 @@ class FrameObs:
     xp: tuple[int, int] | None = None
     gold: int | None = None
     shop: tuple[SlotKey, ...] | None = None
+    units: int | None = None
+    """보드+벤치 유닛 수(둘 다 읽었을 때). 골드가 늘 때 판매(유닛 감소)와 수입을 가른다."""
 
     @classmethod
     def of(cls, state: GameState, at: float, costs: CostBook) -> FrameObs:
@@ -377,8 +396,11 @@ class FrameObs:
                     cost = slot.cost if slot.cost is not None else costs.cost(slot.id)
                     keys.append(SlotKey(str(slot.kind.value), slot.id, cost))
             shop = tuple(keys)
+        units = None
+        if state.board is not None and state.bench is not None:
+            units = len(state.board) + len(state.bench)
         return cls(at=at, mode=state.screen_mode, stage=state.stage, level=state.level,
-                   xp=tuple(state.xp) if state.xp else None, gold=state.gold, shop=shop)
+                   xp=tuple(state.xp) if state.xp else None, gold=state.gold, shop=shop, units=units)
 
 
 @dataclass
@@ -456,11 +478,16 @@ class PurchaseTracker:
         경험치 구매를 못 알아본다(30 보고: "미결 0칸, 골드 4"가 설명되지 않는 변화로 남았다)."""
         self._pending: list[_Pending] = []
         self._open_at: float | None = None
+        self._anchor_units: int | None = None
+        self._shop_gap = False                     # 기준 이후 상점을 못 읽은 프레임이 있었다(리롤을 놓쳤을 수 있다)
+        self._income_until: float | None = None   # 라운드 전환 뒤 수입으로 볼 시각
         self.buys = 0
         self.sales = 0
         self.rerolls = 0
         self.xp_buys = 0
         self.noise = 0
+        self.income = 0          # 수입으로 본 골드 증가(애매로 세지 않음)
+        self.reroll_xp = 0       # 리롤·경험치로 본 골드 감소(칸 증거 없음)
 
     # ------------------------------------------------------------------
     def observe(self, obs: FrameObs, ledger: UnitLedger) -> list[LedgerEvent]:
@@ -468,6 +495,8 @@ class PurchaseTracker:
         if not self.cfg.enabled:
             return []
         prev_shop, self._shop = self._shop, obs.shop
+        if obs.shop is None:
+            self._shop_gap = True
         stage_changed = bool(obs.stage and self._stage and obs.stage != self._stage)
         level_up = self._level is not None and obs.level is not None and obs.level > self._level
         xp_up = bool(self._xp and obs.xp and obs.xp[0] > self._xp[0]) or level_up or self._xp_up_since_anchor(obs)
@@ -523,6 +552,14 @@ class PurchaseTracker:
         moved = obs.gold is not None and obs.gold != self._anchor_gold
         if obs.gold is not None:
             self._anchor_gold = obs.gold
+        elif stage_changed:
+            # 라운드가 바뀌었는데 골드를 못 읽었다: 예전 기준과 비교하면 라운드 수입이 "설명되지 않는 변화"가 된다
+            self._anchor_gold = None
+        if stage_changed:
+            self._income_until = obs.at + INCOME_WINDOW_S
+        if obs.units is not None:
+            self._anchor_units = obs.units
+        self._shop_gap = False
         self._remember(obs)
         # 경험치 기준은 골드 기준이 **움직일 때만** 옮긴다: 골드가 그대로인 프레임에서 옮기면 막대가 먼저 바뀐 경우를 놓친다
         if moved or stage_changed or self._anchor_xp is None:
@@ -546,10 +583,16 @@ class PurchaseTracker:
         if events is not None:
             self._anchor(obs)
             return events
-        expired = force or (self._open_at is not None and obs.at - self._open_at > self.cfg.settle_s)
+        waited = obs.at - self._open_at if self._open_at is not None else 0.0
+        limit = self.cfg.settle_s
+        rest = _even_rest(spent, self._pending) if spent is not None else None
+        if rest is not None and rest > 0 and rest % XP_COST == 0:
+            limit = max(limit, XP_WAIT_S)   # 경험치 막대가 골드보다 늦게 읽힐 수 있다 → 조금 더 기다린다
+        expired = force or (self._open_at is not None and waited > limit)
         if not expired:
             return []
-        return self._expire(obs, "골드 변화가 맞지 않습니다", spent=spent)
+        xp_ok = xp_up or obs.xp is None or self._anchor_xp is None
+        return self._expire(obs, "골드 변화가 맞지 않습니다", spent=spent, ledger=ledger, reroll=reroll, xp_ok=xp_ok)
 
     def _explain(self, obs: FrameObs, ledger: UnitLedger, spent: int | None, stage_changed: bool,
                  xp_up: bool, reroll: bool) -> list[LedgerEvent] | None:
@@ -583,7 +626,10 @@ class PurchaseTracker:
                 out.append(LedgerEvent(kind="xp", gold=-XP_COST, evidence="gold", at=obs.at, stage=obs.stage))
             return out
         if rest < 0 and not pending and self.cfg.track_sales:
-            # 미결 구매가 있으면 판매로 보지 않는다(골드가 아직 안 읽힌 구매를 판매로 오인할 수 있다)
+            # 미결 구매가 있으면 판매로 보지 않는다(골드가 아직 안 읽힌 구매를 판매로 오인할 수 있다).
+            # 보드+벤치 유닛 수를 아는데 줄지 않았으면 아직 판매로 보지 않는다(구슬·특성 골드일 수 있다, 37 보고) — 창 끝에 다시 본다
+            if self._anchor_units is not None and obs.units is not None and obs.units >= self._anchor_units:
+                return None
             sold = self._match_sale(-rest, ledger)
             if sold is not None:
                 out = self._commit(obs, pending, "gold", spent)
@@ -592,6 +638,56 @@ class PurchaseTracker:
                 out.append(LedgerEvent(kind="sell", unit_id=cid, copies=copies, gold=-rest, evidence="gold",
                                        note=f"{star}성 판매", at=obs.at, stage=obs.stage))
                 return out
+        return None
+
+    def _explain_loose(self, obs: FrameObs, pending: list[_Pending], spent: int | None,
+                       units_before: int | None, *, ledger: UnitLedger | None = None, reroll: bool = False,
+                       xp_ok: bool = False) -> list[LedgerEvent] | None:
+        """창이 끝날 때(정확한 수식이 맞지 않았다) 장부와 무관한 골드 변화를 가려낸다(37 보고).
+        반환: 이벤트 목록(애매 아님) 또는 None(여전히 애매 — 장부가 틀렸을 수 있다)."""
+        if spent is None:
+            return None
+        if not pending and spent < 0:
+            gained = -spent
+            known = units_before is not None and obs.units is not None
+            if known and obs.units < units_before:
+                # 유닛이 줄었다 = 판매. 판매가가 유일하게 맞으면 뺀다, 아니면 누구인지 모른다(애매)
+                sold = self._match_sale(gained, ledger) if ledger is not None and self.cfg.track_sales else None
+                if sold is None:
+                    return None
+                cid, star, copies = sold
+                self.sales += 1
+                return [LedgerEvent(kind="sell", unit_id=cid, copies=copies, gold=gained, evidence="gold",
+                                    note=f"{star}성 판매", at=obs.at, stage=obs.stage)]
+            window = self._income_until is not None and obs.at <= self._income_until
+            could_sell = ledger is not None and any(
+                sell_value(self.costs.cost(b.champion_id), b.star) == gained for b in ledger.bodies(self.costs))
+            if known or window or not could_sell:
+                # 유닛이 그대로 · 라운드 수입 시간 · 장부 유닛 판매가와 안 맞는다 → 장부와 무관한 수입
+                self.income += 1
+                why = "라운드 수입" if window else "수입(구슬·특성·증강 골드)"
+                return [LedgerEvent(kind="income", gold=gained, evidence="gold", note=why, at=obs.at, stage=obs.stage)]
+            return None
+        if spent <= 0:
+            return None
+        rest = _even_rest(spent, pending)
+        if rest is None or rest < 0 or rest > MAX_REROLL_XP_GOLD:
+            return None
+        for r in ((0, REROLL_COST) if reroll else (0,)):
+            left = rest - r
+            if left < 0 or left % XP_COST or (left and not xp_ok):
+                continue
+            out = self._commit(obs, pending, "gold", spent) if pending else []
+            if r:
+                self.rerolls += 1
+                out.append(LedgerEvent(kind="reroll", gold=-r, evidence="gold", note="리롤(상점 변화 못 봄)",
+                                       at=obs.at, stage=obs.stage))
+            for _ in range(left // XP_COST):
+                self.xp_buys += 1
+                out.append(LedgerEvent(kind="xp", gold=-XP_COST, evidence="gold", note="경험치(늦게 확인)",
+                                       at=obs.at, stage=obs.stage))
+            self.reroll_xp += 1
+            return out
         return None
 
     def _match_sale(self, gained: int, ledger: UnitLedger) -> tuple[str, int, int] | None:
@@ -625,10 +721,13 @@ class PurchaseTracker:
             return None
         return self._commit(obs, champs, "slot", None)
 
-    def _expire(self, obs: FrameObs, why: str, *, spent: int | None = None) -> list[LedgerEvent]:
+    def _expire(self, obs: FrameObs, why: str, *, spent: int | None = None, ledger: UnitLedger | None = None,
+                reroll: bool = False, xp_ok: bool = False) -> list[LedgerEvent]:
         """창이 끝났는데 설명이 안 된다 → 칸 증거만으로 되는 것만 넣고, 나머지는 애매로 남긴다."""
         pending, self._pending = self._pending, []
         self._open_at = None
+        units_before = self._anchor_units
+        shop_gap = self._shop_gap
         # 설명하지 못한 변화는 한 번만 알린다: 골드 기준을 지금 값으로 옮긴다. 옮기지 않으면 같은 차이가 settle_s마다
         # 다시 "설명되지 않는 변화"가 되어 ambiguous가 끝없이 쌓이고(세션 기록: 같은 "골드 12"가 10번), 그 뒤의 구매·판매도
         # 낡은 기준과 비교되어 모두 어긋난다(경험치 구매 하나를 놓치면 다음 수입이 "골드 -4"로 남는다).
@@ -639,10 +738,24 @@ class PurchaseTracker:
             out = self._slot_only(obs, pending)
             if out is not None:
                 return out
+        explained = self._explain_loose(obs, pending, spent, units_before, ledger=ledger,
+                                        reroll=reroll or shop_gap, xp_ok=xp_ok)
+        if explained is not None:
+            return explained
         note = f"{why} (미결 {len(pending)}칸, 골드 {spent if spent is not None else '?'})"
         log.info("장부: 설명되지 않는 변화 — %s", note)
         return [LedgerEvent(kind="ambiguous", copies=len(pending), gold=spent, evidence="none",
                             note=note, at=obs.at, stage=obs.stage)]
+
+
+def _even_rest(spent: int, pending: list[_Pending]) -> int | None:
+    """쓴 골드 − 미결 칸 코스트 합. 코스트를 모르는 칸이 있으면 None."""
+    need = 0
+    for p in pending:
+        if p.key.cost is None:
+            return None
+        need += p.key.cost
+    return spent - need
 
 
 __all__ = [

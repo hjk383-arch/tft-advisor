@@ -821,6 +821,7 @@ class UnitNamer:
     _session: int = 0
     _base: int = 0
     last_descs: tuple = ((), ())
+    last_bench_crops: list = field(default_factory=list)
     """마지막 `name()`의 (보드, 벤치) 모델 기술자 — 판독 칸 순서 그대로."""
     _streak: dict[tuple, tuple[str, int]] = field(default_factory=dict)
     _reload_requested: bool = False
@@ -862,9 +863,11 @@ class UnitNamer:
             self._reload_requested = False
             self.reload()
         self.last_descs = ([], [])
+        self.last_bench_crops = []
         if read.count == 0:
             return read
         bc, nc = self.crops(image, m, read.board), self.crops(image, m, read.bench)
+        self.last_bench_crops = nc       # 이름 미상 벤치 크롭 수집(`UnitCollector.observe_unknown`)
         bd, nd = [descriptor(c) for c in bc], [descriptor(c) for c in nc]
         self.last_descs = (bd, nd)       # 정체 추적기(`vision.unit_track`)가 같은 순서로 쓴다
         emblems = [i for u in read.board for i in u.items]

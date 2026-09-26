@@ -380,6 +380,7 @@ class Recognizer:
             self._read_augments_owned(image, m, P, stage, out)
         if reads("board"):
             read = self.board_reader.read(image, m, P)
+            unit_ctx = None
             if self.unit_namer is not None and read.count:
                 if panel is None and read.board:
                     panel = self.cached_trait_panel(image, m, P)
@@ -388,7 +389,8 @@ class Recognizer:
                 odds = out.values.get("shop_odds")
                 if odds is not None:
                     self._last_shop_odds = list(odds)
-                read = self.unit_namer.name(image, m, read, tp, ctx=self._unit_ctx(image, m, out, captured_at),
+                unit_ctx = self._unit_ctx(image, m, out, captured_at)
+                read = self.unit_namer.name(image, m, read, tp, ctx=unit_ctx,
                                             shop_odds=odds if odds is not None else self._last_shop_odds)
             # 벤치 체력바가 사라진 프레임(준비 끝·전환): 벤치를 비우지 않고 칸 그림 + 직전 판독으로 채운다(30 보고)
             read = self.bench_memory.apply(image, m, P, read)
@@ -400,6 +402,7 @@ class Recognizer:
                     captured_at.timestamp() if captured_at is not None else time.time(),
                     shop=self._shop_key(out), active=mode == ScreenMode.PLANNING,
                     arena=arena_signature(image, m.box))
+                self._collect_unknown(read, unit_ctx, mode)
             self.last_board_read = read
 
         values = dict(out.values)
@@ -412,6 +415,21 @@ class Recognizer:
             source_image=source_image,
             frame_size=(image.shape[1], image.shape[0]),
         )
+
+    def _collect_unknown(self, read: BoardRead, ctx: Any, mode: ScreenMode) -> None:
+        """이름 미상 벤치 크롭을 검토 대기(`_pending/_unknown/`)로(사용자가 판 뒤에 이름을 준다). 준비 단계 · 체력바가 보이는
+        프레임만(`read.bench`가 이름 판정의 크롭과 같은 순서일 때)."""
+        namer = self.unit_namer
+        col = getattr(namer, "collector", None) if namer is not None else None
+        if col is None or ctx is None or mode != ScreenMode.PLANNING or read.bench_held or self.unit_tracker.frozen:
+            return                                         # frozen = 내 맵이 아님(다른 플레이어 벤치일 수 있다)
+        crops = list(getattr(namer, "last_bench_crops", []) or [])
+        if len(crops) != len(read.bench):
+            return
+        try:
+            col.observe_unknown(ctx, read, crops, owned=sorted(namer.hints), unplaced=read.unplaced)
+        except Exception:                                  # 수집 실패가 인식을 멈추게 하지 않는다
+            log.exception("이름 미상 크롭 수집 실패")
 
     @staticmethod
     def _shop_key(out: _Out) -> tuple | None:
