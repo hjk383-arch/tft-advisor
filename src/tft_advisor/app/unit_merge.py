@@ -9,8 +9,16 @@
 
 병합 규칙
 1. vision이 칸마다 `unit_id`까지 줄 수 있으면 그 값이 이긴다(직접 본 것이다).
-2. 나머지 칸에는 장부의 유닛을 **성급이 맞는 것부터** 배정한다. 같은 성급 안에서는
-   (성급↓, 코스트↓, ID) 순서로 결정적으로 배정한다 — 보드 칸이 벤치보다 먼저다(보통 센 유닛을 올린다).
+2. 장부는 **어떤 챔피언을 가졌는지**는 알지만 **어느 칸에 있는지**는 모른다(31 보고 §9, live3: 벤치 2번의 수염 난
+   덩치에 "카밀(장부)"이 붙고 진짜 카밀은 벤치 3번이었다). 그래서 이름 없는 칸에 장부 이름을 **유일하게 정해질 때만** 붙인다:
+   - 남은 칸 수 = 남은 장부 유닛 수이고 장부 유닛이 전부 같은 챔피언(1칸·1기 포함)
+   - vision ★s(s ≥ 2) 칸 수 = 장부에서 ★s인 유닛 수이고 그 유닛들이 한 챔피언뿐(★2가 될 수 있는 챔피언이 하나)
+   - ★1도 같은 조건이되, 남은 칸의 성급을 전부 읽었을 때만
+   붙인 뒤 남은 칸으로 다시 확인한다(하나를 정하면 나머지가 정해질 수 있다).
+   정해지지 않은 장부 유닛은 **자리 미상**(`hex`/`bench_slot` None, 칸의 성급·아이템을 붙이지 않음)으로 내보내고,
+   그 수만큼 이름 없는 칸이 목록에서 빠진다(개수는 vision과 같다). 보드/벤치 쪽은 칸 순서(보드 먼저)로 나눈다 —
+   이름 없는 칸이 한쪽에만 있으면 정확하고, 양쪽에 있으면 추정이다. 인식 확인 창은 판독의 빈 자리를 "이름 미상"으로,
+   자리 미상 장부 유닛을 "장부 보유(자리 미상): …" 한 줄로 보여 준다.
 3. **개수가 다르면 vision을 믿는다.** vision이 9기를 보는데 장부가 7기면 남는 2칸은
    `UNKNOWN_UNIT_ID`(정체 미상)로 두고, 신뢰도를 낮춰 advisor가 세지 않게 한다.
    장부가 더 많으면 남는 유닛은 내보내지 않는다(팔았거나 잘못 추적한 것이다).
@@ -186,6 +194,7 @@ class MergeResult:
     confidence: float = 0.0
     source: FieldSource = FieldSource.TRACKED
     known: int = 0          # 정체를 아는 유닛 수
+    unplaced: int = 0       # 그중 장부로만 알아 자리를 모르는 유닛 수(칸에 이름을 붙이지 않았다)
     unknown: int = 0        # vision은 보지만 정체를 모르는 유닛 수
     dropped: int = 0        # 장부에는 있으나 vision이 보지 못해 뺀 유닛 수
     star_conflicts: int = 0  # 장부의 성급과 vision의 성급이 다른 칸 수(vision을 따른다)
@@ -201,6 +210,8 @@ class MergeResult:
         bits = []
         if self.unknown:
             bits.append(f"이름 미상 {self.unknown}기")
+        if self.unplaced:
+            bits.append(f"장부 보유 자리 미상 {self.unplaced}기")
         if self.dropped:
             bits.append(f"화면에 없어 뺀 유닛 {self.dropped}기")
         if self.star_conflicts:
@@ -226,24 +237,45 @@ def _unit(body: Body | None, slot: SlotObs | None, *, star_conflicts: list[int])
     )
 
 
-def _assign(bodies: list[Body], slots: list[SlotObs]) -> list[tuple[SlotObs, Body | None]]:
-    """칸 ← 유닛 배정. 성급이 맞는 것부터, 그다음 남은 순서대로."""
+def _assign(bodies: list[Body], slots: list[SlotObs]) -> list[tuple[SlotObs, Body | None, bool]]:
+    """칸 ← 장부 유닛. 반환 (칸, 유닛, 자리 확정). 자리가 **유일하게 정해질 때만** 확정(True)이고,
+    나머지 장부 유닛은 남은 칸 순서대로 짝지어 자리 미상(False)으로 둔다(개수·보드/벤치 쪽만 맞춘다). 규칙은 모듈 docstring 2."""
     left = list(bodies)
-    out: list[tuple[SlotObs, Body | None]] = []
-    taken: dict[int, Body] = {}
+    free = list(range(len(slots)))
+    placed: dict[int, Body] = {}
+
+    def take(idx: list[int], group: list[Body]) -> None:
+        for i, body in zip(idx, group, strict=True):
+            placed[i] = body
+            free.remove(i)
+            left.remove(body)
+
+    progress = True
+    while progress and left and free:
+        progress = False
+        if len({b.champion_id for b in left}) == 1 and len(left) == len(free):
+            take(list(free), list(left))
+            break
+        all_stars = all(slots[i].star is not None for i in free)
+        for star in sorted({slots[i].star for i in free if slots[i].star}, reverse=True):
+            idx = [i for i in free if slots[i].star == star]
+            group = [b for b in left if b.star == star]
+            if not group or len(group) != len(idx) or len({b.champion_id for b in group}) != 1:
+                continue
+            if star < 2 and not all_stars:
+                continue
+            take(idx, group)
+            progress = True
+            break
+    out: list[tuple[SlotObs, Body | None, bool]] = []
+    rest = list(left)
     for i, slot in enumerate(slots):
-        if slot.star is None:
-            continue
-        for body in left:
-            if body.star == slot.star:
-                taken[i] = body
-                left.remove(body)
-                break
-    for i, slot in enumerate(slots):
-        body = taken.get(i)
-        if body is None and left:
-            body = left.pop(0)
-        out.append((slot, body))
+        if i in placed:
+            out.append((slot, placed[i], True))
+        elif rest:
+            out.append((slot, rest.pop(0), False))
+        else:
+            out.append((slot, None, False))
     return out
 
 
@@ -299,18 +331,23 @@ def merge_units(ledger: UnitLedger, obs: BoardObs | None, *, level: int | None =
     pairs = _assign(left, [slots[i][1] for i in free_idx])
     conflicts = []
     assigned: dict[int, Body | None] = dict(fixed)
-    used = 0
-    for idx, (_, body) in zip(free_idx, pairs, strict=False):
+    for idx, (_, body, sure) in zip(free_idx, pairs, strict=False):
         assigned[idx] = body
-        used += 1 if body is not None else 0
+        if body is not None and not sure:
+            unplaced_idx.add(idx)
 
     vision_known = ledger_known = 0
     for i, (on_bench, slot) in enumerate(slots):
         body = assigned.get(i)
         if i in unplaced_idx and body is not None:
-            # 자리 미상: 칸 정보(자리·아이템)를 붙이지 않는다 — 어느 칸의 아이템인지 모른다
-            unit = UnitOnBoard(id=body.champion_id, star=slot.star, hex=None, bench_slot=None,
+            # 자리 미상: 칸 정보(자리·아이템)를 붙이지 않는다 — 어느 칸의 아이템인지 모른다.
+            # vision 집합 풀이(보드 unplaced)는 이름 없는 보드 칸 전부의 성급이 같을 때 그 성급을, 아니면 장부 성급을
+            # 이미 body에 담았다. 짝지어진 칸의 성급은 쓰지 않는다 — 짝짓기는 정렬 순서일 뿐이다(QA 32 F1).
+            star = body.star
+            unit = UnitOnBoard(id=body.champion_id, star=star, hex=None, bench_slot=None,
                                confidence=body.confidence)
+            if body.source != "vision":
+                result.unplaced += 1
         else:
             unit = _unit(body, slot, star_conflicts=conflicts)
         (result.bench if on_bench else result.board).append(unit)

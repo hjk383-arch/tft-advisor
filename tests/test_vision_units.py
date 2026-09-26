@@ -115,10 +115,42 @@ def test_single_champion_board_is_forced_only_for_one_slot():
 
 
 def test_every_champion_in_the_set_is_used_at_least_once():
-    # 칸 1이 a와 더 닮았어도 b가 한 번은 나와야 한다
-    S = np.array([[0.9, 0.1], [0.8, 0.5]])
+    # 칸 1이 a와 조금 더 닮았어도, 칸 0이 a를 **확실히** 가지면(0.9 vs 0.5) b가 한 번은 나와야 한다
+    S = np.array([[0.9, 0.1], [0.5, 0.45]])
     _, names = U._place_board(S, ["a", "b"], 1.0)
     assert [n.unit_id for n in names] == ["a", "b"]
+
+
+def test_contradicted_swap_leaves_both_slots_unknown():
+    # 30 보고(라이브 3 2-2): 두 칸 모두 a(아칼리)를 더 닮았고 차가 작다 → "어느 쪽이 a를 더 닮았나"로 가르지 않는다
+    for S in (np.array([[0.563, 0.299], [0.454, 0.271]]),     # 실측 닮음(아칼리, 바루스)
+              np.array([[0.9, 0.1], [0.8, 0.5]]),             # 옛 테스트: 칸 1이 a를 0.3 더 닮음
+              np.array([[0.563, 0.0], [0.454, 0.0]])):        # b 표본 없음 + 소거법이어도 같다
+        _, names = U._place_board(S, ["a", "b"], 1.0)
+        assert [n.unit_id for n in names] == [None, None], S
+    # 칸마다 자기 챔피언을 더 닮았으면 그대로 이름
+    _, names = U._place_board(np.array([[0.56, 0.30], [0.27, 0.45]]), ["a", "b"], 1.0)
+    assert [n.unit_id for n in names] == ["a", "b"]
+
+
+def test_contradicted_swap_goes_to_unplaced(static, table):
+    """집합은 확실(풀이 1개)하지만 두 칸이 어긋나면 이름 대신 unplaced(자리 미상)로 나간다."""
+    rng = np.random.default_rng(7)
+    shape = U.descriptor(np.zeros((112, 112, 3), np.uint8)).shape
+    d = [rng.random(shape).astype(np.float32) for _ in range(2)]
+    lib = U.UnitLibrary()
+    orig = U.UnitLibrary.scores
+    table_scores = [{"DA_18_Akali_AD": 0.563, "DA_18_Varus": 0.299}, {"DA_18_Akali_AD": 0.454, "DA_18_Varus": 0.271}]
+    it = iter(table_scores)
+    try:
+        U.UnitLibrary.scores = lambda self, desc, extra=(): dict(next(it)) if not extra else orig(self, desc, extra)
+        panel = U.TraitPanel({"DA_18_Inferno": 2, "DA_18_Adaptor": 1, "DA_18_Slayer": 1, "DA_18_Rapidfire": 1})
+        res = U.name_units(d, [], lib, panel, table)
+    finally:
+        U.UnitLibrary.scores = orig
+    assert res.board_set == frozenset({"DA_18_Akali_AD", "DA_18_Varus"})
+    assert [b.unit_id for b in res.board] == [None, None]
+    assert sorted(res.unplaced) == ["DA_18_Akali_AD", "DA_18_Varus"]
 
 
 def test_name_units_board_set_known_but_unplaced_without_library(static, table):
@@ -285,8 +317,11 @@ def _heldout_pairs(static):
     from tft_advisor.fixtures import load_expected
     from tft_advisor.vision.recognizer import Recognizer
 
+    from tft_advisor.vision.unit_db import arena_signature
+
     rec = Recognizer(static=static, unit_template_dir=Path("/nonexistent"))
     pairs = []
+    arenas = set()
     for name in HELDOUT_TRAIN:
         img = _load(name)
         exp = load_expected(RAW / f"{name}.expected.json", static)
@@ -294,13 +329,16 @@ def _heldout_pairs(static):
         got, errors = U.labeled_crops(img, exp.extras, rec.profile_for(box[2], box[3]), box)
         assert errors == []
         pairs += got
+        arenas.add(arena_signature(img, box))
+    assert len(arenas) == 1                         # 같은 판·같은 맵(돌 맵)
+    rec._heldout_arena = arenas.pop()               # 30: 표본의 맵 서명(뒷받침 없는 이름은 같은 맵 표본이 있어야 한다)
     return rec, pairs
 
 
 def _reset_library(rec, pairs) -> None:
     """라이브러리를 2-2·2-5 표본만으로 되돌린다. `UnitNamer._learn`이 인식한 프레임(2-6)의 크롭을 메모리 표본으로
     더하므로, 되돌리지 않으면 다음 채점이 **채점 대상 자신의 크롭**으로 맞히는 순환 평가가 된다(QA 19)."""
-    rec.unit_namer.library = U.library_from(pairs)
+    rec.unit_namer.library = U.library_from(pairs, arena=getattr(rec, "_heldout_arena", None))
     rec.unit_namer._session = 0
     rec.unit_namer._base = len(rec.unit_namer.library)
     rec.unit_namer.agree_frames = 1      # 스크린샷 한 장 평가: 여러 프레임 일치 요구를 끈다(23 보고)
@@ -467,30 +505,22 @@ def test_qa_disk_library_folders_are_canonical_champion_ids(static):
 
 
 # ---------------------------------------------------------------- 19 수정 라운드(QA FAIL-1 · 캐시 키 · 오독 완화)
-def test_one_slot_forced_name_goes_to_pending_never_straight_to_the_library(static, table, tmp_path):
-    """25: 디스크에 **바로** 쓰는 자동 학습은 없다. 보드 칸 1개 · 풀이 1개 · 패널 확실 → 검토 대기(`_pending/`)에만,
-    패널 판독이 애매하면 대기에도 넣지 않는다. 승인 폴더(= 라이브러리)는 그대로다."""
+def test_one_slot_forced_name_is_not_collected_board_crops_are_never_collected(static, table, tmp_path):
+    """25 → 30: 디스크에 **바로** 쓰는 자동 학습은 없고(승인 폴더 그대로), 30 수집 정책(벤치에서만)으로 보드 칸은 이름이
+    강제(forced)로 확실해도 검토 대기에도 넣지 않는다."""
     from tft_advisor.vision.board import BoardRead, UnitSlot
     from tft_advisor.vision.unit_db import FrameContext, UnitCollector, UnitImageDB
 
     ko, = ids(static, "코그모")
     kog = _img((0, 0, 255))
-
-    def run(root, p):
-        col = UnitCollector(UnitImageDB(root))
-        res = U.name_units([U.descriptor(kog)], [], U.UnitLibrary(), p, table)
-        read = BoardRead(board=(UnitSlot(star=1, hex=(0, 0), unit_id=res.board[0].unit_id),))
-        col.observe(FrameContext(at=1.0), read, res, [kog], [], p.confidence)
-        return res
-
-    d1 = tmp_path / "a"
-    res = run(d1, U.TraitPanel(dict(table.contrib[ko]), confidence=0.8))
+    root = tmp_path / "a"
+    col = UnitCollector(UnitImageDB(root))
+    p = U.TraitPanel(dict(table.contrib[ko]), confidence=0.8)
+    res = U.name_units([U.descriptor(kog)], [], U.UnitLibrary(), p, table)
     assert [(s.unit_id, s.source) for s in res.board] == [(ko, "forced")]
-    assert len(list((d1 / "_pending" / ko).glob("traits_*.png"))) == 1
-    assert not (d1 / ko).exists()                                     # 승인 폴더에는 없다
-    d2 = tmp_path / "b"
-    res = run(d2, U.TraitPanel(dict(table.contrib[ko]), confidence=0.5))
-    assert res.board[0].unit_id == ko and list(d2.rglob("*.png")) == []
+    read = BoardRead(board=(UnitSlot(star=1, hex=(0, 0), unit_id=res.board[0].unit_id),))
+    assert col.observe(FrameContext(at=1.0), read, res, [kog], [], p.confidence) == []
+    assert list(root.rglob("*.png")) == []
 
 
 def test_library_fallback_stays_inside_the_solution_union(static, table):
@@ -702,10 +732,11 @@ def test_raw_live2_names_nothing_wrong(static, heldout):
     for s in truth["bench_slots"]:
         assert bench[s["slot"]] in (None, s["unit_id"]), (s, bench[s["slot"]])
     assert bench[2] is None and bench[3] in (None, ids(static, "오른")[0])
-    assert read.trait_solutions == 3 and read.board_set == () and read.missed_board == 0
+    # 풀이 3개 중 4코스트(이즈리얼·아리)가 없는 풀이는 {요릭, 유나라, 르블랑} 하나 — 상점 확률 4코스트 0%(30 보고)
+    assert read.trait_solutions == 3 and read.missed_board == 0
+    assert set(read.board_set) == set(ids(static, "요릭", "유나라", "르블랑"))
     assert read.board_common == tuple(ids(static, "요릭"))
-    union = set(ids(static, "요릭", "카르마", "이즈리얼", "유나라", "르블랑", "아리"))
-    assert all(u.unit_id is None or u.unit_id in union for u in read.board)
+    assert all(u.unit_id is None or u.unit_id in set(read.board_set) for u in read.board)
 
 
 def test_raw_live2_purchase_hint_names_the_ornn_copy(static, heldout):
@@ -756,3 +787,41 @@ def test_named_slots_carry_corroborated_flag_for_recog_view(table, monkeypatch):
     assert [u.corroborated for u in (*out.board, *out.bench)] == [False, True, None]
     from tft_advisor.app.recog_view import is_guess
     assert [is_guess(u) for u in (*out.board, *out.bench)] == [True, False, False]
+
+
+# ---------------------------------------------------------------- 30 보고: 다른 맵 표본만으로는 뒷받침 없는 이름을 붙이지 않는다
+def test_same_arena_signature_rule():
+    assert U.same_arena("0a080a", "0b080a") and U.same_arena("0a080a", "09080a")      # 밝기 한 단계는 같은 맵
+    assert not U.same_arena("0a080a", "090809")                                          # 모래 vs 돌: 색이 다르다
+    assert not U.same_arena(None, "0a080a") and not U.same_arena("0a080a", "zz")
+
+
+def test_uncorroborated_name_needs_a_same_arena_sample():
+    """test.png(돌 맵) 벤치 0의 레오나를 모래 맵 세주아니 표본이 0.75로 불렀다 → 같은 맵 표본이 없으면 이름 없음."""
+    red = _img((0, 0, 255))
+    beach = U.library_from([("SEJ", red)], arena="0a080a")
+    d = [U.descriptor(red)]
+    assert U.name_units([], d, beach, None, None).bench[0].unit_id == "SEJ"                     # 맵을 모르면 예전 규칙
+    assert U.name_units([], d, beach, None, None, arena="0a080a").bench[0].unit_id == "SEJ"     # 같은 맵
+    assert U.name_units([], d, beach, None, None, arena="090809").bench[0].unit_id is None      # 다른 맵
+    unknown = U.library_from([("SEJ", red)])                                                     # 맵 모르는 표본(옛 label_*)
+    assert U.name_units([], d, unknown, None, None, arena="090809").bench[0].unit_id is None
+    # 뒷받침(힌트)이 있으면 맵과 상관없이 예전 완화 임계
+    assert U.name_units([], d, beach, None, None, arena="090809", hints=["SEJ"]).bench[0].unit_id == "SEJ"
+
+
+def test_library_arena_list_follows_samples(tmp_path):
+    import json
+
+    root = tmp_path / "lib"
+    (root / "DA_18_Akali_AD").mkdir(parents=True)
+    img = _img((0, 0, 255))
+    cv2.imencode(".png", img)[1].tofile(str(root / "DA_18_Akali_AD" / "purchase_a.png"))
+    (root / "DA_18_Akali_AD" / "purchase_a.json").write_text(json.dumps({"arena": "0a080a"}), encoding="utf-8")
+    cv2.imencode(".png", _img((255, 0, 0)))[1].tofile(str(root / "DA_18_Akali_AD" / "label_b.png"))
+    lib = U.UnitLibrary.load(root)
+    assert sorted(a or "" for a in lib.arenas) == ["", "0a080a"] and len(lib.arenas) == len(lib.samples)
+    lib.add("DA_18_Akali_AD", img, arena="090809")
+    lib.remove_at(0)
+    assert len(lib.arenas) == len(lib.samples) == 2
+    assert set(lib.scores_in_arena(U.descriptor(img), "090809")) == {"DA_18_Akali_AD"}

@@ -23,7 +23,7 @@ from __future__ import annotations
 
 from collections import Counter
 from collections.abc import Callable
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 
 from ..config import BoardPlanWeights, UnitStageWeights
 from ..contracts import (
@@ -31,10 +31,12 @@ from ..contracts import (
     BoardPlanEntry,
     BoardSwap,
     BoardTransition,
+    UNKNOWN_UNIT_ID,
     CompStats,
     StageBoardHint,
     UnitOnBoard,
 )
+from ..unit_status import OwnedUnits
 from .candidates import stage_round
 from .features import View, board_at
 from .stage_boards import BoardPick, NextHint, StageBoardSource, vs_baseline
@@ -224,6 +226,47 @@ def _next_note(nh: NextHint, lineup: list[str], ko: Callable[[str], str]) -> str
     return f"다음 스테이지: {subject} 보통 {where} 쪽으로 이어집니다({tail})"
 
 
+def _guess_tail(n: int) -> str:
+    """미확인 수 뒤 꼬리(21 §15): 추정 이름도 미확인으로 셌음을 밝힌다."""
+    return f"(추정 이름 {n}기 포함)" if n else ""
+
+
+LOW_TRUST_NOTE = "일부 유닛 미확인 — 이름을 확인한 유닛 기준입니다(보드·벤치 신뢰도 낮음)"
+
+
+def relaxed_view(view: View) -> View | None:
+    """필드 신뢰도가 낮아(예: 구매 추적이 애매해 보드 0.50) 보유 유닛을 통째로 못 쓰는 View → 칸마다 이름 신뢰도가
+    임계값 이상인 유닛만 쓰는 View(보드 배치 전용, 21 §14.2). 이름 미상·낮은 신뢰도 칸은 자리만 센다.
+    쓸 유닛이 하나도 없으면 None. 목표 덱·상점 계산에는 쓰지 않는다(그쪽 규칙은 `unit_status.owned_units`).
+    추정 이름(신뢰도 < `view.unit_min_conf`, 21 §15)도 이름 미상처럼 자리만 센다."""
+    st = view.state
+    if st.board is None:
+        return None
+    thr = max(view.min_conf, view.unit_min_conf)
+
+    def side(units):
+        named = [u for u in units or [] if u.id != UNKNOWN_UNIT_ID and u.confidence >= view.min_conf]
+        used = tuple(u for u in named if u.confidence >= thr)
+        return used, len(units or []) - len(used), len(named) - len(used)
+    board, bh, bg = side(st.board)
+    bench, nh, ng = side(st.bench)
+    if not board and not bench:
+        return None
+    owned = OwnedUnits(board=board, bench=bench, board_reliable=False, bench_reliable=False, board_hidden=bh,
+                       bench_hidden=nh, board_seen=True, bench_seen=st.bench is not None,
+                       board_guessed=bg, bench_guessed=ng)
+    return replace(view, units_known=True, units_complete=False, board_complete=False, owned=owned,
+                   board=list(board), bench=list(bench))
+
+
+def stale_copy(plan: BoardPlan) -> BoardPlan:
+    """이번 화면에서 보드를 못 읽었을 때 보여 줄 직전 계획(21 §14.2). 판매 추천은 비운다(골드·유닛이 바뀌었을 수 있다)."""
+    if plan.stale:
+        return plan
+    return plan.model_copy(update={"stale": True, "sell": [], "sell_gold_total": 0, "interest_note": None,
+                                   "sell_notes": []})
+
+
 def plan_board(view: View, stats: AdvisorStats, comp: CompStats | None, level: int | None,
                snow: dict[str, float], ko: Callable[[str], str],
                w: BoardPlanWeights = DEFAULT_WEIGHTS, *, stage: UnitStageWeights | None = None,
@@ -234,15 +277,22 @@ def plan_board(view: View, stats: AdvisorStats, comp: CompStats | None, level: i
     stage_board: 스테이지 보드 통계(None이면 그 항 0 — 예전 동작).
     """
     state = view.state
-    if state.board is None or not view.units_known:
+    if state.board is None:
         return None
+    low_trust = False
+    if not view.units_known:
+        # 필드 신뢰도가 떨어졌다고 섹션을 통째로 지우지 않는다(21 §14.2): 이름 신뢰도 높은 유닛으로 세운다
+        relaxed = relaxed_view(view)
+        if relaxed is None:
+            return None
+        view, low_trust = relaxed, True
     o = view.owned
     cands = [_Cand(u, True, i, _unit_traits(u, stats)) for i, u in enumerate(view.board)]
     cands += [_Cand(u, False, len(cands) + i, _unit_traits(u, stats)) for i, u in enumerate(view.bench)]
     if not cands:
         return None
 
-    notes: list[str] = []
+    notes: list[str] = [LOW_TRUST_NOTE] if low_trust else []
     board_now = len(state.board)
     if view.level is not None:
         slots = max(view.level, board_now)
@@ -253,10 +303,13 @@ def plan_board(view: View, stats: AdvisorStats, comp: CompStats | None, level: i
         notes.append(f"레벨 미인식: 현재 보드 {board_now}칸 기준입니다")
     unknown_board, unknown_bench = o.board_hidden, o.bench_hidden
     open_slots = max(0, slots - unknown_board)
+    # 추정 이름(21 §15)은 이름 미상과 똑같이: 보드 쪽은 자리만 차지한 채 그대로, 벤치 쪽은 올리지도 팔지도 않는다
     if unknown_board:
-        notes.append(f"보드 미확인 {unknown_board}기는 그대로 두었습니다(정체를 몰라 판단하지 않습니다)")
+        notes.append(f"보드 미확인 {unknown_board}기{_guess_tail(o.board_guessed)}는 그대로 두었습니다"
+                     "(정체를 몰라 판단하지 않습니다)")
     if unknown_bench:
-        notes.append(f"벤치 미확인 {unknown_bench}기는 판단하지 않았습니다 — 강한 유닛이면 직접 올려 주세요")
+        notes.append(f"벤치 미확인 {unknown_bench}기{_guess_tail(o.bench_guessed)}는 판단하지 않았습니다"
+                     " — 강한 유닛이면 직접 올려 주세요")
     if not o.bench_seen:
         notes.append("벤치 미인식: 보드 유닛만으로 판단했습니다")
 
@@ -347,8 +400,9 @@ def plan_board(view: View, stats: AdvisorStats, comp: CompStats | None, level: i
         bench=[entry(c, False) for c in sorted(left, key=lambda c: (-c.score, c.order))],
         swaps=swaps, free_slots=max(0, open_slots - len(lineup)),
         unknown_on_board=unknown_board, unknown_on_bench=unknown_bench, notes=notes, transition=transition,
-        stage_board=hint,
+        stage_board=hint, low_trust=low_trust,
     )
 
 
-__all__ = ["BoardPlanWeights", "DEFAULT_WEIGHTS", "plan_board", "transition_note"]
+__all__ = ["BoardPlanWeights", "DEFAULT_WEIGHTS", "LOW_TRUST_NOTE", "plan_board", "relaxed_view", "stale_copy",
+           "transition_note"]

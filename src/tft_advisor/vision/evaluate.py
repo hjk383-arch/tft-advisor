@@ -124,11 +124,12 @@ def evaluate_dir(screens_dir: Path = SCREENS_DIR, recognizer: Recognizer | None 
                 })
         read = rec.last_board_read
         if read is not None and ("board_slots" in exp.extras or "bench_slots" in exp.extras):
-            r.board = {
-                "board": compare_board(exp.extras.get("board_slots") or [], list(read.board), False),
-                "bench": compare_board(exp.extras.get("bench_slots") or [], list(read.bench), True),
-                "unresolved_items": read.unresolved_items,
-            }
+            # 한쪽 라벨만 있으면 그쪽만 비교한다(라이브 3 2-3 준비 끝: 보드는 전투 자리로 옮겨 가는 중이라 정답을 적지 않았다)
+            r.board = {"unresolved_items": read.unresolved_items}
+            if "board_slots" in exp.extras:
+                r.board["board"] = compare_board(exp.extras.get("board_slots") or [], list(read.board), False)
+            if "bench_slots" in exp.extras:
+                r.board["bench"] = compare_board(exp.extras.get("bench_slots") or [], list(read.bench), True)
         results.append(r)
     return results
 
@@ -183,7 +184,9 @@ def main(argv: list[str] | None = None) -> int:
             print(f"  {mark} {f:14} exp={d['expected']!s:40.40} got={d['got']!s:40.40} conf={d['conf']}{est}")
         if r.board:
             for side in ("board", "bench"):
-                b = r.board[side]
+                b = r.board.get(side)
+                if b is None:
+                    continue
                 print(f"  ---- {side:9} 자리 {b['placed_ok']}/{b['expected']} (판독 {b['got']}) "
                       f"성급 {b['star']['ok']}/{b['star']['total']} 아이템 {b['items']['ok']}/{b['items']['total']}"
                       + f" 이름 {b['names']['ok']}/{b['names']['total']}(틀림 {b['names']['wrong']}, 미확인 칸에 낸 이름 {b['names']['unverified']})"

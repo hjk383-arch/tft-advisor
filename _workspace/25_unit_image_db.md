@@ -110,3 +110,48 @@ QA 27 §2.3 F1: 끝난(또는 짝이 없는) 구매가 창(3초) 안의 벤치 �
 - 기존 구매 테스트 3개는 앞 프레임을 하나 더 넣었다(빈 칸 이력 2프레임). 모호 테스트는 이력이 충분한 상태에서 다섯 경우가 여전히 거부된다.
 - `tests/test_vision_units.py::test_named_slots_carry_corroborated_flag_for_recog_view`.
 - 전체: `PYTHONIOENCODING=utf-8 .venv\Scripts\python.exe -m pytest` → 실패는 기존 Windows 4건뿐(api_key 마스크, setup 권한 상자, credentials 0600 2건).
+
+## 30: 수집 정책 — 벤치만 · 알아보면 그만 · 품질 검사 · 스테이지 (2026-09-25, vision-engineer)
+
+배경: 사용자 라이브 판 대기 크롭 53장 검토 → 승인 47, 삭제 6(세주아니 벤치 0 분홍 튜브 · 쉔 보드 금화/흐림 · 피들스틱 2장 스킬
+효과·피해 숫자 "50" · 아칼리 ★2 보드 = 실제 바루스(자리 뒤바뀜 수정 전) · 아칼리 구매 크롭에 피들스틱 낫·연기 침범).
+사용자 정책: "저장된 이후에는 인식이 되는 캐릭터는 더이상 안 찍어도 된다. 사진은 대기석에 있을 때 찍어."
+
+### 규칙 (`vision/unit_db.py` `UnitCollector`)
+| 규칙 | 내용 |
+|---|---|
+| 벤치만 | 모으는 증거: `purchase`(가장 강함) · `duplicate`(확정 보드 유닛과 같은 모델, **라이브러리는 아직 모름**) · 새 `library`(벤치 칸의 **뒷받침된** 라이브러리 이름, 신뢰도 0.6~0.8 = 아직 확실하지 않은 새 자세·새 맵). **보드 `traits` 수집은 없앴다**(효과·피해 숫자·겹친 유닛·잘린 머리). 장부 이름이 `unit_merge` 규칙으로 벤치 칸에 붙는 경로는 vision이 알 수 없어 넣지 않았다(그 배치는 지금 순서대로라 믿을 수 없다 — 30 보고 §6) |
+| 충분하면 그만 | 그 챔피언·성급의 **승인** 사진이 `collect_until`장(설정 `[vision] unit_collect_until = 3`, 0 = 제한 없음) 이상이면 모으지 않는다. 성급 모름(옛 `label_*`)은 ★1로 센다. ★2·★3은 따로 센다 → 새 성급은 처음 보이면 모은다. `UnitImageDB.approved_count()`(캐시, 옮기기·승인 시 비움) |
+| 알아보면 그만 | 이번 칸을 라이브러리가 **같은 챔피언**으로 뒷받침과 함께 신뢰도 >= `RECOGNIZED_CONF`(0.8)로 알아봤으면 모으지 않는다(구매 짝 포함) |
+| 전략가 | 전략가 이름표(두께 9~18px 초록 막대)가 위에 있는 벤치 칸(`bench_memory.tactician_cells`, `FrameContext.tactician`)은 모으지 않는다 |
+| 품질 거부 | `crop_quality()`(모델 픽셀 기준): 밝고 진한 빛(V>=235·S>=100)이 모델의 30% 이상(금화·폭발) · 청록 선택 윤곽이 크롭의 8% 이상 |
+| 품질 표시 | 빛 10% 이상 · 청록 4% 이상 · 옆 칸 모델 침범(가운데와 이어지지 않고 좌우 끝에 닿은 조각 5% 이상) · 머리 잘림(위쪽 줄 가운데 45% 이상) → 저장하되 note "품질: …", 점수 x0.7, 자동 승인 안 함 |
+| 스테이지 | app이 매 프레임 `collector.set_stage(세션 합친 스테이지)`(오버레이 표시값, `app/loop._feed_unit_namer`). 없으면 프레임 판독값을 쓰되 이번 판에서 본 가장 늦은 스테이지보다 앞서면 비운다 |
+| 기본값 | 대기만(`unit_purchase_autoapprove = false` 그대로). 표시가 붙은 크롭은 설정이 켜져 있어도 자동 승인하지 않는다 |
+
+진단: `UnitCollector.skipped` = 이유별 건너뛴 수(enough / recognized / tactician / quality).
+
+### 품질 기준 실측(승인 78장 · 삭제 11장, `data/templates/18/units_screen`)
+- 승인: 거부 0, 표시 4(아칼리 옆 칸, 오른 효과+머리, 세주아니 청록+옆 칸, 코그모 옆 칸).
+- 이번 삭제 6장: 쉔 금화 **거부**, 피들스틱 청록 윤곽 **거부**, 피들스틱 "50" 표시(효과), 아칼리 구매 연기+낫 표시(효과·옆 칸),
+  세주아니 튜브 표시(머리 잘림 — 튜브 자체는 못 가린다), 아칼리 ★2(실제 바루스)는 품질 문제가 아니라 이름 문제(30 보고의 자리
+  뒤바뀜 수정으로 막힘; 보드 수집도 없앴다).
+- 벤치 크롭 상자(체력바 위 끝 +8 ~ +120px, 1080p)는 벤치 유닛 대부분의 머리~발을 덮는다. 키 큰 모델(세주아니 탄 사람, 카르마
+  날개)은 위가 닿는다 → "머리 잘림" 표시. 상자를 바꾸면 기존 승인 사진과 기하가 달라져 이름 비교가 흔들리므로 바꾸지 않았다.
+
+### 스테이지 "1-3/1-4" 조사
+메타데이터의 스테이지는 그 프레임 OCR 값(`FrameContext.stage`)이었다. 크롭 시각(17:51:43~17:52:39, 판 시작 17:51:01)과
+라이브 3 캡처(17:54:51 = 2-2)를 보면 1-3/1-4 표기가 틀렸다고 단정할 근거는 화면에 없었다(1-4에 3코스트 피들스틱은 어색하다).
+어느 쪽이든 이제 세션 스테이지(오버레이 값)를 쓰고, 세션 값이 없을 때 뒤로 가는 판독은 버린다.
+
+### 다른 담당에게
+- 검토 창(`app/unit_review.py`)이 note의 "품질: …"을 보여 주고 점수 순으로 뒤에 두면 정책이 완성된다(나는 고치지 않았다).
+- 설정 키 `unit_collect_until`은 `config.py VisionCfg`에 한 줄, `config/settings.toml [vision]`에 설명과 함께 추가했다.
+
+### 테스트(`tests/test_unit_db.py`)
+- 보드 수집 없음: `test_board_crops_are_never_collected_even_with_a_unique_trait_solution`(옛 traits 증거 테스트 대체)
+- `test_collection_stops_after_enough_approved_but_a_new_star_is_still_collected`, `test_label_crops_without_star_count_as_one_star`
+- `test_already_recognized_slot_is_not_collected_and_corroborated_middle_library_name_is`(구매 짝 포함)
+- `test_crop_quality_rejects_glow_and_selection_outline_and_flags_neighbour`, `test_collector_applies_quality_and_tactician_rules`
+- `test_crop_stage_uses_the_session_stage_and_drops_a_stale_frame_read`
+- 테스트용 단색 크롭 `img()`는 0.75배로 어둡게 했다(원색 255는 "강한 빛"에 걸린다).

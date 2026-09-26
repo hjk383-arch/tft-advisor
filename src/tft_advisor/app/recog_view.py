@@ -29,6 +29,7 @@ BOARD_MODES = frozenset({ScreenMode.PLANNING, ScreenMode.ITEM_SELECT, ScreenMode
 SOURCE_LABELS = {"vision": "화면", "ledger": "장부", "manual": "수동", "unknown": "미상"}
 VISION_DETAIL = {
     "forced": "특성 구속", "traits": "특성+닮음", "library": "모델 비교", "duplicate": "중복 배정",
+    "held": "직전 판독",   # 벤치 체력바가 사라진 프레임(준비 끝): vision이 직전 판독을 이어 씀(vision 30 보고)
 }
 ITEM_GROUPS = (("components", "재료"), ("completed", "완성"), ("emblems", "상징"), ("others", "기타"))
 UNKNOWN_NAME = "이름 미상"
@@ -161,6 +162,7 @@ class RecogView:
     board_note: str | None = None
     board_common_note: str | None = None   # "보드에 확인된 챔피언(자리 미상): 요릭 · 놓친 유닛 1기"
     bench_note: str | None = None
+    ledger_note: str | None = None         # "장부 보유(자리 미상): 카밀 · 쉔" — 장부는 누구를 가졌는지만 안다(31 보고 §9)
     equipped: list[ItemGroup] = field(default_factory=list)
     unused: list[ItemGroup] | None = None   # None = 아이템 벤치를 읽지 못함
     unused_note: str | None = None
@@ -197,6 +199,8 @@ class RecogView:
         else:
             out.append(f"[벤치] {self.bench_count}/{BENCH_SLOTS}" + (f" — {self.bench_note}" if self.bench_note else ""))
             out += [f"  {r.text()}" for r in self.bench]
+        if self.ledger_note:
+            out.append(f"  {self.ledger_note}")
         out.append("[장착 아이템]")
         out += [f"  {g.text()}" for g in self.equipped] or ["  (없음)"]
         if self.unused is None:
@@ -316,8 +320,23 @@ def _board_sort_key(u: UnitOnBoard) -> tuple:
     return (u.hex is None, tuple(u.hex) if u.hex is not None else (9, 9), u.id)
 
 
+def _unknown_at(slot: Any, *, on_bench: bool) -> UnitOnBoard | None:
+    """판독 칸 → 이름 미상 유닛(자리·성급·아이템은 판독 그대로). 장부 이름을 자리 미상으로 뺀 칸을 다시 그릴 때 쓴다."""
+    star = getattr(slot, "star", None)
+    try:
+        return UnitOnBoard(
+            id=UNKNOWN_UNIT_ID, star=star if isinstance(star, int) and 1 <= star <= 4 else None,
+            items=[str(i) for i in (getattr(slot, "items", ()) or ()) if i][:3],
+            hex=None if on_bench else _hex(getattr(slot, "hex", None)),
+            bench_slot=getattr(slot, "bench_slot", None) if on_bench else None,
+            confidence=0.0)
+    except Exception:   # noqa: BLE001 — 판독 모양이 달라도 창은 그린다
+        return None
+
+
 def bench_rows(state: GameState, names: NameBook, board_read: Any = None) -> list[UnitRow] | None:
-    """벤치 1~9칸(빈 칸 포함). 자리를 모르는 벤치 유닛(장부만 있을 때)은 뒤에 "벤치 ?"로 붙인다."""
+    """벤치 1~9칸(빈 칸 포함). 자리를 모르는 벤치 유닛은 판독이 없을 때(장부만)만 뒤에 "벤치 ?"로 붙인다.
+    판독이 있으면 판독에는 있는데 상태에 없는 칸은 "이름 미상"으로 그리고, 자리 미상 장부 유닛은 `ledger_unplaced`가 모은다."""
     if state.bench is None:
         return None
     by_slot: dict[int, UnitOnBoard] = {}
@@ -327,15 +346,56 @@ def bench_rows(state: GameState, names: NameBook, board_read: Any = None) -> lis
             by_slot[u.bench_slot] = u
         else:
             loose.append(u)
+    read_slots = {getattr(s, "bench_slot", None): s for s in (getattr(board_read, "bench", ()) or ())}         if board_read is not None else {}
     rows: list[UnitRow] = []
     for slot in range(BENCH_SLOTS):
         u = by_slot.get(slot)
+        if u is None and slot in read_slots:
+            u = _unknown_at(read_slots[slot], on_bench=True)
         if u is None:
             rows.append(UnitRow(where="bench", pos=f"벤치 {slot + 1}", empty=True))
         else:
             rows.append(unit_row(u, on_bench=True, state=state, names=names, board_read=board_read))
-    rows += [unit_row(u, on_bench=True, state=state, names=names, board_read=board_read) for u in loose]
+    if board_read is None:
+        rows += [unit_row(u, on_bench=True, state=state, names=names, board_read=board_read) for u in loose]
     return rows
+
+
+def board_units(state: GameState, board_read: Any = None) -> list[UnitOnBoard]:
+    """보드 행으로 그릴 유닛. 판독이 있으면 자리 미상 **장부** 유닛은 빼고(`ledger_unplaced`), 그 대신 판독에는 있는데
+    상태에 없는 칸을 이름 미상으로 넣는다. vision 집합 풀이(판독 `unplaced`)의 자리 미상 유닛은 그대로 둔다."""
+    units = list(state.board or [])
+    if board_read is None:
+        return units
+    vision_loose = set(getattr(board_read, "unplaced", ()) or ())
+    keep = [u for u in units if u.hex is not None or u.id in vision_loose or u.id == UNKNOWN_UNIT_ID]
+    have = {tuple(u.hex) for u in keep if u.hex is not None}
+    # 자리 미상 vision 유닛 하나가 이름 없는 판독 칸 하나를 대신한다 — 같은 유닛을 두 번 세지 않는다(QA 32 F2)
+    stand_ins = sum(1 for u in keep if u.hex is None)
+    for s in getattr(board_read, "board", ()) or ():
+        h = _hex(getattr(s, "hex", None))
+        if h is not None and h not in have:
+            if stand_ins > 0:
+                stand_ins -= 1
+                continue
+            u = _unknown_at(s, on_bench=False)
+            if u is not None:
+                keep.append(u)
+                have.add(h)
+    return keep
+
+
+def ledger_unplaced(state: GameState, board_read: Any, names: NameBook) -> str | None:
+    """"장부 보유(자리 미상): 카밀 · 쉔". 판독이 있을 때만(판독이 없으면 "벤치 ?"/"자리 미상" 행으로 이미 보인다)."""
+    if board_read is None:
+        return None
+    vision_loose = set(getattr(board_read, "unplaced", ()) or ())
+    loose = [u for u in state.board or [] if u.hex is None and u.id != UNKNOWN_UNIT_ID and u.id not in vision_loose]
+    loose += [u for u in state.bench or [] if u.bench_slot is None and u.id != UNKNOWN_UNIT_ID]
+    if not loose:
+        return None
+    text = " · ".join(names.name(u.id) + (f" ★{u.star}" if u.star and u.star > 1 else "") for u in loose)
+    return f"장부 보유(자리 미상): {text}"
 
 
 def equipped_groups(state: GameState, board: list[UnitRow], bench: list[UnitRow] | None,
@@ -451,8 +511,9 @@ def build_view(snap: RecogSnapshot | None, names: NameBook, *, threshold: float 
     view.notice = " · ".join(notices) or None
 
     view.board = [unit_row(u, on_bench=False, state=state, names=names, board_read=read)
-                  for u in sorted(state.board or [], key=_board_sort_key)]
+                  for u in sorted(board_units(state, read), key=_board_sort_key)]
     view.bench = bench_rows(state, names, read)
+    view.ledger_note = ledger_unplaced(state, read, names)
     if state.board is None and state.bench is None:
         view.board_note = ("유닛이 보이지 않습니다" if read is not None and not getattr(read, "count", 0)
                            else "읽지 못했습니다")

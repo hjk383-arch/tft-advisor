@@ -85,6 +85,7 @@ ASSIGN_MIN_MARGIN = 0.08  # 구속 배정: 이 칸이 다른 챔피언이 되면
 ASSIGN_MIN_SCORE = 0.30   # 구속 배정: 배정된 챔피언과의 닮음 하한(강제 배정·소거법은 예외)
 PANEL_SURE = 0.75         # 특성 패널 OCR 신뢰도가 이보다 낮으면 풀이 신뢰도를 깎고 디스크 자동 학습을 하지 않는다
 ELIMINATION_MARGIN = 0.25  # 닮음이 낮아도 이 여유 이상이면 소거법 배정으로 받는다(다른 칸이 확실히 정해졌다)
+CONTRA_EPS = 0.03          # 배정받은 챔피언보다 다른 칸의 챔피언을 이만큼 더 닮으면 "칸 자신의 닮음과 어긋난 배정"(30 보고)
 MAX_SOLUTIONS = 24        # 특성 풀이가 이보다 많으면 구속으로 쓰지 않는다
 MAX_BOARD_UNITS = 12
 NAME_CONF_CAP = 0.95
@@ -186,6 +187,9 @@ class UnitLibrary:
     (`vision.unit_db`)이며 `pending_weight`(기본 0 = 쓰지 않음)를 곱한 닮음으로만 순위에 든다."""
 
     samples: list[tuple[str, np.ndarray]] = field(default_factory=list)
+    arenas: list[str | None] = field(default_factory=list)
+    """`samples`와 같은 순서의 맵 서명(`unit_db.arena_signature`, 크롭 메타데이터 `arena`). 모르면 None(옛 `label_*`).
+    뒷받침 없는 이름은 **같은 맵** 표본으로도 닮아야 한다(30 보고: 모래 맵 세주아니 표본이 돌 맵 레오나를 0.75로 불렀다)."""
     save_dir: Path | None = None
     pending: list[tuple[str, np.ndarray]] = field(default_factory=list)
     pending_weight: float = 0.0
@@ -205,16 +209,19 @@ class UnitLibrary:
         lib = cls(save_dir=Path(directory) if directory is not None and save else None, pending_weight=pending_weight)
         if directory is None or not Path(directory).is_dir():
             return lib
-        lib.samples = _load_samples(Path(directory), valid)
+        lib.samples, lib.arenas = _load_samples(Path(directory), valid, with_arena=True)
         if pending_weight > 0:
             from .unit_db import PENDING_DIR
 
             lib.pending = _load_samples(Path(directory) / PENDING_DIR, valid)
         return lib
 
-    def add(self, champion_id: str, crop: np.ndarray, *, persist: bool = False, tag: str = "auto") -> Path | None:
+    def add(self, champion_id: str, crop: np.ndarray, *, persist: bool = False, tag: str = "auto",
+            arena: str | None = None) -> Path | None:
         """표본 추가. `persist`면 디스크에도 저장한다(같은 그림은 한 번만, 챔피언당 자동 표본 `AUTOLEARN_CAP`장)."""
+        self._sync_arenas()
         self.samples.append((champion_id, descriptor(crop)))
+        self.arenas.append(arena)
         if not persist or self.save_dir is None:
             return None
         import cv2
@@ -233,6 +240,28 @@ class UnitLibrary:
             old.unlink(missing_ok=True)
         return path
 
+    def _sync_arenas(self) -> None:
+        """표본 목록을 밖에서 바꿨을 때(테스트·옛 코드) 맵 서명 목록 길이를 맞춘다(모르는 표본 = None)."""
+        if len(self.arenas) != len(self.samples):
+            self.arenas = (list(self.arenas) + [None] * len(self.samples))[:len(self.samples)]
+
+    def remove_at(self, i: int) -> None:
+        self._sync_arenas()
+        del self.samples[i]
+        del self.arenas[i]
+
+    def scores_in_arena(self, desc: np.ndarray, arena: str) -> dict[str, float]:
+        """같은 맵(`same_arena`) 표본만으로 잰 챔피언별 최대 닮음."""
+        self._sync_arenas()
+        out: dict[str, float] = {}
+        for (cid, ref), a in zip(self.samples, self.arenas):
+            if a is None or not same_arena(a, arena):
+                continue
+            s = similarity(desc, ref)
+            if s > out.get(cid, -1.0):
+                out[cid] = s
+        return out
+
     def scores(self, desc: np.ndarray, extra: Iterable[tuple[str, np.ndarray]] = ()) -> dict[str, float]:
         """챔피언 ID → 최대 닮음. `extra`는 이번 프레임에서만 쓰는 임시 표본(보드에서 이름을 안 유닛)."""
         out: dict[str, float] = {}
@@ -248,12 +277,37 @@ class UnitLibrary:
         return out
 
 
-def _load_samples(directory: Path, valid: Any = None) -> list[tuple[str, np.ndarray]]:
+def same_arena(a: str | None, b: str | None) -> bool:
+    """맵 서명(`unit_db.arena_signature`, 6자리 16진수 = Lab 중앙값 16단계) 두 개가 같은 맵인가.
+    밝기(L)는 조명·유닛 가림으로 한 단계 흔들린다(모래 맵 09~0b) → 차 <= 1. 색(a, b)은 같아야 한다: 모래 맵 `..080a`와
+    돌 맵 `..0809`는 b 한 단계만 다르다(30 보고 실측 — 채널마다 1을 허용하면 둘이 같은 맵이 됐다)."""
+    if not a or not b or len(a) != 6 or len(b) != 6:
+        return False
+    try:
+        return abs(int(a[0:2], 16) - int(b[0:2], 16)) <= 1 and a[2:] == b[2:]
+    except ValueError:
+        return False
+
+
+def _sample_arena(png: Path) -> str | None:
+    jp = png.with_suffix(".json")
+    if not jp.is_file():
+        return None
+    try:
+        import json
+
+        return json.loads(jp.read_text(encoding="utf-8")).get("arena") or None
+    except (OSError, ValueError):
+        return None
+
+
+def _load_samples(directory: Path, valid: Any = None, *, with_arena: bool = False) -> Any:
     from .capture import load_image
 
     out: list[tuple[str, np.ndarray]] = []
+    arenas: list[str | None] = []
     if not directory.is_dir():
-        return out
+        return (out, arenas) if with_arena else out
     for sub in sorted(p for p in directory.iterdir() if p.is_dir() and not p.name.startswith("_")):
         if valid is not None and not valid(sub.name):
             log.warning("유닛 라이브러리: 알 수 없는 챔피언 폴더 %s — 건너뜀", sub.name)
@@ -269,7 +323,8 @@ def _load_samples(directory: Path, valid: Any = None) -> list[tuple[str, np.ndar
 
                 img = cv2.resize(img, (CROP_SIZE, CROP_SIZE), interpolation=cv2.INTER_AREA)
             out.append((sub.name, descriptor(img[..., :3])))
-    return out
+            arenas.append(_sample_arena(png))
+    return (out, arenas) if with_arena else out
 
 
 def rank(scores: Mapping[str, float]) -> tuple[str | None, float, float]:
@@ -505,7 +560,33 @@ def _place_board(S: np.ndarray, champs: list[str], set_conf: float,
             out.append(SlotName(champs[c], round(conf, 3), "traits", round(score, 3), round(margin, 3)))
         else:
             out.append(SlotName(None, 0.0, "none", round(score, 3), round(margin, 3)))
-    return total, out
+    return total, _drop_contradicted(S[:n], [int(np.argmax(V[i])) for i in range(n)], out)
+
+
+def _drop_contradicted(S: np.ndarray, assign: list[int], out: list[SlotName]) -> list[SlotName]:
+    """배정이 **칸 자신의 닮음과 어긋나면** 그 칸과 맞바꿀 상대 칸을 모두 모름으로 둔다(30 보고, 라이브 3 2-2).
+
+    두 칸이 모두 같은 챔피언 A를 더 닮았는데(표본이 한쪽 챔피언에 몰림) "어느 쪽이 A를 **더** 닮았나"라는 크롭 사이의
+    작은 차로 A/B를 나누면 자리가 뒤바뀐다(아칼리·바루스: 두 칸 모두 아칼리 표본에 0.56 / 0.45, 바루스 표본에 0.30 / 0.27
+    → 합의 차 0.08로 뒤바뀐 배정, 확인 창 0.81). 칸 i가 챔피언 c를 받았는데 다른 칸 j가 받은 d를 `CONTRA_EPS`보다 더
+    닮았으면, j가 d를 **확실히** 가질 때(닮음 >= `LIB_MIN_SCORE`이고 i보다 `ELIMINATION_MARGIN` 이상 더 닮음)만 받아들인다.
+    아니면 i·j 둘 다 모름 → 집합은 아니까 `unplaced`(자리 미상)로 나간다. 표본 없는 챔피언을 소거법으로 받은 칸도
+    같다(그 칸이 상대 챔피언을 닮았으면 상대 칸이 확실할 때만).
+    """
+    # `assign[i]` = 최적 배정에서 칸 i의 챔피언(이름을 못 받은 칸도 — 그 칸과의 비교로 다른 칸의 이름이 정해졌다)
+    pairs = list(enumerate(assign))
+    bad: set[int] = set()
+    for i, ci in pairs:
+        for j, cj in pairs:
+            if i == j or ci == cj or S[i, ci] <= 0.0 and S[i, cj] <= 0.0:
+                continue
+            if S[i, cj] - S[i, ci] > CONTRA_EPS:
+                if not (S[j, cj] >= LIB_MIN_SCORE and S[j, cj] - S[i, cj] >= ELIMINATION_MARGIN):
+                    bad |= {i, j}
+    bad = {k for k in bad if out[k].source == "traits"}      # 강제(칸 1개)·이미 모름인 칸은 그대로
+    if not bad:
+        return out
+    return [SlotName(None, 0.0, "none", s.score, s.margin) if k in bad else s for k, s in enumerate(out)]
 
 
 def _place_single_champion(S: np.ndarray, champ: str, set_conf: float,
@@ -538,7 +619,8 @@ def _library_name(scores: Mapping[str, float], *, min_score: float, min_margin: 
 
 
 def _tiered_library_name(scores: Mapping[str, float], corroborating: frozenset[str],
-                         allowed: frozenset[str] | None = None) -> SlotName:
+                         allowed: frozenset[str] | None = None,
+                         arena_scores: Mapping[str, float] | None = None) -> SlotName:
     """라이브러리 닮음 → 이름(두 단계, 모듈 상단 임계값 설명).
 
     순위와 차(margin)는 라이브러리 **전체** 챔피언으로 잰다(후보를 먼저 줄이면 표본 없는 진짜 챔피언 대신 표본 있는
@@ -555,18 +637,34 @@ def _tiered_library_name(scores: Mapping[str, float], corroborating: frozenset[s
         return SlotName(cid, round(conf, 3), "library", round(s, 3), round(mg, 3))
     if s < LIB_STRICT_SCORE or mg < LIB_STRICT_MARGIN:
         return none
+    if arena_scores is not None:
+        # 30 보고: 뒷받침 없는 이름은 **같은 맵** 표본으로도 엄격 임계를 넘어야 한다(다른 맵 표본만으로는 바닥·조명이 달라
+        # 색 분포가 우연히 겹친다 — 모래 맵 세주아니 표본 → 돌 맵 레오나 0.75). 차는 라이브러리 전체의 2위와 잰다.
+        s_arena = float(arena_scores.get(cid, 0.0))
+        second = max((v for c, v in scores.items() if c != cid), default=0.0)
+        if s_arena < LIB_STRICT_SCORE or s_arena - second < LIB_STRICT_MARGIN:
+            return SlotName(None, 0.0, "none", round(s, 3), round(mg, 3))
     conf = min(LIB_STRICT_CONF_CAP, 0.3 + 0.6 * s + 0.8 * mg)
     return SlotName(cid, round(conf, 3), "library", round(s, 3), round(mg, 3), corroborated=False)
 
 
 def name_units(board_desc: Sequence[np.ndarray], bench_desc: Sequence[np.ndarray], library: UnitLibrary,
                panel: TraitPanel | None, table: TraitTable | None, *, emblems: Iterable[str] = (),
-               hints: Iterable[str] = ()) -> BoardNames:
+               hints: Iterable[str] = (), unlikely: Iterable[str] = (), arena: str | None = None) -> BoardNames:
     """칸 기술자들 → 이름. 규칙은 모듈 docstring.
 
     `hints`: 이번 판에 가지고 있다고 알려진 챔피언 ID(예: app 장부의 상점 구매 기록). 라이브러리 이름의 **뒷받침**으로만
-    쓴다(힌트만으로는 이름을 붙이지 않는다)."""
+    쓴다(힌트만으로는 이름을 붙이지 않는다).
+
+    `unlikely`: 지금 상점 확률이 0%인 코스트의 챔피언(예: 레벨 4의 4코스트). 특성 풀이가 여럿인데 이 챔피언이 **없는** 풀이가
+    하나뿐이면 그 풀이를 쓴다(신뢰도 0.85 — 증강·공동 선택으로 받을 수는 있다). 라이브 3 2-2: {아칼리,세주아니,바루스,피들스틱}
+    / {아칼리,케일,아무무(4코스트),피들스틱}."""
     hint_set = frozenset(hints)
+    unlikely_set = frozenset(unlikely)
+
+    def arena_scores(d: np.ndarray) -> Mapping[str, float] | None:
+        # `arena`(이 프레임 맵 서명)를 알면 뒷받침 없는 이름에 같은 맵 표본을 요구한다. 모르면(단위 테스트·옛 호출) 검사하지 않는다
+        return None if arena is None else library.scores_in_arena(d, arena)
     n = len(board_desc)
     lib_scores = [library.scores(d) for d in board_desc]
     pair_sim = np.array([[similarity(a, b) for b in board_desc] for a in board_desc]) if n else None
@@ -585,10 +683,16 @@ def name_units(board_desc: Sequence[np.ndarray], bench_desc: Sequence[np.ndarray
     board_set: frozenset[str] | None = None
     unplaced: tuple[str, ...] = ()
     common: frozenset[str] = frozenset.intersection(*sols) if sols else frozenset()
+    likely_only = False
+    place_sols = sols
+    if sols and len(sols) > 1 and unlikely_set:
+        likely = [sol for sol in sols if not (sol & unlikely_set)]
+        if len(likely) == 1:
+            place_sols, likely_only = likely, True
     if sols:
         # 풀이마다 배정 점수를 구해 가장 좋은 풀이를 쓴다. 풀이가 여럿이면 신뢰도를 깎는다.
         scored = []
-        for sol in sols:
+        for sol in place_sols:
             champs = sorted(sol)
             S = np.array([[lib_scores[i].get(c, 0.0) for c in champs] for i in range(n)], dtype=np.float64)
             placed = _place_board(S, champs, 1.0, pair_sim)
@@ -599,7 +703,7 @@ def name_units(board_desc: Sequence[np.ndarray], bench_desc: Sequence[np.ndarray
             top_total, champs, S = scored[0]
             if len(scored) == 1:
                 # 패널 판독이 애매했으면(OCR 점수 낮음) 풀이가 하나여도 신뢰도를 깎는다(QA 19 §3: 행 하나 오독 → 틀린 단일 풀이)
-                set_conf = 1.0 if panel.confidence >= PANEL_SURE else 0.85
+                set_conf = 1.0 if panel.confidence >= PANEL_SURE and not likely_only else 0.85
                 board_set = frozenset(champs)
             else:
                 # 풀이가 둘 이상: 닮음 합이 확실히 갈라 줄 때만 쓴다(그래도 신뢰도는 깎는다)
@@ -617,14 +721,14 @@ def name_units(board_desc: Sequence[np.ndarray], bench_desc: Sequence[np.ndarray
         # 구속이 없으면 라이브러리만(두 단계 임계). 풀이가 여럿이라 구속을 못 썼으면 **풀이 합집합 안의** 챔피언만 받고,
         # 모든 풀이에 든 챔피언(`common`)과 힌트만 뒷받침으로 친다
         allowed = frozenset().union(*sols) if sols else None
-        board = [_tiered_library_name(sc, common | hint_set, allowed) if b.unit_id is None else b
-                 for sc, b in zip(lib_scores, board)]
+        board = [_tiered_library_name(sc, common | hint_set, allowed, arena_scores(d)) if b.unit_id is None else b
+                 for sc, b, d in zip(lib_scores, board, board_desc)]
     # 벤치: 라이브러리 + 이번 프레임에서 이름을 안 보드 유닛(같은 모델 = 같은 챔피언)
     extra = [(b.unit_id, d) for b, d in zip(board, board_desc) if b.unit_id and b.confidence >= 0.8]
     support = frozenset(c for c, _ in extra) | (board_set or frozenset()) | common | hint_set
     bench: list[SlotName] = []
     for d in bench_desc:
-        lib = _tiered_library_name(library.scores(d), support)
+        lib = _tiered_library_name(library.scores(d), support, None, arena_scores(d))
         dup = SlotName(None, 0.0, "none")
         if len({c for c, _ in extra}) >= 2:     # 후보가 하나뿐이면 2위와의 차가 없다 → 쓰지 않는다
             dup = _library_name(UnitLibrary().scores(d, extra), min_score=DUP_MIN_SCORE,
@@ -698,6 +802,8 @@ class UnitNamer:
     library: UnitLibrary
     table: TraitTable | None
     names: Mapping[str, str] = field(default_factory=dict)
+    costs: Mapping[str, int] = field(default_factory=dict)
+    """챔피언 ID → 코스트(상점 확률 0%인 코스트의 챔피언을 특성 풀이에서 뒤로 미루는 데 쓴다)."""
     autolearn: bool = False
     agree_frames: int = AGREE_FRAMES
     """뒷받침 없는 라이브러리 이름(`SlotName.corroborated=False`)은 같은 칸에서 이 횟수만큼 연속으로 같아야 내보낸다.
@@ -715,7 +821,7 @@ class UnitNamer:
     @classmethod
     def from_static(cls, static: StaticData, directory: str | Path | None = None, *,
                     autolearn: bool = False, pending_weight: float = 0.0,
-                    auto_approve_purchase: bool = False) -> UnitNamer:
+                    auto_approve_purchase: bool = False, collect_until: int | None = None) -> UnitNamer:
         """`directory`(기본 `units_dir`)의 **승인** 크롭으로 라이브러리를 만든다. `autolearn`이면 검토 대기 수집기를 붙이고,
         옛 자동 학습 크롭(승인 폴더의 `auto_*`)을 대기로 옮긴다(검토 전에는 믿지 않는다)."""
         from .unit_db import UnitCollector, UnitImageDB
@@ -727,9 +833,12 @@ class UnitNamer:
             db = UnitImageDB(d, valid=valid)
             db.migrate_legacy()
             collector = UnitCollector(db, auto_approve_purchase=auto_approve_purchase)
+            if collect_until is not None:
+                collector.collect_until = int(collect_until)
         lib = UnitLibrary.load(d, valid=valid, save=False, pending_weight=pending_weight)
         names = {c["apiName"]: c.get("name_ko") or c["apiName"] for c in static._load("champions")}
-        return cls(library=lib, table=TraitTable.from_static(static), names=names, autolearn=autolearn,
+        costs = {c["apiName"]: int(c["cost"]) for c in static._load("champions") if isinstance(c.get("cost"), int)}
+        return cls(library=lib, table=TraitTable.from_static(static), names=names, costs=costs, autolearn=autolearn,
                    collector=collector, _base=len(lib))
 
     def crops(self, image: np.ndarray, m: FrameMapper, slots: Sequence[Any]) -> list[np.ndarray]:
@@ -737,7 +846,7 @@ class UnitNamer:
         return [unit_crop(image, left + u.anchor[0] * w, top + u.anchor[1] * h, h) for u in slots]
 
     def name(self, image: np.ndarray, m: FrameMapper, read: BoardRead, panel: TraitPanel | None,
-             ctx: Any = None) -> BoardRead:
+             ctx: Any = None, shop_odds: Sequence[int] | None = None) -> BoardRead:
         """판독에 이름을 붙인 새 `BoardRead`. 유닛이 없으면 그대로 돌려준다.
         `ctx`(`vision.unit_db.FrameContext`): 같은 프레임의 상점·골드·스테이지 — 있으면 수집기가 증거 크롭을 모은다."""
         from dataclasses import replace
@@ -750,11 +859,16 @@ class UnitNamer:
         bc, nc = self.crops(image, m, read.board), self.crops(image, m, read.bench)
         bd, nd = [descriptor(c) for c in bc], [descriptor(c) for c in nc]
         emblems = [i for u in read.board for i in u.items]
-        res = name_units(bd, nd, self.library, panel, self.table, emblems=emblems, hints=self.hints)
+        unlikely = self.unlikely(shop_odds)
+        from .unit_db import arena_signature
+
+        arena = arena_signature(image, m.box)
+        res = name_units(bd, nd, self.library, panel, self.table, emblems=emblems, hints=self.hints,
+                         unlikely=unlikely, arena=arena)
         board_names = self._agree(read.board, res.board, "board")
         bench_names = self._agree(read.bench, res.bench, "bench")
-        self._learn(bc, bd, board_names, persist_ok=self._persist_ok(res, bd, panel))
-        self._learn(nc, nd, bench_names)
+        self._learn(bc, bd, board_names, persist_ok=self._persist_ok(res, bd, panel), arena=arena)
+        self._learn(nc, nd, bench_names, arena=arena)
 
         def put(u: Any, n: SlotName) -> Any:
             return replace(u, unit_id=n.unit_id, unit_conf=n.confidence, name_source=n.source,
@@ -772,6 +886,13 @@ class UnitNamer:
             except Exception:                    # 수집 실패가 인식을 멈추게 하지 않는다
                 log.exception("유닛 사진 수집 실패")
         return out
+
+    def unlikely(self, shop_odds: Sequence[int] | None) -> frozenset[str]:
+        """상점 확률(코스트 1~5, %)이 0인 코스트의 챔피언들. 확률을 모르면 빈 집합."""
+        if not shop_odds or len(shop_odds) < 5 or not self.costs:
+            return frozenset()
+        zero = {k + 1 for k, v in enumerate(shop_odds[:5]) if v == 0}
+        return frozenset(c for c, cost in self.costs.items() if cost in zero)
 
     def set_hints(self, champion_ids: Iterable[str]) -> None:
         """이번 판에 가진 것으로 알려진 챔피언(app 장부의 상점 구매 기록 등)을 넣는다. 새 판이면 빈 목록으로 부른다."""
@@ -832,7 +953,7 @@ class UnitNamer:
         return not (cid is not None and cid != champ and s >= LIB_MIN_SCORE and mg >= LIB_MIN_MARGIN)
 
     def _learn(self, crops: Sequence[np.ndarray], descs: Sequence[np.ndarray], names: Sequence[SlotName],
-               *, persist_ok: bool = False) -> None:
+               *, persist_ok: bool = False, arena: str | None = None) -> None:
         """이름 붙은 칸을 **메모리** 표본으로 더한다. 디스크에는 쓰지 않는다(25: 디스크는 검토 대기 → 사람 승인 경로만).
         `persist_ok`는 옛 호출과의 호환용이며 무시한다."""
         for crop, d, n in zip(crops, descs, names):
@@ -841,11 +962,11 @@ class UnitNamer:
             same = [similarity(d, ref) for cid, ref in self.library.samples if cid == n.unit_id]
             if same and max(same) >= SESSION_NOVELTY:
                 continue
-            self.library.add(n.unit_id, crop, persist=False)
+            self.library.add(n.unit_id, crop, persist=False, arena=arena)
             self._session += 1
             if self._session > SESSION_SAMPLES_MAX:
                 # 이번 실행에서 더한 가장 오래된 표본을 버린다(디스크에서 읽은 표본은 앞쪽 `_base`개)
-                del self.library.samples[min(self._base, len(self.library.samples) - 1)]
+                self.library.remove_at(min(self._base, len(self.library.samples) - 1))
                 self._session -= 1
 
 
@@ -876,11 +997,12 @@ def labeled_crops(image: np.ndarray, expected_extras: Mapping[str, Any], profile
     return out, errors
 
 
-def library_from(pairs: Iterable[tuple[str, np.ndarray]]) -> UnitLibrary:
-    """(ID, 크롭) → 메모리 라이브러리(디스크에 쓰지 않는다). 테스트·평가용."""
+def library_from(pairs: Iterable[tuple[str, np.ndarray]], arena: str | None = None) -> UnitLibrary:
+    """(ID, 크롭) → 메모리 라이브러리(디스크에 쓰지 않는다). 테스트·평가용. `arena` = 표본들의 맵 서명(모르면 None →
+    인식기 경로에서 뒷받침 없는 이름의 근거가 되지 못한다, `_tiered_library_name`)."""
     lib = UnitLibrary()
     for cid, crop in pairs:
-        lib.add(cid, crop)
+        lib.add(cid, crop, arena=arena)
     return lib
 
 

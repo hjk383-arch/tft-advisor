@@ -16,7 +16,7 @@ from ..contracts import (
     UNKNOWN_UNIT_ID, BoardPlan, FallbackReason, GameState, ItemReadiness, Recommendation, ScreenMode, ShopSlotKind,
     TargetComp, UnitOnBoard,
 )
-from ..unit_status import UnitsKnowledge, units_knowledge, units_note
+from ..unit_status import CONFIRMED_NAME_THRESHOLD, UnitsKnowledge, units_knowledge, units_note
 from .names import NameBook
 
 SCREEN_LABELS: dict[ScreenMode, str] = {
@@ -121,6 +121,8 @@ def _unit_label(u: UnitOnBoard, nb: NameBook, threshold: float) -> str:
     name = "이름 미상" if u.id == UNKNOWN_UNIT_ID else nb.name(u.id)
     if u.id != UNKNOWN_UNIT_ID and u.confidence < threshold:
         name += "(?)"
+    elif u.id != UNKNOWN_UNIT_ID and u.confidence < CONFIRMED_NAME_THRESHOLD:
+        name += " (추정)"   # 추천에는 이름 미상으로 쓴다(21 §15)
     if u.star and u.star > 1:
         name += f" {u.star}성"
     return name
@@ -128,7 +130,7 @@ def _unit_label(u: UnitOnBoard, nb: NameBook, threshold: float) -> str:
 
 def units_lines(state: GameState, nb: NameBook, threshold: float = 0.6) -> list[str]:
     """보드·벤치 유닛 목록(이름·자리). 보드는 (줄,칸) — 줄 0 = 내 쪽 맨 앞, 벤치는 왼쪽부터 1~9.
-    이름을 모르면 "이름 미상", 신뢰도가 임계값 미만이면 "(?)", 보드에 있는 것만 알고 칸을 모르면 "자리 미상"."""
+    이름을 모르면 "이름 미상", 신뢰도가 임계값 미만이면 "(?)", 추정 이름(< `CONFIRMED_NAME_THRESHOLD`)이면 "(추정)", 보드에 있는 것만 알고 칸을 모르면 "자리 미상"."""
     out: list[str] = []
     if state.board is not None:
         bits = []
@@ -170,6 +172,18 @@ def item_readiness_text(ready: list[ItemReadiness], names: NameBook) -> str:
     return " / ".join(f"{names.name(r.item_id)}({ITEM_STATUS_LABELS.get(r.status, r.status)})" for r in ready)
 
 
+def final_units_text(comp: TargetComp, names: NameBook) -> str:
+    """목표 덱 최종 유닛(통계 순서) → "자야★3(캐리)✓ · 라칸✓ · 요릭". ✓ = 보유(advisor `owned_units`), 보유를 모르면 ✓ 없음.
+    오버레이는 같은 정보를 아이콘 줄로 그린다(`hud_view`), 콘솔·`--screenshot`은 이 글자."""
+    owned = set(comp.owned_units)
+    bits = []
+    for u in getattr(comp, "final_board", None) or []:
+        star = f"★{u.star}" if u.star and u.star >= 3 else ""   # ★3 목표(리롤)만 — ★2는 거의 전부라 표시하지 않는다
+        carry = "(캐리)" if u.id == comp.carry else ""
+        bits.append(f"{names.name(u.id)}{star}{carry}{'✓' if u.id in owned else ''}")
+    return " · ".join(bits) or "-"
+
+
 def comp_lines(comp: TargetComp, rank: int, names: NameBook, *, compact: bool = False,
                units_note: str | None = None) -> list[str]:
     """목표 덱 1개 → 표시 줄들. rank는 advisor 순서(1부터).
@@ -191,6 +205,8 @@ def comp_lines(comp: TargetComp, rank: int, names: NameBook, *, compact: bool = 
         out.append(f"   보유/부족: {units_note or UNKNOWN_UNITS_TEXT}")
     if comp.items_ready:
         out.append(f"   아이템: {item_readiness_text(comp.items_ready, names)}")
+    if not compact and getattr(comp, "final_board", None):
+        out.append(f"   최종 덱: {final_units_text(comp, names)}")
     if not compact:
         if comp.next_buildup_board:
             b = comp.next_buildup_board
@@ -227,6 +243,8 @@ def board_plan_lines(plan: BoardPlan, names: NameBook, *, comp_name: str | None 
         head.append(f"칸 {plan.slots}")
     if plan.free_slots:
         head.append(f"빈 칸 {plan.free_slots}")
+    if plan.stale:
+        head.insert(0, "(직전)")
     out = [" · ".join(head)] if head else []
     lineup = [f"{label(e.unit_id, e.star)}" + (f"({e.reason})" if e.reason else "") for e in plan.lineup]
     if plan.unknown_on_board:
@@ -243,7 +261,34 @@ def board_plan_lines(plan: BoardPlan, names: NameBook, *, comp_name: str | None 
     if plan.bench:
         out.append("벤치: " + " · ".join(f"{label(e.unit_id, e.star)}" for e in plan.bench[:6])
                    + (f" 외 {len(plan.bench) - 6}" if len(plan.bench) > 6 else ""))
+    out += sell_lines(plan, names)
     out += [f"참고: {n}" for n in plan.notes]
+    return out
+
+
+def sell_lines(plan: BoardPlan, names: NameBook, *, max_units: int = 5) -> list[str]:
+    """판매 추천(21 §14) → 줄들. 예 "판매: 쉔 · 라칸 (+4골드 · 이자 구간 30골드까지 1 남음)".
+    판매할 유닛이 없고 안내(벤치 가득 등)도 없으면 빈 목록."""
+    if not plan.sell and not plan.sell_notes:
+        return []
+
+    def label(uid: str, star: int | None) -> str:
+        return names.name(uid) + (f"★{star}" if star and star >= 2 else "")
+
+    out = []
+    if plan.sell:
+        units = " · ".join(label(s.unit_id, s.star) for s in plan.sell[:max_units])
+        if len(plan.sell) > max_units:
+            units += f" 외 {len(plan.sell) - max_units}"
+        tail = [f"+{plan.sell_gold_total}골드"] if plan.sell_gold_total else []
+        if plan.interest_note:
+            tail.append(plan.interest_note)
+        out.append(f"판매: {units}" + (f" ({' · '.join(tail)})" if tail else ""))
+        why = [f"{label(s.unit_id, s.star)} — {s.reason}" for s in plan.sell[:max_units] if s.reason]
+        if why:
+            out.append("판매 이유: " + " / ".join(why))
+    if plan.sell_notes:
+        out.append("판매 참고: " + " · ".join(plan.sell_notes))
     return out
 
 

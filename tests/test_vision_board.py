@@ -319,7 +319,9 @@ def test_raw_board_labels_match_read(raw_board_results):
     bad = []
     for r in raw_board_results:
         for side in ("board", "bench"):
-            b = r.board[side]
+            b = r.board.get(side)
+            if b is None:          # 그쪽 라벨이 없다(라이브 3 2-3 준비 끝의 보드)
+                continue
             if b["extra"] or b["got"] != b["expected"] or b["star"]["ok"] != b["star"]["total"]:
                 bad.append((r.name, side, b))
     assert bad == [], bad

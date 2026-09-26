@@ -125,6 +125,7 @@ class View:
     augments: list[AugmentRef] = field(default_factory=list)
     augment_offer: list[AugmentRef] = field(default_factory=list)
     min_conf: float = 0.6
+    unit_min_conf: float = 0.6                              # 이름 확정 유닛 신뢰도(21 §15, 추정 이름 제외) — ≥ min_conf
 
     @property
     def units(self) -> list[UnitOnBoard]:
@@ -153,9 +154,13 @@ def _reliable_refs(refs: Iterable[ItemRef], min_conf: float) -> list[ItemRef]:
     return [r for r in refs if r.confidence >= min_conf]
 
 
-def build_view(state: GameState, stats: AdvisorStats, min_conf: float, equipped_tracked: Counter[str] | None) -> View:
+def build_view(state: GameState, stats: AdvisorStats, min_conf: float, equipped_tracked: Counter[str] | None,
+               unit_min_conf: float | None = None) -> View:
+    """unit_min_conf: 이름을 확정으로 볼 유닛 신뢰도(`[board_plan] min_confidence`, 21 §15). 이 미만(추정 이름)은
+    이름 미상처럼 보유 유닛에서 뺀다. None이면 `min_conf`(예전 동작)."""
     rel = lambda f: state.is_reliable(f, min_conf)   # noqa: E731
-    v = View(state=state, min_conf=min_conf)
+    umc = max(min_conf, unit_min_conf if unit_min_conf is not None else min_conf)
+    v = View(state=state, min_conf=min_conf, unit_min_conf=umc)
     if rel("stage"):
         v.stage = state.stage
         v.stage_number = stage_tuple(state.stage)[0]   # type: ignore[arg-type]
@@ -176,7 +181,8 @@ def build_view(state: GameState, stats: AdvisorStats, min_conf: float, equipped_
         v.shop = list(state.shop or [])
     # 보유 유닛: 보드·벤치를 따로 판정한다(2026-09-23 사용자 결정, `_workspace/21_board_trust.md`).
     # 믿을 수 있는 쪽 + 이름을 확인한 유닛만 쓴다. 이름 미상 칸은 어떤 챔피언으로도 세지 않는다.
-    v.owned = owned_units(state, min_conf)
+    # 추정 이름(신뢰도 < unit_min_conf)도 이름 미상처럼 뺀다(21 §15) — 틀린 이름으로 팔거나 사본을 세지 않는다.
+    v.owned = owned_units(state, min_conf, umc)
     if v.owned.usable:
         v.units_known = True
         v.units_complete = v.owned.complete

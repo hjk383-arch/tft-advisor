@@ -84,6 +84,9 @@ unit_autolearn = true
 unit_pending_weight = 0.0
 # true = 상점 구매로 이름이 확실한 벤치 크롭을 검토 없이 바로 승인한다(기본 false: 검토 대기로)
 unit_purchase_autoapprove = false
+# 사진은 **벤치(대기석)** 칸에서만 모은다. 챔피언·성급별 승인 사진이 이만큼 있으면 그 챔피언은 더 찍지 않는다
+# (이미 인식되는 유닛도 찍지 않는다). 새 성급(★2·★3)은 처음 보이면 찍는다. 0 = 제한 없음
+unit_collect_until = 3
 
 [advisor]
 # "mock"(기본, 네트워크·과금 없음) | "live"(TypeSafe API 키 필요, 과금) | "off"(통계 전용). CLI --no-jev → "off".
@@ -129,7 +132,16 @@ enabled = true
 anchor = "top_right"     # "top_left" | "top_right" | "bottom_left" | "bottom_right"
 x = 24                   # anchor 모서리로부터 가로 여백 px
 y = 24                   # 세로 여백 px
-width = 380              # 창 너비 px
+width = 460              # 창 너비 px (고정)
+height = 960             # 창 높이 px (고정 — 내용이 바뀌어도 늘었다 줄었다 하지 않는다. 화면보다 크면 화면 높이)
+# 섹션별 최대 줄 수. 넘치면 "… 외 N", 비어도 자리를 지킨다. 높이가 모자라면 증강 → 아이템 → 상점 → 보드 배치 → 목표 덱 순으로 줄인다
+lines_comp = 3           # 목표 덱 1개당 설명 줄(머리 줄·유닛 아이콘 줄 제외)
+lines_board = 7
+lines_shop = 5
+lines_item = 4
+lines_augment = 4
+unit_icons = true        # 목표 덱 최종 유닛 아이콘 줄(data/templates/18/champions/, 없으면 첫 실행에 받는다 — 못 받으면 이름 글자)
+icon_size = 28           # 아이콘 한 변 px(scale 1.0 기준)
 scale = 1.0              # 글꼴·여백 배율 (0.5 ~ 3.0). 설정 화면의 "오버레이 글꼴 배율"
 # 오버레이 불투명도 0.2 ~ 1.0. 이 키가 없으면 [ui] opacity 를 쓴다. 설정 화면의 "오버레이 불투명도"가 여기에 쓴다.
 # opacity = 0.85

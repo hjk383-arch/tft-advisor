@@ -122,6 +122,7 @@ class VisionCfg(_Cfg):
     unit_autolearn: bool = False   # (settings.toml 기본 true) 증거가 있는 유닛 크롭을 **검토 대기**에 모은다(승인 폴더에 직접 쓰지 않는다, vision.unit_db)
     unit_pending_weight: float = Field(0.0, ge=0, le=1)   # 검토 대기 사진을 이름 순위에 쓸 가중치(0 = 무시, 승인된 사진만 이름)
     unit_purchase_autoapprove: bool = False   # 상점 구매로 이름이 확실한 벤치 크롭을 검토 없이 바로 승인
+    unit_collect_until: int = Field(3, ge=0)  # 챔피언·성급별 승인 사진이 이만큼 있으면 더 모으지 않는다(0 = 제한 없음, vision 30)
 
     @field_validator("content_box", mode="before")
     @classmethod
@@ -257,8 +258,18 @@ class OverlayCfg(_Cfg):
     anchor: Literal["top_left", "top_right", "bottom_left", "bottom_right"] = "top_right"
     x: int = Field(24, ge=0)          # anchor 모서리로부터 가로 여백 px
     y: int = Field(24, ge=0)          # anchor 모서리로부터 세로 여백 px
-    width: int = Field(380, ge=200, le=1600)
+    width: int = Field(460, ge=200, le=1600)
+    height: int = Field(960, ge=200, le=2400)       # 고정 높이 px(내용에 따라 늘었다 줄었다 하지 않는다, 33 보고). 화면보다 크면 화면 높이
     scale: float = Field(1.0, ge=0.5, le=3.0)       # 글꼴·여백 배율(고DPI·큰 화면)
+    # 섹션별 최대 줄 수(고정 자리). 넘치면 "… 외 N"으로 줄이고, 빈 섹션도 자리 표시 한 줄을 둔다.
+    # 전체가 높이를 넘으면 증강 → 아이템 → 상점 → 보드 배치 → 목표 덱 순서로 줄 수를 줄인다(아래가 잘리지 않는다).
+    lines_comp: int = Field(3, ge=1, le=6)          # 목표 덱 1개당 설명 줄(머리 줄·유닛 아이콘 줄 제외)
+    lines_board: int = Field(7, ge=1, le=12)
+    lines_shop: int = Field(5, ge=1, le=6)
+    lines_item: int = Field(4, ge=1, le=10)
+    lines_augment: int = Field(4, ge=1, le=6)
+    unit_icons: bool = True                         # 목표 덱 최종 유닛을 아이콘 줄로(없으면 이름 글자)
+    icon_size: int = Field(28, ge=12, le=64)        # 아이콘 한 변 px(배율 1.0 기준)
     opacity: float | None = Field(None, gt=0, le=1)  # None = [ui] opacity
     click_through: bool | None = None                # None = [ui] click_through
     locked: bool = True               # True = 클릭 통과(이동 불가). False = 일반 창처럼 드래그 가능
@@ -317,6 +328,8 @@ class CompWeights(_Cfg):
     undecided_until_stage: int = Field(4, ge=1, le=9)   # 이 스테이지 이상은 '초반: 방향 미정' 금지, 보드 미인식이면 템포 항
     w_tempo: Unit = 0.30                                # 레벨 템포 항 가중(보드 항 wb를 대신하므로 같은 척도)
     tempo_span: float = Field(2.0, gt=0, le=9)          # 레벨 차가 이 값 이상이면 템포 적합 0
+    # 사용자 고정 덱(21 §14.3): 고정 덱 rel = 1, 나머지 덱의 상대 점수(rel)는 이 배수로 줄인다(상점 경로·아이템 bis 가중)
+    pin_other_rel: Unit = 0.5
 
     @model_validator(mode="after")
     def _constraints(self) -> CompWeights:
@@ -555,6 +568,9 @@ class BoardPlanWeights(_Cfg):
     스테이지 보드 통계(MetaTFT Early Comps)는 상관 관계(연승 편향)라 가중을 작게, 표본으로 수축해 쓴다.
     """
 
+    min_confidence: Unit = 0.8
+    """이름을 **확정**으로 볼 유닛 신뢰도(21 §15). 뒷받침 없는 추정 이름은 0.75로 묶이므로 그 위여야 한다.
+    이 미만인 유닛은 이름 미상처럼 다룬다 — 목표 덱 보유·상점 "보유 N"·1성 쌍·보드 배치·판매 모두(엔진이 `build_view`에 넘긴다)."""
     carry: float = Field(3.0, ge=0)
     core: float = Field(2.0, ge=0)
     final: float = Field(1.2, ge=0)
@@ -587,6 +603,31 @@ class BoardPlanWeights(_Cfg):
     trans_similar_min: Unit = 0.25               # 이 이상이면 "비슷한 보드는 보통…", 미만이면 다음 스테이지 힌트 없음
 
 
+class SellWeights(_Cfg):
+    """판매 추천(advisor/sell.py, 코드 전용·Jev 없음) 규칙 상수. 2026-09-25 추가(21 §14).
+
+    지키는 유닛: 보드 배치 라인업 · 1위 덱 최종 보드(+ `late_from_stage` 전에는 현재~다음 레벨 빌드업 보드,
+    `protect_shown_until_stage` 이하에서는 표시된 2·3위 덱 최종 보드) · 2성이 될 만한 1성 쌍 · 초반 벤치 2성 이상.
+    이름 미상 유닛은 규칙과 무관하게 절대 판매 대상이 아니다.
+    """
+
+    enabled: bool = True
+    min_confidence: Unit = 0.8                          # 이 미만(추정 이름 0.75 상한 포함)은 절대 팔라고 하지 않는다(21 §15)
+    early_until_stage: int = Field(2, ge=1, le=9)       # 이 스테이지 이하: 벤치 압박·이자 구간·구매 자리일 때만 판매 추천
+    late_from_stage: int = Field(4, ge=1, le=9)         # 이 스테이지 이상: 1위 덱 최종 보드 밖 유닛은 판다(빌드업·쌍 보호 없음)
+    protect_shown_until_stage: int = Field(3, ge=0, le=9)   # 이 스테이지 이하: 표시된 2·3위 덱 최종 보드 유닛도 지킨다
+    buildup_levels_ahead: int = Field(1, ge=0, le=3)    # 빌드업 보호: 현재 레벨 ~ +이 값
+    pair_min_odds: int = Field(10, ge=0, le=100)        # 1성 쌍 유지: 그 코스트 상점 확률(%)이 이 이상이면 2성 가능
+    keep_bench_star2_until_stage: int = Field(3, ge=0, le=9)   # 이 스테이지 이하: 라인업 밖 벤치 2성+는 교체 대기로 둔다
+    bench_size: int = Field(9, ge=1, le=9)
+    bench_near_full: int = Field(8, ge=1, le=9)         # 벤치(이름 미상 포함) 이 이상이면 압박
+    early_max: int = Field(2, ge=0, le=9)               # 초반 압박 시 추천 수 상한
+    interest_step: int = Field(10, ge=1)                # 이자 구간(골드)
+    interest_cap: int = Field(5, ge=0)                  # 최대 이자
+    interest_max_units: int = Field(2, ge=0, le=9)      # 초반: 이 수 이하를 팔아 다음 이자 구간에 닿으면 추천
+    interest_near: int = Field(3, ge=0)                 # 팔아도 구간에 못 닿을 때 "N 남음" 표시 거리
+
+
 class Weights(_Cfg):
     """weights.toml 전체."""
 
@@ -600,6 +641,7 @@ class Weights(_Cfg):
     item: ItemWeights = ItemWeights()
     unit_stage: UnitStageWeights = UnitStageWeights()
     board_plan: BoardPlanWeights = BoardPlanWeights()
+    sell: SellWeights = SellWeights()
 
 
 def _read_toml(path: Path) -> dict:

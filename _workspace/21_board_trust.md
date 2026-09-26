@@ -610,3 +610,230 @@ def rescore_shop(self, state: GameState, previous: Recommendation | None = None)
 - 1위·2위 덱이 근소차이면(test.png는 0.62 대 0.61) 1위가 바뀔 때 아이템 추천도 통째로 바뀐다. 히스테리시스(§5.2)가 널뛰기를 줄이지만, 두 덱이 재료를 두고 경쟁하는 상황에서는 여전히 민감하다.
 - 남은 재료를 "보관합니다(구인수의 격노검용 곡궁)"처럼 알려 주려면 `ItemAdvice`에 메모 필드가 필요하다(contracts, app-integrator). 이번에는 넣지 않았다.
 - 임시 보유자는 유닛+아이템 전체 통계에 기대므로, 통계가 없는 유닛은 후보가 되지 않는다. 그런 유닛만 보드에 있으면 임시 문구 없이 "마스터 이에게"로 나온다.
+
+
+## 14. 판매 추천 · 보드 배치 섹션 유지 · 사용자 고정 덱 — jev-strategist, 2026-09-25
+
+사용자 요청 세 건(같은 라운드, 커밋하지 않음):
+1. "돈관리도 중요하기 때문에, 필요없는 기물이 벤치나 보드에 있으면 팔라고 말해줘야해"
+2. "보드배치 추천이 가끔씩 사라지는데 왜 그러는거야"
+3. 오버레이에서 목표 덱을 눌러 **고정**하면 모든 추천이 그 덱을 따른다(다시 누르면 해제). UI는 app-integrator가 이 API로 만든다.
+
+모두 코드·통계 전용이다. Jev 호출은 늘지 않는다.
+
+### 14.1 판매 추천 (`src/tft_advisor/advisor/sell.py`, `config/weights.toml [sell]` = `config.SellWeights`)
+
+**판매가**: 1코스트 = 사본 수(1/3/9). 2코스트 이상은 코스트 x 사본 수 − (성급 − 1)이다(2성 3c−1, 3성 9c−2). 이 규칙은 저장소의 `app/ledger.py sell_value`(구매·판매 추적이 쓰는 규칙)와 같다. advisor는 app을 import하지 않으므로 `unit_sell_value`를 따로 두고, 테스트로 두 함수가 모든 코스트·성급에서 같음을 고정했다.
+
+**이자**: min(5, 골드 // 10).
+- 팔아서 구간이 오르면 "팔면 30골드 → 이자 +1"이라고 쓴다.
+- 못 닿지만 `interest_near`(3) 이내면 "이자 구간 30골드까지 1 남음"이라고 쓴다.
+- 골드를 모르거나 이미 최대 이자면 쓰지 않는다.
+
+**지키는 유닛**(하나라도 해당하면 팔라고 하지 않는다):
+
+| 규칙 | 설명 |
+|---|---|
+| 이름 미상·낮은 신뢰도 | `View`에 들어오지 않으므로 애초에 후보가 아니다. 수만 "미확인 유닛 N기는 판단하지 않았습니다"로 알린다 |
+| 보드 배치 라인업 | 지금 올릴 유닛(`BoardPlan.lineup`)은 (id, 성급, 보드 여부)로 인스턴스를 하나씩 소비해 지킨다 |
+| 1위 덱 경로 | 최종 보드와 캐리. `late_from_stage`(4) 전에는 현재 ~ +`buildup_levels_ahead`(1) 레벨 빌드업 보드도 지킨다 |
+| 표시된 2·3위 덱 | `protect_shown_until_stage`(3) 이하에서 최종 보드 유닛을 지킨다(아직 덱이 정해지지 않았다) |
+| 1성 쌍 | 확인된 1성이 2기 이상이고, 후반 전이고, 그 코스트 상점 확률이 `pair_min_odds`(10%) 이상이면 지킨다. 아니면 "2성 가능성이 낮습니다(상점 5코스트 0%)" 또는 "후반이라 2성 대기보다 골드가 낫습니다"라고 쓴다 |
+| 초반 벤치 2성 이상 | `keep_bench_star2_until_stage`(3) 이하에서 교체 대기로 둔다. 벤치가 가득 찼거나 구매 자리가 모자라면 예외다 |
+
+**후보 근거**(합쇼체):
+- 기본: "목표 덱·빌드업에 없습니다", 후반이면 "최종 덱에 없는 유닛입니다".
+- 2성 옆의 1성: "2성이 이미 있어 3성은 어렵습니다".
+- 보드 유닛: 앞에 "보드에서 빼도 되는 유닛 · "을 붙인다.
+- 아이템을 든 유닛: 끝에 "· 아이템 N개는 벤치로 돌아옵니다"를 붙인다. 팔아도 아이템은 잃지 않으므로 판매를 막지 않는다.
+
+**보여 주는 조건**:
+- 초반(스테이지 ≤ `early_until_stage` = 2): 쌍이나 1성 싱글을 들고 있는 것은 정상이라 조용히 둔다. 다음 중 하나일 때만 추천한다.
+  - 벤치 압박: 이름 미상을 포함한 벤치 수 ≥ `bench_near_full`(8)이면 `early_max`(2)기까지.
+  - 상점 [구매]에 벤치 자리가 모자랄 때. 확인된 1성이 2기인 유닛을 사면 바로 합성되므로 자리가 필요 없다.
+  - `interest_max_units`(2)기 이하를 팔아 다음 이자 구간에 닿을 때.
+- 3스테이지 이상: 후보를 전부 보여 준다.
+- 파는 순서: 벤치 먼저 → 보드 배치 점수 낮은 순 → 판매가 낮은 순.
+
+**계약 추가**(선택 필드, 기존 호환 — `contracts.py`):
+```python
+class SellAdvice(ContractModel):
+    unit_id: ChampionId
+    star: Star | None = None
+    where: Literal["board", "bench"]
+    hex: tuple[int, int] | None = None          # where=board일 때 화면에서 읽은 칸
+    bench_slot: int | None = None               # where=bench일 때 0~8
+    gold: int | None = None                     # 판매가(코스트 모르면 None)
+    items: list[ItemId] = []                    # 팔면 아이템 벤치로 돌아온다
+    reason: str | None = None
+
+class BoardPlan(...):                           # 추가 필드
+    sell: list[SellAdvice] = []                 # 파는 순서
+    sell_gold_total: int = 0
+    interest_note: str | None = None            # "팔면 30골드 → 이자 +1" / "이자 구간 30골드까지 1 남음"
+    sell_notes: list[str] = []                  # "벤치 9/9 가득 참 — 상점 구매 1기 자리가 모자랍니다" · "미확인 유닛 5기는 판단하지 않았습니다"
+    stale: bool = False                         # §14.2
+    low_trust: bool = False                     # §14.2
+```
+
+**표시**(`app/report.py`): 새 순수 함수 `sell_lines(plan, names)`. `board_plan_lines`가 "벤치:" 줄 다음에 붙이므로 오버레이도 그대로 보인다.
+```
+판매: 알리스타 · 쉔 (+4골드 · 팔면 30골드 → 이자 +1)
+판매 이유: 알리스타 — 목표 덱·빌드업에 없습니다 / 쉔 — 목표 덱·빌드업에 없습니다 · 아이템 1개는 벤치로 돌아옵니다
+판매 참고: 벤치 9/9 가득 참 · 미확인 유닛 5기는 판단하지 않았습니다
+```
+판매할 유닛도 안내도 없으면 줄이 없다. 초반에 조용할 때가 여기에 해당한다.
+
+**건너뛰는 경우**:
+- `rescore_shop`은 판매를 다시 계산하지 않는다(직전 계획 그대로). 새로 산 유닛은 라인업에 없어서 판매 대상으로 잘못 뜰 수 있기 때문이다. 다음 준비 단계의 전체 추천이 새로 채운다.
+- `stale`·`low_trust` 계획에는 판매를 붙이지 않는다.
+
+### 14.2 보드 배치가 사라지던 원인과 수정
+
+원인은 세 가지였다.
+1. `plan_board`가 `not view.units_known`이면 None을 돌려줬다. 실전에서는 vision 이름과 장부가 섞여 출처가 `tracked`가 되고, (추정) 이름 상한 0.75 때문에 필드 신뢰도가 0.50까지 내려간다. 그러면 `owned_units`가 한 유닛도 쓰지 않아(§1 표: tracked·저신뢰 = 사용 안 함) 섹션이 통째로 사라졌다.
+2. augment_select 화면은 보드를 못 읽는 경우가 많은데, 이때 `_full`이 `board_plan=None`을 만들었다. carousel은 직전 추천을 복사했다.
+3. 보드를 못 읽은 프레임(state.board None).
+
+수정:
+- **신뢰도 하락**: `board_plan.relaxed_view(view)`를 추가했다. 필드 신뢰도·출처와 무관하게, 칸마다 이름 신뢰도가 임계값(0.6) 이상인 유닛만 쓴다. 이름 미상·낮은 신뢰도 칸은 "미확인"으로 자리만 센다(내리지도, 팔지도 않는다). 계획에는 `low_trust=True`와 notes 첫 줄 "일부 유닛 미확인 — 이름을 확인한 유닛 기준입니다(보드·벤치 신뢰도 낮음)"이 붙는다. 이 View는 보드 배치 전용이다. 목표 덱·상점은 기존 `owned_units` 규칙을 그대로 쓴다. 판매 추천은 하지 않는다.
+- **이번 화면에서 계획을 못 세움**(보드 None, 이름 전무, augment_select, carousel): 세션의 직전 계획을 `stale=True`로 이어 간다(`board_plan.stale_copy`, 판매는 비운다). `board_plan_lines` 첫 줄 앞에 "(직전)"이 붙는다. 전투·item_select 화면은 원래 직전 추천을 그대로 돌려준다. `rescore_shop`도 직전 계획을 유지한다.
+- **지우는 때**: 새 판(`reset()` — loading/game_over 화면, loop의 새 판 감지)뿐이다. 직전 추천이 없는 첫 화면에서 이름을 하나도 모르면 예전처럼 None이다.
+- 참고: 신뢰도가 낮은 tracked 출처에서는 장부 이름의 유닛 신뢰도가 대개 1.0이다. 그래서 relaxed 계획은 장부 이름을 믿는다. "저신뢰" 문구와 판매 생략으로 이 한계를 표시한다. 유닛별 출처(`UnitOnBoard.source`, §1)가 생기면 vision 이름만 쓰도록 좁힐 수 있다.
+
+### 14.3 사용자 고정 덱 API (app-integrator가 UI에서 호출)
+
+```python
+Advisor.set_pinned_comp(comp_id: str | None) -> None   # 고정 / None이면 해제. 스레드 안전(threading.Lock)
+Advisor.pinned_comp_id -> str | None                   # property. 지금 고정된 덱(설정값 그대로)
+Recommendation.pinned_comp_id: str | None = None       # 이 추천에 실제로 적용된 고정 덱(통계에 없는 덱이면 None)
+```
+- **저장 · 해제**
+  - 고정값은 advisor 세션(`Session.pinned`)에 있다.
+  - `reset()`(새 판)이면 풀린다.
+  - 통계에 없는 comp_id는 추천 때 무시하고 WARNING 로그를 남긴다. 이때 `Recommendation.pinned_comp_id`는 None이다.
+- **순위**
+  - 고정 덱은 점수와 무관하게 `target_comps[0]`이다.
+  - 아래에 점수 순 대안이 최대 2개 붙는다(`max_target_comps` − 1).
+  - 근거 첫 줄은 고정 덱이 "사용자 고정 덱", 대안이 "대안 덱(고정 덱 아래)"이다.
+  - 고정 중에는 '초반: 방향 미정'과 "직전 추천 유지" 표시를 끈다.
+- **후보에 없을 때**: 1차 필터 후보에 없으면 통계에서 직접 불러 `score_candidate`로 후보에 넣는다. 후보 수 상한은 유지하고, 가장 낮은 후보를 뺀다.
+- **따라가는 것**
+  - `Scorer.shown[0]`이 고정 덱이 되므로 보드 배치·판매·아이템(1위 덱 캐리 BIS 우선 배분 §13)·빌드업(`next_buildup_board`)이 모두 고정 덱을 따른다.
+  - 상점 경로 가중(`rel`): 고정 덱 1.0, 나머지는 x `[comp] pin_other_rel`(0.5)이다. mini 예(3-2): 자이라 덱 고정 시 세주아니 0.31→0.36, 요릭 0.45→0.52, 베이가 0.93→0.74.
+- **Jev · 캐시**
+  - Jev state에 `user_pinned_comp: {comp: <후보 라벨>, note: "The player has locked this comp …"}`를 적는다.
+  - 이 값이 state 해시에 들어가므로 고정/해제가 캐시 키를 가른다. 해제하면 예전 해시로 돌아가 캐시를 다시 쓴다.
+  - 고정 중에는 덱 선택 질문(C4 `comp_pick`)을 묻지 않는다. 나머지 질문은 그대로 한 요청에 묶인다. 추가 호출은 없다.
+- **화면별 동작**
+  - `rescore_shop`: 고정 덱을 후보에 넣고, 직전 점수로 `rel`을 덮은 뒤 `apply_pin_rel`로 고정 가중을 다시 적용한다.
+  - 전투·item_select 화면에서 고정이 바뀌면(`last.pinned_comp_id` ≠ 현재 고정) Jev 없이(`use_jev=False`) 목표 덱·아이템·보드 배치를 다시 계산한다. 상점은 직전 값을 둔다. 이 추천은 "Jev 미사용"으로 표시되고, 다음 준비 단계에서 Jev로 다시 채운다.
+  - carousel도 고정이 바뀌었으면 새로 계산한다.
+
+### 14.4 전/후 (`--screenshot … --no-jev --no-overlay`)
+
+**test.png**(2-6, 골드 31, 벤치 9/9 중 미확인 5):
+- 목표 덱·상점·아이템은 변화가 없다.
+- [보드 배치]에 한 줄이 더해졌다.
+  ```
+  판매 참고: 벤치 9/9 가득 참 · 팔 만한 확인 유닛이 없습니다 · 미확인 유닛 5기는 판단하지 않았습니다
+  ```
+- 확인된 벤치 유닛(자야 x2, 카밀, 아칼리)은 모두 1성 쌍이다(보드의 카밀·아칼리와 합쳐 2기). 2-6 레벨 5 확률에서 2성 가능성이 있으므로 지켰다. 상점의 자야 [구매]는 사는 즉시 2성이 되므로 자리가 모자라다고 하지 않는다.
+
+**live3 2-2 준비.png**(1920x1080, 골드 7, 벤치 6기 전부 미확인):
+- 판매 줄은 없다. 초반이고 압박이 없으며, 확인된 벤치 유닛도 없다.
+- 전: 보드 이름 0기라 [보드 배치]가 없었다.
+- 후: 이번 실행에서는 vision 쪽 동시 작업(`vision/units.py`·`bench_memory.py`, 내 변경 아님)으로 보드 이름 4기가 읽혀 [보드 배치]가 나온다(바루스★2·피들스틱·아칼리·세주아니, 교체 없음). 이 차이는 내 변경 때문이 아니다. 이름이 전무하고 직전 추천도 없는 한 장짜리 스크린샷이면 여전히 None이다.
+
+### 14.5 테스트
+- `tests/advisor/test_sell.py`(16개)
+  - 판매가 = ledger 규칙, 이자 문구
+  - 초반 벤치 가득(싱글 ≤ 2기, "9/9 가득 참", 미확인 안내, 벤치 칸 번호) / 초반 조용함
+  - 쌍 유지(2코스트 33%) vs 5코스트 0% 쌍 판매 / 이름 미상은 절대 판매하지 않음
+  - 이자 구간(28골드 + 알리스타 2 → "팔면 30골드 → 이자 +1")
+  - 후반 최종 덱 밖(쌍·2성 포함) 판매, 최종 덱·라인업 유지, "이자 구간 50골드까지 1 남음"
+  - 아이템 보유자("아이템 1개는 벤치로 돌아옵니다") / 중반 벤치 2성 유지
+  - 상점 구매 자리 부족(사면 바로 합성되는 구매는 제외) / 끔 설정 · 리포트 줄 · 합쇼체
+  - §14.2: 신뢰도 0.50 tracked → 계획 유지(`low_trust`, 문구, 미확인 자리, 판매 없음) / 보드 못 읽음 → 직전 계획 `stale` + "(직전)" / augment·carousel·combat이 직전 계획 유지 / 새 보드면 새 계획, `reset` 뒤 None
+- `tests/advisor/test_pinned_comp.py`(9개)
+  - 고정 → s03(2-1)·s04(4-1) 모두 1위, 근거 문구, comp_pick 없음, Jev state, 보드 배치 기준 덱
+  - 해제 → 점수 순서, 후보 밖 덱(lunar-aphelios-kayle) 불러오기, reset이 해제
+  - 모르는 덱 무시 + 로그 / 캐시 키(고정 시 호출 +1, 해제 시 캐시 재사용)
+  - rescore_shop이 고정을 따름(자이라 덱 유닛 ↑, 베이가 ↓) / 전투 중 고정 → Jev 호출 없이 1위 교체·상점 유지 / 스레드 안전
+- 전체: `PYTHONIOENCODING=utf-8 .venv/Scripts/python.exe -m pytest -o addopts="" -q` → 1379 passed, 3 skipped, 1 xfailed, 6 failed.
+  - 알려진 Windows 실패 4건: api_key 힌트, setup 권한 상자, credentials 0600 두 건.
+  - `tests/app/test_board_wiring.py::test_live_loop_passes_the_board_read_to_the_session`: app-integrator가 작업 중인 `loop.py:652`가 가짜 advisor(`D`)의 `pinned_comp_id`를 읽는다. 테스트 더블에 속성이 없어서 실패한다(그쪽 작업).
+  - `tests/test_vision_units.py::test_every_champion_in_the_set_is_used_at_least_once`: vision 동시 작업 중이다. 단독으로 다시 돌리면 통과한다.
+
+### 14.6 남은 일 · 요청
+- **app-integrator**
+  - 오버레이에서 "판매:" 줄을 강조(WARN 색)할지 결정한다. 지금은 "교체:"만 강조된다.
+  - `BoardPlan.stale`이면 섹션을 흐리게 보여 준다.
+  - `test_board_wiring`의 가짜 advisor에 `pinned_comp_id`를 추가하거나, loop에서 `getattr(..., None)`을 쓴다.
+- **vision-engineer**: 유닛별 출처(`UnitOnBoard.source`)가 있으면 §14.2의 저신뢰 계획을 vision 이름으로만 좁힐 수 있다.
+- **튜닝 후보**
+  - `[sell] pair_min_odds`, `early_max`, `bench_near_full`, `late_from_stage`
+  - `[comp] pin_other_rel`: 0이면 고정 덱만 본다.
+
+## 15. 추정 이름은 판단하지 않는다 — jev-strategist, 2026-09-25
+
+**버그**: test.png 벤치 1을 vision이 "세주아니 (추정)"으로 읽는다. 라이브러리 닮음 하나로만 붙인 이름이다(`SlotName.corroborated=False`, 신뢰도 상한 0.75). 눈으로 보면 레오나일 가능성이 높다. 필드 임계값 0.6은 넘으므로 advisor가 확정 이름처럼 썼다. 그래서 [보드 배치]가 "벤치: … 세주아니 …", "판매: 세주아니 (+2골드) — 목표 덱·빌드업에 없습니다"를 보여 줬다. 같은 화면의 자야 2기도 0.75 추정 이름이었다. 이 때문에 상점 자야가 "확인 보유 2 → [구매]"(사면 2성)로 나왔다.
+
+**규칙**: 유닛 신뢰도가 `[board_plan] min_confidence`(기본 0.8, 추정 상한 0.75보다 높다) 미만이면 **이름 미상과 똑같이** 다룬다.
+- 판매 후보가 아니다. `[sell] min_confidence`(0.8)로 한 번 더 거른다.
+- 벤치로 내리거나 보드에 올리지 않는다. 보드 쪽은 자리만 차지한다.
+- 사본 수(1성 쌍 · 사면 2성), 상점 "보유 N", 목표 덱 보유·부족, Jev state `copies_owned*`·`unidentified_units`에 넣지 않는다.
+- 문구에서는 미확인 수에 포함해 밝힌다.
+  - "미확인 유닛 7기(추정 이름 3기 포함)는 판단하지 않았습니다"
+  - "벤치 미확인 N기(추정 이름 M기 포함)는 …"
+  - "이름 미상 N기(추정 이름 M기 포함)"
+
+**신호**: `UnitOnBoard`에는 출처·뒷받침 플래그가 없다. `confidence`(vision `unit_conf` 또는 장부 min(body, 칸))만 넘어온다. 그래서 신뢰도로만 가른다.
+- 확정으로 쓰는 경우: 뒷받침된 라이브러리 이름(≤ 0.92), 장부·수동(1.0, 자리가 정해진 칸 0.85), vision 집합 풀이 자리 미상(0.8).
+- 한계 1: 뒷받침됐어도 신뢰도가 0.8 미만인 이름은 추정으로 빠진다. 예로 특성 풀이 `set_conf x 0.85`가 낮은 경우가 있다.
+- 한계 2: 장부 유닛이 칸을 못 정한 자리(`SLOT_CONF_LOOSE` 0.6)에 붙으면 함께 빠진다.
+- 둘 다 보수적인 쪽(판단하지 않음)으로 틀린다. **app-integrator 요청**: `UnitOnBoard.corroborated: bool | None`(또는 `name_source`)를 추가하면 이 기준을 "corroborated 또는 장부·수동"으로 바꿀 수 있다.
+
+**구현**:
+- `unit_status.owned_units(state, threshold, unit_threshold=None)`
+  - `unit_threshold` 미만인 이름 있는 칸은 hidden으로 센다.
+  - `OwnedUnits.board_guessed`·`bench_guessed`·`guessed`를 추가했고, `gap_text`에 "(추정 이름 N기 포함)"을 붙인다.
+  - `units_knowledge`·`units_reason`에도 같은 인자를 추가했다.
+  - `units_note`는 기본값이 `CONFIRMED_NAME_THRESHOLD`(0.8)다. 그래서 표시 문구의 "N기 반영"이 advisor가 실제로 쓴 수와 맞는다.
+  - 인자를 넘기지 않은 `owned_units`·`units_reason`은 예전과 같다.
+- `features.build_view(..., unit_min_conf)` → `View.unit_min_conf`. 엔진은 `[board_plan] min_confidence`를 넘긴다(`_view`, `rescore_shop`). 목표 덱·상점·Jev·보드 배치·판매가 모두 이 View를 쓴다.
+- `board_plan.relaxed_view`(저신뢰 계획)도 `unit_min_conf`로 거른다.
+- `sell.sell_advice`는 `[sell] min_confidence` 미만을 후보·사본 수에서 뺀다.
+- `app/report.py units_lines`: 0.6 ≤ 신뢰도 < 0.8인 이름에 " (추정)"을 붙인다(인식 확인 창과 같은 표시).
+- 설정: `config.BoardPlanWeights.min_confidence`, `config.SellWeights.min_confidence`, `weights.toml [board_plan]`·`[sell] min_confidence = 0.8`.
+
+**전/후**(test.png, `--jev mock`):
+- 비교 방법: 같은 GameState(보드 5기 0.85, 벤치 세주아니·자야·자야 0.75 추정, 아칼리·카밀 0.85, 미상 4)를 두 번 돌렸다. 한 번은 `min_confidence` 0.6(= 예전 동작), 한 번은 0.8이다.
+- vision 동시 작업으로 실제 CLI 실행에서는 자야 2기가 이미 "이름 미상"으로 바뀌어 있었다. 그래서 인식을 고정하고 advisor만 비교했다. CLI에서도 판매 줄과 세주아니 벤치 표시는 똑같이 사라진다.
+```
+전:  벤치: 자야 · 자야 · 세주아니 · 카밀 · 아칼리
+     판매: 세주아니 (+2골드)
+     판매 이유: 세주아니 — 목표 덱·빌드업에 없습니다
+     판매 참고: 벤치 9/9 가득 참 · 미확인 유닛 4기는 판단하지 않았습니다
+     [상점] 1. [구매] 자야 0.56 · 빌드업 — … · 확인 보유 2
+후:  벤치: 카밀 · 아칼리
+     판매 참고: 벤치 9/9 가득 참 · 팔 만한 확인 유닛이 없습니다 · 미확인 유닛 7기(추정 이름 3기 포함)는 판단하지 않았습니다
+     참고: 벤치 미확인 7기(추정 이름 3기 포함)는 판단하지 않았습니다 — 강한 유닛이면 직접 올려 주세요
+     [상점] 1. [보류] 자야 0.41 · 빌드업 — … · 확인 보유 0
+     목표 덱: (부분 확인 — 화면 인식 7기 반영 · 이름 미상 7기(추정 이름 3기 포함) · …)
+     상태 줄: 벤치 9기: 1 세주아니 (추정) · … · 3 자야 (추정) · … · 8 자야 (추정) · 9 카밀
+```
+목표 덱 순위·보드 라인업·교체·아이템은 변하지 않았다. 상점 레오나의 경로 가중만 0.85에서 0.84로 바뀌었다.
+
+**테스트**: `tests/advisor/test_guessed_units.py`(7개).
+- 기본 임계값이 추정 상한보다 높다.
+- 0.75 이름은 팔지 않고, 0.85 이름은 판다(미확인 문구 포함).
+- 보드의 추정 이름은 교체·판매 대상이 아니다. 벤치의 추정 이름은 라인업에 들어가지 않는다.
+- 확인 1 + 추정 1은 쌍이 아니다. 확인 2(0.85)는 쌍으로 지킨다.
+- `owned_units`·`units_reason`·`units_note` 문구를 확인한다.
+- 엔진 끝까지: 추정 세주아니 2기는 상점 "보유 2"가 아니고 목표 덱 보유도 아니다. 0.85 2기는 "보유 2"다.
+- 리포트 "(추정)" 표시를 확인한다.
+
+`test_board_trust.board_ok_bench_low`의 벤치 세주아니 0.7은 0.85로 올렸다. 이 fixture는 "확인 2기"를 뜻하므로 새 규칙에서는 0.8 이상이어야 한다.
+
+전체 결과(수정 뒤): 1440 passed, 3 skipped, 2 xfailed, 4 failed. 새 규칙 때문에 실패했던 2건(위 fixture)은 고쳤다. 남은 4건은 알려진 Windows 4건이다(api_key 힌트, setup 권한 상자, credentials 0600 두 건). `tests/fixtures/states/*.json`에는 0.6~0.8 이름 유닛이 없어서 fixture 추천은 변하지 않는다.

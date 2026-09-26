@@ -129,7 +129,8 @@ class UnitSlot:
     unit_conf: float = 0.0
     """이름 판정 신뢰도(0 = 이름 없음)."""
     name_source: str = "none"
-    """이름 근거: forced(특성 구속만으로 결정) | traits(구속 + 닮음 배정) | library | duplicate | none."""
+    """이름 근거: forced(특성 구속만으로 결정) | traits(구속 + 닮음 배정) | library | duplicate | none |
+    held(체력바가 사라진 프레임에서 직전 판독을 그대로 이어 씀, `vision.bench_memory`)."""
     corroborated: bool | None = None
     """이름에 모델 닮음 말고 다른 뒷받침(특성 구속·장부 힌트·같은 모델 보드 유닛)이 있는가. False = 라이브러리 닮음 하나만으로 붙인
     추정(`units.SlotName.corroborated`). None = 이름 없음 또는 모름(`app.recog_view.is_guess`는 이때 신뢰도 규칙으로 본다)."""
@@ -164,6 +165,9 @@ class BoardRead:
     """모든 특성 풀이에 든 챔피언 = 풀이가 여럿이어도 보드에 **확실히 있는** 챔피언(자리는 모른다). 풀이가 하나면 `board_set`과 같다."""
     missed_board: int = 0
     """특성 풀이 챔피언 수 - 찾은 보드 칸 수. > 0이면 체력바를 못 찾은(가려진) 보드 유닛이 적어도 이만큼 있다."""
+    bench_held: bool = False
+    """벤치 체력바가 사라진 프레임(준비 끝·전환)이라 벤치를 **칸 그림 + 직전 판독**으로 채웠다(`vision.bench_memory`).
+    `name_source == "held"`인 칸은 직전 판독 그대로(표시: "직전 판독"), 이름 없는 칸은 그림으로만 찾은 칸이다."""
 
     @property
     def count(self) -> int:

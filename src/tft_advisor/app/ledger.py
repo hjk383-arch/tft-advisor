@@ -450,6 +450,10 @@ class PurchaseTracker:
         self._stage: str | None = None
         self._level: int | None = None
         self._xp: tuple[int, int] | None = None
+        self._anchor_level: int | None = None
+        self._anchor_xp: tuple[int, int] | None = None
+        """정산 기준(골드를 맞춘 순간)의 레벨·경험치. 경험치 막대가 골드보다 **먼저** 바뀌어 읽히면 직전 프레임과만 비교해서는
+        경험치 구매를 못 알아본다(30 보고: "미결 0칸, 골드 4"가 설명되지 않는 변화로 남았다)."""
         self._pending: list[_Pending] = []
         self._open_at: float | None = None
         self.buys = 0
@@ -466,7 +470,7 @@ class PurchaseTracker:
         prev_shop, self._shop = self._shop, obs.shop
         stage_changed = bool(obs.stage and self._stage and obs.stage != self._stage)
         level_up = self._level is not None and obs.level is not None and obs.level > self._level
-        xp_up = bool(self._xp and obs.xp and obs.xp[0] > self._xp[0]) or level_up
+        xp_up = bool(self._xp and obs.xp and obs.xp[0] > self._xp[0]) or level_up or self._xp_up_since_anchor(obs)
         events: list[LedgerEvent] = []
 
         if obs.shop is None or prev_shop is None or len(prev_shop) != len(obs.shop):
@@ -516,9 +520,22 @@ class PurchaseTracker:
     def _anchor(self, obs: FrameObs, stage_changed: bool = False) -> None:
         self._pending = []
         self._open_at = None
+        moved = obs.gold is not None and obs.gold != self._anchor_gold
         if obs.gold is not None:
             self._anchor_gold = obs.gold
         self._remember(obs)
+        # 경험치 기준은 골드 기준이 **움직일 때만** 옮긴다: 골드가 그대로인 프레임에서 옮기면 막대가 먼저 바뀐 경우를 놓친다
+        if moved or stage_changed or self._anchor_xp is None:
+            self._anchor_level, self._anchor_xp = self._level, self._xp
+
+    def _xp_up_since_anchor(self, obs: FrameObs) -> bool:
+        """정산 기준 이후 레벨이 올랐거나 같은 레벨에서 경험치가 늘었다(경험치 구매의 화면 증거)."""
+        level = obs.level if obs.level is not None else self._level
+        xp = obs.xp if obs.xp is not None else self._xp
+        if self._anchor_level is not None and level is not None and level > self._anchor_level:
+            return True
+        return bool(self._anchor_xp and xp and (level is None or level == self._anchor_level)
+                    and xp[0] > self._anchor_xp[0])
 
     def _settle(self, obs: FrameObs, ledger: UnitLedger, stage_changed: bool, xp_up: bool,
                 *, reroll: bool = False, force: bool = False) -> list[LedgerEvent]:
@@ -612,6 +629,10 @@ class PurchaseTracker:
         """창이 끝났는데 설명이 안 된다 → 칸 증거만으로 되는 것만 넣고, 나머지는 애매로 남긴다."""
         pending, self._pending = self._pending, []
         self._open_at = None
+        # 설명하지 못한 변화는 한 번만 알린다: 골드 기준을 지금 값으로 옮긴다. 옮기지 않으면 같은 차이가 settle_s마다
+        # 다시 "설명되지 않는 변화"가 되어 ambiguous가 끝없이 쌓이고(세션 기록: 같은 "골드 12"가 10번), 그 뒤의 구매·판매도
+        # 낡은 기준과 비교되어 모두 어긋난다(경험치 구매 하나를 놓치면 다음 수입이 "골드 -4"로 남는다).
+        self._anchor(obs)
         if not pending and not spent:
             return []
         if pending and spent is None:

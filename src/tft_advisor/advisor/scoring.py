@@ -95,6 +95,7 @@ class Scorer:
     aug_labels: dict[int, str] = field(default_factory=dict)   # augment_offer 인덱스 → aug_pick 라벨
     item_labels: dict[str, str] = field(default_factory=dict)  # item_pick 라벨 → 아이템 ID
     debug: dict[str, Any] = field(default_factory=dict)
+    pinned: str | None = None     # 사용자 고정 덱 comp_id(21 §14.3). cands 안에 있어야 한다(engine이 보장)
 
     # --- Jev 답 접근 ---
     def gate(self, conf: float, force_low: bool = False) -> float:
@@ -218,11 +219,27 @@ class Scorer:
                 shown.append(r)
         self.order = order
         self.shown = shown
+        if self.pinned is not None and any(r["cand"].comp_id == self.pinned for r in order):
+            # 사용자 고정 덱: 점수와 무관하게 1위, 나머지는 점수 순 대안(최대 limit − 1개)
+            pin_row = next(r for r in order if r["cand"].comp_id == self.pinned)
+            others = [r for r in order if r is not pin_row and r["final"] > 0]
+            self.order = [pin_row] + [r for r in order if r is not pin_row]
+            self.shown = [pin_row] + others[:max(0, limit - 1)]
+            self.p_undecided, self.undecided = 0.0, False
+            self.debug["pinned"] = self.pinned
+            self.apply_pin_rel()
         no_bonus_rank = [r["cand"].comp_id for r in sorted(self.comp_rows, key=lambda r: (-r["score"], r["k"]))]
         self.kept_by_hysteresis = {
             r["cand"].comp_id for i, r in enumerate(order)
             if r["H"] and no_bonus_rank.index(r["cand"].comp_id) > i
         }
+
+    def apply_pin_rel(self) -> None:
+        """고정 덱 rel = 1, 나머지 x pin_other_rel(상점 경로·아이템 bis가 고정 덱을 따르게). 고정 없으면 그대로."""
+        if self.pinned is None or self.pinned not in self.rel:
+            return
+        f = self.w.comp.pin_other_rel
+        self.rel = {cid: (1.0 if cid == self.pinned else v * f) for cid, v in self.rel.items()}
 
     def hysteresis_weight(self, comp_id: str) -> float:
         """H(c)(§5.2, Phase 3 수정): 시그니처 불변일 때 직전 1위 = 1, 직전 2·3위 = other_share, 그 외 0.
@@ -307,14 +324,16 @@ class Scorer:
         # 3. 상태 플래그 (후반 무자원 안내는 오버레이가 근거 앞 3개만 보여 주므로 보드 플래그보다 앞에 둔다)
         if self.blind_late and not self.undecided:
             reasons.append("보유 아이템·증강 신호 없음: 레벨 템포·메타로 추정")
-        units_note = units_reason(v.state, v.min_conf)   # 보드 미인식 / 부분 확인 / 구매 추적 기준
+        units_note = units_reason(v.state, v.min_conf, v.unit_min_conf)   # 보드 미인식 / 부분 확인 / 구매 추적 기준
         if units_note is not None:
             reasons.append(units_note)
         if not v.items_known:
             reasons.append("아이템 미인식")
         if self.undecided:
             reasons.append("초반: 방향 미정")
-        if comp.comp_id in self.kept_by_hysteresis:
+        if self.pinned is not None:
+            reasons.insert(0, "사용자 고정 덱" if comp.comp_id == self.pinned else "대안 덱(고정 덱 아래)")
+        elif comp.comp_id in self.kept_by_hysteresis:
             reasons.append("직전 추천 유지")
         if self.answers is None:
             reasons.append("Jev 미사용(통계 기반)")
@@ -322,6 +341,7 @@ class Scorer:
             comp_id=comp.comp_id, name=comp.name, score=clip01(row["final"]), carry=comp.carry,
             levelling=comp.levelling, reasons=reasons[:5], owned_units=owned_units, missing_units=missing_units,
             items_ready=ready, next_buildup_board=next_buildup_board(comp, c.L),
+            final_board=list(comp.final_board[:12]),
         )
 
     def augment_reason(self, comp) -> str:

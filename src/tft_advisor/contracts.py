@@ -470,6 +470,9 @@ class TargetComp(ContractModel):
     missing_units: list[ChampionId] = Field(default_factory=list)
     items_ready: list[ItemReadiness] = Field(default_factory=list)
     next_buildup_board: BuildupBoard | None = None
+    final_board: list[CompUnit] = Field(default_factory=list, max_length=12)
+    """덱의 최종 보드 유닛(`CompStats.final_board` 복사, 통계 순서). 2026-09-25 추가(선택) — 오버레이가 메타 사이트처럼
+    유닛 아이콘 줄로 보여 준다(보유 = `owned_units`, 부족 = `missing_units`, 캐리 = `carry`)."""
 
 
 class ShopAdvice(ContractModel):
@@ -577,6 +580,26 @@ class StageBoardHint(ContractModel):
     next_avg_place: float | None = None
 
 
+class SellAdvice(ContractModel):
+    """판매 추천 1기(이름을 확인한 보유 유닛만 — 이름 미상은 절대 판매 대상이 아니다). 2026-09-25 추가
+    (`_workspace/21_board_trust.md` §14). 코드·통계 전용(Jev 호출 없음).
+
+    - where: 지금 있는 곳(board = 보드에서 빼서 판다 / bench). hex·bench_slot은 화면에서 읽은 칸(모르면 None)
+    - gold: 판매가(코스트·성급 규칙, `advisor.sell.unit_sell_value`). 코스트를 모르면 None
+    - items: 장착 아이템 — 팔면 아이템 벤치로 돌아온다(reason에도 적는다)
+    - reason: 짧은 합쇼체 근거
+    """
+
+    unit_id: ChampionId
+    star: Star | None = None
+    where: Literal["board", "bench"]
+    hex: tuple[Annotated[int, Field(ge=0, le=3)], Annotated[int, Field(ge=0, le=6)]] | None = None
+    bench_slot: Annotated[int, Field(ge=0, le=8)] | None = None
+    gold: Annotated[int, Field(ge=0)] | None = None
+    items: list[ItemId] = Field(default_factory=list, max_length=3)
+    reason: str | None = None
+
+
 class BoardPlan(ContractModel):
     """지금 보유한 유닛 중 무엇을 보드에 둘지(코드 계산, Jev 호출 없음). 2026-09-23 추가.
 
@@ -584,6 +607,11 @@ class BoardPlan(ContractModel):
     - bench: 벤치에 둘(또는 내릴) 이름 아는 유닛
     - slots: 보드 칸 수(보통 레벨). free_slots: 올릴 유닛이 모자라 비는 칸
     - notes: 부분 확인·레벨 미인식 등 한계(합쇼체)
+    - sell / sell_gold_total / interest_note / sell_notes: 판매 추천(2026-09-25 추가, 선택 — §14).
+      sell이 비어 있고 sell_notes도 없으면 표시하지 않는다
+    - stale: 이번 화면에서 보드를 읽지 못해 **직전 계획을 그대로 보여 주는 중**(2026-09-25 추가). 판매 추천은 비운다
+    - low_trust: 보드·벤치 필드 신뢰도가 낮아(구매 추적 애매 등) 칸마다 이름 신뢰도가 높은 유닛만으로 세운 계획
+      (2026-09-25 추가). 판매 추천은 하지 않는다
     """
 
     comp_id: str | None = None
@@ -597,6 +625,12 @@ class BoardPlan(ContractModel):
     notes: list[str] = Field(default_factory=list)
     transition: BoardTransition | None = None   # 2026-09-24 추가(선택). 같은 내용이 notes에 "전환: …" 한 줄로도 들어간다
     stage_board: StageBoardHint | None = None   # 2026-09-24 추가(선택). notes에 "지금 이 스테이지 추천 보드: …"/"다음 스테이지: …"
+    sell: list[SellAdvice] = Field(default_factory=list)            # 2026-09-25 추가(선택) — 판매 추천(파는 순서)
+    sell_gold_total: Annotated[int, Field(ge=0)] = 0                # sell 전부를 팔면 받는 골드(코스트 모르는 유닛 제외)
+    interest_note: str | None = None                                # 예 "팔면 30골드 → 이자 +1" / "이자 구간 30골드까지 1 남음"
+    sell_notes: list[str] = Field(default_factory=list)             # 예 "벤치 9/9 가득 참" · "미확인 유닛 5기는 판단하지 않았습니다"
+    stale: bool = False                                             # 직전 계획(이번 화면에서 보드 못 읽음)
+    low_trust: bool = False                                         # 필드 신뢰도 낮음 — 이름 신뢰도 높은 유닛 기준
 
 
 class FallbackReason(StrEnum):
@@ -628,6 +662,10 @@ class Recommendation(ContractModel):
     item: ItemAdvice | None = None
     component_priority: list[ItemId] = Field(default_factory=list, max_length=10)
     board_plan: BoardPlan | None = None   # 보드 배치 추천(2026-09-23 추가, 선택 필드 — 없으면 표시하지 않는다)
+    pinned_comp_id: str | None = None     # 사용자 고정 덱(2026-09-25 추가, 선택). 고정 중이면 target_comps[0].comp_id와 같다
+    pinned_comp_id: str | None = None
+    """사용자가 고정한 목표 덱(2026-09-25 추가, 선택). 값이 있으면 이 추천은 그 덱 기준으로 계산됐다
+    (`Advisor.set_pinned_comp`, 오버레이 목표 덱 클릭). None = 고정 없음(자동 선정)."""
     jev_used: bool
     fallback_reason: FallbackReason | None = None
     latency_ms: Annotated[float, Field(ge=0)] | None = None

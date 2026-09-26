@@ -32,9 +32,10 @@ def gs(**kw) -> GameState:
 
 
 def board_ok_bench_low(**kw) -> GameState:
-    """test.png와 같은 모양: 보드 0.85(전부 이름 확인), 벤치 0.38(이름 미상 3 + 확인 2 + 낮은 신뢰도 1)."""
+    """test.png와 같은 모양: 보드 0.85(전부 이름 확인), 벤치 0.38(이름 미상 3 + 확인 2 + 낮은 신뢰도 1).
+    확인 벤치 유닛은 0.8 이상이다 — 0.75 이하 추정 이름은 이름 미상으로 센다(21 §15, test_guessed_units.py)."""
     return gs(board=[U("DA_18_Zyra"), U("DA_18_Ashe")],
-              bench=[unknown(), U("DA_18_Sejuani", 0.8), unknown(), U("DA_18_Sejuani", 0.7),
+              bench=[unknown(), U("DA_18_Sejuani", 0.8), unknown(), U("DA_18_Sejuani", 0.85),
                      U("DA_18_Maokai", 0.5), unknown()],
               confidence={"board": 0.85, "bench": 0.38}, field_source=VISION, **kw)
 

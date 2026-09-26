@@ -56,9 +56,11 @@ class RecogWindow(QWidget):
                  on_redetect: Callable[[], Any] | None = None,
                  on_quit: Callable[[], Any] | None = None,
                  on_review: Callable[[], Any] | None = None,
+                 pin: Any = None,
                  parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self.on_review = on_review
+        self.pin = pin                           # deck_chooser.PinController(목표 덱 고정 버튼 줄, 없으면 두지 않는다)
         self.on_redetect = on_redetect
         self.on_quit = on_quit
         self.settings = settings
@@ -123,6 +125,12 @@ class RecogWindow(QWidget):
         self.redetect_label.setTextFormat(Qt.TextFormat.RichText)
         self.redetect_label.setWordWrap(True)
         self.redetect_label.setVisible(False)
+        # 목표 덱 고정: 오버레이 옆 띠와 같은 버튼(같은 PinController — 한쪽을 누르면 양쪽이 같이 바뀐다)
+        self.deck_buttons = None
+        if pin is not None:
+            from .deck_chooser import DeckButtons
+
+            self.deck_buttons = DeckButtons(pin, title="목표 덱 고정:", parent=self)
 
         self.body = QLabel("", self)
         self.body.setTextFormat(Qt.TextFormat.RichText)
@@ -143,6 +151,8 @@ class RecogWindow(QWidget):
         layout.setSpacing(4)
         layout.addLayout(top)
         layout.addWidget(self.redetect_label)
+        if self.deck_buttons is not None:
+            layout.addWidget(self.deck_buttons)
         layout.addWidget(self.scroll, 1)
         layout.addWidget(self.foot)
         self.setStyleSheet(f"""
@@ -223,6 +233,8 @@ class RecogWindow(QWidget):
         else:
             parts.append(_section(f"벤치 {view.bench_count}/9", view.bench_note))
             parts.append(_rows(view.bench, self.threshold, dim_all))
+        if view.ledger_note:
+            parts.append(f"<span style='color:{ACCENT}'>{_esc(view.ledger_note)}</span>")
         parts.append(_section("장착 아이템"))
         parts += [_group(g.title, g.items) for g in view.equipped] or [_dim("(없음)")]
         if view.unused is None:
@@ -424,8 +436,10 @@ class RecogController:
                  window_factory: Callable[..., RecogWindow] | None = None,
                  on_redetect: Callable[[], Any] | None = None,
                  on_quit: Callable[[], Any] | None = None,
-                 on_review: Callable[[], Any] | None = None) -> None:
+                 on_review: Callable[[], Any] | None = None,
+                 pin: Any = None) -> None:
         self.settings = settings
+        self.pin = pin                     # 목표 덱 고정 컨트롤러(없으면 창에 버튼 줄을 두지 않는다)
         self.on_review = on_review         # 오버레이의 open_unit_review(없으면 버튼을 두지 않는다)
         self.on_quit = on_quit             # 오버레이의 quit(없으면 [앱 종료] 버튼을 두지 않는다)
         self.on_redetect = on_redetect     # 오버레이의 request_redetect(없으면 창에 버튼을 두지 않는다)
@@ -502,7 +516,7 @@ class RecogController:
         if self.window is None:
             factory = self._factory or RecogWindow
             kwargs = {k: v for k, v in (("on_redetect", self.on_redetect), ("on_quit", self.on_quit),
-                                        ("on_review", self.on_review)) if v is not None}
+                                        ("on_review", self.on_review), ("pin", self.pin)) if v is not None}
             self.window = factory(self.settings, names=self.names, state_dir=self.state_dir, passive=True,
                                   on_close=lambda: self.set_enabled(False), **kwargs)
             if self.redetect_note is not None and hasattr(self.window, "show_redetect"):

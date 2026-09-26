@@ -10,6 +10,8 @@ Qt 시그널로 UI 스레드에 넘긴다(**UI 스레드에서 인식·Jev 호�
 - Jev 실시간 판단     트레이 메뉴 체크(과금). 켜면 live, 끄면 mock으로 **재시작 없이** 바꾸고 설정에 저장한다
                       (`app/jev_toggle.py`. 교체는 작업 스레드에서 하고, 새 백엔드는 다음 추천부터 쓰인다)
 - 인식 확인 창        트레이 메뉴 체크. 보드·벤치·장착/미사용 아이템을 보여 주는 보조 창(`app/recog_window.py`)
+- 목표 덱 고정        오버레이 왼쪽의 "📌 목표 덱" 띠(별도의 작은 창, 클릭 통과 아님)·인식 확인 창 버튼·트레이
+                      "목표 덱 고정 ▸". 누르면 그 덱으로 고정(모든 추천이 그 덱 기준), 다시 누르면 해제(`app/deck_chooser.py`)
 - 게임 화면 다시 찾기  트레이 메뉴. 게임 창 위치·크기를 OS 창 목록에서 다시 읽어 캡처 영역을 재시작 없이 맞춘다
                       (`app/game_window.py`. 찾기는 캡처 스레드에서 한다)
 - 표시/숨기기         Ctrl+Shift+O
@@ -33,11 +35,13 @@ from PySide6.QtWidgets import QApplication, QLabel, QMenu, QPushButton, QSystemT
 
 from ..config import Settings, load_settings
 from ..contracts import GameState, Recommendation
-from ..unit_status import units_note
+from .hud_model import ACCENT, DIM, GOOD, STALE, WARN, build_model
+from .hud_view import HudView, IconBook, default_icon_dir
 from .names import NameBook
+from .pinning import header_label
 from .platform_window import apply_always_on_top, apply_click_through, click_through_note
 from .report import (
-    KeptInfo, StatusInfo, augment_lines, board_plan_lines, comp_lines, item_lines, jev_label, recognition_warnings,
+    KeptInfo, StatusInfo, recognition_warnings,
     shop_lines, state_line, status_line,
 )
 
@@ -47,10 +51,7 @@ STATE_FILE = "overlay.json"
 QUIT_HINT = "종료: 트레이 아이콘 오른쪽 클릭 → 종료, 또는 ✕ 버튼"
 QUIT_HINT_MS = 30000          # 시작 안내를 상태줄에 보여 주는 시간
 CONFIRM_MS = 3000             # 종료 버튼: 첫 클릭 뒤 이 시간 안에 한 번 더 눌러야 끝난다(실수 방지)
-ACCENT = "#7fd1ff"
-GOOD = "#8ce99a"
-WARN = "#ffd43b"
-DIM = "#9aa4b2"
+__all_colors__ = (ACCENT, DIM, GOOD, STALE, WARN)   # 색은 hud_model 한 곳에서 정한다(여기서는 다시 내보낸다)
 
 
 class ConfirmButton(QPushButton):
@@ -129,6 +130,7 @@ class OverlayWindow(QWidget):
     loop_update = Signal(object)
     jev_switched = Signal(object)     # jev_toggle.SwitchResult (작업 스레드 → UI 스레드)
     redetected = Signal(object)       # game_window.WindowDetection (캡처 스레드 → UI 스레드)
+    icons_ready = Signal(object)      # 챔피언 아이콘 첫 내려받기 끝(작업 스레드 → UI 스레드)
 
     def __init__(self, settings: Settings | None = None, *, names: NameBook | None = None,
                  state_dir: Path | None = None, config_dir: Path | None = None,
@@ -161,6 +163,8 @@ class OverlayWindow(QWidget):
         self.last_redetect = None                # 마지막 다시 찾기 결과(WindowDetection)
         self.unit_review_opener = None           # () -> 검토 창 ("유닛 사진 검토", app/unit_review.py). 없으면 메뉴 항목 없음
         self.review_window = None                # 열린 검토 창(참조를 들고 있어야 GC로 닫히지 않는다)
+        self.pin = None                          # deck_chooser.PinController (목표 덱 고정, 없으면 띠·메뉴 없음)
+        self.deck_chooser = None                 # deck_chooser.DeckChooser (오버레이 옆 "목표 덱" 띠 창)
 
         self.setWindowTitle("TFT Advisor")
         self.setWindowFlags(Qt.WindowType.FramelessWindowHint | Qt.WindowType.Tool)
@@ -168,25 +172,29 @@ class OverlayWindow(QWidget):
         self.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.customContextMenuRequested.connect(lambda pos: self.menu().exec(self.mapToGlobal(pos)))
 
-        self.body = QLabel("", self)
+        # 본문 = 고정 배치 HUD(섹션 자리·줄 수 고정, 33 보고). 상태줄은 아래 고정 높이 라벨.
+        self.icons = IconBook(default_icon_dir(self.settings.app.set_number) if self.cfg.unit_icons else None)
+        self.body = HudView(self.cfg, icons=self.icons, deck_slots=self.settings.ui.max_target_comps, parent=self)
         self.foot = QLabel("", self)
-        for label in (self.body, self.foot):
-            label.setTextFormat(Qt.TextFormat.RichText)
-            label.setWordWrap(True)
-            label.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft)
+        self.foot.setTextFormat(Qt.TextFormat.RichText)
+        self.foot.setWordWrap(True)
+        self.foot.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft)
         pad = int(10 * self.scale)
+        self._pad = pad
         layout = QVBoxLayout(self)
         layout.setContentsMargins(pad, pad, pad, pad)
         layout.setSpacing(int(4 * self.scale))
-        layout.addWidget(self.body)
+        layout.addWidget(self.body, 1)
         layout.addWidget(self.foot)
         self.setStyleSheet(self._stylesheet())
-        self.setFixedWidth(self.cfg.width)
+        self.foot.setFixedHeight(2 * self.body.line_h + int(10 * self.scale))   # 상태줄 2줄 고정
+        self._apply_geometry()
         self.setWindowOpacity(self._opacity)
 
         self.loop_update.connect(self._on_update_main, Qt.ConnectionType.QueuedConnection)
         self.jev_switched.connect(self._on_jev_switched, Qt.ConnectionType.QueuedConnection)
         self.redetected.connect(self._on_redetected, Qt.ConnectionType.QueuedConnection)
+        self.icons_ready.connect(self._on_icons_ready, Qt.ConnectionType.QueuedConnection)
         self._age_timer = QTimer(self)
         self._age_timer.setInterval(5000)          # 상태줄의 "N초 전"을 갱신한다
         self._age_timer.timeout.connect(self._render_status)
@@ -233,76 +241,51 @@ class OverlayWindow(QWidget):
         if status is not None:
             self.status = status
         self.status.rec = rec
+        if self.pin is not None:
+            self.pin.set_rec(rec, notify=False)
         self.render()
+        self._place_chooser()
 
     def render(self) -> None:
-        self.body.setText(self._body_html())
+        """내용만 바꾼다. **창 크기·섹션 자리는 바꾸지 않는다**(고정 배치, 33 보고)."""
+        rec = self.rec
+        pin_note = self.pin.header() if self.pin is not None else header_label(None, rec)
+        self.body.set_model(build_model(
+            self.state, rec, self.names, kept=self.kept, pin_note=pin_note,
+            deck_slots=self.settings.ui.max_target_comps, threshold=self.settings.vision.state_min_confidence,
+            plan_color=_plan_color))
         self._render_status()
-        self._fit_height()
 
-    def _fit_height(self) -> None:
-        """내용 높이에 맞춘다. `adjustSize()`는 최상위 창을 화면 높이의 2/3에서 잘라 아래 섹션([상점]·[아이템])이
-        보이지 않았다. 줄바꿈 라벨은 폭에 따라 높이가 달라지므로 고정 폭 기준 높이를 구하고, 화면 높이까지만 늘린다."""
-        self.setFixedWidth(self.cfg.width)
-        lay = self.layout()
-        h = lay.totalHeightForWidth(self.cfg.width) if lay is not None and lay.hasHeightForWidth() else -1
-        if h <= 0:
-            h = self.sizeHint().height()
+    def _on_icons_ready(self, _count=None) -> None:
+        self.icons.refresh()
+        self.body.update()
+
+    def fixed_size(self) -> tuple[int, int]:
+        """설정 크기(`[overlay] width`/`height`). 화면보다 크면 화면 크기로 줄인다(섹션 줄 수가 대신 줄어든다)."""
+        w, h = self.cfg.width, self.cfg.height
         screen = self.screen() or QGuiApplication.primaryScreen()
         if screen is not None:
-            h = min(h, screen.availableGeometry().height())
-        self.resize(self.cfg.width, h)
+            area = screen.availableGeometry()
+            w, h = min(w, area.width()), min(h, area.height())
+        return int(w), int(h)
+
+    def _apply_geometry(self) -> None:
+        """창을 고정 크기로 두고, 본문 높이에 맞춰 섹션 줄 수를 한 번 정한다(내용과 무관)."""
+        w, h = self.fixed_size()
+        self.setFixedSize(w, h)
+        body_h = h - 2 * self._pad - self.foot.height() - self.layout().spacing()
+        self.body.setFixedHeight(max(50, body_h))
+        self.body.fit(self.body.height())
+
+    def chooser_offset(self) -> int:
+        """목표 덱 띠를 [목표 덱] 제목 높이에 맞춘다(창 위쪽에서 px)."""
+        y = self.body.section_y.get("comps")
+        if y is None:   # 아직 그리지 않았다 — 고정 배치라 계산으로 같은 값
+            y = int(self.body.pad + (3 + 0.4) * self.body.line_h)
+        return self.body.y() + y
 
     def _render_status(self) -> None:
         self.foot.setText(f"<span style='color:{DIM}'>{_line(status_line(self.status))}</span>")
-
-    def _body_html(self) -> str:
-        parts: list[str] = [f"<b style='color:{ACCENT}'>TFT Advisor</b>"]
-        state, rec = self.state, self.rec
-        if state is not None:
-            parts.append(f"<span style='color:{DIM}'>{_line(state_line(state))}</span>")
-        if rec is None:
-            parts.append("<i>추천 대기 중…</i>" if state is None else "<i>이 화면에서는 새 추천이 없습니다</i>")
-            return "<br>".join(parts)
-
-        kept = self.kept
-        if kept is not None:
-            parts.append(f"<span style='color:{WARN}'>{_line(kept.note())}</span>")
-        parts.append(_section("목표 덱", jev_label(rec) + (f" · {kept.label}" if kept is not None else "")))
-        shown = rec.target_comps[:self.settings.ui.max_target_comps]
-        if not shown:
-            parts.append("<i>후보 없음 — 인식 정보 부족</i>")
-        note = units_note(state, self.settings.vision.state_min_confidence) if state is not None else None
-        for i, comp in enumerate(shown, start=1):   # advisor 순서 그대로. 점수로 재정렬하지 않는다
-            lines = comp_lines(comp, i, self.names, compact=True, units_note=note)
-            parts.append(f"<b>{_line(lines[0])}</b>")
-            parts += [f"<span style='color:{DIM}'>{_line(ln)}</span>" for ln in lines[1:]]
-        if rec.board_plan is not None:   # 어떤 유닛을 보드에 둘지(목표 덱 아래, 21 보고 §6)
-            plan = rec.board_plan
-            basis = next((c.name for c in rec.target_comps if c.comp_id == plan.comp_id), None)
-            parts.append(_section("보드 배치"))
-            for ln in board_plan_lines(plan, self.names, comp_name=basis):
-                color = WARN if ln.startswith("교체:") and plan.swaps else DIM
-                parts.append(f"<span style='color:{color}'>{_line(ln)}</span>")
-        if rec.shop:
-            parts.append(_section("상점", kept.shop_label if kept is not None else None))
-            fresh = kept is None or kept.shop_fresh      # 지금 상점 기준이면 밝게, 직전 추천은 흐리게
-            for line in shop_lines(rec, self.names):
-                color = GOOD if "[구매]" in line and fresh else DIM
-                parts.append(f"<span style='color:{color}'>{_line(line)}</span>")
-        elif kept is not None and (kept.bought or kept.changed):
-            parts.append(_section("상점", f"{kept.shop_label} — 남은 추천 칸 없음"))
-        if rec.augment is not None:
-            parts.append(_section("증강 선택"))
-            parts += [f"<span style='color:{WARN if ln.startswith('★') else DIM}'>{_line(ln)}</span>"
-                      for ln in augment_lines(rec, self.names)]
-        if rec.item is not None and (rec.item.suggestions or rec.item.hold):
-            parts.append(_section("아이템"))
-            parts += [f"<span style='color:{DIM}'>{_line(ln)}</span>" for ln in item_lines(rec, self.names)]
-        if rec.component_priority:
-            parts.append(f"<span style='color:{DIM}'>재료: "
-                         f"{html.escape(self.names.joined(rec.component_priority, limit=5))}</span>")
-        return "<br>".join(parts)
 
     # ------------------------------------------------------------------ 루프 연결
     def on_loop_update(self, update) -> None:
@@ -312,6 +295,30 @@ class OverlayWindow(QWidget):
     def attach_recog(self, controller) -> None:
         """인식 확인 창 컨트롤러를 붙인다(트레이 메뉴를 만들기 전, 즉 `show_overlay()` 전에 부른다)."""
         self.recog = controller
+
+    # ------------------------------------------------------------------ 목표 덱 고정(31 보고)
+    def attach_pin(self, controller) -> None:
+        """`deck_chooser.PinController`를 붙인다(`show_overlay()` 전에). 띠 창·트레이 하위 메뉴가 생긴다."""
+        self.pin = controller
+        if controller is not None:
+            controller.on_change = self._on_pin_changed
+
+    def _on_pin_changed(self) -> None:
+        pin = self.pin
+        if pin is not None:
+            self._set_extra(f"목표 덱 고정: {pin.pinned_name or pin.pinned}" if pin.pinned else "목표 덱 고정 해제")
+        self.render()
+        self._place_chooser()
+
+    def _place_chooser(self) -> None:
+        chooser = self.deck_chooser
+        if chooser is None:
+            return
+        want = self.isVisible() and chooser.has_choices
+        if want:
+            chooser.follow(self)
+        if chooser.isVisible() != want:
+            chooser.setVisible(want)
 
     # ------------------------------------------------------------------ 게임 화면 다시 찾기
     def attach_redetector(self, redetector) -> None:
@@ -379,6 +386,8 @@ class OverlayWindow(QWidget):
         self._feed_recog(update)
         threshold = self.settings.vision.state_min_confidence
         if update.kind == "reset":
+            if self.pin is not None:   # 새 판: 목표 덱 고정도 풀린다(루프·세션은 이미 비웠다)
+                self.pin.clear()
             self.set_data(update.state, None, self.status)
             return
         state = update.state or self.state
@@ -415,12 +424,24 @@ class OverlayWindow(QWidget):
         apply_always_on_top(self, self.cfg.always_on_top)
         self.apply_lock(self._locked)
         self.show()
+        self._apply_geometry()   # 창이 놓일 화면이 정해진 뒤 한 번 더(화면보다 크면 줄인다)
         self.place()
         self._age_timer.start()
         if self.tray is None:
             self.tray = _make_tray(self)
         self._show_quit_handle()
+        self._show_chooser()
         self.show_quit_hint()
+
+    def _show_chooser(self) -> None:
+        if self.pin is None:
+            return
+        if self.deck_chooser is None:
+            from .deck_chooser import DeckChooser
+
+            self.deck_chooser = DeckChooser(self.pin)
+            apply_always_on_top(self.deck_chooser, True)
+        self._place_chooser()
 
     def _show_quit_handle(self) -> None:
         if self.quit_handle is None:
@@ -444,11 +465,15 @@ class OverlayWindow(QWidget):
         super().moveEvent(event)
         if self.quit_handle is not None and self.quit_handle.isVisible():
             self.quit_handle.follow(self)
+        if self.deck_chooser is not None and self.deck_chooser.isVisible():
+            self.deck_chooser.follow(self)
 
     def resizeEvent(self, event) -> None:   # noqa: N802
         super().resizeEvent(event)
         if self.quit_handle is not None and self.quit_handle.isVisible():
             self.quit_handle.follow(self)
+        if self.deck_chooser is not None and self.deck_chooser.isVisible():
+            self.deck_chooser.follow(self)
 
     def apply_lock(self, locked: bool) -> None:
         """잠금 = 클릭 통과(이동 불가). 해제 = 일반 창(드래그·단축키 사용 가능)."""
@@ -597,6 +622,7 @@ class OverlayWindow(QWidget):
             self.quit_handle.setVisible(self.isVisible())
             if self.isVisible():
                 self.quit_handle.follow(self)
+        self._place_chooser()   # 목표 덱 띠도 함께 숨고 나타난다
 
     def adjust_opacity(self, delta: float) -> None:
         self._opacity = max(0.2, min(1.0, self._opacity + delta))
@@ -606,7 +632,7 @@ class OverlayWindow(QWidget):
         """모든 종료 경로(트레이 "종료"·Ctrl+Q·✕ 손잡이·인식 확인 창 [앱 종료])가 여기로 온다 → `app.quit()` →
         `aboutToQuit`에 붙은 종료 처리(루프 정지·세션 저장, `app/live._run_overlay`)가 한 번 돈다."""
         log.info("종료 요청")
-        for w in (self.quit_handle,):
+        for w in (self.quit_handle, self.deck_chooser):
             if w is not None:
                 w.hide()
         app = QApplication.instance()
@@ -663,6 +689,8 @@ class OverlayWindow(QWidget):
         _add(m, "위치 저장\tCtrl+S", self.save_position)
         m.addSeparator()
         self._add_jev_action(m)
+        if self.pin is not None:
+            self.pin.add_menu(m)
         if self.recog is not None:
             self.recog.add_menu_action(m)
         if self.redetector is not None:
@@ -675,6 +703,17 @@ class OverlayWindow(QWidget):
         m.addSeparator()
         _add(m, "종료\tCtrl+Q", self.quit)
         return m
+
+
+def _plan_color(line: str, plan, stale: bool) -> str:
+    """보드 배치 한 줄의 색. 할 일(교체·판매)은 WARN, 직전 계획은 전부 흐리게."""
+    if stale:
+        return STALE
+    if line.startswith("교체:") and plan.swaps:
+        return WARN
+    if line.startswith("판매:"):
+        return WARN
+    return DIM
 
 
 def _line(text: str) -> str:

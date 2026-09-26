@@ -142,6 +142,36 @@ def test_buy_plus_xp_in_one_window(tracker):
     assert tracker.purchases.xp_buys == 1
 
 
+def test_xp_bar_read_before_gold_is_still_an_xp_buy(tracker, clock):
+    """30 보고: 경험치 막대가 골드보다 **한 프레임 먼저** 바뀌어 읽혀도 경험치 구매다(예전: 골드가 줄던 프레임에는 직전
+    프레임 대비 경험치 변화가 없어 설명되지 않는 변화 "미결 0칸, 골드 4"로 남았다)."""
+    shop = [C3, C1, C2, C1B, C4]
+    feed(tracker, gold=20, level=4, xp=(2, 10), shop=shop_of(shop))
+    clock.t += 0.3
+    feed(tracker, gold=20, level=4, xp=(6, 10), shop=shop_of(shop))     # 막대 먼저
+    clock.t += 0.3
+    feed(tracker, gold=16, level=4, xp=(6, 10), shop=shop_of(shop))     # 골드는 다음 프레임
+    clock.t += 3.0
+    feed(tracker, gold=16, level=4, xp=(6, 10), shop=shop_of(shop))
+    assert tracker.purchases.xp_buys == 1 and tracker.data.units.ambiguous == 0
+
+
+def test_unexplained_change_is_reported_once_and_rebased(tracker, clock):
+    """설명되지 않는 골드 변화는 **한 번만** 애매로 센다(예전: 기준을 옮기지 않아 같은 "골드 12"가 settle_s마다 다시 쌓였다).
+    그 뒤의 구매는 새 기준으로 정상 확정된다."""
+    shop = [C3, C1, C2, C1B, C4]
+    feed(tracker, gold=30, level=5, xp=(2, 20), shop=shop_of(shop))
+    clock.t += 0.3
+    feed(tracker, gold=18, level=5, xp=(2, 20), shop=shop_of(shop))     # 설명 안 되는 -12(예: 골드 오독·모르는 지출)
+    for _ in range(6):
+        clock.t += 2.5
+        feed(tracker, gold=18, level=5, xp=(2, 20), shop=shop_of(shop))
+    assert tracker.data.units.ambiguous == 1
+    clock.t += 0.3
+    feed(tracker, gold=18 - cost(C3), level=5, xp=(2, 20), shop=shop_of([None, C1, C2, C1B, C4]))
+    assert tracker.data.units.copies == {C3: 1} and tracker.data.units.ambiguous == 1
+
+
 def test_level_up_does_not_disturb_the_ledger(tracker):
     feed(tracker, gold=20, level=5, xp=(2, 6), shop=shop_of([C3, C1, C2, C1B, C4]))
     feed(tracker, gold=16, level=6, xp=(0, 10), shop=shop_of([C3, C1, C2, C1B, C4]))

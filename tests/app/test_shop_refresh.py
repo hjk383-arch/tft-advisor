@@ -255,5 +255,6 @@ def test_overlay_shows_fresh_shop_label_and_board_plan(qapp, settings):
     assert "새 상점 기준" in html and "[보드 배치]" in html and "교체" in html
     assert html.index("[목표 덱]") < html.index("[보드 배치]") < html.index("[상점]")
     w.set_data(combat(B), rec_for(B), kept=KeptInfo(ScreenMode.COMBAT))
-    assert "직전 추천" in w.body.text() and "[보드 배치]" not in w.body.text()
+    # 고정 배치(33 보고): 보드 배치 섹션은 자리를 지키고 자리 표시만 보인다
+    assert "직전 추천" in w.body.text() and "보드 배치 추천 없음" in w.body.text() and "교체" not in w.body.text()
     w.deleteLater()

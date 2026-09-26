@@ -6,6 +6,9 @@
         CommunityDragon 증강 아이콘 → data/templates/{set}/augments/{apiName}.png (보유 증강 줄 판독용)
         + CDragon에 없는 세트 증강(`missing-*` 자리표시)은 tactics.tools 아이콘 → augments_alt/{apiName}.png + sources.json
         (요청 간격 --delay초, 이미 받은 파일은 다시 받지 않는다. 전부 gitignore 로컬 캐시)
+    python -m tft_advisor.vision.templates fetch-champions [--overwrite] [--delay 0.5]
+        CommunityDragon 챔피언 네모 아이콘(`tileIcon` = `.../tft18_x_square.tex`, 128px) → data/templates/{set}/champions/{apiName}.png
+        (오버레이 목표 덱의 유닛 아이콘 줄, 메타 사이트처럼. 상점에 나오는 세트 챔피언만. gitignore 로컬 캐시)
     python -m tft_advisor.vision.templates harvest-items SCREENSHOT LABEL.json
         원본 캡처의 아이템 벤치 칸을 잘라 실화면 템플릿 data/templates/{set}/items_screen/{apiName}.png로 저장.
         LABEL.json의 "item_bench": [이름|apiName|null, ...] 10칸(위→아래). 이름은 게임에 보이는 한국어 그대로 쓴다.
@@ -99,6 +102,38 @@ def fetch_items(set_number: int, categories: tuple[str, ...], overwrite: bool = 
     # 같은 아이콘을 쓰는 ID(DA_* 와 레거시 TFT_Item_*)는 하나만 둔다: static_data 우선순위(DA_·set_native)로.
     recs = [r for r in static.tables["items"] if r.get("category") in categories]
     return _fetch_icons(recs, template_dir(set_number, "items"), overwrite)
+
+
+def champion_icon_path(rec: dict) -> str | None:
+    """챔피언 정적 레코드 → CDragon 게임 경로. 네모 아이콘(`tileIcon`, 예 `assets/characters/tft18_murkwolf/tft18_murkwolf_square.tex`)을
+    쓰고, 없으면 팀 플래너 그림(`squareIcon`, 256px)을 쓴다. `icon`(가로로 긴 스플래시)은 쓰지 않는다."""
+    for key in ("tileIcon", "squareIcon"):
+        path = rec.get(key)
+        if path and str(path).lower().endswith((".tex", ".dds", ".png")):
+            return str(path)
+    return None
+
+
+def champion_records(static) -> list[dict]:
+    """아이콘을 받을 챔피언: 상점에 나오는 세트 챔피언(`shop_pool`). 레코드의 `icon`을 네모 아이콘 경로로 바꾼다."""
+    out = []
+    for r in static.tables["champions"]:
+        path = champion_icon_path(r)
+        if r.get("shop_pool") and path:
+            out.append(dict(r, icon=path))
+    return out
+
+
+def fetch_champions(set_number: int, overwrite: bool = False, delay: float = FETCH_DELAY_S) -> tuple[int, list[str]]:
+    """챔피언 네모 아이콘 → data/templates/{set}/champions/{apiName}.png (이미 있으면 다시 받지 않는다)."""
+    return _fetch_icons(champion_records(load_static(set_number)), template_dir(set_number, "champions"), overwrite,
+                        delay=delay)
+
+
+def champion_icons_missing(set_number: int) -> bool:
+    """챔피언 아이콘 폴더가 없거나 비었는가(첫 실행에 받아 둘지 판단)."""
+    d = template_dir(set_number, "champions")
+    return not d.is_dir() or not any(d.glob("*.png"))
 
 
 def _augment_cdragon_icon(icon: str) -> str:
@@ -372,6 +407,9 @@ def _main(argv: list[str] | None = None) -> int:
     f = sub.add_parser("fetch-items")
     f.add_argument("--categories", default=",".join(DEFAULT_ITEM_CATEGORIES))
     f.add_argument("--overwrite", action="store_true")
+    fc = sub.add_parser("fetch-champions")
+    fc.add_argument("--overwrite", action="store_true")
+    fc.add_argument("--delay", type=float, default=FETCH_DELAY_S, help="요청 사이 간격(초)")
     fa = sub.add_parser("fetch-augments")
     fa.add_argument("--overwrite", action="store_true")
     fa.add_argument("--no-alt", action="store_true", help="대체 출처(tactics.tools) 아이콘을 받지 않습니다")
@@ -385,8 +423,10 @@ def _main(argv: list[str] | None = None) -> int:
     d.add_argument("out", type=Path, nargs="?")
     args = ap.parse_args(argv)
 
-    if args.cmd in ("fetch-items", "fetch-augments"):
-        if args.cmd == "fetch-items":
+    if args.cmd in ("fetch-items", "fetch-augments", "fetch-champions"):
+        if args.cmd == "fetch-champions":
+            ok, failed = fetch_champions(args.set, args.overwrite, delay=args.delay)
+        elif args.cmd == "fetch-items":
             ok, failed = fetch_items(args.set, tuple(args.categories.split(",")), args.overwrite)
         else:
             ok, failed = fetch_augments(args.set, args.overwrite, alt=not args.no_alt, delay=args.delay)

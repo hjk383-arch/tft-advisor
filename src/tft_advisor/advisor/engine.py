@@ -17,6 +17,7 @@ from __future__ import annotations
 import asyncio
 import hashlib
 import logging
+import threading
 import time
 from collections import Counter
 from dataclasses import asdict, dataclass, field
@@ -25,8 +26,8 @@ from typing import Any, Literal
 
 from ..config import Settings, Weights, load_settings, load_weights
 from ..contracts import BoardPlan, FallbackReason, GameState, Recommendation, ScreenMode, ShopSlotKind
-from .board_plan import plan_board
-from .candidates import Candidate, augment_comp_fit, late_cfg, prefilter, unit_stage
+from .board_plan import plan_board, stale_copy
+from .candidates import Candidate, augment_comp_fit, late_cfg, prefilter, score_candidate, unit_stage
 from .features import View, build_view, comp_level, craftable_items, global_level, is_late, item_fit
 from .jev_client import GatewayResult, JevBackend, JevGateway, LiveJevBackend, MockJevBackend
 from .jev_state import NameBook, StateParts, build_state, state_hash
@@ -61,6 +62,7 @@ from .questions import (
     s3,
 )
 from .scoring import Scorer
+from .sell import attach_sell
 from .stage_boards import MetaTftStageBoards, StageBoardSource
 from .stats_source import AdvisorStats, load_stats
 
@@ -83,6 +85,7 @@ class Session:
     prev_bench_items: Counter[str] | None = None
     last: Recommendation | None = None
     last_hash: str | None = None
+    pinned: str | None = None     # 사용자 고정 덱(21 §14.3). 새 판(reset)이면 Session과 함께 지워진다
 
 
 def resource_signature(view: View, owned: list[str], stats: AdvisorStats) -> str:
@@ -103,6 +106,7 @@ class Advisor:
         self.backend_name, be = self._resolve_backend(backend)
         self.gateway = JevGateway(be, self.settings.advisor)
         self.session = Session()
+        self._pin_lock = threading.Lock()
         self._loop: asyncio.AbstractEventLoop | None = None
         # 스테이지별 실제 보드 통계(MetaTFT Early Comps, 21 §11). stats에 stage_stats가 없거나 비었으면 None(항 0).
         # 테스트는 가짜 StageBoardSource를 넣을 수 있다.
@@ -136,9 +140,49 @@ class Advisor:
         await self.gateway.aclose()
 
     def reset(self) -> None:
-        """새 게임: 세션(히스테리시스·장착 추적·직전 추천)과 캐시를 비운다."""
-        self.session = Session()
+        """새 게임: 세션(히스테리시스·장착 추적·직전 추천·고정 덱)과 캐시를 비운다."""
+        with self._pin_lock:
+            self.session = Session()
         self.gateway.clear_cache()
+
+    # --- 사용자 고정 덱(21 §14.3) ---
+    def set_pinned_comp(self, comp_id: str | None) -> None:
+        """목표 덱을 고정(comp_id) / 해제(None)한다. 스레드 안전(UI 스레드에서 불러도 된다).
+
+        고정 중에는 그 덱이 target_comps[0]이 되고 보드 배치·판매·아이템·상점 경로·빌드업이 그 덱을 따른다.
+        다음 `recommend()`/`rescore_shop()`부터 반영된다. 새 판(`reset()`)이면 풀린다.
+        통계에 없는 comp_id는 추천 때 무시하고 로그를 남긴다(`Recommendation.pinned_comp_id`가 None)."""
+        with self._pin_lock:
+            self.session.pinned = comp_id or None
+        log.info("사용자 고정 덱: %s", comp_id or "해제")
+
+    @property
+    def pinned_comp_id(self) -> str | None:
+        with self._pin_lock:
+            return self.session.pinned
+
+    def _active_pin(self) -> str | None:
+        """이번 추천에 쓸 고정 덱(통계에 없는 덱이면 None + 로그)."""
+        pin = self.pinned_comp_id
+        if pin is None:
+            return None
+        if self.stats.comp(pin) is None:
+            log.warning("고정 덱 %s를 통계에서 찾지 못해 고정을 무시합니다", pin)
+            return None
+        return pin
+
+    def _with_pin(self, view: View, cands: list[Candidate], pin: str | None) -> list[Candidate]:
+        """고정 덱이 후보에 없으면 통계에서 직접 불러 넣는다(후보 수 상한 유지 — 가장 낮은 후보를 뺀다)."""
+        if pin is None or any(c.comp_id == pin for c in cands):
+            return cands
+        comp = self.stats.comp(pin)
+        if comp is None:
+            return cands
+        owned = view.owned_pool(self.stats)
+        craft = list(craftable_items(view.components, self.stats)) if view.items_known else []
+        cand = score_candidate(comp, view, self.stats, self.w, owned, craft, [a.id for a in view.augments])
+        n = self.settings.advisor.max_candidate_comps
+        return ([cand] + cands)[:max(1, n)]
 
     async def recommend(self, state: GameState) -> Recommendation | None:
         t0 = time.perf_counter()
@@ -147,9 +191,17 @@ class Advisor:
             self.reset()
             return None
         if mode in (ScreenMode.COMBAT, ScreenMode.ITEM_SELECT, ScreenMode.UNKNOWN):
-            return self.session.last
+            last = self.session.last
+            if last is not None and last.pinned_comp_id != self._active_pin():
+                # 전투 중에 덱을 고정/해제했다: Jev 없이 목표 덱·아이템·보드 배치만 새로 계산, 상점은 직전 그대로
+                rec = await self._full(state, mode, t0, use_jev=False)
+                rec = rec.model_copy(update={"shop": list(last.shop)})
+                self.session.last = rec
+                return rec
+            return last
         if mode == ScreenMode.CAROUSEL:
-            if self.session.last is not None:
+            last = self.session.last
+            if last is not None and last.pinned_comp_id == self._active_pin():   # 고정이 바뀌었으면 새로 계산
                 return self._carousel_update(state, t0)
             return await self._full(state, mode, t0, use_jev=False)   # §1.1: carousel은 Jev를 부르지 않는다
         return await self._full(state, mode, t0)
@@ -167,19 +219,23 @@ class Advisor:
         prev = previous if previous is not None else self.session.last
         if prev is None:
             return None
-        view = build_view(state, self.stats, self.settings.vision.state_min_confidence, None)
+        view = build_view(state, self.stats, self.settings.vision.state_min_confidence, None,
+                          self.w.board_plan.min_confidence)
         if view.shop is None:
             return prev
         if view.items_known and not (view.units_complete or view.equipped_seen):
             view.equipped = list(self.session.equipped_tracked.elements())   # 세션을 바꾸지 않고 추적값만 읽는다
         prev_ids = [t.comp_id for t in prev.target_comps]
+        pin = self._active_pin()
         cands, pool = prefilter(view, self.stats, self.w, self.settings.advisor.max_candidate_comps, prev_ids)
+        cands = self._with_pin(view, cands, pin)
         names = NameBook(self.stats)
         parts = build_state(view, cands, self.stats, names, include_shop=True, include_offer=False)
+        self._pin_state(parts, cands, pin)
         key = state_hash(parts.state, QUESTIONS_VERSION, self.settings.advisor.jev_model)
         answers = self.gateway.cached(key)
         scorer = self._scorer(view, cands, pool, answers, comp_labels=parts.comp_labels, prev_shown=prev_ids,
-                              sig_unchanged=True)
+                              sig_unchanged=True, pinned=pin)
         scorer.score_comps()
         # 목표 덱 고정: 직전 요청의 덱 상대 점수(rel)를 그대로 쓴다(없는 덱만 이번 프록시 값)
         prev_final = {c["comp_id"]: c["final"] for c in prev.debug.get("candidates", []) if "final" in c}
@@ -188,6 +244,7 @@ class Advisor:
             for cid, f in prev_final.items():
                 if cid in scorer.rel:
                     scorer.rel[cid] = f / mx
+        scorer.apply_pin_rel()   # 고정 덱은 직전 점수와 무관하게 경로 가중 1
         glv = global_level(view, [c.comp for c in cands] or pool)
         shop = scorer.shop_advice(glv, parts.shop_desc_lost)
         ms = (time.perf_counter() - t0) * 1000
@@ -207,7 +264,7 @@ class Advisor:
     def _view(self, state: GameState) -> View:
         s = self.session
         min_conf = self.settings.vision.state_min_confidence
-        view = build_view(state, self.stats, min_conf, None)
+        view = build_view(state, self.stats, min_conf, None, self.w.board_plan.min_confidence)   # 추정 이름 제외(21 §15)
         # §4.3(c) equipped_tracked: 연속된 두 요청 모두 items 신뢰 가능할 때만 추적.
         # vision이 장착분을 직접 읽었으면(`equipped_seen`) 추정할 필요가 없다 — 추적값으로 덮지 않는다.
         known = view.units_complete or view.equipped_seen   # 부분 확인이면 유닛 장착분이 모자라다
@@ -232,27 +289,46 @@ class Advisor:
         last = self.session.last
         assert last is not None
         view = self._view(state)
-        scorer = self._scorer(view, *self._candidates(view), answers=None)
+        pin = self._active_pin()
+        cands, pool = self._candidates(view)
+        scorer = self._scorer(view, self._with_pin(view, cands, pin), pool, answers=None, pinned=pin)
         scorer.score_comps()
         prio = scorer.component_priority(last.target_comps)
         rec = last.model_copy(update={
             "component_priority": prio, "latency_ms": (time.perf_counter() - t0) * 1000,
-            "created_at": datetime.now(timezone.utc),
+            "created_at": datetime.now(timezone.utc), "board_plan": self._previous_plan(),
             "debug": {**last.debug, "mode": ScreenMode.CAROUSEL.value, "carousel_reuse": True},
         })
         self.session.last = rec   # carousel 직후 combat 등은 갱신된 component_priority를 돌려준다
         return rec
 
-    def _board_plan(self, view: View, scorer: Scorer, glv: int | None) -> BoardPlan | None:
-        """보드 배치 추천(21 §6): 1위 목표 덱 기준, 코드 전용(Jev 호출 없음)."""
-        comp = scorer.shown[0]["cand"].comp if scorer.shown else None
+    def _board_plan(self, view: View, scorer: Scorer, glv: int | None, shop=()) -> BoardPlan | None:
+        """보드 배치 추천(21 §6) + 판매 추천(21 §14): 1위 목표 덱 기준, 코드 전용(Jev 호출 없음).
+
+        이번 화면에서 계획을 세우지 못하면(보드 못 읽음·이름 전무) 직전 계획을 "직전"으로 표시해 이어 간다 —
+        섹션이 깜빡이며 사라지지 않게 한다(21 §14.2). 새 판(`reset`)에서만 지워진다."""
+        comps = [r["cand"].comp for r in scorer.shown]
+        comp = comps[0] if comps else None
         level = comp_level(view, comp) if comp is not None else glv
+        plan: BoardPlan | None = None
         try:
-            return plan_board(view, self.stats, comp, level, scorer.s_now_table(glv), scorer.ko, self.w.board_plan,
+            plan = plan_board(view, self.stats, comp, level, scorer.s_now_table(glv), scorer.ko, self.w.board_plan,
                               stage=self.w.unit_stage, stage_board=self.stage_boards)
         except Exception:   # 부가 기능이 추천 전체를 막지 않게 한다
             log.exception("보드 배치 추천 실패")
+        if plan is not None:
+            try:
+                plan = attach_sell(plan, view, self.stats, comps, level, shop, self.w.sell)
+            except Exception:
+                log.exception("판매 추천 실패")
+            return plan
+        return self._previous_plan()
+
+    def _previous_plan(self) -> BoardPlan | None:
+        last = self.session.last
+        if last is None or last.board_plan is None:
             return None
+        return stale_copy(last.board_plan)
 
     def _candidates(self, view: View) -> tuple[list[Candidate], list[Any]]:
         return prefilter(view, self.stats, self.w, self.settings.advisor.max_candidate_comps, self.session.prev_shown)
@@ -266,11 +342,13 @@ class Advisor:
     async def _full(self, state: GameState, mode: ScreenMode, t0: float, *, use_jev: bool = True) -> Recommendation:
         s = self.session
         view = self._view(state)
+        pin = self._active_pin()
         cands, pool = self._candidates(view)
+        cands = self._with_pin(view, cands, pin)
         owned = view.owned_pool(self.stats)
         sig = resource_signature(view, owned, self.stats)
         sig_unchanged = s.prev_sig is not None and sig == s.prev_sig
-        common = dict(prev_shown=list(s.prev_shown), sig_unchanged=sig_unchanged)
+        common = dict(prev_shown=list(s.prev_shown), sig_unchanged=sig_unchanged, pinned=pin)
 
         include_shop = mode == ScreenMode.PLANNING
         include_offer = mode == ScreenMode.AUGMENT_SELECT
@@ -282,7 +360,8 @@ class Advisor:
 
         names = NameBook(self.stats)
         parts = build_state(view, cands, self.stats, names, include_shop=include_shop, include_offer=include_offer)
-        qs, labels = self._questions(view, cands, parts, names, proxy, glv, include_shop, include_offer)
+        self._pin_state(parts, cands, pin)
+        qs, labels = self._questions(view, cands, parts, names, proxy, glv, include_shop, include_offer, pin)
         key = state_hash(parts.state, QUESTIONS_VERSION, self.settings.advisor.jev_model)
 
         if use_jev:
@@ -298,7 +377,7 @@ class Advisor:
         augment = scorer.augment_advice(parts.aug_desc_lost) if include_offer else None
         item = scorer.item_advice()
         prio = scorer.component_priority(targets)
-        plan = self._board_plan(view, scorer, glv)
+        plan = self._board_plan(view, scorer, glv, shop)
 
         debug: dict[str, Any] = {
             "mode": mode.value, "questions_version": QUESTIONS_VERSION, "backend": self.backend_name,
@@ -322,7 +401,7 @@ class Advisor:
         }
         rec = Recommendation(
             target_comps=targets, shop=shop, augment=augment, item=item, component_priority=prio,
-            board_plan=plan, jev_used=res.answers is not None, fallback_reason=res.reason if res.answers is None else None,
+            board_plan=plan, pinned_comp_id=pin, jev_used=res.answers is not None, fallback_reason=res.reason if res.answers is None else None,
             state_hash=key, created_at=datetime.now(timezone.utc), debug=debug,
             latency_ms=(time.perf_counter() - t0) * 1000,
         )
@@ -341,8 +420,23 @@ class Advisor:
     # ------------------------------------------------------------------
     # 질문 묶음 (§1.1, §3)
     # ------------------------------------------------------------------
+    @staticmethod
+    def _pin_state(parts: StateParts, cands: list[Candidate], pin: str | None) -> None:
+        """고정 덱을 Jev state에 적는다 — state 해시(캐시 키)에도 들어가 고정이 바뀌면 캐시가 갈린다."""
+        if pin is None:
+            return
+        k = next((i for i, c in enumerate(cands) if c.comp_id == pin), None)
+        if k is None:
+            return
+        parts.state["user_pinned_comp"] = {
+            "comp": parts.comp_labels[k] if k < len(parts.comp_labels) else pin,
+            "note": ("The player has locked this comp as their target. Judge buys, items and augments as steps "
+                     "toward it; the other candidate comps are only alternatives."),
+        }
+
     def _questions(self, view: View, cands: list[Candidate], parts: StateParts, names: NameBook, proxy: Scorer,
-                   glv: int | None, include_shop: bool, include_offer: bool) -> tuple[QuestionSet, dict[str, Any]]:
+                   glv: int | None, include_shop: bool, include_offer: bool,
+                   pin: str | None = None) -> tuple[QuestionSet, dict[str, Any]]:
         qs = QuestionSet()
         st = parts.state
         labels: dict[str, Any] = {"aug": {}, "item": {}}
@@ -358,7 +452,7 @@ class Advisor:
             if avail["board"] and "board" in st:
                 qs.score(f"comp_board_fit_{k}", c3(k, lab), C3_LEVELS, c.U)
 
-        if cands:
+        if cands and pin is None:   # 고정 덱이면 덱 선택(comp_pick)은 묻지 않는다 — 사용자가 이미 골랐다
             crit: dict[str, Any] = {}
             hints: dict[str, float] = {}
             rows = {r["cand"].comp_id: r for r in proxy.comp_rows}

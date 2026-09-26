@@ -211,6 +211,8 @@ class SessionData:
     units: UnitLedger = field(default_factory=UnitLedger)     # 보유 유닛 장부(챔피언 → 1성 등가 사본 수)
     frames: int = 0
     recognitions: int = 0
+    pinned_comp_id: str | None = None      # 사용자가 고정한 목표 덱(오버레이 클릭, 31 보고). 새 판에서 비워진다
+    pinned_comp_name: str | None = None    # 표시용 이름(고정한 덱이 목표 덱 목록에서 빠져도 해제 버튼에 쓴다)
 
     def to_json(self) -> dict:
         return {
@@ -231,6 +233,8 @@ class SessionData:
             "units": self.units.to_json(),
             "frames": self.frames,
             "recognitions": self.recognitions,
+            "pinned_comp_id": self.pinned_comp_id,
+            "pinned_comp_name": self.pinned_comp_name,
         }
 
     @classmethod
@@ -250,6 +254,8 @@ class SessionData:
             learned=[dict(x) for x in raw.get("learned") or [] if isinstance(x, dict)],
             frames=int(raw.get("frames") or 0),
             recognitions=int(raw.get("recognitions") or 0),
+            pinned_comp_id=str(raw["pinned_comp_id"]) if raw.get("pinned_comp_id") else None,
+            pinned_comp_name=str(raw["pinned_comp_name"]) if raw.get("pinned_comp_name") else None,
         )
         d.purchases = Counter({str(k): int(v) for k, v in (raw.get("purchases") or {}).items()})
         d.units = UnitLedger.from_json(raw.get("units"))
@@ -326,6 +332,13 @@ class SessionTracker:
             tmp.replace(self.path)
         except OSError as e:   # 저장 실패로 앱이 죽지 않는다
             log.warning("세션 저장 실패(%s): %s", self.path, e)
+
+    def set_pinned_comp(self, comp_id: str | None, name: str | None = None) -> None:
+        """목표 덱 고정/해제를 기록하고 바로 저장한다(앱을 다시 켜도 이번 판 동안 유지). 아무 스레드에서나 부른다."""
+        with self._lock:
+            self.data.pinned_comp_id = comp_id or None
+            self.data.pinned_comp_name = (name or None) if comp_id else None
+            self.save()
 
     # ------------------------------------------------------------------ 추적
     def reset(self, reason: str = "new_game") -> None:

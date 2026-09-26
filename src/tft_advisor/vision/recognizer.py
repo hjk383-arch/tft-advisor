@@ -26,6 +26,7 @@ from ..static_data import PROJECT_ROOT, StaticData, load_static, preference_key
 from . import parse
 from .augment_learn import AugmentLearner, OwnedRow, augment_visual_keys, load_alt_manifest
 from .board import BoardRead, BoardReader, find_ally_bars
+from .bench_memory import BenchMemory
 from .icons import AugmentIconMatcher, IconMatcher, find_icon_row, slot_is_empty
 from .item_ids import ItemCatalog
 from .matching import NameMatcher
@@ -173,9 +174,14 @@ class Recognizer:
             UnitNamer.from_static(self.static, unit_template_dir, autolearn=self.cfg.unit_autolearn,
                                   # 25: 설정 키 제안(config.py는 app-integrator 담당) — 없으면 기본값
                                   pending_weight=float(getattr(self.cfg, "unit_pending_weight", 0.0) or 0.0),
-                                  auto_approve_purchase=bool(getattr(self.cfg, "unit_purchase_autoapprove", False)))
+                                  auto_approve_purchase=bool(getattr(self.cfg, "unit_purchase_autoapprove", False)),
+                                  collect_until=int(getattr(self.cfg, "unit_collect_until", 3)))
             if self.cfg.unit_names else None)
         """보드·벤치 챔피언 이름(특성 패널 구속 + 모델 크롭 라이브러리). 설정 `[vision] unit_names=false`면 None."""
+        self._last_shop_odds: list[int] | None = None
+        """마지막으로 읽은 상점 확률(이번 프레임에 HUD를 안 읽었을 때 유닛 이름 풀이에 쓴다)."""
+        self.bench_memory = BenchMemory()
+        """벤치 빈 칸 기준 그림 + 칸별 직전 유닛(`vision.bench_memory`). 새 판이면 app이 `reset()`을 부른다."""
         self._panel_cache: tuple[np.ndarray, tuple[list[ActiveTrait], float, bool]] | None = None
         self.last_board_read: BoardRead | None = None
         """직전 `recognize()`의 보드 판독(`board` 묶음을 읽었을 때만). app은 `app.unit_merge.board_obs_from`으로 받는다."""
@@ -375,7 +381,13 @@ class Recognizer:
                     panel = self.cached_trait_panel(image, m, P)
                 tp = (TraitPanel({t.id: t.count for t in panel[0]}, complete=panel[2], confidence=panel[1])
                       if panel is not None and panel[0] else None)
-                read = self.unit_namer.name(image, m, read, tp, ctx=self._unit_ctx(image, m, out, captured_at))
+                odds = out.values.get("shop_odds")
+                if odds is not None:
+                    self._last_shop_odds = list(odds)
+                read = self.unit_namer.name(image, m, read, tp, ctx=self._unit_ctx(image, m, out, captured_at),
+                                            shop_odds=odds if odds is not None else self._last_shop_odds)
+            # 벤치 체력바가 사라진 프레임(준비 끝·전환): 벤치를 비우지 않고 칸 그림 + 직전 판독으로 채운다(30 보고)
+            read = self.bench_memory.apply(image, m, P, read)
             self.last_board_read = read
 
         values = dict(out.values)
@@ -401,8 +413,14 @@ class Recognizer:
             shop = tuple(s.id if s.kind == ShopSlotKind.CHAMPION else (None if s.kind == ShopSlotKind.EMPTY else "*")
                          for s in slots)
         at = captured_at.timestamp() if captured_at is not None else time.time()
+        from .bench_memory import tactician_cells
+
+        try:        # 전략가가 벤치 위를 지나가는 칸은 사진을 모으지 않는다(30 보고)
+            tact = frozenset(tactician_cells(image, m, self.profile_for(m.box[2], m.box[3])))
+        except Exception:
+            tact = frozenset()
         return FrameContext(at=at, stage=out.values.get("stage"), shop=shop, gold=out.values.get("gold"),
-                            frame=frame_digest(image), arena=arena_signature(image, m.box))
+                            frame=frame_digest(image), arena=arena_signature(image, m.box), tactician=tact)
 
     # ------------------------------------------------------------------ OCR 헬퍼
     def _read(self, image: np.ndarray, m: FrameMapper, r: Rect) -> list[TextBox]:

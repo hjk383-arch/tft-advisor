@@ -32,6 +32,8 @@ def cid(static, name: str) -> str:
 
 
 def img(color, bg=(90, 120, 150), w=32) -> np.ndarray:
+    # 원색 그대로(밝기 255)면 품질 검사의 "강한 효과(밝고 진한 빛)"에 걸린다 → 0.75배로 어둡게(30 보고)
+    color = tuple(int(c * 0.75) for c in color)
     out = np.full((112, 112, 3), bg, np.uint8)
     cv2.rectangle(out, (56 - w // 2, 20), (56 + w // 2, 100), color, -1)
     return out
@@ -221,7 +223,8 @@ def test_purchase_is_not_labelled_when_ambiguous(static, tmp_path, case):
     assert saved == [] and list(tmp_path.rglob("*.png")) == []
 
 
-def test_traits_evidence_needs_unique_solution_matching_slot_count(static, table, tmp_path):
+def test_board_crops_are_never_collected_even_with_a_unique_trait_solution(static, table, tmp_path):
+    """30 보고(사용자 정책): 사진은 벤치에서만. 보드 크롭은 특성 풀이가 확실해도 모으지 않는다(효과·피해 숫자·겹침·잘린 머리)."""
     col = D.UnitCollector(db_at(tmp_path, static))
     yo, orn = cid(static, "요릭"), cid(static, "오른")
     red, blue = img((0, 0, 255)), img((255, 0, 0))
@@ -229,17 +232,11 @@ def test_traits_evidence_needs_unique_solution_matching_slot_count(static, table
     counts = {static.trait_by_name(k)["apiName"]: v for k, v in
               {"개화": 1, "전쟁기계": 1, "소환사": 1, "나무정령": 1, "엄호대": 1}.items()}
     p = U.TraitPanel(counts, confidence=0.9)
-    board = (UnitSlot(star=1, hex=(0, 0)),)
-    # 칸 1개 < 풀이 2명(가려진 유닛) → 이름은 붙어도 증거로 모으지 않는다
-    res = U.name_units([U.descriptor(red)], [], lib, p, table)
-    assert res.missed == 1 and res.board[0].unit_id == yo
-    assert col.observe(D.FrameContext(at=1.0), BoardRead(board=board), res, [red], [], 0.9) == []
-    # 칸 수가 맞으면 모은다
-    board2 = (*board, UnitSlot(star=2, hex=(0, 1)))
+    board2 = (UnitSlot(star=1, hex=(0, 0)), UnitSlot(star=2, hex=(0, 1)))
     res = U.name_units([U.descriptor(red), U.descriptor(blue)], [], lib, p, table)
-    saved = col.observe(D.FrameContext(at=2.0), BoardRead(board=board2), res, [red, blue], [], 0.9)
-    assert sorted((m.champion, m.star, m.evidence) for m in saved) == sorted(
-        [(yo, 1, D.EVIDENCE_TRAITS), (orn, 2, D.EVIDENCE_TRAITS)])
+    assert res.board_set and all(n.unit_id for n in res.board)
+    assert col.observe(D.FrameContext(at=2.0), BoardRead(board=board2), res, [red, blue], [], 0.9) == []
+    assert list(tmp_path.rglob("*.png")) == []
 
 
 def test_namer_with_collector_passes_frame_context_and_reload_reads_approved(static, table, tmp_path):
@@ -355,3 +352,138 @@ def test_purchase_crop_contradicting_approved_crops_is_not_saved(static, tmp_pat
     col.observe(D.FrameContext(at=1.1), BoardRead(bench=_bench(0, 1)), _names(0, 2), [], [a, img((250, 5, 5), w=30)],
                 None)
     assert col.saved == []
+
+
+# ---------------------------------------------------------------- 30 보고: 수집 정책(벤치만 · 충분하면 그만 · 품질 · 스테이지)
+def _dup(champ, conf=0.85):
+    return U.SlotName(champ, conf, "duplicate")
+
+
+def _names_bench(*slot_names):
+    return U.BoardNames(board=(), bench=tuple(slot_names))
+
+
+def _approve_n(db, champ, n, star=1):
+    for i in range(n):
+        db.approve(db.add_pending(champ, img(((40 * i + 30) % 255, (70 * i) % 255, 200)), evidence="purchase",
+                                  star=star))
+
+
+def test_collection_stops_after_enough_approved_but_a_new_star_is_still_collected(static, tmp_path):
+    db = db_at(tmp_path, static)
+    ka = cid(static, "카르마")
+    _approve_n(db, ka, 3, star=1)
+    assert db.approved_count(ka, 1) == 3 and db.approved_count(ka, 2) == 0
+    col = D.UnitCollector(db, collect_until=3)
+    one = UnitSlot(star=1, bench_slot=0)
+    assert col.observe(D.FrameContext(at=1.0), BoardRead(bench=(one,)), _names_bench(_dup(ka)), [],
+                       [img((10, 120, 10))], None) == []
+    assert col.skipped.get("enough") == 1
+    two = UnitSlot(star=2, bench_slot=0)                      # ★2는 처음 → 모은다
+    saved = col.observe(D.FrameContext(at=2.0), BoardRead(bench=(two,)), _names_bench(_dup(ka)), [],
+                        [img((10, 120, 10))], None)
+    assert [(m.champion, m.star, m.evidence) for m in saved] == [(ka, 2, D.EVIDENCE_DUPLICATE)]
+    # 0 = 제한 없음
+    col0 = D.UnitCollector(db, collect_until=0)
+    assert len(col0.observe(D.FrameContext(at=3.0), BoardRead(bench=(one,)), _names_bench(_dup(ka)), [],
+                            [img((120, 10, 120))], None)) == 1
+
+
+def test_label_crops_without_star_count_as_one_star(static, tmp_path):
+    db = db_at(tmp_path, static)
+    ak = cid(static, "아칼리")
+    (db.root / ak).mkdir(parents=True)
+    for i in range(3):
+        cv2.imencode(".png", img((i * 60, 0, 200)))[1].tofile(str(db.root / ak / f"label_{i}.png"))
+    assert db.approved_count(ak, 1) == 3 and db.approved_count(ak, None) == 3
+
+
+def test_already_recognized_slot_is_not_collected_and_corroborated_middle_library_name_is(static, tmp_path):
+    db = db_at(tmp_path, static)
+    ka = cid(static, "카르마")
+    col = D.UnitCollector(db)
+    slot = UnitSlot(star=1, bench_slot=4)
+    sure = U.SlotName(ka, 0.86, "library", 0.7, 0.3, corroborated=True)
+    middle = U.SlotName(ka, 0.7, "library", 0.58, 0.13, corroborated=True)
+    guess = U.SlotName(ka, 0.7, "library", 0.63, 0.21, corroborated=False)
+    for n in (sure, guess):
+        assert col.observe(D.FrameContext(at=1.0), BoardRead(bench=(slot,)), _names_bench(n), [],
+                           [img((10, 120, 10))], None) == []
+    saved = col.observe(D.FrameContext(at=2.0), BoardRead(bench=(slot,)), _names_bench(middle), [],
+                        [img((10, 120, 10))], None)
+    assert [(m.champion, m.evidence, m.slot) for m in saved] == [(ka, D.EVIDENCE_LIBRARY, "bench:4")]
+    # 구매 짝도: 새 칸을 라이브러리가 이미 그 챔피언으로 알아봤으면 모으지 않는다
+    col2 = D.UnitCollector(db_at(tmp_path / "b", static))
+    a, b = img((0, 0, 255)), img((255, 0, 0))
+    for t in (0.7, 1.0):
+        col2.observe(D.FrameContext(at=t), BoardRead(bench=_bench(0)), _names(0, 1), [], [a], None)
+    col2.note_purchase(ka, at=1.1)
+    none = U.SlotName(None, 0.0, "none")
+    assert col2.observe(D.FrameContext(at=1.3), BoardRead(bench=_bench(0, 1)), _names_bench(none, sure), [],
+                        [a, b], None) == []
+    assert col2.skipped.get("recognized") == 1
+
+
+def _glow_crop() -> np.ndarray:
+    out = np.full((112, 112, 3), (90, 120, 150), np.uint8)
+    cv2.circle(out, (56, 60), 30, (0, 230, 255), -1)          # 밝은 금빛 덩어리(금화·폭발)
+    cv2.rectangle(out, (50, 20), (62, 100), (60, 40, 90), -1)
+    return out
+
+
+def _cyan_crop() -> np.ndarray:
+    out = img((60, 40, 120))
+    cv2.rectangle(out, (36, 16), (76, 104), (255, 230, 0), 4)    # 청록 선택 윤곽(BGR)
+    return out
+
+
+def _neighbour_crop() -> np.ndarray:
+    out = img((60, 40, 120))
+    cv2.rectangle(out, (8, 30), (24, 90), (160, 30, 160), -1)    # 옆 칸 모델이 왼쪽 끝을 침범(테두리 몇 줄은 배경으로 잡힌다)
+    return out
+
+
+def test_crop_quality_rejects_glow_and_selection_outline_and_flags_neighbour():
+    assert D.crop_quality(img((60, 40, 120))).reject is None and D.crop_quality(img((60, 40, 120))).flags == ()
+    assert D.crop_quality(_glow_crop()).reject is not None
+    assert D.crop_quality(_cyan_crop()).reject is not None
+    q = D.crop_quality(_neighbour_crop())
+    assert q.reject is None and "옆 칸 침범" in q.flags
+
+
+def test_collector_applies_quality_and_tactician_rules(static, tmp_path):
+    db = db_at(tmp_path, static)
+    ka = cid(static, "카르마")
+    col = D.UnitCollector(db)
+    s0 = UnitSlot(star=1, bench_slot=0)
+    for crop in (_glow_crop(), _cyan_crop()):
+        assert col.observe(D.FrameContext(at=1.0), BoardRead(bench=(s0,)), _names_bench(_dup(ka)), [], [crop],
+                           None) == []
+    assert col.skipped.get("quality") == 2
+    # 전략가가 그 칸 위에 있다 → 모으지 않는다
+    assert col.observe(D.FrameContext(at=2.0, tactician=frozenset({0})), BoardRead(bench=(s0,)),
+                       _names_bench(_dup(ka)), [], [img((60, 40, 120))], None) == []
+    assert col.skipped.get("tactician") == 1
+    # 옆 칸 침범은 저장하되 표시·점수 낮춤
+    (m,) = col.observe(D.FrameContext(at=3.0), BoardRead(bench=(s0,)), _names_bench(_dup(ka)), [],
+                       [_neighbour_crop()], None)
+    assert "옆 칸 침범" in (m.note or "") and m.score < 0.85 and m.status == D.PENDING
+
+
+def test_crop_stage_uses_the_session_stage_and_drops_a_stale_frame_read(static, tmp_path):
+    db = db_at(tmp_path, static)
+    ka, ak = cid(static, "카르마"), cid(static, "아칼리")
+    col = D.UnitCollector(db, collect_until=0)
+    s0 = UnitSlot(star=1, bench_slot=0)
+    col.set_stage("2-3")                                      # 오버레이 = 세션 스테이지
+    (m,) = col.observe(D.FrameContext(at=1.0, stage="1-3"), BoardRead(bench=(s0,)), _names_bench(_dup(ka)), [],
+                       [img((10, 120, 10))], None)
+    assert m.stage == "2-3"
+    col2 = D.UnitCollector(db, collect_until=0)                # 세션 스테이지가 없을 때: 프레임 값, 뒤로 가면 비운다
+    (a,) = col2.observe(D.FrameContext(at=1.0, stage="2-5"), BoardRead(bench=(s0,)), _names_bench(_dup(ak)), [],
+                        [img((120, 10, 10))], None)
+    (b,) = col2.observe(D.FrameContext(at=2.0, stage="1-4"), BoardRead(bench=(s0,)), _names_bench(_dup(ak)), [],
+                        [img((10, 10, 120))], None)
+    assert a.stage == "2-5" and b.stage is None
+    col2.reset()
+    assert col2.session_stage is None and col2._max_stage is None

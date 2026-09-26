@@ -23,8 +23,19 @@ units_screen/_trash/{apiName}/...                        삭제(되살릴 수 �
 | 종류 | 언제 | 강도 |
 |---|---|---|
 | `purchase` | 상점 칸 X가 빈 칸이 되고(= 구매, 상점·장부 보고는 한 건), 같은 정산 창 안에 **직전 2프레임 비어 있던 벤치 칸 하나**가 생겼고 창 안에 다른 벤치·보드 변화가 없다(1성) | 가장 강함 |
-| `traits` | 특성 패널 풀이가 **하나**이고 찾은 보드 칸 수와 맞으며 그 칸이 구속 배정으로 이름을 받았다 | 강함 |
-| `duplicate` | 같은 프레임에서 이름이 확정된 보드 유닛과 같은 모델인 벤치 유닛 | 보통 |
+| `duplicate` | 같은 프레임에서 이름이 확정된 보드 유닛과 같은 모델인 벤치 유닛(라이브러리는 아직 모름) | 보통 |
+| `library` | 벤치 칸의 라이브러리 이름이 **뒷받침**(보드 확정·특성 집합·장부 구매 힌트)되었지만 아직 확실하지는 않다(신뢰도 0.6~0.8) | 보통 |
+| `traits` | (예전) 특성 풀이로 이름 받은 **보드** 칸 — 30 보고 뒤로 모으지 않는다(보드 크롭은 효과·피해 숫자·겹친 유닛·잘린 머리가 많았다) | — |
+
+## 수집 정책(사용자, 2026-09-25): "인식이 되는 캐릭터는 더 안 찍어도 된다. 사진은 대기석에 있을 때 찍어"
+- **벤치 칸만** 모은다(보통 사서 벤치에 놓는다). 보드 크롭은 모으지 않는다.
+- 그 챔피언·성급의 **승인** 사진이 `collect_until`장(설정 `[vision] unit_collect_until`, 기본 3) 이상이면 더 모으지 않는다.
+  성급 모름(옛 `label_*`)은 1성으로 센다. 새 성급(★2·★3)은 처음 보이면 모은다.
+- 이번 크롭이 이미 라이브러리로 **알아본** 칸(같은 챔피언, 뒷받침, 신뢰도 >= `RECOGNIZED_CONF`)이면 모으지 않는다.
+- 품질(`crop_quality`): 전략가가 그 칸 위 · 강한 효과(밝고 진한 빛이 모델의 30% 이상) · 선택 윤곽(청록 빛 8% 이상)은 버린다.
+  옆 칸 모델 침범·약한 효과·청록 조금·머리 잘림은 **표시**(note "품질: …")하고 점수를 낮춘다(검토 창에서 뒤로).
+- 스테이지는 app이 알려 준 **세션 스테이지**(오버레이 표시값, `set_stage`)를 쓴다. 없으면 프레임 판독값을 쓰되 이번 판에서 본
+  가장 늦은 스테이지보다 앞서면 비운다(오독).
 | `legacy_forced` | 옛 자동 학습(`auto_*`, 승인 폴더에 바로 저장되던 것)을 대기로 옮긴 것 | 검토 필요 |
 | `label` / `manual` | 사용자 확인 라벨 수확 / 검토 창에서 사람이 준 이름 | 승인 |
 """
@@ -57,20 +68,33 @@ EVIDENCE_DUPLICATE = "duplicate"
 EVIDENCE_LEGACY = "legacy_forced"
 EVIDENCE_LABEL = "label"
 EVIDENCE_MANUAL = "manual"
+EVIDENCE_LIBRARY = "library"
 EVIDENCE_KO = {
     EVIDENCE_PURCHASE: "상점 구매", EVIDENCE_TRAITS: "특성 풀이", EVIDENCE_DUPLICATE: "같은 모델(보드)",
+    EVIDENCE_LIBRARY: "사진 비교(뒷받침)",
     EVIDENCE_LEGACY: "옛 자동 학습", EVIDENCE_LABEL: "확인 라벨", EVIDENCE_MANUAL: "직접 지정",
 }
 
 PENDING_CAP = 8           # (챔피언, 성급, 증거)마다 대기 크롭 상한 — 넘으면 **맵 서명이 새로운** 크롭만 받는다
 NEAR_DUP = 0.95           # 같은 챔피언의 기존 크롭(대기·승인)과 이보다 닮으면 거의 같은 그림 → 저장하지 않는다
 PURCHASE_WINDOW_S = 3.0   # 상점 구매와 벤치 새 칸이 이 시간 안에 함께 보여야 짝을 짓는다(장부 정산 창 2초 + 여유)
-TRAITS_MIN_CONF = 0.85    # 특성 풀이 증거로 모을 칸의 최소 이름 신뢰도
+TRAITS_MIN_CONF = 0.85    # (예전) 특성 풀이 증거로 모을 칸의 최소 이름 신뢰도 — 30 뒤로 보드 크롭은 모으지 않는다
 DUPLICATE_MIN_CONF = 0.8
 PANEL_SURE = 0.75         # (units.PANEL_SURE와 같은 값) 패널 판독이 이보다 애매하면 특성 증거로 모으지 않는다
 MIN_EMPTY_FRAMES = 2      # 구매 새 칸은 직전 이 프레임 수만큼 연속으로 비어 있던 칸이어야 한다(판독 깜빡임 거르기)
 CONTRADICT_MIN = 0.8      # 구매 크롭이 다른 챔피언 승인 크롭을 이만큼 이상 닮고
 CONTRADICT_MARGIN = 0.1   # 산 챔피언 승인 크롭보다 이만큼 더 닮으면 모순 -> 저장하지 않는다
+COLLECT_UNTIL = 3         # 챔피언·성급별 승인 사진이 이만큼 있으면 더 모으지 않는다(설정 `unit_collect_until`)
+RECOGNIZED_CONF = 0.8     # 라이브러리가 이 신뢰도 이상(뒷받침)으로 이미 알아본 칸은 모으지 않는다
+LIBRARY_EVIDENCE_MIN = 0.6   # 뒷받침된 라이브러리 이름을 증거로 모으는 최소 신뢰도(그 위 RECOGNIZED_CONF부터는 이미 안다)
+# 품질(모델 픽셀 = `units.model_mask` 기준). 실측: 사용자 검토(2026-09-25) 승인 47장 · 삭제 6장
+GLOW_REJECT = 0.30        # 밝고 진한 빛(V>=235, S>=100)이 모델의 이만큼 이상: 금화·폭발(삭제 쉔 0.70 / 승인 최대 0.15)
+GLOW_FLAG = 0.10          # 표시만(삭제: 연기 0.14 · 피해 숫자 0.15 · 스킬 효과 0.11 / 승인 대부분 < 0.09)
+CYAN_REJECT = 0.08        # 선택 윤곽(청록 H 80~100) 크롭 전체 비율(삭제 0.093 / 승인 최대 0.054)
+CYAN_FLAG = 0.04
+SIDE_FLAG = 0.05          # 가운데와 이어지지 않고 크롭 좌우 끝에 닿은 모델 조각 = 옆 칸 모델(삭제 0.055~0.068, 승인 대부분 < 0.03)
+HEAD_CUT_FLAG = 0.45      # 크롭 위쪽 줄(체력바 바로 아래) 가운데에 모델이 이만큼 차 있으면 머리가 잘렸을 수 있다
+FLAG_SCORE_MULT = 0.7
 
 
 # ---------------------------------------------------------------------------
@@ -173,6 +197,54 @@ def frame_digest(image: np.ndarray) -> str:
     return hashlib.sha1(small.tobytes()).hexdigest()[:12]
 
 
+@dataclass(frozen=True)
+class CropQuality:
+    """벤치 크롭 품질. `reject`가 있으면 저장하지 않는다. `flags`는 저장하되 note에 적고 점수를 낮춘다."""
+
+    reject: str | None = None
+    flags: tuple[str, ...] = ()
+    glow: float = 0.0
+    cyan: float = 0.0
+    side: float = 0.0
+    head: float = 0.0
+
+
+def crop_quality(crop: np.ndarray) -> CropQuality:
+    """모델 크롭(`units.unit_crop`) → 품질. 기준은 모듈 상단 상수(사용자 검토 승인 47 · 삭제 6장 실측)."""
+    import cv2
+
+    from .units import model_mask
+
+    m = model_mask(crop).astype(bool)
+    h, w = m.shape
+    n = max(1, int(m.sum()))
+    hsv = cv2.cvtColor(crop, cv2.COLOR_BGR2HSV)
+    hue, sat, val = hsv[..., 0], hsv[..., 1], hsv[..., 2]
+    glow = float(((val >= 235) & (sat >= 100) & m).sum()) / n
+    cyan = float(((hue >= 80) & (hue <= 100) & (sat >= 120) & (val >= 170)).mean())
+    num, lab, st, _ = cv2.connectedComponentsWithStats(m.astype(np.uint8), 8)
+    center = set(np.unique(lab[:, w // 2 - w // 14:w // 2 + w // 14]).tolist()) - {0}
+    edge = max(2, w // 10)      # 테두리 몇 줄은 배경 군집으로 잡혀 모델에서 빠지므로 "끝에 닿음"을 조금 넓게 본다
+    side = sum(int(st[k][4]) for k in range(1, num)
+               if k not in center and (st[k][0] <= edge or st[k][0] + st[k][2] >= w - edge)) / float(h * w)
+    head = float(m[2:8, w // 4:3 * w // 4].mean()) if h > 8 else 0.0
+    flags: list[str] = []
+    reject = None
+    if glow >= GLOW_REJECT:
+        reject = "강한 효과(밝은 빛)"
+    elif cyan >= CYAN_REJECT:
+        reject = "선택 윤곽(청록)"
+    if glow >= GLOW_FLAG:
+        flags.append("효과")
+    if cyan >= CYAN_FLAG:
+        flags.append("청록 윤곽")
+    if side >= SIDE_FLAG:
+        flags.append("옆 칸 침범")
+    if head >= HEAD_CUT_FLAG:
+        flags.append("머리 잘림")
+    return CropQuality(reject, tuple(flags), round(glow, 3), round(cyan, 3), round(side, 3), round(head, 3))
+
+
 def arena_signature(image: np.ndarray, box: tuple[int, int, int, int]) -> str:
     """맵(바닥) 서명: 게임 화면 보드 가운데 줄무늬 영역의 중앙값 Lab 색을 16단계로 줄인 6자리 16진수.
     같은 맵이면 같고, 모래·돌·푸른 돌처럼 다른 맵이면 대개 다르다(대기 상한에서 '새로운 맵' 판단에만 쓴다)."""
@@ -204,6 +276,8 @@ class UnitImageDB:
         self.near_dup = near_dup
         self._index: dict[str, tuple[str, str | None, str, np.ndarray]] | None = None
         """크롭 id → (챔피언, 맵 서명, 상태, 기술자). 중복·상한 판정용. 처음 저장할 때 만든다."""
+        self._approved: dict[tuple[str, int], int] | None = None
+        """(챔피언, 성급) → 승인 사진 수 캐시(`approved_count`)."""
 
     # ------------------------------------------------------------------ 읽기
     def _dirs(self, status: str) -> Path:
@@ -276,6 +350,7 @@ class UnitImageDB:
         new = replace(meta, champion=champion, status=status or meta.status, path=dest, id=dest.stem)
         self._write(new)
         self._index = None
+        self._approved = None
         return new
 
     def _ensure_index(self) -> dict[str, tuple[str, str | None, str, np.ndarray]]:
@@ -326,6 +401,8 @@ class UnitImageDB:
                         path=self._dirs(status) / champion / f"{cid}.png")
         self._write(meta, crop)
         idx[cid] = (champion, arena, status, d)
+        if approve:
+            self._approved = None
         log.info("유닛 사진 %s: %s ★%s (%s %.2f)", "승인" if approve else "대기", champion, star, evidence,
                  score if score is not None else -1)
         return meta
@@ -369,6 +446,16 @@ class UnitImageDB:
             log.info("유닛 사진 DB: 옛 자동 학습 크롭 %d장을 검토 대기로 옮겼습니다", moved)
         return moved
 
+    def approved_count(self, champion: str, star: int | None) -> int:
+        """승인 사진 수(그 챔피언·성급). 성급 모름(옛 `label_*`)은 1성으로 센다. 디스크 목록은 캐시한다(옮기면 비운다)."""
+        if self._approved is None:
+            counts: dict[tuple[str, int], int] = {}
+            for meta in self.entries(APPROVED):
+                key = (meta.champion, meta.star or 1)
+                counts[key] = counts.get(key, 0) + 1
+            self._approved = counts
+        return self._approved.get((champion, star or 1), 0)
+
     # ------------------------------------------------------------------ 적용 범위
     def coverage(self, champions: Iterable[str]) -> Coverage:
         by: dict[str, dict[int | None, int]] = {}
@@ -410,6 +497,8 @@ class FrameContext:
     gold: int | None = None
     frame: str | None = None
     arena: str | None = None
+    tactician: frozenset[int] = frozenset()
+    """전략가(꼬마 전설이) 이름표가 위에 있는 벤치 칸(`bench_memory.tactician_cells`). 그 칸 크롭은 모으지 않는다."""
 
 
 @dataclass
@@ -419,6 +508,8 @@ class _NewSlot:
     crop: np.ndarray
     star: int | None
     ctx: FrameContext
+    name: Any = None
+    """그 칸의 이름 판정(`units.SlotName`) — 이미 알아본 칸이면 모으지 않는다."""
 
 
 @dataclass
@@ -452,7 +543,14 @@ class UnitCollector:
     game: str = field(default_factory=lambda: time.strftime("%Y%m%d-%H%M%S") + "-" + uuid.uuid4().hex[:4])
     auto_approve_purchase: bool = False
     window_s: float = PURCHASE_WINDOW_S
+    collect_until: int = COLLECT_UNTIL
+    """챔피언·성급별 승인 사진이 이만큼 있으면 더 모으지 않는다(0 = 제한 없음). 설정 `[vision] unit_collect_until`."""
+    session_stage: str | None = None
+    """app 세션의 합친 스테이지(오버레이 표시값). `set_stage()`로 넣는다. 크롭 메타데이터의 스테이지로 쓴다."""
     saved: list[CropMeta] = field(default_factory=list)
+    skipped: dict[str, int] = field(default_factory=dict)
+    """모으지 않은 이유별 횟수(진단용): enough / recognized / quality / tactician."""
+    _max_stage: tuple[int, int] | None = None
     _buys: list[_Buy] = field(default_factory=list)
     _new: list[_NewSlot] = field(default_factory=list)
     _last_shop: tuple[str | None, ...] | None = None
@@ -469,6 +567,27 @@ class UnitCollector:
         self._new.clear()
         self._history.clear()
         self._last_shop = self._last_board = self._disturbed_at = None
+        self.session_stage = None
+        self._max_stage = None
+
+    def set_stage(self, stage: str | None) -> None:
+        """app 세션의 합친 스테이지(오버레이에 보이는 값). 프레임 판독 스테이지보다 이것을 믿는다."""
+        self.session_stage = stage or None
+        key = _stage_key(stage)
+        if key is not None and (self._max_stage is None or key > self._max_stage):
+            self._max_stage = key
+
+    def _stage_for(self, ctx: FrameContext) -> str | None:
+        """크롭에 적을 스테이지: 세션 스테이지 > 프레임 판독(이번 판에서 본 가장 늦은 스테이지보다 앞서면 오독으로 보고 비운다)."""
+        if self.session_stage:
+            return self.session_stage
+        key = _stage_key(ctx.stage)
+        if key is None:
+            return None
+        if self._max_stage is not None and key < self._max_stage:
+            return None
+        self._max_stage = key
+        return ctx.stage
 
     def note_purchase(self, champion_id: str, at: float | None = None, source: str = "ledger") -> None:
         """app 장부의 구매 이벤트(상점에서 산 챔피언). 같은 창 안에 벤치에 새 칸이 생기면 그 크롭의 이름이 된다."""
@@ -501,35 +620,58 @@ class UnitCollector:
                 bench_crops: Sequence[np.ndarray], panel_conf: float | None) -> list[CropMeta]:
         """`read` = 이름이 붙은 `BoardRead`, `names` = `units.BoardNames`. 이번 프레임에 저장한 크롭들."""
         before = len(self.saved)
-        self._traits(ctx, read, names, board_crops, panel_conf)
+        # 벤치 칸만 모은다(30 보고 · 사용자 정책). 보드 크롭(`board_crops`)은 효과·피해 숫자·겹친 유닛·잘린 머리가 많아 쓰지 않는다
         self._duplicates(ctx, read, names, bench_crops)
-        self._purchases(ctx, read, bench_crops)
+        self._library(ctx, read, names, bench_crops)
+        self._purchases(ctx, read, bench_crops, names)
         return self.saved[before:]
 
+    def _skip(self, why: str) -> None:
+        self.skipped[why] = self.skipped.get(why, 0) + 1
+
     def _save(self, champion: str, crop: np.ndarray, *, evidence: str, star: int | None, score: float,
-              ctx: FrameContext, slot: str, approve: bool = False) -> None:
+              ctx: FrameContext, slot: int | None, name: Any = None, approve: bool = False) -> None:
+        """벤치 칸 크롭 저장(정책·품질 검사를 거친다)."""
+        if self.collect_until > 0 and self.db.approved_count(champion, star) >= self.collect_until:
+            self._skip("enough")                  # 이 챔피언·성급은 사진이 충분하다(새 성급은 따로 센다)
+            return
+        if _recognized(name, champion):
+            self._skip("recognized")              # 라이브러리가 이미 알아봤다
+            return
+        if slot is not None and slot in ctx.tactician:
+            self._skip("tactician")
+            return
+        q = crop_quality(crop)
+        if q.reject is not None:
+            self._skip("quality")
+            log.debug("유닛 사진: %s 벤치 %s 크롭 버림(%s)", champion, slot, q.reject)
+            return
+        note = f"품질: {', '.join(q.flags)}" if q.flags else None
+        if q.flags:
+            score *= FLAG_SCORE_MULT
         meta = self.db.add_pending(champion, crop, evidence=evidence, star=star, score=score, game=self.game,
-                                   stage=ctx.stage, arena=ctx.arena, frame=ctx.frame, slot=slot, approve=approve)
+                                   stage=self._stage_for(ctx), arena=ctx.arena, frame=ctx.frame,
+                                   slot=f"bench:{slot}" if slot is not None else "bench:?",
+                                   approve=approve and not q.flags, note=note)
         if meta is not None:
             self.saved.append(meta)
 
-    def _traits(self, ctx: FrameContext, read: Any, names: Any, crops: Sequence[np.ndarray],
-                panel_conf: float | None) -> None:
-        # 특성 풀이가 하나 · 칸 수 일치(가려진 유닛 없음) · 패널 판독 확실 · 구속 배정으로 이름 받은 칸
-        if names.solutions != 1 or names.missed or names.board_set is None or (panel_conf or 0.0) < PANEL_SURE:
-            return
-        for u, n, crop in zip(read.board, names.board, crops):
-            if n.unit_id and n.source in ("forced", "traits") and n.confidence >= TRAITS_MIN_CONF:
-                self._save(n.unit_id, crop, evidence=EVIDENCE_TRAITS, star=u.star, score=n.confidence, ctx=ctx,
-                           slot=f"board:{u.hex[0]},{u.hex[1]}" if u.hex else "board:?")
-
     def _duplicates(self, ctx: FrameContext, read: Any, names: Any, crops: Sequence[np.ndarray]) -> None:
+        # 라이브러리는 모르고(source=duplicate) 같은 프레임의 확정 보드 유닛과 같은 모델인 벤치 칸
         for u, n, crop in zip(read.bench, names.bench, crops):
             if n.unit_id and n.source == "duplicate" and n.confidence >= DUPLICATE_MIN_CONF:
                 self._save(n.unit_id, crop, evidence=EVIDENCE_DUPLICATE, star=u.star, score=n.confidence, ctx=ctx,
-                           slot=f"bench:{u.bench_slot}")
+                           slot=u.bench_slot)
 
-    def _purchases(self, ctx: FrameContext, read: Any, crops: Sequence[np.ndarray]) -> None:
+    def _library(self, ctx: FrameContext, read: Any, names: Any, crops: Sequence[np.ndarray]) -> None:
+        # 뒷받침된 라이브러리 이름이지만 아직 확실하지 않은(0.6~0.8) 벤치 칸 = 새 자세·새 맵 사진
+        for u, n, crop in zip(read.bench, names.bench, crops):
+            if (n.unit_id and n.source == "library" and getattr(n, "corroborated", False)
+                    and LIBRARY_EVIDENCE_MIN <= n.confidence < RECOGNIZED_CONF):
+                self._save(n.unit_id, crop, evidence=EVIDENCE_LIBRARY, star=u.star, score=n.confidence, ctx=ctx,
+                           slot=u.bench_slot, name=n)
+
+    def _purchases(self, ctx: FrameContext, read: Any, crops: Sequence[np.ndarray], names: Any = None) -> None:
         now = ctx.at
         # 1) 상점 칸 챔피언 → 빈 칸 = 구매(상점을 이번 프레임에 읽었을 때만 비교한다)
         if ctx.shop is not None:
@@ -541,6 +683,8 @@ class UnitCollector:
         # 2) 벤치·보드 변화
         bench = {u.bench_slot: u.star for u in read.bench if u.bench_slot is not None}
         crop_at = {u.bench_slot: c for u, c in zip(read.bench, crops) if u.bench_slot is not None}
+        bench_names = tuple(getattr(names, "bench", ()) or ())
+        name_at = {u.bench_slot: n for u, n in zip(read.bench, bench_names) if u.bench_slot is not None}
         board = (len(read.board), tuple(sorted(int(u.star or 0) for u in read.board)))
         last = self._history[-1] if self._history else None
         if last is not None and self._last_board is not None:
@@ -555,7 +699,7 @@ class UnitCollector:
                 empty_before = (len(self._history) >= MIN_EMPTY_FRAMES
                                 and all(s not in h for h in self._history[-MIN_EMPTY_FRAMES:]))
                 if quiet and empty_before and len(bench) == len(last) + 1:
-                    self._new.append(_NewSlot(now, s, crop_at[s], bench[s], ctx))
+                    self._new.append(_NewSlot(now, s, crop_at[s], bench[s], ctx, name_at.get(s)))
                 else:
                     self._disturb(now)           # 방금 있던 칸이 다시 보인 것(깜빡임) 등 — 새 칸으로 믿지 않는다
         self._history = [*self._history, bench][-MIN_EMPTY_FRAMES:]
@@ -582,7 +726,7 @@ class UnitCollector:
                 log.info("구매 크롭이 %s의 승인 사진보다 다른 챔피언을 더 닮았습니다 — 저장하지 않음", champ)
                 continue
             self._save(champ, ns.crop, evidence=EVIDENCE_PURCHASE, star=1, score=0.95, ctx=ns.ctx,
-                       slot=f"bench:{ns.slot}", approve=self.auto_approve_purchase)
+                       slot=ns.slot, name=ns.name, approve=self.auto_approve_purchase)
         for b in live:
             b.used = True                        # 창이 끝날 때까지 남겨 늦게 온 다른 출처 보고를 흡수한다
         self._new.clear()
@@ -610,5 +754,21 @@ class UnitCollector:
         return own is not None and other >= CONTRADICT_MIN and other - own >= CONTRADICT_MARGIN
 
 
-__all__ = ["APPROVED", "PENDING", "ChampionCoverage", "Coverage", "CropMeta", "EVIDENCE_KO", "FrameContext",
-           "UnitCollector", "UnitImageDB", "arena_signature", "crop_digest", "frame_digest", "open_db", "roster"]
+def _stage_key(stage: str | None) -> tuple[int, int] | None:
+    try:
+        a, b = str(stage).split("-")
+        return int(a), int(b)
+    except (ValueError, AttributeError):
+        return None
+
+
+def _recognized(name: Any, champion: str) -> bool:
+    """이 칸을 라이브러리가 이미 그 챔피언으로 **알아봤다**(뒷받침 있음, 신뢰도 >= `RECOGNIZED_CONF`)."""
+    return (name is not None and getattr(name, "unit_id", None) == champion
+            and getattr(name, "source", None) == "library" and bool(getattr(name, "corroborated", False))
+            and float(getattr(name, "confidence", 0.0)) >= RECOGNIZED_CONF)
+
+
+__all__ = ["APPROVED", "PENDING", "ChampionCoverage", "Coverage", "CropMeta", "CropQuality", "EVIDENCE_KO",
+           "FrameContext", "UnitCollector", "UnitImageDB", "arena_signature", "crop_digest", "crop_quality",
+           "frame_digest", "open_db", "roster"]

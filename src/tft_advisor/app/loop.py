@@ -35,12 +35,17 @@ from typing import Any, Literal, Protocol
 
 from ..config import Settings, load_settings
 from ..contracts import GameState, Recommendation
+from .pinning import apply_pin, readvise_state
 from .report import KeptInfo, kept_view, shop_ids, shop_needs_rescore
 from .session import KEEP_MODES, RESET_MODES, SessionTracker
 
 log = logging.getLogger(__name__)
 
 UpdateKind = Literal["recognized", "kept", "reset", "advice", "error"]
+
+FORCE_REREAD_DELAY_S = 0.5
+"""구매·판매·유닛 수 변화를 본 뒤 이만큼 지나 첫 프레임에서 보드·벤치·특성 패널을 통째로 다시 읽는다(유닛이 벤치에
+떨어지는 애니메이션이 끝난 뒤). 특성 패널 주기(`traits_every_s`)를 이번 한 번 건너뛴다(vision 30 보고)."""
 
 
 @dataclass
@@ -85,6 +90,24 @@ def rescore_shop(advisor: Any, state: GameState, previous: Recommendation | None
     return previous.model_copy(update={"shop": list(fresh.shop)})
 
 
+class _PinSync:
+    """사용자가 고정한 목표 덱을 advisor에 반영한다(31 보고). `want`는 UI 스레드가 바꾸고, `sync()`는 **추천 스레드에서**
+    advise 직전에 부른다. advisor가 바뀌면(Jev 토글) 새 advisor에 다시 반영한다. 고정한 적이 없으면 부르지 않는다."""
+
+    def __init__(self) -> None:
+        self.want: str | None = None
+        self._applied: dict[int, str | None] = {}
+
+    def sync(self, advisor: Any) -> None:
+        if advisor is None:
+            return
+        key, want = id(advisor), self.want
+        if self._applied.get(key) == want:
+            return
+        apply_pin(advisor, want)
+        self._applied = {key: want}
+
+
 class AdviceRunner(Protocol):
     def submit(self, state: GameState) -> None: ...
 
@@ -101,9 +124,14 @@ class InlineAdviceRunner:
         self.advisor = advisor
         self.on_result = on_result
         self.on_shop = on_shop
+        self.pin = _PinSync()
+
+    def set_pin(self, comp_id: str | None) -> None:
+        self.pin.want = comp_id
 
     def submit(self, state: GameState) -> None:
         try:
+            self.pin.sync(self.advisor)
             rec = self.advisor.advise(state)
         except Exception:   # 추천 실패로 루프가 죽지 않는다
             log.exception("추천 실패 (state stage=%s mode=%s)", state.stage, state.screen_mode)
@@ -112,6 +140,7 @@ class InlineAdviceRunner:
 
     def submit_shop(self, state: GameState, previous: Recommendation | None) -> None:
         try:
+            self.pin.sync(self.advisor)
             rec = rescore_shop(self.advisor, state, previous)
         except Exception:
             log.exception("상점 재평가 실패 (stage=%s)", state.stage)
@@ -146,6 +175,7 @@ class ThreadAdviceRunner:
         self.advisor_swapped = threading.Event()   # 교체가 끝날 때마다 set (테스트·전환기 대기용)
         self._wake = threading.Event()
         self._stop = threading.Event()
+        self.pin = _PinSync()     # 목표 덱 고정(추천 스레드에서 advisor에 반영)
         self._thread = threading.Thread(target=self._run, name=name, daemon=True)
         self._thread.start()
 
@@ -161,6 +191,12 @@ class ThreadAdviceRunner:
         with self._lock:
             if self._pending is None:
                 self._pending_shop = (state, previous)
+        self._wake.set()
+
+    def set_pin(self, comp_id: str | None) -> None:
+        """목표 덱 고정/해제(UI 스레드). 반영은 다음 추천 직전에 추천 스레드에서 한다."""
+        with self._lock:
+            self.pin.want = comp_id
         self._wake.set()
 
     def set_advisor(self, advisor: Any) -> None:
@@ -195,6 +231,9 @@ class ThreadAdviceRunner:
             with self._lock:
                 state, self._pending = self._pending, None
                 shop, self._pending_shop = self._pending_shop, None
+            if state is None and shop is None:
+                continue
+            self.pin.sync(self.advisor)   # 목표 덱 고정 반영(이 스레드에서만 advisor를 만진다)
             if state is None and shop is not None:
                 try:
                     rec = rescore_shop(self.advisor, shop[0], shop[1])
@@ -272,6 +311,11 @@ class LiveLoop:
         self._frames = 0
         self._debug_dumps = 0
         self._pending_reset: dict[str, Any] | None = None   # 새 판 확인 대기: mode, first, count, recheck
+        self._force_full_at: float | None = None
+        """구매·판매·유닛 수 변화 뒤 보드+벤치+특성을 통째로 다시 읽을 시각(`_note_unit_change`, vision 30)."""
+        self._prev_shop_ids: tuple | None = None
+        self._prev_unit_counts: tuple[int, int] | None = None
+        self.forced_rereads = 0
         self.last_board_read: Any = None      # 마지막 보드 판독(인식 확인 창이 칸별 이름 출처를 보려고 쓴다)
         self.last_recog_ms: float | None = None
         self.screen_hook: Any = None
@@ -282,6 +326,8 @@ class LiveLoop:
         """직전 추천의 상점 칸이 상점 재평가 결과인가(표시: "새 상점 기준"). 전체 추천이 오면 False."""
         self._shop_submitted: tuple | None = None   # 마지막으로 재평가를 요청한 상점(같은 상점을 거듭 요청하지 않는다)
         self.shop_rescores = 0
+        self.pin_readvises = 0
+        self._restore_pin()
 
     def _make_detector(self):
         from ..vision.change import ChangeDetector
@@ -306,7 +352,12 @@ class LiveLoop:
         content = self._content(image)
         changed = set(self.detector.update(image, content=content))
         now = self.clock()
-        if not changed:
+        forced = self._force_due(now)
+        if forced:
+            # 구매·판매·유닛 수 변화 뒤 한 번: 보드+벤치+특성 패널(+이름)을 통째로 다시 읽는다(특성 주기를 한 번 건너뛴다)
+            groups = self._groups(changed, now) | self._full_groups()
+            self._last_traits = now
+        elif not changed:
             if not self._recheck_due(now):
                 return None
             changed = {"stage"}   # 새 판 확인: 정지 화면이라도 화면 판별만 다시 한다
@@ -352,6 +403,44 @@ class LiveLoop:
             self._last_traits = now
         return groups or set(DEFAULT_GROUPS)
 
+    # ------------------------------------------------------------------ 구매 뒤 다시 읽기(vision 30)
+    @staticmethod
+    def _full_groups() -> set[str]:
+        from ..vision.recognizer import DEFAULT_GROUPS
+
+        return set(DEFAULT_GROUPS) | {"traits"}
+
+    def _force_due(self, now: float) -> bool:
+        at = self._force_full_at
+        if at is None or now < at:
+            return False
+        self._force_full_at = None
+        self.forced_rereads += 1
+        return True
+
+    def _note_unit_change(self, state: GameState, groups: Collection[str], board_read: Any, now: float) -> None:
+        """구매·판매(장부 이벤트, 상점 칸이 빈 칸이 됨) 또는 보드/벤치 유닛 수 변화 → `FORCE_REREAD_DELAY_S` 뒤 첫 프레임에
+        보드·벤치·특성 패널을 통째로 다시 읽게 예약한다. 유닛이 벤치에 떨어지는 애니메이션(약 0.3초)이 끝난 뒤를 읽는다."""
+        why = None
+        if any(getattr(ev, "kind", None) in ("buy", "sell") for ev in (getattr(self.tracker, "last_events", None) or ())):
+            why = "장부 구매/판매"
+        if "shop" in groups:
+            cur = shop_ids(state)
+            prev, self._prev_shop_ids = self._prev_shop_ids, cur
+            if why is None and cur is not None and prev is not None and len(cur) == len(prev):
+                emptied = [i for i, (a, b) in enumerate(zip(prev, cur)) if a is not None and b is None]
+                others = [i for i, (a, b) in enumerate(zip(prev, cur)) if a != b and i not in emptied]
+                if emptied and len(emptied) <= 2 and not others:
+                    why = "상점 칸 비움"
+        if board_read is not None:
+            counts = (len(getattr(board_read, "board", ()) or ()), len(getattr(board_read, "bench", ()) or ()))
+            prev_counts, self._prev_unit_counts = self._prev_unit_counts, counts
+            if why is None and prev_counts is not None and counts != prev_counts:
+                why = f"유닛 수 {prev_counts} → {counts}"
+        if why is not None and self._force_full_at is None:
+            self._force_full_at = now + FORCE_REREAD_DELAY_S
+            log.debug("보드 다시 읽기 예약(%s)", why)
+
     def _recheck_due(self, now: float) -> bool:
         p = self._pending_reset
         if p is None or now - p["recheck"] < self.settings.app.reset_recheck_s:
@@ -381,6 +470,11 @@ class LiveLoop:
                 namer.reset()          # 새 판: 이름 힌트·연속 일치 기록·수집기 판 ID
             except Exception:
                 log.exception("유닛 이름 인식 초기화 실패")
+        bench_memory = getattr(self.recognizer, "bench_memory", None)
+        if bench_memory is not None:
+            bench_memory.reset()       # 새 판: 벤치 빈 칸 기준·직전 유닛(vision 30)
+        self._force_full_at = None
+        self._prev_shop_ids = self._prev_unit_counts = None
         if self.advisor is not None:
             self.advisor.reset()
         self.last_recommendation = None
@@ -389,6 +483,7 @@ class LiveLoop:
         self.last_board_read = None
         self.shop_fresh = False
         self._shop_submitted = None
+        self._send_pin(None)   # 새 판: 목표 덱 고정 해제(세션 기록은 tracker.reset이 비웠다)
         note = f"보관: {self.tracker.last_archive.name}" if self.tracker.last_archive else None
         return self._emit(LoopUpdate(kind="reset", state=state, recognized=tuple(sorted(groups)), message=note))
 
@@ -412,6 +507,10 @@ class LiveLoop:
         merged = self.tracker.observe(state, groups, owned_row=owned_row, board_read=board_read)
         self.last_state = merged
         self._feed_unit_namer()
+        try:
+            self._note_unit_change(merged, groups, board_read, now)
+        except Exception:   # 보조 기능 — 루프를 막지 않는다
+            log.exception("구매 뒤 다시 읽기 예약 실패")
         if mode in KEEP_MODES:
             # 직전 추천을 그대로 둔다(advisor 계약, 목표 덱 고정). 표시용 사본에서 산·바뀐 상점 칸만 뺀다.
             # 단 상점에 새 상품이 보이면(전투 중 새로고침·라운드 시작) 상점만 다시 평가한다.
@@ -436,6 +535,9 @@ class LiveLoop:
                 namer.set_hints(owned())
             collector = getattr(namer, "collector", None)
             if collector is not None:
+                set_stage = getattr(collector, "set_stage", None)
+                if set_stage is not None and self.last_state is not None:
+                    set_stage(self.last_state.stage)   # 사진 메타데이터 = 오버레이에 보이는 세션 스테이지(vision 30)
                 for ev in getattr(self.tracker, "last_events", None) or ():
                     if ev.kind == "buy" and ev.unit_id:
                         collector.note_purchase(ev.unit_id, ev.at)
@@ -592,6 +694,46 @@ class LiveLoop:
         log.info("화면 설정 적용: 모니터 %s · %s · content_box=%s", settings.capture.monitor,
                  settings.vision.resolution, settings.vision.content_box)
 
+    # ------------------------------------------------------------------ 목표 덱 고정(31 보고)
+    @property
+    def pinned_comp_id(self) -> str | None:
+        return getattr(getattr(self.tracker, "data", None), "pinned_comp_id", None)
+
+    @property
+    def pinned_comp_name(self) -> str | None:
+        return getattr(getattr(self.tracker, "data", None), "pinned_comp_name", None)
+
+    def _send_pin(self, comp_id: str | None) -> None:
+        setter = getattr(self.runner, "set_pin", None)
+        if setter is not None:
+            setter(comp_id)
+
+    def _restore_pin(self) -> None:
+        """앱을 판 중간에 다시 켰을 때: 세션에 남은 고정을 추천 스레드에 넘긴다(첫 추천부터 반영)."""
+        pinned = self.pinned_comp_id
+        if pinned:
+            log.info("이전 세션의 목표 덱 고정을 이어받습니다: %s", pinned)
+            self._send_pin(pinned)
+
+    def request_pin(self, comp_id: str | None, name: str | None = None) -> bool:
+        """목표 덱 고정(comp_id) / 해제(None). UI 스레드에서 부른다 — 여기서는 advisor를 만지지 않는다.
+
+        세션에 기록하고(`session.json`), 추천 스레드에 고정 값을 넘긴 뒤 **마지막 상태로 바로 다시 추천**한다
+        (새 캡처·인식 없음). 결과는 평소처럼 `_on_advice` → on_update로 온다. 다시 추천을 요청했으면 True.
+        """
+        setter = getattr(self.tracker, "set_pinned_comp", None)
+        if setter is not None:
+            setter(comp_id, name)
+        self._send_pin(comp_id)
+        log.info("목표 덱 %s", f"고정: {comp_id}" if comp_id else "고정 해제")
+        state = self.last_state
+        if state is None:
+            return False
+        self._shop_submitted = shop_ids(state)
+        self.pin_readvises += 1
+        self.runner.submit(readvise_state(state))
+        return True
+
     def set_advisor(self, advisor: Any) -> None:
         """실행 중 advisor를 갈아 끼운다(트레이 Jev 토글 → `app/jev_toggle.py`).
 
@@ -615,6 +757,9 @@ class LiveLoop:
 
 class _NullRunner:
     def submit(self, state: GameState) -> None:
+        pass
+
+    def set_pin(self, comp_id: str | None) -> None:
         pass
 
     def submit_shop(self, state: GameState, previous: Recommendation | None) -> None:

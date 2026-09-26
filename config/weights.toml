@@ -4,6 +4,8 @@
 
 [comp]
 # resource_fit = wi*item_fit + wa*augment_fit + wb*board_fit  (wi+wa+wb = 1)
+# pin_other_rel: 사용자가 목표 덱을 고정하면 고정 덱 rel = 1, 나머지 덱 rel은 이 배수(상점 경로·아이템 가중, 21 §14.3)
+pin_other_rel = 0.5
 wi = 0.45
 wa = 0.25
 wb = 0.30
@@ -146,6 +148,8 @@ plan_now_scale = { "1" = 2.0, "2" = 2.0, "3" = 1.5, "4" = 1.2, "5" = 1.0 }
 # 기본 점수 = 목표 덱 소속(x unit_stage.plan_comp_scale) + 성급 + 아이템 + 코스트
 #           + 지금 강함(x unit_stage.plan_now_scale: s_now · 스테이지 유닛 통계 · 추천 스테이지 보드 소속)
 #           + 특성 이득(지금 라인업 기준) + 보드 유지 − 같은 챔피언 중복
+min_confidence = 0.8        # 이름 확정 유닛 신뢰도(21 §15). 추정 이름(뒷받침 없는 라이브러리 닮음, 상한 0.75)은 이름 미상처럼 —
+                            # 목표 덱 보유·상점 보유 N·1성 쌍·보드 배치·판매 모두에서 뺀다. 0.75 이하로 내리면 추정 이름을 믿게 된다
 carry = 3.0                 # 목표 덱 캐리 / 핵심 / 최종 보드 / 빌드업(현재·다음 레벨) — 하나만
 core = 2.0
 final = 1.2
@@ -177,3 +181,24 @@ trans_min_games = 20        # 다음 스테이지 전이 최소 표본
 trans_link_min = 0.15
 trans_match_min = 0.5       # 지금 라인업 ↔ 출발 클러스터 Jaccard >= 이 값이면 "이 보드는 보통…"
 trans_similar_min = 0.25    # >= 이 값이면 "비슷한 보드는 보통…", 미만이면 다음 스테이지 힌트를 내지 않는다
+
+[sell]
+# 판매 추천(advisor/sell.py, 코드 전용·Jev 없음). 키 정의·범위: config.py SellWeights. 21 §14.
+# 지키는 유닛: 보드 배치 라인업 · 1위 덱 최종 보드 · (late_from_stage 전) 현재~다음 레벨 빌드업 보드
+#   · (protect_shown_until_stage 이하) 표시된 2·3위 덱 최종 보드 · 2성이 될 만한 1성 쌍 · (초반) 벤치 2성 이상.
+# 이름 미상 유닛은 절대 팔라고 하지 않는다. 판매가 = 코스트 x 사본 수(2코스트 이상 2성 −1, 3성 −2 — app/ledger.py와 같은 규칙).
+enabled = true
+min_confidence = 0.8           # 이 미만(추정 이름 포함)은 절대 팔라고 하지 않는다(21 §15)
+early_until_stage = 2          # 이하: 벤치 압박·다음 이자 구간·상점 구매 자리가 필요할 때만 추천(쌍·1성 싱글 보유는 정상)
+late_from_stage = 4            # 이상: 1위 덱 최종 보드 밖이면 판다(빌드업·쌍 보호 없음)
+protect_shown_until_stage = 3
+buildup_levels_ahead = 1
+pair_min_odds = 10             # 1성 쌍 유지 조건: 그 코스트 상점 확률(%) >= 이 값
+keep_bench_star2_until_stage = 3
+bench_size = 9
+bench_near_full = 8            # 벤치(이름 미상 포함) >= 이 값이면 압박
+early_max = 2
+interest_step = 10
+interest_cap = 5
+interest_max_units = 2         # 초반: 이 수 이하를 팔아 다음 이자 구간에 닿으면 추천
+interest_near = 3              # 못 닿을 때 "이자 구간 N골드까지 k 남음"을 보여 줄 거리

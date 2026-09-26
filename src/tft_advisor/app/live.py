@@ -253,6 +253,8 @@ def _run_overlay(loop: LiveLoop, settings: Settings, backend: str, patch: str | 
     if loop.screen_hook is not None:
         window.attach_redetector(loop.screen_hook)   # 트레이 "게임 화면 다시 찾기" + 따라가기 알림
     window.attach_unit_review(unit_review_opener(loop.recognizer))   # 트레이 "유닛 사진 검토"(없으면 None)
+    window.attach_pin(make_pin(loop, settings))
+    ensure_champion_icons(settings, on_done=window.icons_ready.emit)   # 첫 실행: 유닛 아이콘을 뒤에서 받는다   # 목표 덱 고정: 오버레이 옆 띠 + 트레이 하위 메뉴 + 인식 확인 창 버튼
     recog = _make_recog(settings, window, config_dir, test_view_cli)
     loop.on_update = window.on_loop_update
     window.show_overlay()
@@ -276,7 +278,7 @@ def _run_overlay(loop: LiveLoop, settings: Settings, backend: str, patch: str | 
         stop.set()
         thread.join(timeout=3.0)
         loop.close()               # 추천 스레드 정지 + 캡처 닫기 + 세션 저장
-        for w in (recog.window if recog is not None else None, window.quit_handle, window):
+        for w in (recog.window if recog is not None else None, window.quit_handle, window.deck_chooser, window):
             try:
                 if w is not None:
                     w.hide()
@@ -292,6 +294,46 @@ def _run_overlay(loop: LiveLoop, settings: Settings, backend: str, patch: str | 
         return 0
 
 
+def ensure_champion_icons(settings: Settings, on_done=None, *, fetch=None) -> threading.Thread | None:
+    """목표 덱 유닛 아이콘(`data/templates/{set}/champions/`)이 없으면 **백그라운드 스레드**에서 CommunityDragon에서 받는다.
+    받는 동안 오버레이는 이름 글자로 그린다. 끝나면 `on_done(ok_count)`(오버레이가 아이콘 캐시를 새로 읽는다). 실패해도 앱은 돈다."""
+    if not settings.overlay.unit_icons:
+        return None
+    from ..vision.templates import champion_icons_missing, fetch_champions
+
+    set_number = settings.app.set_number
+    if not champion_icons_missing(set_number):
+        return None
+    fetch = fetch or fetch_champions
+
+    def run() -> None:
+        try:
+            ok, failed = fetch(set_number)
+            log.info("챔피언 아이콘 %d개 받음%s", ok, f" (실패 {len(failed)})" if failed else "")
+        except Exception:   # noqa: BLE001 — 네트워크 없음 등: 이름 글자로 그린다
+            log.warning("챔피언 아이콘을 받지 못했습니다 — 이름 글자로 표시합니다", exc_info=True)
+            return
+        if on_done is not None:
+            on_done(ok)
+
+    thread = threading.Thread(target=run, name="tft-icons", daemon=True)
+    thread.start()
+    return thread
+
+
+def make_pin(loop: LiveLoop, settings: Settings):
+    """목표 덱 고정 컨트롤러(UI 스레드). 누르면 `loop.request_pin` → 세션 기록 + 추천 스레드에서 다시 추천.
+    세션에 남은 고정(판 중간 재시작)으로 시작한다. 실패하면 None(고정 기능 없이 오버레이는 뜬다)."""
+    try:
+        from .deck_chooser import PinController
+
+        return PinController(loop.request_pin, pinned=loop.pinned_comp_id, pinned_name=loop.pinned_comp_name,
+                             limit=settings.ui.max_target_comps)
+    except Exception:   # noqa: BLE001
+        log.exception("목표 덱 고정을 준비하지 못했습니다")
+        return None
+
+
 def _make_recog(settings: Settings, window, config_dir: Path | None, cli: bool | None):
     """인식 확인 창 컨트롤러를 오버레이에 붙인다(트레이 메뉴 "인식 확인 창"). 실패해도 오버레이는 뜬다."""
     try:
@@ -301,7 +343,8 @@ def _make_recog(settings: Settings, window, config_dir: Path | None, cli: bool |
                                      names=window.names,
                                      on_redetect=window.request_redetect if window.redetector is not None else None,
                                      on_quit=window.quit,
-                                     on_review=window.open_unit_review if window.unit_review_opener else None)
+                                     on_review=window.open_unit_review if window.unit_review_opener else None,
+                                     pin=window.pin)
         window.attach_recog(controller)
         return controller
     except Exception:   # noqa: BLE001
