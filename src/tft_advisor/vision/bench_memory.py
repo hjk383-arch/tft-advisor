@@ -218,9 +218,10 @@ class BenchMemory:
                                           anchor=(round(cell.cx, 5), round(cell.cy, 5))))
                 evidence += 1
                 continue
-            if prev is not None:         # 기준 없음/애매: 사라졌다는 증거가 없다 → 이름 없이 직전 판독
-                bench.append(replace(prev, unit_id=None, unit_conf=0.0, name_source="held", corroborated=None,
-                                     confidence=HELD_CONF))
+            if prev is not None:         # 기준 없음/애매: 사라졌다는 증거가 없다 → 이름·성급·아이템 없이 자리만(QA 32 W1:
+                # 바뀐 칸이 옛 ★2를 달고 있었다). "그대로"(held)가 아니므로 정체 추적기도 이름을 붙이지 않는다
+                bench.append(replace(prev, unit_id=None, unit_conf=0.0, name_source="none", corroborated=None,
+                                     star=None, star_conf=0.0, items=(), item_count=0, confidence=HELD_CONF))
         if not evidence and self.last_bench_n < 2:
             return read
         self.held_frames += 1

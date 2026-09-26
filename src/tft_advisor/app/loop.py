@@ -470,9 +470,10 @@ class LiveLoop:
                 namer.reset()          # 새 판: 이름 힌트·연속 일치 기록·수집기 판 ID
             except Exception:
                 log.exception("유닛 이름 인식 초기화 실패")
-        bench_memory = getattr(self.recognizer, "bench_memory", None)
-        if bench_memory is not None:
-            bench_memory.reset()       # 새 판: 벤치 빈 칸 기준·직전 유닛(vision 30)
+        for name in ("bench_memory", "unit_tracker"):      # 새 판: 벤치 기억(vision 30) · 유닛 정체 추적(vision 35)
+            helper = getattr(self.recognizer, name, None)
+            if helper is not None:
+                helper.reset()
         self._force_full_at = None
         self._prev_shop_ids = self._prev_unit_counts = None
         if self.advisor is not None:
@@ -525,7 +526,21 @@ class LiveLoop:
         return getattr(self.recognizer, "unit_namer", None)
 
     def _feed_unit_namer(self) -> None:
-        """장부 → 유닛 이름 인식(vision 23·25 보고): 보유 챔피언 힌트 + 상점 구매 이벤트를 사진 수집기에 알린다."""
+        """장부 → 유닛 이름 인식(vision 23·25 보고): 보유 챔피언 힌트 + 상점 구매 이벤트를 사진 수집기에 알린다.
+        구매·판매 이벤트는 유닛 정체 추적기(`recognizer.unit_tracker`, vision 35)에도 알린다."""
+        tracker = getattr(self.recognizer, "unit_tracker", None)
+        if tracker is not None:
+            try:
+                # 구매 시각 = 이 이벤트를 만든 **프레임의 캡처 시각**(추적기의 새 칸 시각과 같은 시계, QA 36 F1b). 모르면 장부 시각
+                cap = getattr(self.last_state, "captured_at", None) if self.last_state is not None else None
+                frame_at = cap.timestamp() if cap is not None else None
+                for ev in getattr(self.tracker, "last_events", None) or ():
+                    if ev.kind == "buy" and ev.unit_id:
+                        tracker.note_purchase(ev.unit_id, frame_at if frame_at is not None else ev.at)
+                    elif ev.kind == "sell" and ev.unit_id:
+                        tracker.note_sale(ev.unit_id)
+            except Exception:   # 보조 기능 — 인식·추천을 막지 않는다
+                log.exception("유닛 정체 추적기에 장부 이벤트 전달 실패")
         namer = self._unit_namer()
         if namer is None:
             return

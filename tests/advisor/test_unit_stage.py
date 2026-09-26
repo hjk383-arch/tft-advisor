@@ -132,18 +132,30 @@ def test_shop_still_uses_owned_copies_in_stage2(make_advisor, weights):
     assert kennen.score > shen.score
 
 
-def _plan(stats, weights, stage: str, board, bench, level: int, stage_board=None):
+def _plan(stats, weights, stage: str, board, bench, level: int, stage_board=None, follow_buildup: bool = True):
     view = build_view(state(stage, level, board, bench=bench), stats, 0.6, None)
+    w = weights.board_plan.model_copy(update={"follow_buildup": follow_buildup})
     return plan_board(view, stats, stats.comp(ZYRA), level, {}, lambda i: stats.name(i, "ko") or i,
-                      weights.board_plan, stage=weights.unit_stage, stage_board=stage_board)
+                      w, stage=weights.unit_stage, stage_board=stage_board)
+
+
+def test_board_plan_follows_buildup_even_early(stats, weights):
+    """21 §17(기본): 1칸, 2성 무관 유닛(알리스타) vs 1성 목표 덱 빌드업 유닛(요릭) → 2스테이지에도 빌드업 유닛."""
+    board = [{"id": "DA_18_Alistar", "star": 2, "confidence": 0.9}]
+    bench = ones(["DA_18_Yorick"])
+    for stage in ("2-3", "5-1"):
+        p = _plan(stats, weights, stage, board, bench, 1)
+        assert [e.unit_id for e in p.lineup] == ["DA_18_Yorick"] and p.lineup[0].in_reference
+        assert [(s.field_unit_id, s.bench_unit_id) for s in p.swaps] == [("DA_18_Yorick", "DA_18_Alistar")]
 
 
 def test_board_plan_prefers_strong_now_early_and_final_deck_late(stats, weights):
-    """1칸: 2성 무관 유닛(알리스타) vs 1성 목표 덱 핵심(요릭). 2스테이지는 지금 강한 2성, 5스테이지는 목표 덱 핵심."""
+    """(follow_buildup 끔 = 21 §10 예전 동작) 1칸: 2성 무관 유닛(알리스타) vs 1성 목표 덱 핵심(요릭).
+    2스테이지는 지금 강한 2성, 5스테이지는 목표 덱 핵심."""
     board = [{"id": "DA_18_Alistar", "star": 2, "confidence": 0.9}]
     bench = ones(["DA_18_Yorick"])
-    early = _plan(stats, weights, "2-3", board, bench, 1)
-    late = _plan(stats, weights, "5-1", board, bench, 1)
+    early = _plan(stats, weights, "2-3", board, bench, 1, follow_buildup=False)
+    late = _plan(stats, weights, "5-1", board, bench, 1, follow_buildup=False)
     assert [e.unit_id for e in early.lineup] == ["DA_18_Alistar"] and early.swaps == []
     assert [e.unit_id for e in late.lineup] == ["DA_18_Yorick"]
     # 전환 경로: 지금 전력용 유닛과 모을 목표 덱 유닛을 보여 준다

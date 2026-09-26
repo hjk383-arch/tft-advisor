@@ -57,16 +57,20 @@ class IconCell:
     items: int = 0                  # 든 아이템 수(보드 배치, 작은 점)
     unknown: bool = False           # 이름 미상 칸("?" 칸)
     dim: bool = False               # 직전 계획(stale) — 흐리게
+    star_unknown: bool = False      # 성급을 읽지 못함 → "★?"(★1처럼 보이지 않게, QA 36 W2)
+    ref: bool | None = None         # 보드 배치: 목표 덱 빌드업 기준 보드 유닛인가(True면 아래 하늘색 막대)
+    need: bool = False              # 보드 배치: 기준 보드에 있는데 없는 유닛(상점에서 구할 것) — 흐리게 + "+"
 
     def text(self) -> str:
         if self.unknown:
             return "?"
         mark = "✓" if self.owned else ""
         tail = "(캐리)" if self.carry else ""
-        star = f"★{self.star}" if self.star and self.star >= 2 else ""
+        star = "★?" if self.star_unknown else f"★{self.star}" if self.star and self.star >= 2 else ""
         up = "↑" if self.badge == "↑" else ""
         held = f"[템{self.items}]" if self.items else ""
-        return f"{self.name}{star}{up}{held}{mark}{tail}"
+        need = "(구하기)" if self.need else ""
+        return f"{self.name}{star}{up}{held}{mark}{tail}{need}"
 
 
 @dataclass(frozen=True)
@@ -252,9 +256,22 @@ def lineup_cells(plan, state: GameState | None, rec: Recommendation | None, name
             held = len(match.items)
         out.append(IconCell(unit_id=e.unit_id, name=names.name(e.unit_id), cost=_cost(names, e.unit_id),
                             carry=e.unit_id == carry, star=e.star if e.star and e.star >= 2 else None,
-                            badge="↑" if e.action == "field" else None, items=held, dim=stale))
+                            star_unknown=e.star is None, badge="↑" if e.action == "field" else None, items=held,
+                            dim=stale, ref=getattr(e, "in_reference", None)))
     out += [IconCell(unit_id="", name="?", unknown=True, dim=stale) for _ in range(plan.unknown_on_board)]
+    # 기준 보드에 있는데 없는 유닛(상점에서 구할 것): 라인업 뒤에 흐리게
+    for uid in getattr(plan, "missing", None) or []:
+        out.append(IconCell(unit_id=uid, name=names.name(uid), cost=_cost(names, uid), owned=False, need=True,
+                            dim=stale, ref=True))
     return tuple(out)
+
+
+def hud_reference_line(plan) -> str | None:
+    """HUD용 빌드업 기준 줄: 덱 이름 없이(제목 옆에 있다) "보유 n/m"을 앞에 둔다(QA 36 W4, 460px에서 꼬리가 잘렸다).
+    콘솔은 `report.board_plan_lines`의 긴 줄을 그대로 쓴다. 유닛 이름은 호출하는 쪽이 붙인다."""
+    if not getattr(plan, "reference_units", None):
+        return None
+    return f"레벨 {plan.reference_level} 빌드업 보유 {len(plan.owned_in_reference)}/{len(plan.reference_units)}: "
 
 
 def build_model(state: GameState | None, rec: Recommendation | None, names: NameBook, *,
@@ -301,6 +318,13 @@ def build_model(state: GameState | None, rec: Recommendation | None, names: Name
         stale = bool(getattr(plan, "stale", False))
         board.note = "직전" if stale else None
         lines = board_plan_lines(plan, names, comp_name=basis)
+        ref_head = hud_reference_line(plan)
+        if ref_head is not None:
+            long_head = f"레벨 {plan.reference_level} 빌드업"
+            short = ref_head + " · ".join(names.name(u) for u in plan.reference_units)
+            if plan.level is not None and plan.level != plan.reference_level:
+                short += f" (레벨 {plan.level} 통계 없음)"
+            lines = [short if ln.startswith(long_head) and "— 보유" in ln else ln for ln in lines]
         for n, ln in enumerate(lines):
             color = plan_color(ln, plan, stale) if plan_color is not None else DIM
             row = Row("text", ln, color)

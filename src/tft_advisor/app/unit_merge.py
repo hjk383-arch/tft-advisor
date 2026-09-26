@@ -312,7 +312,8 @@ def merge_units(ledger: UnitLedger, obs: BoardObs | None, *, level: int | None =
         if match is not None:
             left.remove(match)
         vconf = slot.unit_conf if slot.unit_conf > 0 else slot.confidence
-        fixed[i] = Body(slot.unit_id, slot.star or (match.star if match else 1), min(1.0, vconf), "vision")
+        # 성급: vision 배지 > 장부. 둘 다 모르면 None(모름) — 1성으로 지어내지 않는다(35 보고)
+        fixed[i] = Body(slot.unit_id, slot.star or (match.star if match else None), min(1.0, vconf), "vision")
     # 집합만 아는 보드 챔피언(자리 미상): 이름 없는 보드 칸 수와 정확히 같을 때만
     unplaced_idx: set[int] = set()
     open_board = [i for i, (on_bench, _) in enumerate(slots) if not on_bench and i not in fixed]
@@ -323,7 +324,7 @@ def merge_units(ledger: UnitLedger, obs: BoardObs | None, *, level: int | None =
             match = next((b for b in left if b.champion_id == cid), None)
             if match is not None:
                 left.remove(match)
-            fixed[i] = Body(cid, star or (match.star if match else 1), UNPLACED_CONFIDENCE, "vision")
+            fixed[i] = Body(cid, star or (match.star if match else None), UNPLACED_CONFIDENCE, "vision")
             unplaced_idx.add(i)
     consumed = len(bodies) - len(left)      # vision 이름과 같은 챔피언이라 장부에서 빠진 유닛 수
 

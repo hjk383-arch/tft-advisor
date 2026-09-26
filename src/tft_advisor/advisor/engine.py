@@ -99,7 +99,8 @@ class Session:
 
 def resource_signature(view: View, owned: list[str], stats: AdvisorStats) -> str:
     """§8.4: 완성템+상징+유물/찬란한(장착분 포함) + 증강 + 2성 이상 4~5코스트 유닛. 재료는 제외."""
-    units = sorted({u.id for u in view.units if (u.star or 1) >= 2 and (stats.champion_cost(u.id) or 0) >= 4})
+    units = sorted({u.id for u in view.units if u.star is not None and u.star >= 2
+                    and (stats.champion_cost(u.id) or 0) >= 4})
     payload = "|".join([",".join(sorted(owned)), ",".join(sorted(a.id for a in view.augments)), ",".join(units)])
     return hashlib.sha256(payload.encode()).hexdigest()[:16]
 
@@ -281,6 +282,8 @@ class Advisor:
                 if cid in scorer.rel:
                     scorer.rel[cid] = f / mx
         scorer.apply_pin_rel()   # 고정 덱은 직전 점수와 무관하게 경로 가중 1
+        # 상점 ★2 규칙(21 §17.6)의 기준 덱 = 화면에 보이는 직전 추천 1위(고정 중이면 고정 덱)
+        scorer.shop_target_id = pin or (prev.target_comps[0].comp_id if prev.target_comps else None)
         glv = global_level(view, [c.comp for c in cands] or pool)
         shop = scorer.shop_advice(glv, parts.shop_desc_lost)
         ms = (time.perf_counter() - t0) * 1000
@@ -354,7 +357,8 @@ class Advisor:
             log.exception("보드 배치 추천 실패")
         if plan is not None:
             try:
-                plan = attach_sell(plan, view, self.stats, comps, level, shop, self.w.sell)
+                plan = attach_sell(plan, view, self.stats, comps, level, shop, self.w.sell,
+                                   pinned=scorer.pinned is not None)
             except Exception:
                 log.exception("판매 추천 실패")
             return plan

@@ -66,3 +66,19 @@ pixmap 캐시, 보유/부족/캐리/★3 표시, 콘솔 "최종 덱", CDragon �
 - 미리보기(실제 Windows, test.png + mock): scratchpad `hud_preview_board.png`(`hud_preview_board_empty.png`).
 - 전체 테스트: 알려진 Windows 4건 외에 advisor 쪽 실패가 보인다 — 다른 에이전트가 `advisor/engine.py`·`candidates.py`를 고치는 중이었다
   (한때 engine.py 136행 SyntaxError). 이번 변경(app/hud_*·테스트)과 무관.
+
+---
+
+## 9. QA 36 후속 (W2 성급 미상 · W4 빌드업 줄 잘림)
+- **W2**: 성급을 못 읽은 유닛(None)이 ★1처럼 보였다.
+  - 상태 줄(`report._unit_label`): 이름을 아는 유닛이면 " ★?"(예 "아칼리 ★? (자리 미상)"). 이름 미상 칸에는 붙이지 않는다.
+    `tests/test_vision_units.py::test_report_lists_named_units` 기대값을 새 문구로 고쳤다.
+  - HUD 라인업 아이콘: `IconCell.star_unknown` → 아이콘 왼쪽 아래 흐린 "★?"(글자 모드 "이름★?"). 목표 덱 최종 유닛 줄은 목표 성급이라 해당 없음.
+- **W4**: HUD에서는 빌드업 기준 줄을 `hud_model.hud_reference_line`으로 바꿔 덱 이름(제목 옆에 이미 있음)을 빼고 보유 수를 앞에 둔다:
+  "레벨 5 빌드업 보유 2/5: 알리스타 · 오른 · 쉔 · 바루스 · 자야"(아래 레벨 폴백이면 끝에 "(레벨 N 통계 없음)"). 콘솔(`report.board_plan_lines`)은 긴 줄 그대로.
+  `lines_board` 기본값 7 유지(테스트로 고정).
+- **선택 항목(넣음)**: 라인업 아이콘 뒤에 `BoardPlan.missing`(기준 보드에 있는데 없는 유닛)을 흐린 아이콘 + 초록 "+" 배지로 붙였다(글자 "(구하기)").
+  `BoardPlanEntry.in_reference=True`인 라인업 유닛은 아이콘 아래 하늘색 막대(빌드업 기준 유닛), False(임시로 채운 유닛)는 막대 없음. 줄 수·높이는 그대로다.
+- 테스트(`tests/app/test_hud_fixed.py` +2): ★? 칸·상태 줄, 기준 줄 덱 이름 없음·"보유 n/m" 앞·콘솔 긴 줄 유지·lines_board 7, missing 칸 흐림·"+".
+- 미리보기(실제 Windows, mock 추천만): scratchpad `hud_qa36_test.png`, `hud_qa36_live4.png`(스크립트 `hud_preview2.py`).
+- 전체 `PYTHONIOENCODING=utf-8`: 알려진 Windows 4건만 실패.

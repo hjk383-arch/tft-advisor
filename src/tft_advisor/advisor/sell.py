@@ -40,10 +40,11 @@ STAR_COPIES = {1: 1, 2: 3, 3: 9, 4: 27}
 
 
 def unit_sell_value(cost: int | None, star: int | None) -> int | None:
-    """유닛 판매가(게임 규칙). 1코스트는 전액, 2코스트 이상은 2성 3c−1 / 3성 9c−2."""
+    """유닛 판매가(게임 규칙). 1코스트는 전액, 2코스트 이상은 2성 3c−1 / 3성 9c−2.
+    성급 미상(None)이면 **최솟값**(★1 판매가)이다 — 부르는 쪽이 "최소"라고 밝힌다(`sell_advice`)."""
     if cost is None:
         return None
-    s = star or 1
+    s = star if star is not None else 1
     n = STAR_COPIES.get(s, 1)
     if cost <= 1:
         return cost * n
@@ -90,18 +91,20 @@ def _odds(view: View, stats: AdvisorStats) -> list[int] | None:
 
 def attach_sell(plan: BoardPlan | None, view: View, stats: AdvisorStats, comps: Sequence[CompStats],
                 level: int | None, shop: Sequence[ShopAdvice],
-                w: SellWeights = DEFAULT_SELL) -> BoardPlan | None:
-    """보드 배치 계획에 판매 추천을 붙인 사본. 계획이 없거나(보드 모름) 직전·저신뢰 계획이면 그대로 돌려준다."""
+                w: SellWeights = DEFAULT_SELL, *, pinned: bool = False) -> BoardPlan | None:
+    """보드 배치 계획에 판매 추천을 붙인 사본. 계획이 없거나(보드 모름) 직전·저신뢰 계획이면 그대로 돌려준다.
+    pinned: 사용자 고정 덱(comps[0])이면 대안 덱(2·3위) 유닛을 지키지 않는다(21 §17.8)."""
     if plan is None or plan.stale or plan.low_trust or not w.enabled:
         return plan
-    sell, total, note, notes = sell_advice(plan, view, stats, comps, level, shop, w)
+    sell, total, note, notes = sell_advice(plan, view, stats, comps, level, shop, w, pinned=pinned)
     return plan.model_copy(update={"sell": sell, "sell_gold_total": total, "interest_note": note,
                                    "sell_notes": notes})
 
 
 def sell_advice(plan: BoardPlan, view: View, stats: AdvisorStats, comps: Sequence[CompStats], level: int | None,
                 shop: Sequence[ShopAdvice],
-                w: SellWeights = DEFAULT_SELL) -> tuple[list[SellAdvice], int, str | None, list[str]]:
+                w: SellWeights = DEFAULT_SELL, *,
+                pinned: bool = False) -> tuple[list[SellAdvice], int, str | None, list[str]]:
     stage, _ = stage_round(view)
     early = stage is not None and stage <= w.early_until_stage
     late = stage is not None and stage >= w.late_from_stage
@@ -122,7 +125,7 @@ def sell_advice(plan: BoardPlan, view: View, stats: AdvisorStats, comps: Sequenc
     in_lineup: set[int] = set()
     for e in plan.lineup:
         for x in insts:
-            if x.order in in_lineup or x.unit.id != e.unit_id or (x.unit.star or 1) != (e.star or 1):
+            if x.order in in_lineup or x.unit.id != e.unit_id or x.unit.star != e.star:   # 성급 미상은 미상끼리
                 continue
             if (x.where == "board") != e.on_board:
                 continue
@@ -142,15 +145,19 @@ def sell_advice(plan: BoardPlan, view: View, stats: AdvisorStats, comps: Sequenc
                 b = board_at(top, lv + d)
                 if b is not None:
                     path.update(b.units)
+        if not late:   # 보드 배치가 따르는 기준 보드·다음 레벨 보드(21 §17)도 지킨다 — 두 추천이 엇갈리지 않게
+            path.update(plan.reference_units)
+            path.update(plan.next_level_units)
     shown_final: set[str] = set()
-    if stage is None or stage <= w.protect_shown_until_stage:
+    if not pinned and (stage is None or stage <= w.protect_shown_until_stage):   # 고정 덱이면 대안 덱을 지키지 않는다(21 §17.8)
         for c in comps[1:]:
             shown_final |= {u.id for u in c.final_board}
 
     # --- 벤치 압박 · 상점 구매 자리 ---
     bench_used = len(state.bench) if state.bench is not None else None
-    ones = Counter(u.id for u in units if (u.star or 1) == 1)
-    stars2 = Counter(u.id for u in units if (u.star or 1) >= 2)
+    # 성급 미상(None)은 ★1 쌍에도 ★2에도 세지 않는다(★1 가정 금지)
+    ones = Counter(u.id for u in units if u.star == 1)
+    stars2 = Counter(u.id for u in units if u.star is not None and u.star >= 2)
     buys_needing_slot = [a for a in shop if a.buy and a.kind == ShopSlotKind.CHAMPION and a.offer_id
                          and ones[a.offer_id] < 2]   # 확인된 1성 2기가 있으면 사는 즉시 합성된다(자리 불필요)
     free = (w.bench_size - bench_used) if bench_used is not None else None
@@ -173,7 +180,7 @@ def sell_advice(plan: BoardPlan, view: View, stats: AdvisorStats, comps: Sequenc
 
     cands: list[tuple[_Inst, str]] = []
     for x in insts:
-        uid, star = x.unit.id, x.unit.star or 1
+        uid, star = x.unit.id, x.unit.star
         if x.order in in_lineup:
             continue
         if uid in path:
@@ -187,7 +194,7 @@ def sell_advice(plan: BoardPlan, view: View, stats: AdvisorStats, comps: Sequenc
                 continue
         elif star == 1 and stars2[uid]:
             why = "2성이 이미 있어 3성은 어렵습니다"
-        if (star >= 2 and x.where == "bench" and stage is not None and stage <= w.keep_bench_star2_until_stage
+        if (star is not None and star >= 2 and x.where == "bench" and stage is not None and stage <= w.keep_bench_star2_until_stage
                 and not (full or need_slot)):
             continue
         if why is None:
@@ -197,6 +204,8 @@ def sell_advice(plan: BoardPlan, view: View, stats: AdvisorStats, comps: Sequenc
         if x.unit.items:
             why += f" · 아이템 {len(x.unit.items)}개는 벤치로 돌아옵니다"
         x.gold = unit_sell_value(stats.champion_cost(uid), star)
+        if star is None:
+            why += " · 성급 미확인(판매가는 최소값)"
         sc = scores.get((uid, x.unit.star), [])
         x.score = min(sc) if sc else 0.0
         cands.append((x, why))

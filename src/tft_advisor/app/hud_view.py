@@ -236,9 +236,16 @@ class HudView(QWidget):
             self._badge(p, QRectF(x, y, s * 0.42, s * 0.42), "C", QColor(WARN), QColor(20, 20, 20))
         if cell.owned:
             self._badge(p, QRectF(x + s * 0.58, y + s * 0.58, s * 0.42, s * 0.42), "✓", QColor(GOOD), QColor(10, 30, 10))
-        if cell.star:
-            p.setPen(QColor(WARN))
-            p.drawText(QRectF(x, y + s * 0.55, s * 0.6, s * 0.45), int(Qt.AlignmentFlag.AlignCenter), f"★{cell.star}")
+        if cell.star or cell.star_unknown:   # 성급 미상은 흐린 "★?"(★1로 보이지 않게)
+            p.setPen(QColor(WARN) if cell.star else QColor(DIM))
+            p.drawText(QRectF(x, y + s * 0.55, s * 0.6, s * 0.45), int(Qt.AlignmentFlag.AlignCenter),
+                       f"★{cell.star}" if cell.star else "★?")
+        if cell.need:   # 상점에서 구할 유닛: 오른쪽 위 "+"
+            self._badge(p, QRectF(x + s * 0.58, y, s * 0.42, s * 0.42), "+", QColor(GOOD), QColor(10, 30, 10))
+        if cell.ref and not cell.need:   # 빌드업 기준 보드 유닛: 아래 하늘색 막대
+            p.setPen(Qt.PenStyle.NoPen)
+            p.setBrush(QColor(ACCENT))
+            p.drawRect(QRectF(x + 2, y + s + 1, s - 4, max(2.0, 2 * self.scale)))
         if cell.badge:   # "↑" 벤치에서 올릴 유닛
             self._badge(p, QRectF(x + s * 0.58, y, s * 0.42, s * 0.42), cell.badge, QColor(ACCENT), QColor(8, 20, 30))
         if cell.items:   # 든 아이템: 아래쪽 오른편 작은 네모 점(최대 3)

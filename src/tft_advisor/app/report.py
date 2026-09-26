@@ -123,7 +123,9 @@ def _unit_label(u: UnitOnBoard, nb: NameBook, threshold: float) -> str:
         name += "(?)"
     elif u.id != UNKNOWN_UNIT_ID and u.confidence < CONFIRMED_NAME_THRESHOLD:
         name += " (추정)"   # 추천에는 이름 미상으로 쓴다(21 §15)
-    if u.star and u.star > 1:
+    if u.star is None and u.id != UNKNOWN_UNIT_ID:
+        name += " ★?"   # 성급 미상 — ★1로 보이지 않게(QA 36 W2). 이름 미상 칸은 이미 모른다고 쓰므로 붙이지 않는다
+    elif u.star is not None and u.star > 1:
         name += f" {u.star}성"
     return name
 
@@ -231,10 +233,16 @@ def shop_lines(rec: Recommendation, names: NameBook) -> list[str]:
 
 
 def board_plan_lines(plan: BoardPlan, names: NameBook, *, comp_name: str | None = None) -> list[str]:
-    """보드 배치 추천(`Recommendation.board_plan`) → 표시 줄들. 오버레이도 이 줄을 쓸 수 있다(21 §6.3)."""
+    """보드 배치 추천(`Recommendation.board_plan`) → 표시 줄들. 오버레이도 이 줄을 쓸 수 있다(21 §6.3).
 
-    def label(uid: str, star: int | None) -> str:
-        return names.name(uid) + (f"★{star}" if star and star >= 2 else "")
+    목표 덱 빌드업 기준 보드가 있으면(21 §17) 기준 줄 · 교체(↑ 벤치에서 올리기) · 상점에서 구할 유닛 · 다음 레벨을
+    먼저 보여 준다(고정 크기 HUD에서 잘리지 않게 중요한 줄부터)."""
+
+    def label(uid: str, star: int | None) -> str:   # 성급 미상은 ★?(★1로 가정하지 않는다)
+        return names.name(uid) + ("★?" if star is None else f"★{star}" if star >= 2 else "")
+
+    def joined(ids) -> str:
+        return " · ".join(names.name(u) for u in ids)
 
     head = []
     if comp_name:
@@ -246,22 +254,46 @@ def board_plan_lines(plan: BoardPlan, names: NameBook, *, comp_name: str | None 
     if plan.stale:
         head.insert(0, "(직전)")
     out = [" · ".join(head)] if head else []
+    ref = bool(getattr(plan, "reference_units", None))
+    if ref:
+        who = f"({comp_name})" if comp_name else ""
+        line = (f"레벨 {plan.reference_level} 빌드업{who}: {joined(plan.reference_units)}"
+                f" — 보유 {len(plan.owned_in_reference)}/{len(plan.reference_units)}")
+        if plan.level is not None and plan.reference_level is not None and plan.level != plan.reference_level:
+            line += f" (레벨 {plan.level} 빌드업 통계가 없어 레벨 {plan.reference_level} 기준입니다)"
+        out.append(line)
     lineup = [f"{label(e.unit_id, e.star)}" + (f"({e.reason})" if e.reason else "") for e in plan.lineup]
     if plan.unknown_on_board:
         lineup.append(f"미확인 {plan.unknown_on_board}기(그대로)")
     out.append("보드: " + (" · ".join(lineup) or "-"))
-    if plan.swaps:
+    if plan.swaps and ref:
+        moves = [f"{names.name(sw.field_unit_id)}(↔ 보드 {names.name(sw.bench_unit_id)} 내리기)" if sw.bench_unit_id
+                 else f"{names.name(sw.field_unit_id)}(빈 칸)" for sw in plan.swaps]
+        out.append("교체: ↑ 벤치에서 올리기 " + " · ".join(moves))
+    elif plan.swaps:
         moves = [f"벤치 {names.name(sw.field_unit_id)} ↔ 보드 {names.name(sw.bench_unit_id)}" if sw.bench_unit_id
                  else f"빈 칸에 {names.name(sw.field_unit_id)} 올리기" for sw in plan.swaps]
         out.append("교체: " + " / ".join(moves))
     else:
         out.append("교체: 없음(지금 배치를 유지하세요)")
-    if plan.free_slots:
+    if ref and plan.missing:
+        line = f"상점에서 구하세요: {joined(plan.missing)}"
+        if plan.unknown_on_bench or plan.unknown_on_board:
+            line += " (미확인 유닛 중에 있을 수 있습니다)"
+        out.append(line)
+    elif plan.free_slots:
         out.append(f"빈 칸 {plan.free_slots}개: 상점에서 유닛을 사서 채우세요")
+    if ref and plan.next_level is not None and plan.next_level_units:
+        new = [u for u in plan.next_level_units if u not in plan.reference_units]
+        out.append(f"레벨 {plan.next_level}: " + (f"+{joined(new)}" if new else "같은 유닛 유지")
+                   + f" (빌드업 {len(plan.next_level_units)}기)")
+    if ref:   # 판매는 할 일이라 벤치 목록보다 먼저
+        out += sell_lines(plan, names)
     if plan.bench:
         out.append("벤치: " + " · ".join(f"{label(e.unit_id, e.star)}" for e in plan.bench[:6])
                    + (f" 외 {len(plan.bench) - 6}" if len(plan.bench) > 6 else ""))
-    out += sell_lines(plan, names)
+    if not ref:
+        out += sell_lines(plan, names)
     out += [f"참고: {n}" for n in plan.notes]
     return out
 
@@ -272,15 +304,16 @@ def sell_lines(plan: BoardPlan, names: NameBook, *, max_units: int = 5) -> list[
     if not plan.sell and not plan.sell_notes:
         return []
 
-    def label(uid: str, star: int | None) -> str:
-        return names.name(uid) + (f"★{star}" if star and star >= 2 else "")
+    def label(uid: str, star: int | None) -> str:   # 성급 미상은 ★?(★1로 가정하지 않는다)
+        return names.name(uid) + ("★?" if star is None else f"★{star}" if star >= 2 else "")
 
     out = []
     if plan.sell:
         units = " · ".join(label(s.unit_id, s.star) for s in plan.sell[:max_units])
         if len(plan.sell) > max_units:
             units += f" 외 {len(plan.sell) - max_units}"
-        tail = [f"+{plan.sell_gold_total}골드"] if plan.sell_gold_total else []
+        at_least = " 이상" if any(s.star is None for s in plan.sell) else ""   # 성급 미상 = 최소 판매가
+        tail = [f"+{plan.sell_gold_total}골드{at_least}"] if plan.sell_gold_total else []
         if plan.interest_note:
             tail.append(plan.interest_note)
         out.append(f"판매: {units}" + (f" ({' · '.join(tail)})" if tail else ""))
@@ -313,7 +346,10 @@ def item_lines(rec: Recommendation, names: NameBook) -> list[str]:
         holder = f" → {names.name(s.holder_unit_id)}" if s.holder_unit_id else ""
         why = f" — {s.reason}" if s.reason else ""
         out.append(f"· {names.name(s.item_id)}{f' ({comps})' if comps else ''}{holder} {s.score:.2f}{why}")
-    if rec.item.hold:
+    note = getattr(rec.item, "note", None)
+    if note:
+        out.append(f"· {note}")
+    elif rec.item.hold:
         out.append("· 재료 보관 권장(지금 조합하지 않음)")
     return out
 

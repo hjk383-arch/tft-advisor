@@ -153,16 +153,21 @@ def test_empty_stage_stats_degrade_to_none():
 # ---------------------------------------------------------------------------
 
 
-def _plan(repo, src, weights, state: GameState, comp_id: str, level: int):
+def _plan(repo, src, weights, state: GameState, comp_id: str, level: int, follow_buildup: bool = True):
     view = build_view(state, repo, 0.6, None)
+    w = weights.board_plan.model_copy(update={"follow_buildup": follow_buildup})
     return plan_board(view, repo, repo.comp(comp_id), level, {}, lambda i: repo.name(i, "ko") or i,
-                      weights.board_plan, stage=weights.unit_stage, stage_board=src)
+                      w, stage=weights.unit_stage, stage_board=src)
 
 
 def test_plan_fields_the_real_stage_board_from_bench(repo, src, weights):
-    """보드엔 COVEN(3스테이지 평균 수준), 벤치엔 SPELL(3스테이지 1위 실제 보드) → SPELL로 바꾸라고 한다."""
+    """(follow_buildup 끔 = 21 §11 예전 동작) 보드엔 COVEN(3스테이지 평균 수준), 벤치엔 SPELL(3스테이지 1위 실제 보드)
+    → SPELL로 바꾸라고 한다. 기본(21 §17)에서는 목표 덱 빌드업 기준 보드가 우선이고 스테이지 보드 문구는 내지 않는다."""
     st = gs("3-2", 5, COVEN, SPELL)
-    p = _plan(repo, src, weights, st, "juggernaut-zyra-amumu", 5)
+    on = _plan(repo, src, weights, st, "juggernaut-zyra-amumu", 5)
+    assert on.reference_units and on.stage_board is not None                 # 통계 힌트는 계약 필드에 남는다
+    assert not any(n.startswith(("지금 이 스테이지 추천 보드", "다음 스테이지", "전환: ")) for n in on.notes)
+    p = _plan(repo, src, weights, st, "juggernaut-zyra-amumu", 5, follow_buildup=False)
     assert {e.unit_id for e in p.lineup} == set(SPELL)
     assert {s.field_unit_id for s in p.swaps} == set(SPELL)
     hint = p.stage_board

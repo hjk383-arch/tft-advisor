@@ -233,8 +233,7 @@ def unit_proxy(comp: CompStats, view: View, L: int | None, w: Weights, us: UnitS
     pf = w.prefilter
     best: dict[str, float] = {}      # 유닛별 최고 배수(성급·아이템 반영)
     for u in view.units:
-        star = u.star or 1
-        if star >= 2:
+        if u.star is not None and u.star >= 2:     # 성급 미상은 ★2로 치지 않는다(1성과 같은 배수 — 하한)
             f = pf.unit_star_mult
         elif us is None:
             f = 1.0

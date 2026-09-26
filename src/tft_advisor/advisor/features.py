@@ -392,18 +392,25 @@ _STAR_EQUIV = {1: 1, 2: 3, 3: 9, 4: 27}
 
 
 def copies_owned(unit_id: str, units: list[UnitOnBoard]) -> int:
-    """1성 등가 개수. 부분 확인이면 **하한**이다(이름 미상 칸은 세지 않는다)."""
-    return sum(_STAR_EQUIV.get(u.star or 1, 1) for u in units if u.id == unit_id)
+    """1성 등가 개수. 부분 확인이면 **하한**이다(이름 미상 칸은 세지 않는다).
+    성급 미상(star None, vision이 성급을 못 읽음)은 "적어도 1기"로 센다 — 이때도 값은 하한이다(`star_unknown`)."""
+    return sum(_STAR_EQUIV.get(u.star, 1) if u.star is not None else 1 for u in units if u.id == unit_id)
+
+
+def star_unknown(unit_id: str, units: list[UnitOnBoard]) -> bool:
+    """그 챔피언 사본 중 성급 미상이 있나(사본 수·2성/3성 판정이 하한일 뿐이다)."""
+    return any(u.id == unit_id and u.star is None for u in units)
 
 
 def buy_makes_2star(unit_id: str, units: list[UnitOnBoard]) -> bool:
-    ones = sum(1 for u in units if u.id == unit_id and (u.star or 1) == 1)
+    """확인된 ★1 사본만 센다 — 성급 미상은 ★1로 가정하지 않는다."""
+    ones = sum(1 for u in units if u.id == unit_id and u.star == 1)
     return ones % 3 == 2
 
 
 def buy_makes_3star(unit_id: str, units: list[UnitOnBoard]) -> bool:
-    """1성 2 + 2성 2가 있으면 구매로 3성."""
-    ones = sum(1 for u in units if u.id == unit_id and (u.star or 1) == 1)
+    """확인된 1성 2 + 2성 2가 있으면 구매로 3성(성급 미상은 세지 않는다)."""
+    ones = sum(1 for u in units if u.id == unit_id and u.star == 1)
     twos = sum(1 for u in units if u.id == unit_id and u.star == 2)
     return ones == 2 and twos == 2
 

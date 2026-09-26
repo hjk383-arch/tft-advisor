@@ -277,7 +277,8 @@ def test_report_lists_named_units(static):
                           UnitOnBoard(id=ak, hex=None, confidence=0.8)],
                    bench=[UnitOnBoard(id=UNKNOWN_UNIT_ID, bench_slot=2, confidence=0.2)])
     lines = units_lines(st, NameBook(static), 0.6)
-    assert lines == ["보드 2기: 아칼리 2성 (0,0) · 아칼리 (자리 미상)", "벤치 1기: 3 이름 미상"]
+    # 성급 미상은 "★?"(★1로 보이지 않게, QA 36 W2)
+    assert lines == ["보드 2기: 아칼리 2성 (0,0) · 아칼리 ★? (자리 미상)", "벤치 1기: 3 이름 미상"]
 
 
 def test_fixture_labels_keep_unconfirmed_names_apart(static, tmp_path):

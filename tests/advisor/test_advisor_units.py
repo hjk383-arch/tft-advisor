@@ -250,8 +250,12 @@ def test_shop_gold_accumulation_limits_buys(make_advisor):
 def test_two_star_bonus_only_when_units_known(make_advisor):
     shop = [{"kind": "champion", "id": "DA_18_Warwick"}] + [{"kind": "empty"}] * 4
     known = make_advisor().advise(gs(stage="2-1", level=4, gold=10, shop=shop, bench=[],
-                                     board=[{"id": "DA_18_Warwick"}, {"id": "DA_18_Warwick"}]))
+                                     board=[{"id": "DA_18_Warwick", "star": 1}, {"id": "DA_18_Warwick", "star": 1}]))
     assert known.shop[0].reason_tag.value == "two_star"
+    # 성급 미상(None) 2기는 ★1 쌍으로 치지 않는다(21 §17.7) — "사면 2성" 가산 없음
+    nostar = make_advisor().advise(gs(stage="2-1", level=4, gold=10, shop=shop, bench=[],
+                                      board=[{"id": "DA_18_Warwick"}, {"id": "DA_18_Warwick"}]))
+    assert nostar.shop[0].reason_tag is None or nostar.shop[0].reason_tag.value != "two_star"
     unknown = make_advisor().advise(gs(stage="2-1", level=4, gold=10, shop=shop))
     assert unknown.shop[0].reason_tag is None or unknown.shop[0].reason_tag.value != "two_star"
     assert "copies_owned" not in unknown.debug["jev_state"]["shop"][0]

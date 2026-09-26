@@ -582,7 +582,12 @@ def _drop_contradicted(S: np.ndarray, assign: list[int], out: list[SlotName]) ->
                 continue
             if S[i, cj] - S[i, ci] > CONTRA_EPS:
                 if not (S[j, cj] >= LIB_MIN_SCORE and S[j, cj] - S[i, cj] >= ELIMINATION_MARGIN):
-                    bad |= {i, j}
+                    bad.add(i)
+                    # j는 자기 챔피언을 **강하게** 닮았으면(엄격 임계 이상, i보다 `LIB_MIN_MARGIN` 이상) 이름을 지킨다 — 35 보고,
+                    # live4: 오른 칸 0.81 vs 알리스타 칸(표본 없음)이 오른을 0.61 닮음 → 오른은 확실, 알리스타 칸만 모름.
+                    # 라이브 3 아칼리/바루스(0.56 / 0.45)는 엄격 임계 아래라 여전히 둘 다 모름
+                    if not (S[j, cj] >= LIB_STRICT_SCORE and S[j, cj] - S[i, cj] >= LIB_MIN_MARGIN):
+                        bad.add(j)
     bad = {k for k in bad if out[k].source == "traits"}      # 강제(칸 1개)·이미 모름인 칸은 그대로
     if not bad:
         return out
@@ -815,6 +820,8 @@ class UnitNamer:
     (`collector.note_purchase(champion_id)`)."""
     _session: int = 0
     _base: int = 0
+    last_descs: tuple = ((), ())
+    """마지막 `name()`의 (보드, 벤치) 모델 기술자 — 판독 칸 순서 그대로."""
     _streak: dict[tuple, tuple[str, int]] = field(default_factory=dict)
     _reload_requested: bool = False
 
@@ -854,10 +861,12 @@ class UnitNamer:
         if self._reload_requested:
             self._reload_requested = False
             self.reload()
+        self.last_descs = ([], [])
         if read.count == 0:
             return read
         bc, nc = self.crops(image, m, read.board), self.crops(image, m, read.bench)
         bd, nd = [descriptor(c) for c in bc], [descriptor(c) for c in nc]
+        self.last_descs = (bd, nd)       # 정체 추적기(`vision.unit_track`)가 같은 순서로 쓴다
         emblems = [i for u in read.board for i in u.items]
         unlikely = self.unlikely(shop_odds)
         from .unit_db import arena_signature

@@ -5,7 +5,7 @@
 [comp]
 # resource_fit = wi*item_fit + wa*augment_fit + wb*board_fit  (wi+wa+wb = 1)
 # pin_other_rel: 사용자가 목표 덱을 고정하면 고정 덱 rel = 1, 나머지 덱 rel은 이 배수(상점 경로·아이템 가중, 21 §14.3)
-pin_other_rel = 0.5
+pin_other_rel = 0.0         # 21 §17.8 사용자 규칙 "고정하면 그 덱에 적합한 기물과 아이템만": 다른 덱 경로 가중 0
 # 메타 상위 N(2026-09-25 사용자 규칙 "추천 메타 덱은 상위 5개만", _workspace/21_board_trust.md §16).
 # 목표 덱 후보(= Jev candidate_comps) = 평균 등수 상위 meta_top_n 덱. 순위: avg_place 오름차순, 동률 top4 → win_rate → games.
 # games < meta_min_games인 덱은 순위에 들지 않는다(작은 표본의 우연한 좋은 등수 차단). 통과 덱이 N개 미만이면
@@ -67,6 +67,8 @@ jev_share_now = 0.7         # λn
 jev_share_path = 0.5        # λp
 two_star_bonus = 0.15       # 보유 유닛 모르면 미적용
 three_star_bonus = 0.25
+reference_missing_bonus = 0.3   # 보드 배치 기준 보드(1위/고정 덱의 내 레벨 빌드업)에서 없는 유닛 가산("레벨 N 빌드업 부족"). 21 §17
+skip_owned_star2 = true     # 확인된 보유 ★2+ 챔피언은 [구매] 권하지 않음("이미 2성 보유"). 1위/고정 덱이 ★3 목표면 예외("3성 목표"). 21 §17.6
 hp_danger_shift = 0.15      # hp unknown이면 미적용
 mu_core = 1.0               # mu_core >= mu_final >= mu_next_buildup >= mu_cur_buildup
 mu_final = 0.7
@@ -190,6 +192,17 @@ trans_min_games = 20        # 다음 스테이지 전이 최소 표본
 trans_link_min = 0.15
 trans_match_min = 0.5       # 지금 라인업 ↔ 출발 클러스터 Jaccard >= 이 값이면 "이 보드는 보통…"
 trans_similar_min = 0.25    # >= 이 값이면 "비슷한 보드는 보통…", 미만이면 다음 스테이지 힌트를 내지 않는다
+# --- 목표 덱 레벨별 빌드업 기준 보드(21 §17). 목표 덱(1위 또는 고정 덱)의 내 레벨 빌드업 보드를 기준으로:
+#     1) 기준 보드 보유 유닛을 먼저 올린다(같은 챔피언은 높은 성급 사본, 성급 미상은 ★1로 가정하지 않음)
+#     2) 남는 칸은 임시 유닛: 기준 보드 특성 기여 → 성급·아이템 → s_now·스테이지 통계(보조, ref_now_scale)
+#     내 레벨에 빌드업이 없으면 가장 가까운 아래 레벨(없으면 위 레벨), 그다음 레벨이 "다음" 목표 ---
+follow_buildup = true
+ref_top_boards = 3          # 그 레벨 보드 중 표본 상위 N개에서 보유 유닛이 가장 많은 보드(동률: games → avg_place)
+ref_min_units_gap = 1       # 유닛 수 < 레벨 − 이 값인 보드는 제외(수집 잡음)
+ref_trait_mult = 2.0        # 임시 유닛의 기준 보드 특성 기여 배수
+next_member = 1.0           # 임시 유닛이 다음 레벨 빌드업 유닛이면 가산
+ref_now_scale = 0.4         # 기준 보드가 있을 때 s_now·스테이지 보드 통계 배수(보조 신호)
+star_unknown = 0.4          # 성급 미상 가산(★1 0 < 미상 < ★2 star2). keep(0.5)보다 작게
 
 [sell]
 # 판매 추천(advisor/sell.py, 코드 전용·Jev 없음). 키 정의·범위: config.py SellWeights. 21 §14.

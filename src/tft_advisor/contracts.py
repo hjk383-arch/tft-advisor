@@ -518,6 +518,7 @@ class ItemAdvice(ContractModel):
 
     suggestions: list[ItemSuggestion] = Field(default_factory=list)
     hold: bool = False
+    note: str | None = None        # 2026-09-25 추가(선택, 21 §17.8): 예 "고정 덱 아이템을 만들 재료가 아직 없습니다 — 재료 보관"
 
 
 class BoardPlanEntry(ContractModel):
@@ -532,6 +533,7 @@ class BoardPlanEntry(ContractModel):
     action: Literal["keep", "field", "bench", "stay"]
     score: float = 0.0
     reason: str | None = None      # 짧은 합쇼체/명사형 근거(예 "목표 덱 핵심 · 적응가 1→2 활성")
+    in_reference: bool | None = None   # 2026-09-25 추가(선택, 21 §17): 목표 덱 레벨 빌드업(기준 보드) 유닛인가. None = 기준 보드 없음
 
 
 class BoardSwap(ContractModel):
@@ -612,6 +614,9 @@ class BoardPlan(ContractModel):
     - stale: 이번 화면에서 보드를 읽지 못해 **직전 계획을 그대로 보여 주는 중**(2026-09-25 추가). 판매 추천은 비운다
     - low_trust: 보드·벤치 필드 신뢰도가 낮아(구매 추적 애매 등) 칸마다 이름 신뢰도가 높은 유닛만으로 세운 계획
       (2026-09-25 추가). 판매 추천은 하지 않는다
+    - level · reference_* · owned_in_reference · missing · next_level(_units): 목표 덱(1위 또는 고정 덱)의 레벨별 빌드업
+      기준 보드(2026-09-25 추가, 21 §17). 있으면 lineup은 기준 보드 보유 유닛이 먼저이고, 남는 칸만 임시 유닛으로 채운다.
+      lineup의 뜻(지금 보드에 둘 유닛)은 그대로다
     """
 
     comp_id: str | None = None
@@ -631,6 +636,16 @@ class BoardPlan(ContractModel):
     sell_notes: list[str] = Field(default_factory=list)             # 예 "벤치 9/9 가득 참" · "미확인 유닛 5기는 판단하지 않았습니다"
     stale: bool = False                                             # 직전 계획(이번 화면에서 보드 못 읽음)
     low_trust: bool = False                                         # 필드 신뢰도 낮음 — 이름 신뢰도 높은 유닛 기준
+    # --- 2026-09-25 추가(선택, 21 §17): 목표 덱 레벨별 빌드업 기준 보드. 보드 배치는 이 보드를 먼저 채운다 ---
+    level: Annotated[int, Field(ge=1, le=10)] | None = None                  # 기준으로 삼은 내 레벨(모르면 None)
+    reference_level: Annotated[int, Field(ge=1, le=10)] | None = None        # 기준 보드의 레벨(내 레벨에 빌드업이 없으면 가장 가까운 아래 레벨)
+    reference_units: list[ChampionId] = Field(default_factory=list)          # 기준 보드(목표 덱 빌드업, CompStats.buildup) 유닛
+    reference_games: Annotated[int, Field(ge=0)] | None = None
+    reference_avg_place: float | None = None
+    owned_in_reference: list[ChampionId] = Field(default_factory=list)       # 기준 보드 중 이름을 확인한 보유 유닛
+    missing: list[ChampionId] = Field(default_factory=list)                  # 기준 보드 중 없는 유닛(상점에서 구할 것)
+    next_level: Annotated[int, Field(ge=1, le=10)] | None = None             # 다음 빌드업 레벨
+    next_level_units: list[ChampionId] = Field(default_factory=list)         # 다음 레벨 빌드업 보드 전체
 
 
 class FallbackReason(StrEnum):

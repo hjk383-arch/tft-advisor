@@ -262,3 +262,45 @@ def test_board_icon_row_keeps_geometry(qapp, settings, tmp_path):
         seen.append((w.size().height(), dict(w.body.section_y)))
     assert all(s == seen[0] for s in seen)
     w.deleteLater()
+
+
+# ---------------------------------------------------------------- QA 36 W2·W4
+def ref_plan(**kw) -> BoardPlan:
+    base = dict(comp_id="c0", slots=5, level=5, reference_level=5, reference_units=UNITS[:5],
+                owned_in_reference=UNITS[:2], missing=UNITS[2:4],
+                lineup=[BoardPlanEntry(unit_id=UNITS[0], star=None, on_board=True, action="keep", in_reference=True),
+                        BoardPlanEntry(unit_id=UNITS[4], star=2, on_board=True, action="keep", in_reference=False)])
+    base.update(kw)
+    return BoardPlan(**base)
+
+
+def test_unknown_star_is_shown_as_question_mark():
+    from tft_advisor.app.hud_model import lineup_cells
+    from tft_advisor.app.report import units_lines
+    from tft_advisor.contracts import UnitOnBoard
+
+    names = NameBook()
+    plan = ref_plan()
+    rec = big_rec().model_copy(update={"board_plan": plan})
+    cells = lineup_cells(plan, None, rec, names)
+    assert cells[0].star_unknown and "★?" in cells[0].text() and cells[0].ref is True
+    assert not cells[1].star_unknown and "★2" in cells[1].text() and cells[1].ref is False
+    need = [c for c in cells if c.need]
+    assert [c.unit_id for c in need] == UNITS[2:4] and all(c.owned is False for c in need)   # 흐리게 + "+"
+    st = planning_state(board=[UnitOnBoard(id=UNITS[0], star=None, hex=(0, 0), confidence=0.95)], bench=[])
+    assert any("★?" in ln for ln in units_lines(st, names))
+
+
+def test_hud_reference_line_drops_deck_name_and_leads_with_owned_count(settings):
+    names = NameBook()
+    rec = big_rec().model_copy(update={"board_plan": ref_plan()})
+    b = Budgets.from_cfg(settings.overlay)
+    rows = [r for k, r in layout_rows(build_model(planning_state(), rec, names), b) if k == "board"]
+    ref = next(r.text for r in rows if r.text.startswith("레벨 5 빌드업"))
+    assert ref.startswith("레벨 5 빌드업 보유 2/5: ") and rec.target_comps[0].name.strip() not in ref
+    # 콘솔(report)은 예전 긴 줄 그대로
+    from tft_advisor.app.report import board_plan_lines
+
+    full = board_plan_lines(ref_plan(), names, comp_name="덱 X")
+    assert any(ln.startswith("레벨 5 빌드업(덱 X):") and ln.endswith("보유 2/5") for ln in full)
+    assert settings.overlay.lines_board == 7

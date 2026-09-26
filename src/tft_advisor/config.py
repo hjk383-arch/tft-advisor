@@ -329,7 +329,7 @@ class CompWeights(_Cfg):
     w_tempo: Unit = 0.30                                # 레벨 템포 항 가중(보드 항 wb를 대신하므로 같은 척도)
     tempo_span: float = Field(2.0, gt=0, le=9)          # 레벨 차가 이 값 이상이면 템포 적합 0
     # 사용자 고정 덱(21 §14.3): 고정 덱 rel = 1, 나머지 덱의 상대 점수(rel)는 이 배수로 줄인다(상점 경로·아이템 bis 가중)
-    pin_other_rel: Unit = 0.5
+    pin_other_rel: Unit = 0.0
     # 메타 상위 N(21 §16, 2026-09-25 사용자 규칙 "추천 메타 덱은 상위 5개만"): 목표 덱 후보 = 평균 등수 상위 N 덱뿐.
     # 순위 = avg_place 오름차순(동률: top4 → win_rate → games 내림차순), games >= meta_min_games인 덱만.
     # 0 = 제한 없음(예전 동작: prefilter.min_games를 넘는 모든 덱).
@@ -434,6 +434,11 @@ class ShopWeights(_Cfg):
     mu_next_buildup: Unit = 0.5
     mu_cur_buildup: Unit = 0.25
     special_fallback_score: Unit = 0.3
+    reference_missing_bonus: Unit = 0.3
+    """보드 배치 기준 보드(목표 덱 내 레벨 빌드업, 21 §17)에 있는데 아직 없는 유닛의 상점 점수 가산. 0이면 끔."""
+    skip_owned_star2: bool = True
+    """사용자 규칙(21 §17.6): 이름·성급을 확인한 보유 유닛이 이미 ★2 이상이면 그 챔피언은 [구매]로 권하지 않는다
+    (이유 "이미 2성 보유"). 목표 덱(1위 또는 고정 덱) 최종 보드가 그 유닛을 ★3으로 원하면 예외("3성 목표 · 보유 N/9")."""
 
     @model_validator(mode="after")
     def _constraints(self) -> ShopWeights:
@@ -607,6 +612,14 @@ class BoardPlanWeights(_Cfg):
     trans_link_min: Unit = 0.15                  # 목표 덱으로 이어지는 전이로 볼 연결 확률
     trans_match_min: Unit = 0.5                  # 라인업 ↔ 클러스터 Jaccard가 이 이상이면 "이 보드는 보통…"
     trans_similar_min: Unit = 0.25               # 이 이상이면 "비슷한 보드는 보통…", 미만이면 다음 스테이지 힌트 없음
+    # --- 목표 덱 레벨별 빌드업 기준 보드(21 §17): 기준 보드 보유 유닛을 먼저 올리고, 남는 칸만 아래 점수로 채운다 ---
+    follow_buildup: bool = True                  # False면 예전(§6·§10·§11 신호 혼합) 동작
+    ref_top_boards: int = Field(3, ge=1, le=10)  # 그 레벨 빌드업 보드 중 표본 상위 몇 개에서 고르나(보유 유닛 많은 쪽 → games → avg_place)
+    ref_min_units_gap: int = Field(1, ge=0, le=9)   # 유닛 수가 레벨 − 이 값보다 적은 보드(수집 잡음, 예 레벨 5에 1기)는 쓰지 않는다
+    ref_trait_mult: float = Field(2.0, ge=1)     # 임시 유닛: 기준 보드 특성(목표 덱 핵심 특성 포함) 기여 배수
+    next_member: float = Field(1.0, ge=0)        # 임시 유닛: 다음 레벨 빌드업 유닛이면 가산
+    ref_now_scale: float = Field(0.4, ge=0)      # 기준 보드가 있을 때 '지금 강함'(s_now·스테이지 보드 통계) 배수 — 보조 신호(plan_now_scale 대신)
+    star_unknown: float = Field(0.4, ge=0)       # 성급 미상 유닛 가산(★1로 가정하지 않는다). keep보다 작아 보드의 ★1 사본을 굳이 바꾸지 않는다
 
 
 class SellWeights(_Cfg):

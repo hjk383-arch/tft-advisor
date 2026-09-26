@@ -27,6 +27,8 @@ from . import parse
 from .augment_learn import AugmentLearner, OwnedRow, augment_visual_keys, load_alt_manifest
 from .board import BoardRead, BoardReader, find_ally_bars
 from .bench_memory import BenchMemory
+from .unit_db import arena_signature
+from .unit_track import UnitTracker
 from .icons import AugmentIconMatcher, IconMatcher, find_icon_row, slot_is_empty
 from .item_ids import ItemCatalog
 from .matching import NameMatcher
@@ -181,6 +183,8 @@ class Recognizer:
         self._last_shop_odds: list[int] | None = None
         """마지막으로 읽은 상점 확률(이번 프레임에 HUD를 안 읽었을 때 유닛 이름 풀이에 쓴다)."""
         self.bench_memory = BenchMemory()
+        self.unit_tracker = UnitTracker()
+        """판 안의 유닛 정체(구매 칸 · 옮기기 · 합성, `vision.unit_track`). 새 판이면 app이 `reset()`을 부른다."""
         """벤치 빈 칸 기준 그림 + 칸별 직전 유닛(`vision.bench_memory`). 새 판이면 app이 `reset()`을 부른다."""
         self._panel_cache: tuple[np.ndarray, tuple[list[ActiveTrait], float, bool]] | None = None
         self.last_board_read: BoardRead | None = None
@@ -388,6 +392,14 @@ class Recognizer:
                                             shop_odds=odds if odds is not None else self._last_shop_odds)
             # 벤치 체력바가 사라진 프레임(준비 끝·전환): 벤치를 비우지 않고 칸 그림 + 직전 판독으로 채운다(30 보고)
             read = self.bench_memory.apply(image, m, P, read)
+            if self.unit_namer is not None and read.count:
+                # 판 안의 정체 이어 가기(구매 칸 · 옮기기 · 합성, 35 보고). 준비 단계에서만 갱신한다
+                bd, nd = self.unit_namer.last_descs
+                read = self.unit_tracker.update(
+                    read, list(bd), list(nd),
+                    captured_at.timestamp() if captured_at is not None else time.time(),
+                    shop=self._shop_key(out), active=mode == ScreenMode.PLANNING,
+                    arena=arena_signature(image, m.box))
             self.last_board_read = read
 
         values = dict(out.values)
@@ -400,6 +412,15 @@ class Recognizer:
             source_image=source_image,
             frame_size=(image.shape[1], image.shape[0]),
         )
+
+    @staticmethod
+    def _shop_key(out: _Out) -> tuple | None:
+        """상점 5칸: 챔피언 ID | None(빈 칸) | "*"(특수·식별 실패). 이번 프레임에 상점을 읽지 않았으면 None."""
+        slots = out.values.get("shop")
+        if slots is None:
+            return None
+        return tuple(s.id if s.kind == ShopSlotKind.CHAMPION else (None if s.kind == ShopSlotKind.EMPTY else "*")
+                     for s in slots)
 
     def _unit_ctx(self, image: np.ndarray, m: FrameMapper, out: _Out, captured_at: datetime | None) -> Any:
         """유닛 사진 수집기(`vision.unit_db`)에 줄 같은 프레임 판독. 수집기가 없으면 None(계산하지 않는다)."""

@@ -23,6 +23,7 @@ from ..contracts import (
     UNKNOWN_UNIT_ID,
 )
 from ..unit_status import units_reason
+from .board_plan import plan_view, view_reference
 from .candidates import (
     Candidate,
     augment_comp_fit,
@@ -41,6 +42,7 @@ from .features import (
     buy_makes_2star,
     buy_makes_3star,
     comp_board_units,
+    comp_level,
     copies_owned,
     is_late,
     item_fit,
@@ -97,6 +99,7 @@ class Scorer:
     debug: dict[str, Any] = field(default_factory=dict)
     pinned: str | None = None     # 사용자 고정 덱 comp_id(21 §14.3). cands 안에 있어야 한다(engine이 보장)
     meta: Any = None              # candidates.MetaTop — 메타 상위 N 풀(21 §16). 고정 덱이 풀 밖이면 근거에 적는다
+    shop_target_id: str | None = None   # 상점 ★2 규칙 기준 덱(21 §17.6). None이면 표시 1위. rescore_shop은 직전 추천 1위
 
     # --- Jev 답 접근 ---
     def gate(self, conf: float, force_low: bool = False) -> float:
@@ -415,6 +418,53 @@ class Scorer:
             ws, wp = clip01(ws + sw.hp_danger_shift), clip01(wp - sw.hp_danger_shift)
         return ws, wp
 
+    def shop_target(self) -> CompStats | None:
+        """상점 ★2 규칙의 기준 덱: `shop_target_id`(rescore_shop이 직전 추천 1위로 정한다) → 표시 1위(고정 덱이면 고정 덱)."""
+        tid = self.shop_target_id
+        if tid:
+            for c in self.cands:
+                if c.comp_id == tid:
+                    return c.comp
+            comp = self.stats.comp(tid)
+            if comp is not None:
+                return comp
+        return self.shown[0]["cand"].comp if self.shown else None
+
+    def pinned_units(self) -> set[str] | None:
+        """고정 덱에 맞는 유닛(21 §17.8): 최종 보드 + 캐리 + 빌드업 경로(내 레벨 ~ +2 레벨 보드 전부). 고정이 없으면 None."""
+        if self.pinned is None:
+            return None
+        comp = self.shop_target()
+        if comp is None:
+            return None
+        out = {u.id for u in comp.final_board} | ({comp.carry} if comp.carry else set())
+        lv = comp_level(self.view, comp)
+        for blv, boards in comp.buildup.items():
+            if lv is None or lv <= blv <= lv + 2 or (blv < 4 <= lv + 2 and lv < 4):
+                for b in boards:
+                    out.update(b.units)
+        return out
+
+    def owned_star2_rule(self, uid: str, n_own: int) -> tuple[bool, str] | None:
+        """사용자 규칙 "3성 유닛 덱이 아닌 이상, 이미 2성이면 추천하지 말아줘"(21 §17.6).
+
+        이름·성급을 **확인한** 보유 유닛(신뢰도 ≥ unit_min_conf, star가 2 이상으로 읽힘)만 본다 — 추정 이름·성급 미상은
+        적용하지 않는다. 반환 (보류 여부, 근거 앞 문구) 또는 None(해당 없음)."""
+        if not self.w.shop.skip_owned_star2:
+            return None
+        v = self.view
+        best = max((u.star for u in v.units if u.id == uid and u.star is not None and u.confidence >= v.unit_min_conf),
+                   default=None)
+        if best is None or best < 2:
+            return None
+        top = self.shop_target()
+        want3 = top is not None and any(u.id == uid and (u.star or 0) >= 3 for u in top.final_board)
+        if best >= 3:
+            return True, "이미 3성 보유"
+        if want3:
+            return False, f"3성 목표 · 보유 {min(n_own, 9)}/9"
+        return True, "이미 2성 보유"
+
     def shop_advice(self, global_level: int | None, special_lost: dict[int, bool]) -> list[ShopAdvice]:
         v = self.view
         if v.shop is None:
@@ -422,6 +472,19 @@ class Scorer:
         sw = self.w.shop
         ws, wp = self.shop_weights()
         snow = self.s_now_table(global_level)
+        # 보드 배치 기준 보드(21 §17)에서 아직 없는 유닛 → 상점 가산. "상점에서 구하세요"와 [구매]가 엇갈리지 않게
+        ref_missing: set[str] = set()
+        ref_label = ""
+        top = self.shop_target()
+        pin_ok = self.pinned_units()     # 고정 덱이면 그 덱 유닛만 [구매](21 §17.8)
+        if sw.reference_missing_bonus > 0 and top is not None:
+            # 보드 배치와 같은 기준 보드·보유 집합(저신뢰 프레임이면 relaxed_view) — plan.missing과 같은 목록(21 §17.12)
+            ref = view_reference(v, top, comp_level(v, top), self.w.board_plan)
+            if ref is not None:
+                pv = plan_view(v)
+                have = {u.id for u in pv[0].units} if pv is not None else set()
+                ref_missing = set(ref.units) - have
+                ref_label = f"레벨 {ref.ref_level} 빌드업 부족"
         rows: list[dict[str, Any]] = []
         out: dict[int, ShopAdvice] = {}
         for i, slot in enumerate(v.shop):
@@ -460,27 +523,39 @@ class Scorer:
                 three = cost <= 2 and buy_makes_3star(uid, v.units)
                 two = buy_makes_2star(uid, v.units)
                 bonus = (sw.three_star_bonus if three else 0.0) + (sw.two_star_bonus if two else 0.0)
-            score = clip01(ws * now + wp * path + bonus)
+            refb = sw.reference_missing_bonus if uid in ref_missing else 0.0
+            score = clip01(ws * now + wp * path + bonus + refb)
             fshare = fin / (fin + bld) if (fin + bld) > 0 else 0.0
             parts = {
                 ReasonTag.NOW_POWER: ws * now,
                 ReasonTag.FINAL_COMP: wp * path * fshare,
-                ReasonTag.BUILDUP: wp * path * (1 - fshare),
+                ReasonTag.BUILDUP: wp * path * (1 - fshare) + refb,
                 ReasonTag.TWO_STAR: bonus,
             }
             tag = max(parts, key=lambda t: (parts[t], -list(parts).index(t)))
             reason = f"지금 {now:.2f} · 경로 {path:.2f}"
+            if refb:
+                reason = f"{ref_label} · {reason}"
+            hold = False
             if v.units_known:
                 n_own = copies_owned(uid, v.units)
                 reason += f" · 확인 보유 {n_own}" if v.units_partial else f" · 보유 {n_own}"   # 부분 확인: 하한
+                star2 = self.owned_star2_rule(uid, n_own)
+                if star2 is not None:
+                    hold, note = star2
+                    reason = f"{note} · {reason}"
+            if pin_ok is not None and uid not in pin_ok:
+                hold = True
+                reason = f"고정 덱에 없음 · {reason}"
             rows.append({"slot": i, "kind": slot.kind, "id": uid, "score": score, "tag": tag, "reason": reason,
+                         "hold": hold,
                          "cost": slot.cost if slot.cost is not None else self.stats.champion_cost(uid),
                          "now": round(now, 4), "path": round(path, 4), "s_now": round(sn, 4), "c_path": round(cp, 4),
-                         "bonus": bonus, "jev_now": j1, "jev_path": j2})
+                         "bonus": bonus, "ref_bonus": refb, "jev_now": j1, "jev_path": j2})
         # 구매: 임계값 이상을 점수 순으로, 골드 누적이 gold를 넘으면 False
         spent = 0
         for r in sorted(rows, key=lambda r: (-r["score"], r["slot"])):
-            buy = r["score"] >= sw.buy_threshold
+            buy = r["score"] >= sw.buy_threshold and not r.get("hold")
             if buy and v.gold is not None and r["cost"] is not None:
                 if spent + r["cost"] > v.gold:
                     buy = False
@@ -855,13 +930,29 @@ class Scorer:
         top_comp = self.shown[0]["cand"].comp if self.shown else None
         early = v.stage_number is not None and v.stage_number < iw.tempo_until_stage
         owned_units = self.owned_unit_ids()
+        pin_units = self.pinned_units()   # 고정 덱이면 그 덱 캐리 BIS·핵심 아이템만(21 §17.8)
+        on_board = {u.id for u in v.board} if v.units_known else set()
         suggestions = []
+        kept_picked = []
         for r in picked:
             holder, reason = self.item_reason(r, top_comp, early and not hold, owned_units)
             r["shown_holder"], r["reason"] = holder, reason
+            if pin_units is not None and r["kind"] != "top":
+                # 보조·범용 아이템은 권하지 않는다. 초반 지금 전력용은 고정 덱 유닛(보드 위)이 들 때만
+                if not (r["kind"] == "fallback" and early and not hold and holder in pin_units and holder in on_board):
+                    continue
+            kept_picked.append(r)
             suggestions.append(ItemSuggestion(item_id=r["item"], components=r["components"], holder_unit_id=holder,
                                               score=round(r["score"], 4), reason=reason))
+        dropped = len(picked) - len(kept_picked)
+        picked = kept_picked
+        note = None
+        if pin_units is not None and not suggestions and (rows or v.components):
+            hold = True
+            note = "고정 덱 아이템을 만들 재료가 아직 없습니다 — 재료 보관"
         for x in dict.fromkeys(bench_completed):   # 벤치 완성템 → 보유자 추천(§6-9)
+            if pin_units is not None and self.top_item_role(x) is None:
+                continue                          # 고정 덱이 쓰지 않는 완성템은 보유자를 권하지 않는다
             h, h_deck = self.item_holder(x)
             if h is None:
                 reason = "목표 덱 캐리용"
@@ -877,8 +968,9 @@ class Scorer:
                               "need": self.debug.pop("item_need", None),
                               "picked": [{"item": r["item"], "kind": r["kind"], "holder": r["shown_holder"],
                                           "reason": r["reason"]} for r in picked],
-                              "max_bis": max_bis, "hold": hold, "jev_choice": ans.choice if ans else None}
-        return ItemAdvice(suggestions=suggestions, hold=hold)
+                              "max_bis": max_bis, "hold": hold, "jev_choice": ans.choice if ans else None,
+                              "pinned_dropped": dropped}
+        return ItemAdvice(suggestions=suggestions, hold=hold, note=note)
 
     def temp_text(self, item_id: str, holder: str, owned_units: set[str]) -> str:
         """보유자 안내. 1위 덱 보유자가 아직 없고 보드에 알맞은 유닛이 있으면 "마스터 이 확보 전까지 카밀에게 임시로",
@@ -900,7 +992,8 @@ class Scorer:
         if kind == "top":
             h = self.holder_for(x)
             deck = top_comp.name if top_comp else ""
-            head = f"1위 덱({deck}) 캐리 아이템" if r["role"] == "carry" else f"1위 덱({deck}) 핵심 아이템"
+            which = "고정 덱" if self.pinned is not None else "1위 덱"   # 21 §17.8
+            head = f"{which}({deck}) 캐리 아이템" if r["role"] == "carry" else f"{which}({deck}) 핵심 아이템"
             if h is None:
                 return None, head
             return h, f"{head} · {self.temp_text(x, h, owned_units)}"

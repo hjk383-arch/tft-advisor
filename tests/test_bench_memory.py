@@ -110,7 +110,10 @@ def test_sudden_drop_without_any_evidence_keeps_previous_bench_unnamed():
         _put_unit(b, i, color=(10, 200, 200))
         b[735:745, 416 + 121 * i - 25:416 + 121 * i + 25] = (250, 250, 250)
     out = mem.apply(b, m, prof, _read([]))
-    assert len(out.bench) == 9 and all(u.unit_id is None and u.name_source == "held" for u in out.bench)
+    # 그림이 같으면 "그대로"(held, 성급 유지), 다르면 자리만(none, 성급 모름) — 어느 쪽도 이름은 없다
+    assert len(out.bench) == 9 and all(u.unit_id is None for u in out.bench)
+    assert all((u.name_source == "held" and u.star == 1) or (u.name_source == "none" and u.star is None)
+               for u in out.bench)
 
 
 def test_other_arena_is_not_compared():
@@ -174,7 +177,7 @@ def test_raw_live3_bench_without_bars_no_empty_reference(recognizer):
     read = _run(recognizer, L3A, L3B)
     slots = {u.bench_slot: u for u in read.bench}
     assert {0, 1, 2, 3, 4, 7} <= set(slots) <= {0, 1, 2, 3, 4, 5, 7}
-    assert slots.get(5) is None or (slots[5].unit_id is None and slots[5].name_source == "held")
+    assert slots.get(5) is None or (slots[5].unit_id is None and slots[5].star is None)
 
 
 def test_raw_live3_end_frame_alone_has_no_memory(recognizer):
@@ -239,9 +242,8 @@ def test_qa32_changed_picture_never_keeps_the_name_and_reset_forgets():
     assert out.bench == () and not out.bench_held
 
 
-@pytest.mark.xfail(strict=True, reason="QA 32 W: 기준 없음/애매(규칙 4) 칸이 그림이 바뀌었는데도 직전 성급·아이템을 이어 쓴다 "
-                                       "(vision-engineer, bench_memory.py:221-223)")
 def test_qa32_changed_picture_without_empty_reference_drops_star_and_items():
+    """QA 32 W1(35에서 고침): 기준 없음/애매 칸은 자리만 — 이름·성급·아이템을 이어 쓰지 않는다."""
     m, prof = _setup()
     mem = BM.BenchMemory()
     a = _frame()
