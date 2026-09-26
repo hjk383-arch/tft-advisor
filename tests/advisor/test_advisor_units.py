@@ -35,6 +35,8 @@ from tft_advisor.contracts import (
     UnitOnBoard,
 )
 
+from .conftest import NO_META, with_overrides
+
 C = "DA_Component_"
 
 
@@ -149,6 +151,8 @@ def test_view_reliability_filter(stats):
 
 
 def test_prefilter_min_games_quota_and_prev(stats, weights):
+    # 메타 상위 N 제한을 끄고(21 §16 이전 풀) 1차 필터 규칙만 본다 — inferno-ashe는 mini 상위 5 밖이다(test_meta_top.py)
+    weights = with_overrides(weights, NO_META)
     v = build_view(gs(stage="3-2", level=6), stats, 0.6, None)
     cands, pool = prefilter(v, stats, weights, 4, prev_shown=["inferno-ashe"])
     ids = [c.comp_id for c in cands]
@@ -717,6 +721,8 @@ def test_exact_allocation_matches_brute_force_on_small_sets(stats, weights, sett
 
 
 def test_no_top_item_early_slams_for_tempo_on_a_board_unit(stats, weights, settings):
+    # 거인의 결의를 쓰는 오른 덱(juggernaut-elderdragon)은 mini 메타 상위 5 밖 → 제한을 끄고 §13 배분 규칙만 본다
+    weights = with_overrides(weights, NO_META)
     sc = make_scorer(stats, weights, settings, _item_state("2-5", 5, ("ChainVest", "RecurveBow"), _ORNN_BOARD))
     adv = sc.item_advice()
     assert sc.debug["item"]["mode"] == "fallback" and adv.hold is False

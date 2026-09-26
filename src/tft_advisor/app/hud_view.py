@@ -25,6 +25,10 @@ log = logging.getLogger(__name__)
 FONT_FAMILIES = ["Malgun Gothic", "Apple SD Gothic Neo", "Noto Sans KR", "sans-serif"]
 BACKGROUND = QColor(12, 14, 20, 225)
 MISSING_OPACITY = 0.5
+STALE_OPACITY = 0.45
+"""직전 보드 배치(stale) 아이콘 투명도."""
+ITEM_DOT = "#f08c00"
+"""유닛이 든 아이템 표시 점 색."""
 """부족 유닛 아이콘 투명도(보유는 1.0)."""
 
 
@@ -146,7 +150,8 @@ class HudView(QWidget):
                 if row.kind == "icons":
                     self._icons(p, row.cells, x0, y, width)
                 elif row.kind == "icontext":
-                    self._text(p, Row("text", row.text, row.color), x0, y + (self.icon_h - self.line_h) / 2, width)
+                    self._text(p, Row("text", row.text, row.color, italic=row.italic), x0,
+                               y + (self.icon_h - self.line_h) / 2, width)
                 y += self.icon_h
                 continue
             if key == "comps" and row.kind == "head":
@@ -202,9 +207,9 @@ class HudView(QWidget):
     def _cell(self, p: QPainter, cell: IconCell, x: float, y: float, s: int) -> None:
         rect = QRectF(x, y, s, s)
         p.save()
-        if cell.owned is False:
-            p.setOpacity(MISSING_OPACITY)
-        pix = self.icons.get(cell.unit_id, s)
+        base = STALE_OPACITY if cell.dim else 1.0
+        p.setOpacity(base * (MISSING_OPACITY if cell.owned is False else 1.0))
+        pix = None if cell.unknown else self.icons.get(cell.unit_id, s)
         if pix is not None:
             src = QRectF((pix.width() - s) / 2, (pix.height() - s) / 2, s, s)
             p.drawPixmap(rect, pix, src)
@@ -216,14 +221,14 @@ class HudView(QWidget):
             small.setPixelSize(max(7, int(s * 0.36)))
             p.setFont(small)
             p.setPen(QColor(TEXT))
-            p.drawText(rect, int(Qt.AlignmentFlag.AlignCenter), cell.name[:2])
+            p.drawText(rect, int(Qt.AlignmentFlag.AlignCenter), "?" if cell.unknown else cell.name[:2])
         border = QColor(WARN) if cell.carry else QColor(COST_COLORS.get(cell.cost or 0, DIM))
         pen = QPen(border)
         pen.setWidthF(max(1.5, (2.5 if cell.carry else 1.5) * self.scale))
         p.setPen(pen)
         p.setBrush(Qt.BrushStyle.NoBrush)
         p.drawRect(rect.adjusted(0.5, 0.5, -0.5, -0.5))
-        p.setOpacity(1.0)
+        p.setOpacity(base)
         tiny = QFont(self.bold)
         tiny.setPixelSize(max(7, int(s * 0.34)))
         p.setFont(tiny)
@@ -234,6 +239,14 @@ class HudView(QWidget):
         if cell.star:
             p.setPen(QColor(WARN))
             p.drawText(QRectF(x, y + s * 0.55, s * 0.6, s * 0.45), int(Qt.AlignmentFlag.AlignCenter), f"★{cell.star}")
+        if cell.badge:   # "↑" 벤치에서 올릴 유닛
+            self._badge(p, QRectF(x + s * 0.58, y, s * 0.42, s * 0.42), cell.badge, QColor(ACCENT), QColor(8, 20, 30))
+        if cell.items:   # 든 아이템: 아래쪽 오른편 작은 네모 점(최대 3)
+            d = max(3.0, s * 0.14)
+            p.setPen(Qt.PenStyle.NoPen)
+            p.setBrush(QColor(ITEM_DOT))
+            for k in range(min(3, cell.items)):
+                p.drawRect(QRectF(x + s - (k + 1) * (d + 1) - 1, y + s - d - 1, d, d))
         p.restore()
 
     @staticmethod

@@ -13,6 +13,8 @@ from tft_advisor.advisor.features import build_view
 from tft_advisor.config import UnitStageWeights, Weights
 from tft_advisor.contracts import GameState
 
+from .conftest import NO_META, with_overrides
+
 ZYRA_CORE = ["DA_18_Zyra", "DA_18_Yorick", "DA_Amumu18", "DA_Vi18"]   # juggernaut-zyra-amumu 핵심 4기
 ZYRA = "juggernaut-zyra-amumu"
 
@@ -118,8 +120,9 @@ def weights_board(adv) -> float:
 # ---------------------------------------------------------------------------
 
 
-def test_shop_still_uses_owned_copies_in_stage2(make_advisor):
-    rec = make_advisor().advise(state("2-3", 4, ones(["DA_18_Kennen"]), bench=ones(["DA_18_Kennen"]),
+def test_shop_still_uses_owned_copies_in_stage2(make_advisor, weights):
+    # 케넨 경로 덱은 mini 메타 상위 5 밖 → 제한을 끄고 '2스테이지에도 보유 사본을 센다'만 본다(21 §16)
+    rec = make_advisor(weights_=with_overrides(weights, NO_META)).advise(state("2-3", 4, ones(["DA_18_Kennen"]), bench=ones(["DA_18_Kennen"]),
                                       shop=["DA_18_Kennen", "DA_18_Shen"]))
     rows = {r["id"]: r for r in rec.debug["shop"]["rows"]}
     assert rows["DA_18_Kennen"]["bonus"] >= make_advisor().w.shop.two_star_bonus   # 3번째 사본 → 2성

@@ -8,8 +8,10 @@ import하지 않고 덕 타이핑으로 쓴다(`stats.stage_stats` 속성이 없
    표본 수로 수축(delta x g/(g+k))해 −1~1 신호로 바꾼다. 근거 문구 "통계: 2스테이지 1성 · 평균보다 0.10등 높음(1,234판)"
    (delta는 절대 등수가 아니라 기준선 대비 차이다. 등수는 낮을수록 좋으므로 delta 음수 = "높음").
 2. `best_board`: 지금 스테이지·레벨의 실제 보드(정확한 variation 우선, 없으면 cluster) 중 보유 유닛으로 (거의) 만들 수 있는 것.
-   고르기 점수 = 품질(수축 delta) + 보유 비율 + 목표 덱 연결(comp_links, 초반엔 작게).
-3. `next_hint`: 지금 라인업과 닮은 클러스터에서 다음 스테이지로 가장 많이 간 경로(목표 덱으로 이어지는 경로 우선).
+   고르기 점수 = 품질(수축 delta) + 보유 비율 + 목표 덱 연결(comp_links, 초반엔 작게)
+   + 메타 상위 N 덱 전체로의 연결 확률 합(`board_meta_link`, 21 §16).
+3. `next_hint`: 지금 라인업과 닮은 클러스터에서 다음 스테이지로 가장 많이 간 경로. 우선순위: 목표 덱으로 이어지는 경로
+   → 메타 상위 N 덱으로 이어지는 경로(21 §16) → 전체.
    닮은 정도(Jaccard)가 `trans_match_min` 이상이면 "이 보드는", `trans_similar_min` 이상이면 "비슷한 보드는",
    그보다 낮으면 힌트를 내지 않는다(유닛 1기만 겹친 클러스터로 "이 보드는 보통…"이라 말하지 않게, 27 W4).
 
@@ -91,9 +93,20 @@ def _get(obj: Any, name: str, default: Any = None) -> Any:
 class MetaTftStageBoards:
     """`StageStats`(덕 타이핑) → StageBoardSource. 조회 실패는 None으로 흘린다(부가 신호가 추천을 막지 않게)."""
 
-    def __init__(self, stage_stats: Any, w: BoardPlanWeights) -> None:
+    def __init__(self, stage_stats: Any, w: BoardPlanWeights, meta: frozenset[str] | None = None) -> None:
         self.st = stage_stats
         self.w = w
+        self.meta = meta     # 메타 상위 N comp_id(21 §16). None = 제한 없음(메타 연결 항 0, 힌트 우선순위 단계 없음)
+
+    def set_meta(self, meta: frozenset[str] | None) -> None:
+        """엔진이 메타 상위 N을 계산할 때마다 알려 준다."""
+        self.meta = frozenset(meta) if meta else None
+
+    def meta_link(self, board: Any) -> float:
+        """이 보드가 메타 상위 N 덱 중 하나로 이어질 확률 합(0~1). 메타 제한이 없으면 0."""
+        if not self.meta:
+            return 0.0
+        return min(1.0, sum(p for c, p in (_get(board, "comp_links", ()) or ()) if c in self.meta))
 
     @classmethod
     def from_stats(cls, stats: object, w: BoardPlanWeights) -> MetaTftStageBoards | None:
@@ -154,7 +167,7 @@ class MetaTftStageBoards:
                     continue
                 link = b.link(comp_id) if comp_id else 0.0
                 score = (self._quality(b.delta, b.games) + w.board_cover * len(mine) / len(b.units)
-                         + w.board_link * comp_scale * link)
+                         + w.board_link * comp_scale * link + w.board_meta_link * comp_scale * self.meta_link(b))
                 cand = BoardPick(stage=s, kind=kind, cluster=str(b.cluster), units=tuple(b.units), owned=mine,
                                  games=int(b.games), avg_place=b.avg_place, delta=b.delta, link=link, score=score)
                 if best is None or (cand.score, cand.games) > (best.score, best.games):
@@ -176,15 +189,17 @@ class MetaTftStageBoards:
         if match < self.w.trans_similar_min:
             return None
         cluster = found[0].cluster
-        opts: list[tuple[Any, Any, float]] = []
+        opts: list[tuple[Any, Any, float, float]] = []
         for t in self.st.transitions(s, cluster, min_games=self.w.trans_min_games):
             nb = self.st.cluster_board(s + 1, t.next_cluster)
             if nb is not None:
-                opts.append((t, nb, nb.link(comp_id) if comp_id else 0.0))
+                opts.append((t, nb, nb.link(comp_id) if comp_id else 0.0, self.meta_link(nb)))
         if not opts:
             return None
-        linked = [o for o in opts if o[2] >= self.w.trans_link_min]
-        t, nb, link = max(linked or opts, key=lambda o: (o[0].share, o[0].games))
+        lm = self.w.trans_link_min
+        linked = [o for o in opts if o[2] >= lm]                   # 1. 목표 덱으로 이어지는 경로
+        meta_linked = [o for o in opts if o[3] >= lm]              # 2. 메타 상위 N 덱으로 이어지는 경로(21 §16)
+        t, nb, link, _ml = max(linked or meta_linked or opts, key=lambda o: (o[0].share, o[0].games))
         return NextHint(stage=s + 1, units=tuple(nb.units), share=t.share, avg_place=t.avg_place, games=t.games,
                         link=link, match=match, close=match >= self.w.trans_match_min)
 

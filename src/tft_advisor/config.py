@@ -330,6 +330,11 @@ class CompWeights(_Cfg):
     tempo_span: float = Field(2.0, gt=0, le=9)          # 레벨 차가 이 값 이상이면 템포 적합 0
     # 사용자 고정 덱(21 §14.3): 고정 덱 rel = 1, 나머지 덱의 상대 점수(rel)는 이 배수로 줄인다(상점 경로·아이템 bis 가중)
     pin_other_rel: Unit = 0.5
+    # 메타 상위 N(21 §16, 2026-09-25 사용자 규칙 "추천 메타 덱은 상위 5개만"): 목표 덱 후보 = 평균 등수 상위 N 덱뿐.
+    # 순위 = avg_place 오름차순(동률: top4 → win_rate → games 내림차순), games >= meta_min_games인 덱만.
+    # 0 = 제한 없음(예전 동작: prefilter.min_games를 넘는 모든 덱).
+    meta_top_n: int = Field(5, ge=0, le=50)
+    meta_min_games: int = Field(5000, ge=0)
 
     @model_validator(mode="after")
     def _constraints(self) -> CompWeights:
@@ -596,6 +601,7 @@ class BoardPlanWeights(_Cfg):
     board_max_missing: int = Field(2, ge=0, le=5)   # 추천 보드에서 없는 유닛 허용 수(상점에서 살 수 있음)
     board_cover: float = Field(1.0, ge=0)        # 보드 고르기: 보유 비율 가중
     board_link: float = Field(0.5, ge=0)         # 보드 고르기: 목표 덱 연결 확률 가중(x plan_comp_scale)
+    board_meta_link: float = Field(0.25, ge=0)   # 보드 고르기: 메타 상위 N 덱 전체로의 연결 확률 합 가중(x plan_comp_scale, 21 §16)
     board_member: float = Field(0.6, ge=0)       # 추천 보드 소속 유닛 가산, x plan_now_scale
     trans_min_games: float = Field(20, ge=0)     # 다음 스테이지 전이 최소 표본
     trans_link_min: Unit = 0.15                  # 목표 덱으로 이어지는 전이로 볼 연결 확률

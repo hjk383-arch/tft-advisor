@@ -6,6 +6,13 @@
 # resource_fit = wi*item_fit + wa*augment_fit + wb*board_fit  (wi+wa+wb = 1)
 # pin_other_rel: 사용자가 목표 덱을 고정하면 고정 덱 rel = 1, 나머지 덱 rel은 이 배수(상점 경로·아이템 가중, 21 §14.3)
 pin_other_rel = 0.5
+# 메타 상위 N(2026-09-25 사용자 규칙 "추천 메타 덱은 상위 5개만", _workspace/21_board_trust.md §16).
+# 목표 덱 후보(= Jev candidate_comps) = 평균 등수 상위 meta_top_n 덱. 순위: avg_place 오름차순, 동률 top4 → win_rate → games.
+# games < meta_min_games인 덱은 순위에 들지 않는다(작은 표본의 우연한 좋은 등수 차단). 통과 덱이 N개 미만이면
+# prefilter.min_games 이상 덱을 수축 평균 등수 순으로 채운다(로그 경고). meta_top_n = 0 이면 제한 없음(예전 동작).
+# 고정 덱이 통계 갱신 뒤 상위 N 밖으로 밀려도 고정은 유지하고 근거에 "메타 상위 N 밖"을 적는다.
+meta_top_n = 5
+meta_min_games = 5000
 wi = 0.45
 wa = 0.25
 wb = 0.30
@@ -176,6 +183,8 @@ board_min_games = 100       # "지금 이 스테이지 추천 보드" 후보 최
 board_max_missing = 2       # 보유하지 않은 유닛 허용 수(상점에서 구할 유닛, 보유 비율 가중으로 적을수록 우선)
 board_cover = 1.0           # 보드 고르기 = 품질(−delta_수축/span) + board_cover x 보유 비율 + board_link x plan_comp_scale x 목표 덱 연결
 board_link = 0.5
+board_meta_link = 0.25      # + board_meta_link x plan_comp_scale x (메타 상위 N 덱으로의 연결 확률 합). 다음 스테이지 힌트도
+                            # 목표 덱 연결 경로 → 메타 상위 N 연결 경로 → 전체 순으로 고른다(21 §16)
 board_member = 0.6          # 고른 보드에 든 보유 유닛 가산(x plan_now_scale)
 trans_min_games = 20        # 다음 스테이지 전이 최소 표본
 trans_link_min = 0.15

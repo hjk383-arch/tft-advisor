@@ -196,3 +196,69 @@ def test_first_run_fetch_runs_in_background_and_reports(monkeypatch, settings, t
 def test_config_defaults_are_larger(settings):
     assert settings.overlay.width >= 440 and settings.overlay.height >= 880
     assert json.dumps(Budgets.from_cfg(settings.overlay).__dict__)
+
+
+# ---------------------------------------------------------------- 보드 배치 라인업 아이콘(33 보고 §8)
+def board_rec(stale: bool = False) -> Recommendation:
+    from tft_advisor.contracts import BoardSwap
+
+    plan = BoardPlan(comp_id="c0", slots=4, unknown_on_board=1, stale=stale,
+                     lineup=[BoardPlanEntry(unit_id=UNITS[0], star=2, on_board=True, action="keep"),
+                             BoardPlanEntry(unit_id=UNITS[1], on_board=False, action="field")],
+                     swaps=[BoardSwap(field_unit_id=UNITS[1], bench_unit_id=UNITS[2])])
+    return big_rec().model_copy(update={"board_plan": plan})
+
+
+def board_state():
+    from tft_advisor.contracts import UnitOnBoard
+
+    return planning_state(board=[UnitOnBoard(id=UNITS[0], star=2, hex=(0, 0), items=["DA_Bloodthirster"],
+                                             confidence=0.9)],
+                          bench=[UnitOnBoard(id=UNITS[1], star=1, bench_slot=0, confidence=0.9)])
+
+
+def test_board_lineup_becomes_an_icon_row(settings):
+    from tft_advisor.app.hud_model import lineup_cells
+
+    names = NameBook()
+    rec = board_rec()
+    cells = lineup_cells(rec.board_plan, board_state(), rec, names)
+    assert [c.unit_id for c in cells[:2]] == UNITS[:2] and cells[2].unknown
+    assert cells[0].star == 2 and cells[0].items == 1 and cells[0].carry and cells[0].badge is None
+    assert cells[1].badge == "↑" and cells[1].items == 0
+    b = Budgets.from_cfg(settings.overlay)
+    rows = [r for k, r in layout_rows(build_model(board_state(), rec, names), b) if k == "board"]
+    kinds = [r.kind for r in rows]
+    assert kinds[:3] == ["gap", "section", "icons"] and rows[1].note.startswith("기준")
+    assert not any(r.kind == "text" and r.text.startswith("보드:") for r in rows)      # 아이콘 줄이 대신한다
+    assert any(r.text.startswith("교체:") for r in rows)
+    assert len(rows) == 2 + b.board                                                     # 줄 수 고정
+    html = model_html(build_model(board_state(), rec, names), b)
+    assert f"보드: {names.name(UNITS[0])}★2[템1](캐리)" in html and "↑" in html
+
+
+def test_board_icons_fall_back_to_text_and_stale_is_dimmed(settings):
+    from tft_advisor.app.hud_model import lineup_cells
+
+    names = NameBook()
+    b = Budgets.from_cfg(settings.overlay)
+    text_mode = Budgets(**{**vars(b), "icons": False})
+    rows = [r for k, r in layout_rows(build_model(board_state(), board_rec(), names), text_mode) if k == "board"]
+    assert any(r.kind == "text" and r.text.startswith("보드:") for r in rows) and len(rows) == 2 + b.board
+    assert all(c.dim for c in lineup_cells(board_rec(True).board_plan, board_state(), board_rec(True), names, True))
+    rows = [r for k, r in layout_rows(build_model(board_state(), board_rec(True), names), b) if k == "board"]
+    assert "(직전)" in rows[1].note and all(c.dim for c in rows[2].cells)
+    # 추천 없음: 아이콘 자리에 자리 표시(높이 같음)
+    rows = [r for k, r in layout_rows(build_model(board_state(), None, names), b) if k == "board"]
+    assert rows[2].kind == "icontext" and "보드 배치 추천 없음" in rows[2].text and len(rows) == 2 + b.board
+
+
+def test_board_icon_row_keeps_geometry(qapp, settings, tmp_path):
+    w = OverlayWindow(settings, state_dir=tmp_path)
+    seen = []
+    for rec in (None, board_rec(), board_rec(True), big_rec()):
+        w.set_data(board_state(), rec)
+        w.body.grab()
+        seen.append((w.size().height(), dict(w.body.section_y)))
+    assert all(s == seen[0] for s in seen)
+    w.deleteLater()

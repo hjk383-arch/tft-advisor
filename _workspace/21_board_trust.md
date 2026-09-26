@@ -837,3 +837,73 @@ Recommendation.pinned_comp_id: str | None = None       # 이 추천에 실제로
 `test_board_trust.board_ok_bench_low`의 벤치 세주아니 0.7은 0.85로 올렸다. 이 fixture는 "확인 2기"를 뜻하므로 새 규칙에서는 0.8 이상이어야 한다.
 
 전체 결과(수정 뒤): 1440 passed, 3 skipped, 2 xfailed, 4 failed. 새 규칙 때문에 실패했던 2건(위 fixture)은 고쳤다. 남은 4건은 알려진 Windows 4건이다(api_key 힌트, setup 권한 상자, credentials 0600 두 건). `tests/fixtures/states/*.json`에는 0.6~0.8 이름 유닛이 없어서 fixture 추천은 변하지 않는다.
+
+## 16. 추천 메타 덱은 상위 5개만 — jev-strategist, 2026-09-25
+
+사용자 규칙: "추천 메타 덱은 상위 5개 덱만 골라줘. 그 이하는 솔직히 별로야." 목표 덱 후보는 메타 상위 N(기본 5) 덱에서만 나온다. 설계 문서는 `_workspace/02_jev-strategist_design.md` §2.0이다.
+
+### 16.1 메타 순위 (`advisor/candidates.py` `meta_top`, `MetaTop`)
+- 사전 정리(`prefilter.min_games` 1000, 중복 제거)를 먼저 한다. 그 뒤 `games >= max(comp.meta_min_games, prefilter.min_games)`인 덱을 원 `avg_place` 오름차순으로 정렬해 N개를 고른다. 동률이면 top4, win_rate, games 순으로 높은 쪽이 앞선다. 현재 MetaTFT 덱 행에는 top4·win_rate가 없어서 사실상 games가 동률을 가른다.
+- 하한을 넘는 덱이 N개보다 적으면 나머지를 수축 평균 등수 순으로 채우고 WARNING 로그를 남긴다. 추천이 비지 않게 하기 위해서다.
+- `comp.meta_top_n = 0`이면 제한이 없다(예전 동작).
+- `Advisor.meta`는 `(id(stats), id(weights))`가 바뀔 때마다 다시 계산하고 INFO 로그를 남긴다. 앱 시작과 통계를 바꿔 끼울 때가 해당한다. `Recommendation.debug["meta_top"]`에도 목록이 들어간다.
+
+현재 상위 5(18.3, 앱 시작 로그):
+```
+1. 처형자 카직스 [executioner-khazix] 평균 4.163등 · 46,124판
+2. 주문술사 베이가 [spellweaver-veigar] 평균 4.289등 · 63,790판
+3. 달빛 아펠리오스 니달리 [lunar-aphelios-nidalee_ap] 평균 4.298등 · 98,067판
+4. 전쟁기계 자이라 아무무 [juggernaut-zyra-amumu] 평균 4.343등 · 22,119판
+5. 기원자 아리 [invoker-ahri] 평균 4.348등 · 90,908판
+```
+하한 때문에 빠진 덱은 두 개다. 검은 가시 베이가(4.351등, 3,999판)는 하한이 없었다면 6위였다. 적응가 마스터 이 렝가(4.429등, 6,829판)는 하한은 넘지만 순위로 밀렸다. 6위는 지옥불 장로 드래곤(4.406등, 115,934판)이다.
+
+### 16.2 적용 범위
+- **목표 덱 후보**: 1차 필터 p(c), 쿼터, 합성 점수는 풀 안에서만 계산한다(`prefilter(..., meta=)`). 직전 표시 덱이 풀 밖이면 쿼터로 살리지 않는다. 풀 안에서는 기존 원칙을 그대로 따른다. 보유 아이템·증강 적합이 순위를 정하고 승률은 타이브레이커다. 스테이지별 유닛 영향(§10)도 적용한다. 표시는 최대 3개다.
+- **Jev**: `candidate_comps` = 풀에서 고른 후보뿐이다. 추가 호출은 없다(test.png 기준 질문 34개에서 25개로 줄었다).
+- **넓은 표본을 그대로 쓰는 곳**: 상점 S_now(레벨별 빌드업 유닛 빈도)와 전역 레벨 추정은 min_games 이상 전체 덱을 쓴다. 덱 선택이 아니라 "지금 이 레벨에 흔히 쓰는 유닛" 신호이기 때문이다.
+- **고정 덱**: 풀 밖 덱이라도 고정은 유지한다. 통계 갱신으로 밀려난 경우가 이에 해당한다. 근거는 `["사용자 고정 덱", "메타 상위 5 밖", …]` 순서로 나온다. 대안 덱(2·3위)은 풀 안에서만 고른다.
+- **스테이지 보드**(`advisor/stage_boards.py`): 엔진이 `set_meta(ids)`로 풀을 알려 준다.
+  - 다음 스테이지 힌트는 경로를 이 순서로 고른다. 목표 덱 연결 ≥ `trans_link_min` 경로가 먼저, 메타 상위 N 연결 합 ≥ `trans_link_min` 경로가 다음, 전체가 마지막이다.
+  - 추천 스테이지 보드 점수에 `board_plan.board_meta_link`(0.25) × plan_comp_scale × (상위 N 덱 연결 확률 합)을 더한다.
+  - 목표 덱이 이미 풀 안에 있으므로 `comp_link` 표시는 그대로 목표 덱 기준이다.
+
+### 16.3 설정
+- `config/weights.toml [comp]`: `meta_top_n = 5`, `meta_min_games = 5000` (`config.CompWeights`)
+- `[board_plan]`: `board_meta_link = 0.25` (`config.BoardPlanWeights`)
+
+### 16.4 전/후 (test.png, `--screenshot tests/fixtures/screens/test/test.png --jev mock --no-overlay`, 2-6 레벨 5)
+전은 `meta_top_n = 0`으로 돌렸다(후보 50개, 질문 34개).
+```
+전:  1. 적응가 마스터 이 렝가 0.62 (4.43등 · 6,829판)   2. 검은 가시 워윅 0.61 (4.70등 · 2,074판)   3. 처형자 드레이븐 0.58 (4.46등)
+     보드 배치 기준 마스터 이 렝가 · 아이템 밤의 끝자락 → 마스터 이 · 상점 레오나 0.46(최종 덱 경로 0.84) · 자야 0.41
+후:  1. 처형자 카직스 0.49 (4.16등)   2. 달빛 아펠리오스 니달리 0.44 (보유 코그모)   3. 주문술사 베이가 0.44 (보유 카시오페아)
+     보드 배치 기준 카직스 · 아이템 밤의 끝자락 → 카직스(1위 덱 캐리 아이템, 카밀에게 임시로) · 상점 요릭 0.35(경로 0.87) · 자야 0.24 · 레오나 0.21(경로 0)
+```
+- 전에 1·2위였던 덱은 둘 다 상위 5 밖이다. 검은 가시 워윅은 표본 2,074판, 평균 4.70등이었다. 이제 풀 안에서 밤의 끝자락(보유 재료로 조합 가능)이 캐리 BIS인 카직스가 1위다.
+- 보드 라인업(카시오페아·카밀·엘리스·아칼리·코그모)과 스테이지 보드 힌트는 변하지 않았다.
+- 추천 지연은 4~6ms로 변화가 없다.
+
+### 16.5 테스트
+- `tests/advisor/test_meta_top.py` 신규(37개, 1 skip):
+  - 순위·동률 규칙
+  - 표본 하한: 3,000판 3.9등 덱은 제외되고, 6,000판이거나 하한을 2,000으로 낮추면 포함된다
+  - 하한 미달 채우기와 경고 로그
+  - N 설정(1/3/5/8)과 0 = 제한 없음
+  - 직전 표시 덱이 풀 밖이면 후보에서 빠진다
+  - 전 fixture에서 목표 덱 ⊂ 상위 5, Jev 후보 ≤ 5, Jev 호출은 1회뿐
+  - 풀 밖 고정 덱은 1위로 유지되고 "메타 상위 5 밖"이 붙는다. 풀 안 고정 덱에는 문구가 없다
+  - 통계를 바꿔 끼워 고정 덱이 밀려나도 고정이 유지되고 문구가 붙는다
+  - 스테이지 보드의 메타 연결 경로·보드 우선과 엔진 → `set_meta` 전달
+- 기존 테스트 4건은 메타 제한을 끄고(`conftest.NO_META`, `with_overrides`) 원래 규칙만 보게 했다. 모두 mini 상위 5 밖의 덱을 전제로 한 테스트다.
+  - `test_advisor_units::test_prefilter_min_games_quota_and_prev` (inferno-ashe 직전 표시 쿼터)
+  - `test_advisor_units::test_no_top_item_early_slams_for_tempo_on_a_board_unit` (거인의 결의 → 오른 덱)
+  - `test_unit_stage::test_shop_still_uses_owned_copies_in_stage2` (케넨)
+  - fixture `s17_item_early_tempo_slam`: fixture JSON에 `"weights": {"comp": {"meta_top_n": 0}}`를 추가했다. 세 러너(test_advisor_fixtures, all_recs, fixround)가 이 키를 읽는다. 제한을 켜면 mini 상위 5 중 거인의 결의를 쓰는 덱이 없어 재료 보관(hold)이 나온다. 이것이 새 규칙에서 맞는 동작이다.
+- 나머지 fixture s01~s18의 기대값은 그대로 통과한다.
+- 전체: 1479 passed, 4 skipped, 2 xfailed, 4 failed. 실패 4건은 알려진 Windows 4건이다(api_key 힌트, setup 권한 상자, credentials 0600 두 건).
+
+### 16.6 남은 점 · 사용자 판단
+- `meta_min_games = 5000`은 18.3 표본 기준이다. 패치 초반처럼 표본이 적을 때는 하한을 넘는 덱이 5개보다 적을 수 있다. 그때는 채우기 경고가 뜬다. 통계 갱신 후 로그를 보고 조정한다.
+- 순위는 덱 평균 등수만 본다. 보유 아이템으로 풀 밖 덱이 훨씬 잘 맞아도 추천하지 않는다(사용자 규칙). 원하면 해당 덱을 고정하면 된다. 다만 고정은 표시된 덱만 가능하다(app `deck_chooser`).
+- app은 건드리지 않았다. `TargetComp.reasons`에 "메타 상위 5 밖"이 들어가므로 오버레이 근거 줄에 그대로 보인다.

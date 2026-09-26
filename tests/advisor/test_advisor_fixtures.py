@@ -9,7 +9,9 @@ import pytest
 from tft_advisor.contracts import FallbackReason, Recommendation
 from tft_advisor.advisor import MockJevBackend
 
-from .conftest import fixture_names, load_fixture, to_state
+from tft_advisor.config import load_weights
+
+from .conftest import fixture_names, load_fixture, to_state, with_overrides
 
 HEX64 = re.compile(r"^[0-9a-f]{64}$")
 
@@ -21,6 +23,8 @@ def run_fixture(name: str, make_advisor, *, branch: bool = False):
     kw = {}
     if jev.get("fail"):
         kw["fail"] = FallbackReason(jev["fail"])
+    if fx.get("weights"):   # fixture별 가중 덮어쓰기(예 s17: 메타 상위 N 제한 끔, 21 §16)
+        kw["weights_"] = with_overrides(load_weights(), fx["weights"])
     adv = make_advisor(**kw)
     # expect_mini: mini 통계에서만 성립하는 구체 기대값(실제 저장소 fixround는 expect만 본다)
     steps = fx.get("steps") or [{"state": fx["state"], "expect": {**fx.get("expect", {}), **fx.get("expect_mini", {})}}]
@@ -234,7 +238,8 @@ def all_recs(stats, settings, weights):
         fx = load_fixture(name)
         if "state" not in fx or fx.get("jev"):
             continue
-        adv = Advisor(stats=stats, settings=settings, weights=weights, backend=MockJevBackend())
+        adv = Advisor(stats=stats, settings=settings, weights=with_overrides(weights, fx.get("weights")),
+                      backend=MockJevBackend())
         out[name] = adv.advise(to_state(fx["state"]))
     return out
 

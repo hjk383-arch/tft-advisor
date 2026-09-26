@@ -117,6 +117,64 @@ def dedupe(comps: list[CompStats], threshold: float) -> list[CompStats]:
     return kept
 
 
+def meta_rank_key(c: CompStats) -> tuple:
+    """메타 순위 키(21 §16): 평균 등수 오름차순, 동률이면 top4 → win_rate → games 내림차순, 마지막 comp_id."""
+    return (c.avg_place if c.avg_place is not None else 9.0, -(c.top4 or 0.0), -(c.win_rate or 0.0),
+            -(c.games or 0), c.comp_id)
+
+
+@dataclass(frozen=True)
+class MetaTop:
+    """메타 상위 N 덱(목표 덱 후보 풀, 21 §16). n = 0이면 제한 없음(comps = prefilter 풀 전체)."""
+
+    comps: tuple[CompStats, ...]
+    n: int
+    min_games: int
+    filled: tuple[str, ...] = ()     # 표본 하한 미달이지만 N개를 채우려고 넣은 덱(수축 평균 등수 순)
+
+    @property
+    def ids(self) -> frozenset[str]:
+        return frozenset(c.comp_id for c in self.comps)
+
+    @property
+    def limited(self) -> bool:
+        return self.n > 0
+
+    def rank(self, comp_id: str) -> int | None:
+        """1부터. 풀 밖이면 None."""
+        return next((i + 1 for i, c in enumerate(self.comps) if c.comp_id == comp_id), None)
+
+    def describe(self) -> list[str]:
+        out = []
+        for i, c in enumerate(self.comps):
+            extra = "".join(f" · {k} {v:.1%}" for k, v in (("top4", c.top4), ("win", c.win_rate)) if v is not None)
+            tag = " (표본 하한 미달로 채움)" if c.comp_id in self.filled else ""
+            ap = f"{c.avg_place:.3f}" if c.avg_place is not None else "-"
+            out.append(f"{i + 1}. {c.name} [{c.comp_id}] 평균 {ap}등 · {c.games or 0:,}판{extra}{tag}")
+        return out
+
+
+def meta_top(stats: AdvisorStats, w: Weights) -> MetaTop:
+    """메타 상위 N(21 §16). 중복 제거(dedupe) 뒤 games >= max(meta_min_games, prefilter.min_games)인 덱을
+    `meta_rank_key` 순으로 N개. 통과 덱이 N개 미만이면 prefilter.min_games 이상 덱을 수축 평균 등수 순으로 채운다."""
+    cw, pf = w.comp, w.prefilter
+    pool = dedupe(stats.comps(min_games=pf.min_games), pf.dedupe_jaccard)
+    n = cw.meta_top_n
+    floor = max(cw.meta_min_games, pf.min_games)
+    if n <= 0:
+        return MetaTop(tuple(sorted(pool, key=meta_rank_key)), 0, floor)
+    ok = sorted((c for c in pool if (c.games or 0) >= floor), key=meta_rank_key)[:n]
+    filled: list[CompStats] = []
+    if len(ok) < n:
+        sh = w.shrinkage
+        taken = {c.comp_id for c in ok}
+        rest = [c for c in pool if c.comp_id not in taken]
+        rest.sort(key=lambda c: (sh.adjust(c.avg_place if c.avg_place is not None else sh.prior_avg_place, c.games),
+                                 c.comp_id))
+        filled = rest[:n - len(ok)]
+    return MetaTop(tuple(ok + filled), n, floor, tuple(c.comp_id for c in filled))
+
+
 def tier_score(tier: str | None, w: Weights) -> float | None:
     return None if tier is None else w.augment.editorial_tier_score[tier]   # type: ignore[index]
 
@@ -222,14 +280,20 @@ def score_candidate(comp: CompStats, view: View, stats: AdvisorStats, w: Weights
 
 
 def prefilter(view: View, stats: AdvisorStats, w: Weights, n: int,
-              prev_shown: list[str] | None = None) -> tuple[list[Candidate], list[CompStats]]:
-    """상위 N 후보(p(c) 내림차순)와 사전 정리 후 전체 덱 목록(S_now 계산용)."""
+              prev_shown: list[str] | None = None,
+              meta: MetaTop | None = None) -> tuple[list[Candidate], list[CompStats]]:
+    """상위 n 후보(p(c) 내림차순)와 사전 정리 후 전체 덱 목록(S_now·전역 레벨 계산용).
+
+    후보는 메타 상위 N 풀(`meta`, 없으면 `meta_top(stats, w)`) 안에서만 고른다(21 §16). 전체 덱 목록은 풀과 무관하게
+    prefilter.min_games 이상 전체 — 상점 '지금 강함'(S_now)은 덱 선택이 아니라 레벨별 유닛 빈도라 넓은 표본을 쓴다.
+    """
     pool = dedupe(stats.comps(min_games=w.prefilter.min_games), w.prefilter.dedupe_jaccard)
+    meta = meta if meta is not None else meta_top(stats, w)
     owned = view.owned_pool(stats)
     craftable = list(craftable_items(view.components, stats)) if view.items_known else []
     aug_ids = [a.id for a in view.augments]
     us = unit_stage(view, w)
-    scored = [score_candidate(c, view, stats, w, owned, craftable, aug_ids, us) for c in pool]
+    scored = [score_candidate(c, view, stats, w, owned, craftable, aug_ids, us) for c in meta.comps]
     if tempo_active(view, owned, w):   # 09 J1: 보드 미인식 후반에는 템포가 맞는 덱이 후보 N 안에 들어오게 한다
         wt = late_cfg(w).pf_tempo
         for c in scored:

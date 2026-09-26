@@ -15,7 +15,7 @@ from tft_advisor.advisor.features import emblem_advances
 from tft_advisor.advisor.jev_client import JevGateway
 from tft_advisor.contracts import FallbackReason, GameState, ScreenMode
 
-from .conftest import MINI, fixture_names, load_fixture
+from .conftest import MINI, fixture_names, load_fixture, with_overrides
 from .test_advisor_fixtures import check_expect, check_invariants
 
 
@@ -49,7 +49,8 @@ def _all_recs(stats, settings, weights) -> dict:
         fx = load_fixture(name)
         if "state" not in fx or fx.get("jev"):
             continue
-        adv = Advisor(stats=stats, settings=settings, weights=weights, backend=MockJevBackend())
+        adv = Advisor(stats=stats, settings=settings, weights=with_overrides(weights, fx.get("weights")),
+                      backend=MockJevBackend())
         out[name] = adv.advise(GameState.model_validate(fx["state"]))
     return out
 
@@ -76,7 +77,8 @@ def test_fixture_expectations_on_repository(request, name, repo_stats, repo_all_
     """
     fx = load_fixture(name)
     kw = {"fail": FallbackReason(fx["jev"]["fail"])} if (fx.get("jev") or {}).get("fail") else {}
-    adv = Advisor(stats=repo_stats, settings=settings, weights=weights, backend=MockJevBackend(**kw))
+    adv = Advisor(stats=repo_stats, settings=settings, weights=with_overrides(weights, fx.get("weights")),
+                  backend=MockJevBackend(**kw))
     steps = fx.get("steps") or [{"state": fx["state"], "expect": fx.get("expect", {})}]
     near_tie = name == "s09_hysteresis" and "real" in request.node.callspec.id
     first_top = None

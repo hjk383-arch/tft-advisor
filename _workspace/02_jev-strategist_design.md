@@ -78,6 +78,17 @@ C2는 보유 증강이 없으면, C3은 보드·벤치가 신뢰 가능하지 �
 
 입력: 현재 패치의 `CompStats` 전체(현재 MetaTFT 57 클러스터 [데이터]).
 
+### 2.0 메타 상위 N 풀 — 2026-09-25 사용자 규칙 (21 §16)
+사용자 규칙: "추천 메타 덱은 상위 5개 덱만 골라줘. 그 이하는 솔직히 별로야."
+- **풀** = `candidates.meta_top(stats, w)`. 2.1 사전 정리(min_games·중복 제거) 뒤, `games >= max(comp.meta_min_games, prefilter.min_games)`인 덱을 `avg_place` 오름차순(동률: top4 → win_rate → games 내림차순 → comp_id)으로 정렬해 앞에서 `comp.meta_top_n`(5)개를 고른다. 원 평균 등수를 쓴다(수축하지 않는다). 표본 하한이 작은 표본의 우연한 좋은 등수를 막는다. 기본 하한은 5000판이다. 18.3 기준으로 3999판 검은 가시 베이가(4.35등)가 하한에 걸린다. 하한이 없었다면 6위였다.
+- 하한을 넘는 덱이 N개보다 적으면 나머지는 prefilter.min_games 이상 덱에서 수축 평균 등수 순으로 채우고 경고 로그를 남긴다. 추천이 비지 않게 하기 위해서다. `meta_top_n = 0`이면 제한이 없다(예전 동작).
+- 2.2~2.3의 p(c)와 후보 선정, 5.2 최종 덱 합성은 **이 풀 안에서만** 한다. 보유 아이템·증강 적합이 순위를 정하고 승률은 타이브레이커다(CLAUDE.md 원칙). 스테이지별 유닛 영향(21 §10)도 그대로다. 표시는 최대 3개다.
+- Jev `candidate_comps`는 풀에서 고른 후보만 받는다(질문 추가 없음). test.png 기준 질문 수는 34개에서 25개로 줄었다.
+- 상점 S_now(레벨별 빌드업 유닛 빈도)와 전역 레벨 추정에는 풀과 무관하게 min_games 이상 전체 덱을 쓴다. 이 값들은 덱 선택이 아니라 유닛이 "지금" 얼마나 쓰이는지를 보는 넓은 표본이다.
+- **고정 덱**: 사용자가 고정한 덱이 통계 갱신 뒤 풀 밖으로 밀려나도 고정은 유지한다. 근거 두 번째 줄에 "메타 상위 N 밖"을 적는다.
+- `Advisor.meta`는 `(id(stats), id(weights))`가 바뀔 때 다시 계산하고 상위 N을 INFO 로그로 남긴다. 앱 시작과 통계를 바꿔 끼울 때가 여기에 해당한다. debug 필드는 `meta_top`이다.
+- 스테이지 보드(21 §11)의 다음 스테이지 힌트는 경로를 이 순서로 고른다. 목표 덱으로 이어지는 경로가 먼저, 메타 상위 N으로 이어지는 경로가 다음, 그 밖의 경로가 마지막이다. 추천 스테이지 보드 점수에는 `board_plan.board_meta_link`(0.25) × plan_comp_scale × (상위 N 덱으로의 연결 확률 합)을 더한다.
+
 ### 2.1 사전 정리
 1. `games < prefilter.min_games`(기본 1000) 제외. 2026-09-22 스냅샷 기준으로 604/713/772/919판짜리 덱 4개가 빠진다 [데이터](09-21 캐시는 548/694/751/884). stats 재수집 후 수치는 달라질 수 있다.
 2. **중복 제거**: 최종 보드 유닛 집합의 Jaccard ≥ `prefilter.dedupe_jaccard`(0.75)이고 carry가 같으면 표본이 많은 쪽만 남긴다. 예: "Blossom, Sett, Ahri"(Fast 8)와 "Blossom, Ahri, Sett"(Fast 9), comp_augment_tiers의 "APHELIOS > Lvl 8 push" 2건(424001, 424003) [데이터]. 그러지 않으면 2·3위에 사실상 같은 덱이 나온다.
@@ -111,7 +122,7 @@ S(c) = stat_norm(c)   (5.1절과 같은 함수)
 **`item_usage` / pcnt 정의 (2026-09-22 재정의)**: `CompStats.item_usage[x]` = MetaTFT `build_items[x].pcnt` = 그 덱을 한 플레이어 1명(게임 종료 시점)이 가진 아이템 x의 **평균 개수**다. 비율이 아니므로 1을 넘을 수 있다(실측 최대 1.38, 1 초과 35건: 캐리가 같은 아이템 2개를 드는 경우). 임계값 `item_fit.usage_min_pcnt = 0.3`의 뜻은 "이 덱 플레이어 10명 중 약 3명분 이상의 개수가 쓰인다"이다. 1 초과 값도 그대로 비교한다(자르지 않는다). carry_bis/core 아이템은 이미 위 단계에서 걸리므로 이 단계는 "BIS는 아니지만 덱에서 흔히 쓰는 아이템"만 잡는다.
 
 ### 2.3 상위 N 결정
-- N = `settings.advisor.max_candidate_comps`(8).
+- N = `settings.advisor.max_candidate_comps`(8). 2026-09-25부터는 후보가 2.0 메타 상위 풀(5)에서 나온다. 그래서 실효 후보 수는 min(8, meta_top_n)이고, 고정 덱이 풀 밖이면 1을 더한다. 아래 N=8 근거는 제한이 없던 시절 기준이다.
 - 반드시 포함(쿼터): 직전 추천에 표시된 덱(히스테리시스 대상), S(c) 상위 `prefilter.stat_quota`(2)개(메타 대표 덱을 항상 검토). 쿼터 합이 N을 넘으면 직전 표시 덱 → S 상위 순으로 채우고 자른다(`stat_quota`는 코드에서 `min(stat_quota, N)`으로 클램프).
 - 나머지는 p(c) 순.
 - **N=8 근거**: (a) 화면에는 1~3개만 나가므로 Jev가 재정렬할 여유가 필요하다. 1차 필터와 최종 점수가 같은 신호(아이템·증강·유닛)를 쓰므로 진짜 1위가 8위 밖에 있을 가능성은 낮다 [추측]. (b) 덱당 state는 약 300토큰, 질문은 덱당 3~6개다. 8개면 state 약 2.5k, 질문 약 24~48개로 한도(64k)의 20% 이하다. (c) 문서상 질문 추가는 지연에 거의 영향이 없다. 비용을 정하는 것은 state 크기와 정확도(context rot)다. 그래서 N을 더 늘리기보다 덱 표현을 줄이는 쪽을 택한다.
@@ -623,6 +634,8 @@ pick         = argmax aug_score; 1·2위 차이가 augment.tie_eps(0.03) 미만�
 | `[comp]` | `show_ratio_undecided` | float | 0.6 | [0, 1] | 신규 | **show_ratio_undecided ≤ show_ratio** · 5.2 |
 | `[comp]` | `undecided_min_p` | float | 0.5 | [0, 1] | 신규 | 5.2 P(undecided) 임계 |
 | `[comp]` | `tie_eps` | float | 0.02 | [0, 0.2] | 신규 | 5.2 타이브레이커 |
+| `[comp]` | `meta_top_n` | int | 5 | [0, 50] | 신규(2026-09-25) | 2.0 메타 상위 N 풀. 0 = 제한 없음 |
+| `[comp]` | `meta_min_games` | int | 5000 | ≥ 0 | 신규(2026-09-25) | 2.0 순위 표본 하한(실효 = max(이 값, prefilter.min_games)) |
 | `[prefilter]` | `min_games` | int | 1000 | ≥ 0 | 신규(새 섹션) | 2.1 |
 | `[prefilter]` | `dedupe_jaccard` | float | 0.75 | (0, 1] | 신규 | 2.1 |
 | `[prefilter]` | `w_item` | float | 0.40 | [0, 1] | 신규 | **w_item + w_aug + w_unit + w_stat = 1** (오차 1e-6) · 2.2 |

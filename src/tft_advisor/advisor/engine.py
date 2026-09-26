@@ -27,7 +27,16 @@ from typing import Any, Literal
 from ..config import Settings, Weights, load_settings, load_weights
 from ..contracts import BoardPlan, FallbackReason, GameState, Recommendation, ScreenMode, ShopSlotKind
 from .board_plan import plan_board, stale_copy
-from .candidates import Candidate, augment_comp_fit, late_cfg, prefilter, score_candidate, unit_stage
+from .candidates import (
+    Candidate,
+    MetaTop,
+    augment_comp_fit,
+    late_cfg,
+    meta_top,
+    prefilter,
+    score_candidate,
+    unit_stage,
+)
 from .features import View, build_view, comp_level, craftable_items, global_level, is_late, item_fit
 from .jev_client import GatewayResult, JevBackend, JevGateway, LiveJevBackend, MockJevBackend
 from .jev_state import NameBook, StateParts, build_state, state_hash
@@ -111,6 +120,30 @@ class Advisor:
         # 스테이지별 실제 보드 통계(MetaTFT Early Comps, 21 §11). stats에 stage_stats가 없거나 비었으면 None(항 0).
         # 테스트는 가짜 StageBoardSource를 넣을 수 있다.
         self.stage_boards: StageBoardSource | None = MetaTftStageBoards.from_stats(self.stats, self.w.board_plan)
+        self._meta: MetaTop | None = None
+        self._meta_src: tuple[int, int] | None = None   # (id(stats), id(weights)) — 통계를 바꿔 끼우면 다시 계산
+        _ = self.meta   # 시작 시 상위 N을 로그로 남긴다
+
+    @property
+    def meta(self) -> MetaTop:
+        """메타 상위 N 덱(목표 덱 후보 풀, 21 §16). `self.stats`/`self.w`를 바꾸면 다음 접근 때 다시 계산해 로그를 남긴다."""
+        src = (id(self.stats), id(self.w))
+        if self._meta is None or self._meta_src != src:
+            self._meta = meta_top(self.stats, self.w)
+            self._meta_src = src
+            m = self._meta
+            if m.limited:
+                log.info("메타 상위 %d 덱(games >= %d, 평균 등수 순):\n  %s", m.n, m.min_games,
+                         "\n  ".join(m.describe()) or "(없음)")
+                if m.filled:
+                    log.warning("표본 하한(%d판)을 넘는 덱이 %d개뿐이라 %d개를 수축 평균 등수 순으로 채웠습니다: %s",
+                                m.min_games, m.n - len(m.filled), len(m.filled), ", ".join(m.filled))
+            else:
+                log.info("메타 상위 N 제한 없음(comp.meta_top_n = 0): 덱 후보 %d개", len(m.comps))
+            set_meta = getattr(self.stage_boards, "set_meta", None)
+            if callable(set_meta):
+                set_meta(m.ids if m.limited else None)
+        return self._meta
 
     def _resolve_backend(self, spec: BackendSpec) -> tuple[str, JevBackend | None]:
         if spec == "mock":
@@ -172,7 +205,9 @@ class Advisor:
         return pin
 
     def _with_pin(self, view: View, cands: list[Candidate], pin: str | None) -> list[Candidate]:
-        """고정 덱이 후보에 없으면 통계에서 직접 불러 넣는다(후보 수 상한 유지 — 가장 낮은 후보를 뺀다)."""
+        """고정 덱이 후보에 없으면 통계에서 직접 불러 넣는다(후보 수 상한 유지 — 가장 낮은 후보를 뺀다).
+
+        메타 상위 N 밖 덱이라도(통계 갱신으로 밀려난 고정 덱) 사용자 선택이므로 넣는다 — 근거에 "메타 상위 N 밖"(21 §16)."""
         if pin is None or any(c.comp_id == pin for c in cands):
             return cands
         comp = self.stats.comp(pin)
@@ -227,7 +262,8 @@ class Advisor:
             view.equipped = list(self.session.equipped_tracked.elements())   # 세션을 바꾸지 않고 추적값만 읽는다
         prev_ids = [t.comp_id for t in prev.target_comps]
         pin = self._active_pin()
-        cands, pool = prefilter(view, self.stats, self.w, self.settings.advisor.max_candidate_comps, prev_ids)
+        cands, pool = prefilter(view, self.stats, self.w, self.settings.advisor.max_candidate_comps, prev_ids,
+                                meta=self.meta)
         cands = self._with_pin(view, cands, pin)
         names = NameBook(self.stats)
         parts = build_state(view, cands, self.stats, names, include_shop=True, include_offer=False)
@@ -331,13 +367,14 @@ class Advisor:
         return stale_copy(last.board_plan)
 
     def _candidates(self, view: View) -> tuple[list[Candidate], list[Any]]:
-        return prefilter(view, self.stats, self.w, self.settings.advisor.max_candidate_comps, self.session.prev_shown)
+        return prefilter(view, self.stats, self.w, self.settings.advisor.max_candidate_comps, self.session.prev_shown,
+                         meta=self.meta)
 
     def _scorer(self, view: View, cands: list[Candidate], pool: list[Any], answers=None, **kw) -> Scorer:
         owned = view.owned_pool(self.stats)
         craft = craftable_items(view.components, self.stats) if view.items_known else {}
         return Scorer(view=view, stats=self.stats, w=self.w, settings=self.settings, cands=cands, pool=pool,
-                      owned=owned, craftable=craft, answers=answers, **kw)
+                      owned=owned, craftable=craft, answers=answers, meta=self.meta, **kw)
 
     async def _full(self, state: GameState, mode: ScreenMode, t0: float, *, use_jev: bool = True) -> Recommendation:
         s = self.session
@@ -384,6 +421,7 @@ class Advisor:
             "n_questions": len(qs), "question_ids": list(qs.questions), "jev_state": parts.state,
             "jev": res.answers.to_debug() if res.answers else None,
             "fallback_detail": res.detail or None, "resource_sig": sig, "sig_unchanged": sig_unchanged,
+            "meta_top": [c.comp_id for c in self.meta.comps] if self.meta.limited else None,
             "global_level": glv, "p_undecided": round(scorer.p_undecided, 4), "blind_late": scorer.blind_late,
             "unit_stage": {**{k: round(v, 4) for k, v in asdict(unit_stage(view, self.w)).items()},
                            "weights": {k: round(v, 4) for k, v in scorer.weight_map().items()}},

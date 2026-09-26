@@ -61,9 +61,19 @@ def to_state(raw: dict) -> GameState:
     return GameState.model_validate(raw)
 
 
+NO_META = {"comp": {"meta_top_n": 0}}   # 메타 상위 N 제한 끔(21 §16 이전 덱 풀) — 다른 규칙만 보는 테스트용
+
+
+def with_overrides(weights, over: dict | None):
+    """weights의 섹션 값을 덮어쓴 사본. over = {"comp": {"meta_top_n": 0}, ...}(fixture의 "weights" 키)."""
+    if not over:
+        return weights
+    return weights.model_copy(update={sec: getattr(weights, sec).model_copy(update=vals) for sec, vals in over.items()})
+
+
 @pytest.fixture
 def make_advisor(stats, settings, weights):
-    def _make(backend=None, settings_=None, **mock_kw) -> Advisor:
+    def _make(backend=None, settings_=None, weights_=None, **mock_kw) -> Advisor:
         be = backend if backend is not None else MockJevBackend(**mock_kw)
-        return Advisor(stats=stats, settings=settings_ or settings, weights=weights, backend=be)
+        return Advisor(stats=stats, settings=settings_ or settings, weights=weights_ or weights, backend=be)
     return _make

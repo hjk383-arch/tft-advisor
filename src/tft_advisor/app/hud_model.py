@@ -45,20 +45,28 @@ SECTION_GAP = 0.4
 
 @dataclass(frozen=True)
 class IconCell:
-    """최종 덱 유닛 아이콘 1칸."""
+    """유닛 아이콘 1칸(목표 덱 최종 유닛 · 보드 배치 라인업)."""
 
     unit_id: str
     name: str
     cost: int | None = None
     owned: bool | None = None       # True 보유 · False 부족 · None 모름(보드 미인식)
     carry: bool = False
-    star: int | None = None         # 목표 성급(3 이상일 때만 표시 — 리롤 덱)
+    star: int | None = None         # 표시할 성급(목표 덱은 ★3 목표만, 보드 배치는 ★2 이상)
+    badge: str | None = None        # "↑" = 벤치에서 올릴 유닛(보드 배치)
+    items: int = 0                  # 든 아이템 수(보드 배치, 작은 점)
+    unknown: bool = False           # 이름 미상 칸("?" 칸)
+    dim: bool = False               # 직전 계획(stale) — 흐리게
 
     def text(self) -> str:
+        if self.unknown:
+            return "?"
         mark = "✓" if self.owned else ""
         tail = "(캐리)" if self.carry else ""
-        star = f"★{self.star}" if self.star and self.star >= 3 else ""
-        return f"{self.name}{star}{mark}{tail}"
+        star = f"★{self.star}" if self.star and self.star >= 2 else ""
+        up = "↑" if self.badge == "↑" else ""
+        held = f"[템{self.items}]" if self.items else ""
+        return f"{self.name}{star}{up}{held}{mark}{tail}"
 
 
 @dataclass(frozen=True)
@@ -82,7 +90,7 @@ class Row:
         if self.kind == "head":
             return f"<b>{line_html(self.text)}</b>"
         if self.kind == "icons":
-            return f"<span style='color:{DIM}'>{line_html(icons_text(self.cells))}</span>"
+            return f"<span style='color:{DIM}'>{line_html(icons_text(self.cells, self.text or "최종"))}</span>"
         if self.kind == "blank":
             return ""
         body = line_html(self.text)
@@ -91,8 +99,8 @@ class Row:
         return f"<span style='color:{self.color}'>{body}</span>"
 
 
-def icons_text(cells: tuple[IconCell, ...]) -> str:
-    return "최종: " + " · ".join(c.text() for c in cells)
+def icons_text(cells: tuple[IconCell, ...], label: str = "최종") -> str:
+    return f"{label}: " + " · ".join(c.text() for c in cells)
 
 
 def plain(text: str) -> str:
@@ -125,6 +133,9 @@ class Section:
     note: str | None = None
     rows: list[Row] = field(default_factory=list)
     placeholder: str = "(없음)"
+    icons: Row | None = None           # board: 라인업 아이콘 줄(아이콘 모드에서 "보드:" 글자 줄 대신)
+    icon_fallback: Row | None = None   # board: 그 글자 줄("보드: …", 아이콘이 없거나 높이가 모자랄 때)
+    icon_note: str | None = None       # board: 아이콘 모드의 제목 옆 글("(직전) 기준 … · 칸 N")
     decks: list[DeckBlock] = field(default_factory=list)   # comps 섹션만
 
 
@@ -166,6 +177,8 @@ def model_height(budgets: Budgets, deck_slots: int, line_h: float, icon_h: float
         if key == "comps":
             per = line_h * (1 + budgets.comps) + (icon_h if budgets.icons else 0)
             h += per * deck_slots
+        elif key == "board" and budgets.icons:   # 라인업 아이콘 줄 1 + 글자 줄
+            h += icon_h + (budgets.board - 1) * line_h
         else:
             h += budgets.get(key) * line_h
     return h
@@ -182,9 +195,11 @@ def fit_budgets(budgets: Budgets, deck_slots: int, avail: float, line_h: float, 
     return b
 
 
-def fit_rows(rows: list[Row], budget: int, placeholder: str) -> list[Row]:
+def fit_rows(rows: list[Row], budget: int, placeholder: str | None) -> list[Row]:
     """섹션 줄을 정확히 `budget`줄로: 넘치면 마지막 줄 "… 외 N줄", 모자라면 빈 줄(비었으면 자리 표시)."""
-    if not rows:
+    if budget <= 0:
+        return []
+    if not rows and placeholder:
         rows = [Row("text", placeholder, DIM, italic=True)]
     if len(rows) > budget:
         hidden = len(rows) - budget + 1
@@ -217,6 +232,28 @@ def deck_cells(comp: TargetComp, names: NameBook) -> tuple[IconCell, ...]:
         out.append(IconCell(unit_id=u.id, name=names.name(u.id), cost=_cost(names, u.id),
                             owned=(u.id in owned) if known else None, carry=u.id == comp.carry,
                             star=u.star if u.star and u.star >= 3 else None))   # ★3 목표(리롤)만 표시 — ★2는 거의 전부라 소음
+    return tuple(out)
+
+
+def lineup_cells(plan, state: GameState | None, rec: Recommendation | None, names: NameBook,
+                 stale: bool = False) -> tuple[IconCell, ...]:
+    """보드 배치 라인업 → 아이콘 칸(점수 순). 벤치에서 올릴 유닛은 "↑", 이름 미상 보드 칸은 "?" 칸.
+    든 아이템 수는 상태의 같은 챔피언·성급 유닛에서(한 유닛씩 소비) 가져온다."""
+    pool = list((state.board or []) if state is not None else []) + list((state.bench or []) if state is not None else [])
+    carry = None
+    if rec is not None:
+        carry = next((c.carry for c in rec.target_comps if c.comp_id == plan.comp_id), None)
+    out = []
+    for e in plan.lineup:
+        held = 0
+        match = next((u for u in pool if u.id == e.unit_id and (e.star is None or u.star in (None, e.star))), None)
+        if match is not None:
+            pool.remove(match)
+            held = len(match.items)
+        out.append(IconCell(unit_id=e.unit_id, name=names.name(e.unit_id), cost=_cost(names, e.unit_id),
+                            carry=e.unit_id == carry, star=e.star if e.star and e.star >= 2 else None,
+                            badge="↑" if e.action == "field" else None, items=held, dim=stale))
+    out += [IconCell(unit_id="", name="?", unknown=True, dim=stale) for _ in range(plan.unknown_on_board)]
     return tuple(out)
 
 
@@ -263,9 +300,20 @@ def build_model(state: GameState | None, rec: Recommendation | None, names: Name
         basis = next((c.name for c in rec.target_comps if c.comp_id == plan.comp_id), None)
         stale = bool(getattr(plan, "stale", False))
         board.note = "직전" if stale else None
-        for ln in board_plan_lines(plan, names, comp_name=basis):
+        lines = board_plan_lines(plan, names, comp_name=basis)
+        for n, ln in enumerate(lines):
             color = plan_color(ln, plan, stale) if plan_color is not None else DIM
-            board.rows.append(Row("text", ln, color))
+            row = Row("text", ln, color)
+            if ln.startswith("보드:") and board.icon_fallback is None:
+                board.icon_fallback = row      # 아이콘 모드에서는 아이콘 줄이 이 자리를 대신한다
+            elif n == 0 and not ln.startswith("보드:"):
+                board.icon_note = plain(ln)    # "(직전) 기준 … · 칸 N" → 아이콘 모드에서는 제목 옆으로
+                board.rows.append(row)
+            else:
+                board.rows.append(row)
+        cells = lineup_cells(plan, state, rec, names, stale)
+        if cells:
+            board.icons = Row("icons", "보드", cells=cells)
     sections.append(board)
 
     # [상점]
@@ -301,7 +349,8 @@ def layout_rows(model: HudModel, budgets: Budgets) -> list[tuple[str, Row]]:
     out += [("header", Row("blank"))] * (HEADER_ROWS - len(model.header))
     for sec in model.sections:
         out.append((sec.key, Row("gap")))
-        out.append((sec.key, Row("section", sec.title, note=sec.note)))
+        note = sec.icon_note if sec.key == "board" and budgets.icons and sec.icon_note else sec.note
+        out.append((sec.key, Row("section", sec.title, note=note)))
         if sec.key == "comps":
             for deck in sec.decks:
                 out.append((sec.key, deck.head))
@@ -320,9 +369,31 @@ def layout_rows(model: HudModel, budgets: Budgets) -> list[tuple[str, Row]]:
                 else:
                     details = [Row("blank")] * budgets.comps
                 out += [(sec.key, r) for r in details]
+        elif sec.key == "board":
+            out += [(sec.key, r) for r in board_rows(sec, budgets)]
         else:
             out += [(sec.key, r) for r in fit_rows(sec.rows, budgets.get(sec.key), sec.placeholder)]
     return out
+
+
+def board_rows(sec: Section, budgets: Budgets) -> list[Row]:
+    """[보드 배치] 줄. 아이콘 모드: 라인업 아이콘 줄(고정 높이) + 나머지 글자 줄 `board - 1`개. 기준 줄은 제목 옆으로 올린다.
+    글자 모드(아이콘 끔·높이 부족): 예전 글자 줄 그대로 `board`개."""
+    if not budgets.icons:
+        rows = list(sec.rows)
+        if sec.icon_fallback is not None:
+            rows.insert(1 if rows and sec.icon_note else 0, sec.icon_fallback)
+        return fit_rows(rows, budgets.board, sec.placeholder)
+    if sec.icons is not None:
+        head = sec.icons
+    elif sec.icon_fallback is not None:
+        head = Row("icontext", sec.icon_fallback.text, sec.icon_fallback.color)
+    else:
+        head = Row("icontext", sec.placeholder, DIM, italic=True)
+    rest = list(sec.rows)
+    if sec.icon_note and rest:   # 기준 줄은 제목 옆에 있다(layout_rows)
+        rest = rest[1:]
+    return [head, *fit_rows(rest, budgets.board - 1, None)]
 
 
 def model_html(model: HudModel, budgets: Budgets) -> str:

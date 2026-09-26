@@ -96,6 +96,7 @@ class Scorer:
     item_labels: dict[str, str] = field(default_factory=dict)  # item_pick 라벨 → 아이템 ID
     debug: dict[str, Any] = field(default_factory=dict)
     pinned: str | None = None     # 사용자 고정 덱 comp_id(21 §14.3). cands 안에 있어야 한다(engine이 보장)
+    meta: Any = None              # candidates.MetaTop — 메타 상위 N 풀(21 §16). 고정 덱이 풀 밖이면 근거에 적는다
 
     # --- Jev 답 접근 ---
     def gate(self, conf: float, force_low: bool = False) -> float:
@@ -333,6 +334,8 @@ class Scorer:
             reasons.append("초반: 방향 미정")
         if self.pinned is not None:
             reasons.insert(0, "사용자 고정 덱" if comp.comp_id == self.pinned else "대안 덱(고정 덱 아래)")
+            if comp.comp_id == self.pinned and self.outside_meta(comp.comp_id):
+                reasons.insert(1, f"메타 상위 {self.meta.n} 밖")   # 통계 갱신으로 밀려났어도 사용자 선택이라 유지(21 §16)
         elif comp.comp_id in self.kept_by_hysteresis:
             reasons.append("직전 추천 유지")
         if self.answers is None:
@@ -343,6 +346,11 @@ class Scorer:
             items_ready=ready, next_buildup_board=next_buildup_board(comp, c.L),
             final_board=list(comp.final_board[:12]),
         )
+
+    def outside_meta(self, comp_id: str) -> bool:
+        """메타 상위 N 제한이 켜져 있고 이 덱이 그 밖인가(고정 덱만 해당될 수 있다)."""
+        m = self.meta
+        return m is not None and m.limited and comp_id not in m.ids
 
     def augment_reason(self, comp) -> str:
         kt = key_trait_ids(comp)
